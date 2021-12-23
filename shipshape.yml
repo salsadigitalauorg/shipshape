@@ -1,0 +1,26 @@
+drupal-root: web
+checks:
+  active-config:
+    - config-name: core.extension
+  active-modules:
+    - config-name: core.extension
+      required:
+        - govcms_security
+        - tfa
+      disallowed:
+        - dblog
+        - module_permissions_ui
+        - update
+  file-config:
+    - config-name: core.extension
+      config-path: config/sync
+  modules:
+    - config-name: core.extension
+      config-path: config/sync
+      required:
+        - govcms_security
+        - tfa
+      disallowed:
+        - dblog
+        - module_permissions_ui
+        - update
