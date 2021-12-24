@@ -21,17 +21,38 @@ func ParseConfig(data []byte) (Config, error) {
 	return c, err
 }
 
-func (cfg *Config) RunChecks() {
-	for _, c := range cfg.Checks.ActiveConfig {
-		c.RunCheck()
+func (cfg *Config) RunChecks() ResultList {
+	rl := ResultList{
+		Results: []Result{},
+		Errors:  map[string]error{},
 	}
-	for _, c := range cfg.Checks.ActiveModules {
-		c.RunCheck()
+
+	for _, checkType := range cfg.GetAllChecks() {
+		checks, ok := checkType.([]Check)
+		if !ok {
+			continue
+		}
+		for _, c := range checks {
+			r, err := c.RunCheck()
+			if err != nil {
+				rl.Errors[c.GetName()] = err
+			}
+			rl.Results = append(rl.Results, r)
+		}
 	}
-	for _, c := range cfg.Checks.FileConfig {
-		c.RunCheck()
+	return rl
+}
+
+func (cfg *Config) GetAllChecks() []interface{} {
+	return []interface{}{
+		cfg.Checks.DbConfig,
+		cfg.Checks.FileConfig,
+		cfg.Checks.Modules,
+		cfg.Checks.DrushCommand,
+		cfg.Checks.ActiveModules,
 	}
-	for _, c := range cfg.Checks.Modules {
-		c.RunCheck()
-	}
+}
+
+func (c *CheckBase) GetName() string {
+	return c.Name
 }

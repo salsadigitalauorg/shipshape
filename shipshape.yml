@@ -1,9 +1,21 @@
 drupal-root: web
 checks:
-  active-config:
-    - config-name: core.extension
-  active-modules:
-    - config-name: core.extension
+  db-config:
+    - name: Ensure correct update settings.
+      config-name: update.settings
+      config-values:
+        - key: check.interval_days
+          value: 7
+  file-config:
+    - name: File config check
+      config-name: core.extension
+      config-path: config/sync
+      config-values:
+        - key: check.interval_days
+          value: 7
+  modules:
+    - name: Modules audit
+      config-path: config/sync
       required:
         - govcms_security
         - tfa
@@ -11,12 +23,11 @@ checks:
         - dblog
         - module_permissions_ui
         - update
-  file-config:
-    - config-name: core.extension
-      config-path: config/sync
-  modules:
-    - config-name: core.extension
-      config-path: config/sync
+  drush-command:
+    - name: Status
+      command: pm:list --status=enabled
+  active-modules:
+    - name: Active modules audit
       required:
         - govcms_security
         - tfa
