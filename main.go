@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	c, err := shipshape.ParseCheckFile("shipshape.yml")
+	c, err := shipshape.ReadAndParseConfig("shipshape.yml")
 	if err != nil {
 		log.Fatal(err)
 		fmt.Fprintln(os.Stderr, err)

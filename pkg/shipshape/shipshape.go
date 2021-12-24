@@ -2,27 +2,21 @@ package shipshape
 
 import (
 	"io/ioutil"
-	"log"
 
 	"gopkg.in/yaml.v2"
 )
 
-func ParseCheckFile(f string) (Config, error) {
-	var err error
-
+func ReadAndParseConfig(f string) (Config, error) {
 	c := Config{}
-
 	data, err := ioutil.ReadFile(f)
-	// The file does not yet exist, just exit for now.
 	if err != nil {
-		log.Fatalf("error reading file: %v", err)
 		return c, err
 	}
+	return ParseConfig(data)
+}
 
-	err = yaml.Unmarshal(data, &c)
-	if err != nil {
-		log.Fatalf("error unmarshaling: %v", err)
-		return c, err
-	}
-	return c, nil
+func ParseConfig(data []byte) (Config, error) {
+	c := Config{}
+	err := yaml.Unmarshal(data, &c)
+	return c, err
 }
