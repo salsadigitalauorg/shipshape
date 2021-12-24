@@ -1,9 +1,9 @@
 package shipshape
 
-func (c *FileConfigCheck) Init() {
-}
+import "fmt"
 
 func (c *FileConfigCheck) RunCheck() error {
+	fmt.Println("Running file config check")
 	return nil
 }
 

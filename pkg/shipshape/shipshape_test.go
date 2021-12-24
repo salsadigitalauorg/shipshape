@@ -51,3 +51,17 @@ checks:
 	}
 
 }
+
+func TestRunChecks(t *testing.T) {
+	cfg := shipshape.Config{
+		Checks: shipshape.CheckList{
+			ActiveConfig: []shipshape.ActiveConfigCheck{
+				{ConfigName: "core.extension"},
+			},
+			FileConfig: []shipshape.FileConfigCheck{
+				{ConfigName: "core.extensions"},
+			},
+		},
+	}
+	cfg.RunChecks()
+}

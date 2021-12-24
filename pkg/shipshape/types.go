@@ -5,9 +5,8 @@ type CheckType string
 const (
 	ActiveConfig  CheckType = "ActiveConfig"
 	ActiveModules CheckType = "ActiveModules"
-
-	FileConfig CheckType = "FileConfig"
-	Modules    CheckType = "Modules"
+	FileConfig    CheckType = "FileConfig"
+	Modules       CheckType = "Modules"
 )
 
 type Result struct {
@@ -15,7 +14,6 @@ type Result struct {
 }
 
 type Check interface {
-	Init()
 	RunCheck() error
 	GetResult() Result
 }

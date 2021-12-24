@@ -20,3 +20,18 @@ func ParseConfig(data []byte) (Config, error) {
 	err := yaml.Unmarshal(data, &c)
 	return c, err
 }
+
+func (cfg *Config) RunChecks() {
+	for _, c := range cfg.Checks.ActiveConfig {
+		c.RunCheck()
+	}
+	for _, c := range cfg.Checks.ActiveModules {
+		c.RunCheck()
+	}
+	for _, c := range cfg.Checks.FileConfig {
+		c.RunCheck()
+	}
+	for _, c := range cfg.Checks.Modules {
+		c.RunCheck()
+	}
+}
