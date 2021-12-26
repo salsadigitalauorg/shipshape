@@ -45,11 +45,11 @@ func (cfg *Config) RunChecks() ResultList {
 
 func (cfg *Config) GetAllChecks() []interface{} {
 	return []interface{}{
-		cfg.Checks.DbConfig,
-		cfg.Checks.FileConfig,
-		cfg.Checks.Modules,
-		cfg.Checks.DrushCommand,
-		cfg.Checks.ActiveModules,
+		cfg.Checks.DrupalDBConfig,
+		cfg.Checks.DrupalFileConfig,
+		cfg.Checks.DrupalModules,
+		cfg.Checks.Drush,
+		cfg.Checks.DrupalActiveModules,
 	}
 }
 

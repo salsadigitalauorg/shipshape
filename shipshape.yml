@@ -1,19 +1,19 @@
 drupal-root: web
 checks:
-  db-config:
+  drupal-db-config:
     - name: Ensure correct update settings.
       config-name: update.settings
       config-values:
         - key: check.interval_days
           value: 7
-  file-config:
+  drupal-file-config:
     - name: File config check
       config-name: core.extension
       config-path: config/sync
       config-values:
         - key: check.interval_days
           value: 7
-  modules:
+  drupal-modules:
     - name: Modules audit
       config-path: config/sync
       required:
@@ -23,10 +23,10 @@ checks:
         - dblog
         - module_permissions_ui
         - update
-  drush-command:
+  drush:
     - name: Status
       command: pm:list --status=enabled
-  active-modules:
+  drupal-active-modules:
     - name: Active modules audit
       required:
         - govcms_security

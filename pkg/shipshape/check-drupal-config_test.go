@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func TestDbConfigRunCheck(t *testing.T) {
-	c := shipshape.DbConfigCheck{
+func TestDrupalConfigRunCheck(t *testing.T) {
+	c := shipshape.DrupalConfigBase{
 		CheckBase: shipshape.CheckBase{
 			Data: []byte(`
 check:
@@ -16,10 +16,12 @@ notification:
     - admin@example.com
 `),
 		},
-		ConfigValues: []shipshape.ConfigValue{
-			{
-				Key:   "check.interval_days",
-				Value: "7",
+		YamlCheck: shipshape.YamlCheck{
+			Values: []shipshape.KeyValue{
+				{
+					Key:   "check.interval_days",
+					Value: "7",
+				},
 			},
 		},
 	}
@@ -40,7 +42,7 @@ notification:
 	}
 
 	// Wrong key, correct value.
-	c.ConfigValues = []shipshape.ConfigValue{
+	c.Values = []shipshape.KeyValue{
 		{
 			Key:   "check.interval",
 			Value: "7",
@@ -62,7 +64,7 @@ notification:
 	}
 
 	// Correct key, wrong value.
-	c.ConfigValues = []shipshape.ConfigValue{
+	c.Values = []shipshape.KeyValue{
 		{
 			Key:   "check.interval_days",
 			Value: "8",
@@ -84,7 +86,7 @@ notification:
 	}
 
 	// Multiple config values - all correct.
-	c.ConfigValues = []shipshape.ConfigValue{
+	c.Values = []shipshape.KeyValue{
 		{
 			Key:   "check.interval_days",
 			Value: "7",

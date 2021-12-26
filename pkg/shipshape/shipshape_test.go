@@ -9,7 +9,7 @@ import (
 func TestParseConfig(t *testing.T) {
 	invalidData := `
 checks:
-  db-config: foo
+  drupal-db-config: foo
 `
 	c, err := shipshape.ParseConfig([]byte(invalidData))
 	if err == nil || !strings.Contains(err.Error(), "yaml: unmarshal errors") {
@@ -19,14 +19,14 @@ checks:
 	data := `
 drupal-root: web
 checks:
-  db-config:
+  drupal-db-config:
     - name: My db check
       config-name: core.extension
-  file-config:
+  drupal-file-config:
     - name: My file check
       config-name: core.extension
       config-path: config/sync
-  drush-command:
+  drush:
     - name: My drush command check
       command: pm:list --status=enabled
 `
@@ -39,24 +39,24 @@ checks:
 		t.Errorf("drupal root should be 'web', got %s", c.DrupalRoot)
 	}
 
-	if len(c.Checks.DbConfig) == 0 {
-		t.Fatalf("DbConfig checks count should be 1, got %d", len(c.Checks.DbConfig))
+	if len(c.Checks.DrupalDBConfig) == 0 {
+		t.Fatalf("DbConfig checks count should be 1, got %d", len(c.Checks.DrupalDBConfig))
 	}
 
-	if len(c.Checks.FileConfig) == 0 {
-		t.Fatalf("FileConfig checks count should be 1, got %d", len(c.Checks.FileConfig))
+	if len(c.Checks.DrupalFileConfig) == 0 {
+		t.Fatalf("FileConfig checks count should be 1, got %d", len(c.Checks.DrupalFileConfig))
 	}
 
-	if len(c.Checks.DrushCommand) == 0 {
-		t.Fatalf("DrushCommand checks count should be 1, got %d", len(c.Checks.DrushCommand))
+	if len(c.Checks.Drush) == 0 {
+		t.Fatalf("Drush checks count should be 1, got %d", len(c.Checks.Drush))
 	}
 
-	if c.Checks.DbConfig[0].ConfigName != "core.extension" {
-		t.Fatalf("ActiveConfig check 1's config name should be core.extension, got %s", c.Checks.DbConfig[0].ConfigName)
+	if c.Checks.DrupalDBConfig[0].ConfigName != "core.extension" {
+		t.Fatalf("DbConfig check 1's config name should be core.extension, got %s", c.Checks.DrupalDBConfig[0].ConfigName)
 	}
 
-	if c.Checks.FileConfig[0].ConfigName != "core.extension" {
-		t.Fatalf("FileConfig check 1's config name should be core.extension, got %s", c.Checks.FileConfig[0].ConfigName)
+	if c.Checks.DrupalFileConfig[0].ConfigName != "core.extension" {
+		t.Fatalf("FileConfig check 1's config name should be core.extension, got %s", c.Checks.DrupalFileConfig[0].ConfigName)
 	}
 
 }
@@ -64,15 +64,9 @@ checks:
 func TestRunChecks(t *testing.T) {
 	cfg := shipshape.Config{
 		Checks: shipshape.CheckList{
-			DbConfig: []shipshape.DbConfigCheck{
-				{ConfigName: "core.extension"},
-			},
-			FileConfig: []shipshape.FileConfigCheck{
-				{ConfigName: "core.extensions"},
-			},
-			DrushCommand: []shipshape.DrushCommandCheck{
-				{Command: "status"},
-			},
+			DrupalDBConfig:   []shipshape.DrupalDBConfigCheck{},
+			DrupalFileConfig: []shipshape.DrupalFileConfigCheck{},
+			Drush:            []shipshape.DrushCheck{},
 		},
 	}
 	cfg.RunChecks()
