@@ -5,6 +5,11 @@ import (
 	"fmt"
 )
 
+func (c *DrupalConfigBase) FetchData() error {
+	c.Data = []byte("")
+	return nil
+}
+
 func (c *DrupalConfigBase) RunCheck() error {
 	c.Result = Result{CheckType: DrupalDBConfig}
 
@@ -50,10 +55,5 @@ func (c *DrupalConfigBase) RunCheck() error {
 			}
 		}
 	}
-	return nil
-}
-
-func (c *DrupalConfigBase) FetchData() error {
-	c.Data = []byte("")
 	return nil
 }

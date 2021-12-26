@@ -6,7 +6,13 @@ import (
 )
 
 func TestDrupalConfigRunCheck(t *testing.T) {
-	c := shipshape.DrupalConfigBase{
+	c := shipshape.DrupalConfigBase{}
+	err := c.RunCheck()
+	if err == nil || err.Error() != "no data to run check on" {
+		t.Errorf("Check should fail with error 'no data to run check on', got '%+v'", err)
+	}
+
+	c = shipshape.DrupalConfigBase{
 		CheckBase: shipshape.CheckBase{
 			Data: []byte(`
 check:
@@ -26,7 +32,7 @@ notification:
 		},
 	}
 
-	err := c.RunCheck()
+	err = c.RunCheck()
 	if err != nil {
 		t.Errorf("Check should be successful, got error: %+v", err)
 	}
