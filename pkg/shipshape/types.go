@@ -5,30 +5,31 @@ import "gopkg.in/yaml.v3"
 type CheckType string
 
 const (
-	Drush               CheckType = "Drush"
-	DrupalDBConfig      CheckType = "DrupalDBConfig"
-	DrupalFileConfig    CheckType = "DrupalFileConfig"
-	DrupalModules       CheckType = "DrupalModules"
-	DrupalActiveModules CheckType = "DrupalActiveModules"
+	DrupalDBConfig      CheckType = "drupal-db-config"
+	DrupalFileConfig    CheckType = "drupal-file-config"
+	DrupalModules       CheckType = "drupal-modules"
+	DrupalActiveModules CheckType = "drupal-active-modules"
 )
 
-type CheckList struct {
-	Drush               []DrushCheck              `yaml:"drush,omitempty"`
-	DrupalDBConfig      []DrupalDBConfigCheck     `yaml:"drupal-db-config,omitempty"`
-	DrupalFileConfig    []DrupalFileConfigCheck   `yaml:"drupal-file-config,omitempty"`
-	DrupalModules       []DrupalFileModuleCheck   `yaml:"drupal-modules,omitempty"`
-	DrupalActiveModules []DrupalActiveModuleCheck `yaml:"drupal-active-modules,omitempty"`
+var AllChecks = []CheckType{
+	DrupalDBConfig,
+	DrupalFileConfig,
+	DrupalModules,
+	DrupalActiveModules,
 }
 
+type CheckMap map[CheckType][]Check
+
 type Config struct {
-	DrupalRoot string    `yaml:"drupal-root"`
-	Checks     CheckList `yaml:"checks"`
+	DrupalRoot string   `yaml:"drupal-root"`
+	Checks     CheckMap `yaml:"checks"`
 }
 
 type Check interface {
 	GetName() string
 	FetchData() error
-	RunCheck() (Result, error)
+	RunCheck() error
+	GetResult() Result
 }
 
 type CheckBase struct {
@@ -62,7 +63,7 @@ type DrupalConfigBase struct {
 	ConfigName string `yaml:"config-name"`
 }
 
-type DrushCheck struct {
+type Drush struct {
 	Alias   string `yaml:"alias"`
 	Command string `yaml:"command"`
 }
@@ -74,7 +75,7 @@ type DrupalFileConfigCheck struct {
 
 type DrupalDBConfigCheck struct {
 	DrupalConfigBase `yaml:",inline"`
-	DrushCheck       `yaml:",inline"`
+	Drush            `yaml:",inline"`
 }
 
 type DrupalFileModuleCheck struct {
@@ -84,7 +85,9 @@ type DrupalFileModuleCheck struct {
 }
 
 type DrupalActiveModuleCheck struct {
-	DrushCheck `yaml:",inline"`
+	Drush `yaml:",inline"`
+	CheckBase
+	YamlCheck
 	Required   []string `yaml:"required"`
 	Disallowed []string `yaml:"disallowed"`
 }
@@ -104,6 +107,6 @@ type Result struct {
 }
 
 type ResultList struct {
-	Results []Result
+	Results map[string]Result
 	Errors  map[string]error
 }

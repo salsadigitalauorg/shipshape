@@ -14,12 +14,7 @@ func (y *YamlCheck) UnmarshalData(data []byte) error {
 }
 
 func (y *YamlCheck) CheckKeyValue(kv KeyValue) (KeyValueResult, error) {
-	p, err := yamlpath.NewPath(kv.Key)
-	if err != nil {
-		return KeyValueError, err
-	}
-
-	q, err := p.Find(&y.Node)
+	q, err := LookupYamlPath(&y.Node, kv.Key)
 	if err != nil {
 		return KeyValueError, err
 	}
@@ -33,4 +28,16 @@ func (y *YamlCheck) CheckKeyValue(kv KeyValue) (KeyValueResult, error) {
 	}
 
 	return KeyValueEqual, nil
+}
+
+func LookupYamlPath(y *yaml.Node, path string) ([]*yaml.Node, error) {
+	p, err := yamlpath.NewPath(path)
+	if err != nil {
+		return nil, err
+	}
+	q, err := p.Find(y)
+	if err != nil {
+		return nil, err
+	}
+	return q, nil
 }

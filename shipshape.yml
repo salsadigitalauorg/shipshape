@@ -23,9 +23,6 @@ checks:
         - dblog
         - module_permissions_ui
         - update
-  drush:
-    - name: Status
-      command: pm:list --status=enabled
   drupal-active-modules:
     - name: Active modules audit
       required:

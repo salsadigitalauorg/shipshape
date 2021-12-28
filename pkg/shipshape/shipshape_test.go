@@ -26,47 +26,52 @@ checks:
     - name: My file check
       config-name: core.extension
       config-path: config/sync
-  drush:
-    - name: My drush command check
-      command: pm:list --status=enabled
 `
 	c, err = shipshape.ParseConfig([]byte(data))
 	if err != nil {
-		t.Error("Failed to read check file config")
+		t.Errorf("Failed to read check file config: %+v", err)
 	}
 
 	if c.DrupalRoot != "web" {
 		t.Errorf("drupal root should be 'web', got %s", c.DrupalRoot)
 	}
 
-	if len(c.Checks.DrupalDBConfig) == 0 {
-		t.Fatalf("DbConfig checks count should be 1, got %d", len(c.Checks.DrupalDBConfig))
+	if len(c.Checks[shipshape.DrupalDBConfig]) == 0 {
+		t.Fatalf("DbConfig checks count should be 1, got %d", len(c.Checks[shipshape.DrupalDBConfig]))
 	}
 
-	if len(c.Checks.DrupalFileConfig) == 0 {
-		t.Fatalf("FileConfig checks count should be 1, got %d", len(c.Checks.DrupalFileConfig))
+	if len(c.Checks[shipshape.DrupalFileConfig]) == 0 {
+		t.Fatalf("FileConfig checks count should be 1, got %d", len(c.Checks[shipshape.DrupalFileConfig]))
 	}
 
-	if len(c.Checks.Drush) == 0 {
-		t.Fatalf("Drush checks count should be 1, got %d", len(c.Checks.Drush))
+	ddc, ok := c.Checks[shipshape.DrupalDBConfig][0].(*shipshape.DrupalDBConfigCheck)
+	if !ok || ddc.ConfigName != "core.extension" {
+		t.Fatalf("DbConfig check 1's config name should be core.extension, got %s", ddc.ConfigName)
 	}
 
-	if c.Checks.DrupalDBConfig[0].ConfigName != "core.extension" {
-		t.Fatalf("DbConfig check 1's config name should be core.extension, got %s", c.Checks.DrupalDBConfig[0].ConfigName)
-	}
-
-	if c.Checks.DrupalFileConfig[0].ConfigName != "core.extension" {
-		t.Fatalf("FileConfig check 1's config name should be core.extension, got %s", c.Checks.DrupalFileConfig[0].ConfigName)
+	dfc, ok := c.Checks[shipshape.DrupalFileConfig][0].(*shipshape.DrupalFileConfigCheck)
+	if !ok || dfc.ConfigName != "core.extension" {
+		t.Fatalf("FileConfig check 1's config name should be core.extension, got %s", dfc.ConfigName)
 	}
 
 }
 
 func TestRunChecks(t *testing.T) {
 	cfg := shipshape.Config{
-		Checks: shipshape.CheckList{
-			DrupalDBConfig:   []shipshape.DrupalDBConfigCheck{},
-			DrupalFileConfig: []shipshape.DrupalFileConfigCheck{},
-			Drush:            []shipshape.DrushCheck{},
+		DrupalRoot: "",
+		Checks: map[shipshape.CheckType][]shipshape.Check{
+			shipshape.DrupalDBConfig: {
+				&shipshape.DrupalDBConfigCheck{
+					DrupalConfigBase: shipshape.DrupalConfigBase{},
+					Drush:            shipshape.Drush{},
+				},
+			},
+			shipshape.DrupalFileConfig: {
+				&shipshape.DrupalFileConfigCheck{
+					DrupalConfigBase: shipshape.DrupalConfigBase{},
+					ConfigPath:       "",
+				},
+			},
 		},
 	}
 	cfg.RunChecks()

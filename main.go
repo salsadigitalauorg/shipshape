@@ -14,5 +14,8 @@ func main() {
 		log.Fatal(err)
 		fmt.Fprintln(os.Stderr, err)
 	}
-	fmt.Printf("c:\n%+v\n\n", c)
+
+	fmt.Printf("c: %+v\n\n", c)
+	r := c.RunChecks()
+	fmt.Printf("\nresults: %+v\n", r)
 }
