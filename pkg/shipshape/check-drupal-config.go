@@ -1,19 +1,15 @@
 package shipshape
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 )
 
 func (c *DrupalConfigBase) RunCheck() error {
-	c.Result = Result{CheckType: DrupalDBConfig}
-
 	if c.Data == nil {
-		return errors.New("no data to run check on")
+		c.Result.Error = "no data to run check on"
+		return nil
 	}
-
-	c.UnmarshalData(c.Data)
 
 	err := c.UnmarshalData(c.Data)
 	if err != nil {
@@ -63,6 +59,29 @@ func (c *DrupalFileConfigCheck) FetchData() error {
 	return nil
 }
 
+func (c *DrupalFileConfigCheck) RunCheck() error {
+	c.InitResult(DrupalFileConfig)
+	err := c.DrupalConfigBase.RunCheck()
+	return err
+}
+
 func (c *DrupalDBConfigCheck) FetchData() error {
+	return nil
+}
+
+func (c *DrupalDBConfigCheck) RunCheck() error {
+	c.InitResult(DrupalDBConfig)
+	err := c.DrupalConfigBase.RunCheck()
+	return err
+}
+
+func (c *DrupalFileModuleCheck) RunCheck() error {
+	c.InitResult(DrupalModules)
+	err := c.DrupalFileConfigCheck.RunCheck()
+	return err
+}
+
+func (c *DrupalActiveModuleCheck) RunCheck() error {
+	c.InitResult(DrupalActiveModules)
 	return nil
 }

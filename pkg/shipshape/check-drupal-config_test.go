@@ -5,32 +5,36 @@ import (
 	"testing"
 )
 
-func TestDrupalConfigRunCheck(t *testing.T) {
+func TestDrupalConfig(t *testing.T) {
 	c := shipshape.DrupalConfigBase{}
 	err := c.RunCheck()
-	if err == nil || err.Error() != "no data to run check on" {
+	if c.Result.Error != "no data to run check on" {
 		t.Errorf("Check should fail with error 'no data to run check on', got '%+v'", err)
 	}
 
-	c = shipshape.DrupalConfigBase{
-		CheckBase: shipshape.CheckBase{
-			Data: []byte(`
+	mockCheck := func() shipshape.DrupalConfigBase {
+		return shipshape.DrupalConfigBase{
+			CheckBase: shipshape.CheckBase{
+				Data: []byte(`
 check:
   interval_days: 7
 notification:
   emails:
     - admin@example.com
 `),
-		},
-		YamlCheck: shipshape.YamlCheck{
-			Values: []shipshape.KeyValue{
-				{
-					Key:   "check.interval_days",
-					Value: "7",
+			},
+			YamlCheck: shipshape.YamlCheck{
+				Values: []shipshape.KeyValue{
+					{
+						Key:   "check.interval_days",
+						Value: "7",
+					},
 				},
 			},
-		},
+		}
 	}
+
+	c = mockCheck()
 
 	err = c.RunCheck()
 	if err != nil {
@@ -48,6 +52,7 @@ notification:
 	}
 
 	// Wrong key, correct value.
+	c = mockCheck()
 	c.Values = []shipshape.KeyValue{
 		{
 			Key:   "check.interval",
@@ -70,6 +75,7 @@ notification:
 	}
 
 	// Correct key, wrong value.
+	c = mockCheck()
 	c.Values = []shipshape.KeyValue{
 		{
 			Key:   "check.interval_days",
@@ -92,6 +98,7 @@ notification:
 	}
 
 	// Multiple config values - all correct.
+	c = mockCheck()
 	c.Values = []shipshape.KeyValue{
 		{
 			Key:   "check.interval_days",
@@ -116,5 +123,36 @@ notification:
 	}
 	if len(c.Result.Failures) != 0 {
 		t.Errorf("There should be no Failure, got %+v", c.Result.Failures)
+	}
+}
+
+func TestDrupalFileConfig(t *testing.T) {
+	c := shipshape.DrupalFileConfigCheck{
+		DrupalConfigBase: shipshape.DrupalConfigBase{
+			YamlCheck: shipshape.YamlCheck{
+				Values: []shipshape.KeyValue{
+					{
+						Key:   "check.interval_days",
+						Value: "7",
+					},
+				},
+			},
+		},
+		ConfigPath: "testdata/drupal-file-config/update.settings.yml",
+	}
+	if err := c.FetchData(); err != nil {
+		t.Errorf("FetchData should succeed, but failed: %s", err)
+	}
+	if c.Data == nil {
+		t.Errorf("c.Data should be filled, but is empty.")
+	}
+	if err := c.RunCheck(); err != nil {
+		t.Errorf("RunCheck should succeed, but failed: %s", err)
+	}
+	if c.Result.Status != shipshape.Pass {
+		t.Errorf("Check result should be Pass, but got: %s", c.Result.Status)
+	}
+	if len(c.Result.Passes) != 1 || c.Result.Passes[0] != "'check.interval_days' is equal to '7'" {
+		t.Errorf("There should be 1 Pass with value \"'check.interval_days' is equal to '7'\", but got: %+v", c.Result.Passes)
 	}
 }

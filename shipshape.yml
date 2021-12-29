@@ -8,7 +8,7 @@ checks:
           value: 7
   drupal-file-config:
     - name: File config check
-      config-name: core.extension
+      config-name: update.settings
       config-path: config/sync
       config-values:
         - key: check.interval_days

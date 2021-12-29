@@ -1,0 +1,5 @@
+check:
+  interval_days: 7
+notification:
+  emails:
+    - admin@example.com

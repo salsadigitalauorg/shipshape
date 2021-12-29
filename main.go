@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -15,7 +16,11 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 	}
 
-	fmt.Printf("c: %+v\n\n", c)
 	r := c.RunChecks()
-	fmt.Printf("\nresults: %+v\n", r)
+	data, err := json.Marshal(r)
+	if err != nil {
+		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err)
+	}
+	fmt.Println(string(data))
 }

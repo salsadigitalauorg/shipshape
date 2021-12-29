@@ -94,6 +94,12 @@ func (c *CheckBase) RunCheck() error {
 	return nil
 }
 
+func (c *CheckBase) InitResult(ct CheckType) {
+	if c.Result.CheckType == "" {
+		c.Result = Result{CheckType: ct}
+	}
+}
+
 func (c *CheckBase) GetResult() Result {
 	return c.Result
 }

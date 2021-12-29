@@ -85,9 +85,9 @@ type DrupalFileModuleCheck struct {
 }
 
 type DrupalActiveModuleCheck struct {
-	Drush `yaml:",inline"`
-	CheckBase
-	YamlCheck
+	Drush      `yaml:",inline"`
+	CheckBase  `yaml:",inline"`
+	YamlCheck  `yaml:",inline"`
 	Required   []string `yaml:"required"`
 	Disallowed []string `yaml:"disallowed"`
 }
@@ -100,13 +100,15 @@ const (
 )
 
 type Result struct {
-	CheckType CheckType
-	Status    CheckStatus
-	Passes    []string
-	Failures  []string
+	Name      string      `json:"name"`
+	CheckType CheckType   `json:"check-type"`
+	Status    CheckStatus `json:"status"`
+	Passes    []string    `json:"passes"`
+	Failures  []string    `json:"failures"`
+	Error     string      `json:"error"`
 }
 
 type ResultList struct {
-	Results map[string]Result
-	Errors  map[string]error
+	Results map[string]Result `json:"results"`
+	Errors  map[string]error  `json:"errors"`
 }
