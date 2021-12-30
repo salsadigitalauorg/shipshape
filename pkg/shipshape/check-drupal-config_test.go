@@ -156,3 +156,43 @@ func TestDrupalFileConfig(t *testing.T) {
 		t.Errorf("There should be 1 Pass with value \"'check.interval_days' is equal to '7'\", but got: %+v", c.Result.Passes)
 	}
 }
+
+func TestDrupalModules(t *testing.T) {
+	c := shipshape.DrupalFileModuleCheck{
+		DrupalFileConfigCheck: shipshape.DrupalFileConfigCheck{
+			ConfigPath: "testdata/drupal-file-config/core.extension.yml",
+		},
+		Required: []string{
+			"node",
+			"block",
+		},
+		Disallowed: []string{
+			"views_ui",
+			"field_ui",
+		},
+	}
+	if err := c.FetchData(); err != nil {
+		t.Errorf("FetchData should succeed, but failed: %s", err)
+	}
+	if c.Data == nil {
+		t.Errorf("c.Data should be filled, but is empty.")
+	}
+	if err := c.RunCheck(); err != nil {
+		t.Errorf("RunCheck should succeed, but failed: %s", err)
+	}
+	if c.Result.Status != shipshape.Pass {
+		t.Errorf("Check result should be Pass, but got: %s", c.Result.Status)
+	}
+	if len(c.Result.Passes) != 4 {
+		t.Errorf("There should be 4 Passes, but got: %+v", len(c.Result.Passes))
+	}
+	if len(c.Result.Failures) != 0 {
+		t.Errorf("There should be 0 Failures, but got: %+v", c.Result.Failures)
+	}
+	if c.Result.Passes[0] != "'node' is enabled" ||
+		c.Result.Passes[1] != "'block' is enabled" ||
+		c.Result.Passes[2] != "'views_ui' is not enabled" ||
+		c.Result.Passes[3] != "'field_ui' is not enabled" {
+		t.Errorf("Wrong pass messages, got: %+v", c.Result.Passes)
+	}
+}
