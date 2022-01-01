@@ -21,11 +21,13 @@ var AllChecks = []CheckType{
 type CheckMap map[CheckType][]Check
 
 type Config struct {
+	ProjectDir string   `yaml:"project-dir"`
 	DrupalRoot string   `yaml:"drupal-root"`
 	Checks     CheckMap `yaml:"checks"`
 }
 
 type Check interface {
+	Init(pd string, ct CheckType)
 	GetName() string
 	FetchData() error
 	RunCheck() error
@@ -33,9 +35,10 @@ type Check interface {
 }
 
 type CheckBase struct {
-	Name   string `yaml:"name"`
-	Data   []byte
-	Result Result
+	Name       string `yaml:"name"`
+	ProjectDir string `yaml:""`
+	Data       []byte
+	Result     Result
 }
 
 type KeyValue struct {

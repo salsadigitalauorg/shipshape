@@ -3,6 +3,7 @@ package shipshape
 import (
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 )
 
 func (c *DrupalConfigBase) RunCheck() error {
@@ -52,32 +53,15 @@ func (c *DrupalConfigBase) RunCheck() error {
 
 func (c *DrupalFileConfigCheck) FetchData() error {
 	var err error
-	c.Data, err = ioutil.ReadFile(c.ConfigPath)
+	fullpath := filepath.Join(c.ProjectDir, c.ConfigPath, c.ConfigName+".yml")
+	c.Data, err = ioutil.ReadFile(fullpath)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *DrupalFileConfigCheck) RunCheck() error {
-	c.InitResult(DrupalFileConfig)
-	err := c.DrupalConfigBase.RunCheck()
-	return err
-}
-
-func (c *DrupalDBConfigCheck) FetchData() error {
-	return nil
-}
-
-func (c *DrupalDBConfigCheck) RunCheck() error {
-	c.InitResult(DrupalDBConfig)
-	err := c.DrupalConfigBase.RunCheck()
-	return err
-}
-
 func (c *DrupalFileModuleCheck) RunCheck() error {
-	c.InitResult(DrupalModules)
-
 	if c.Data == nil {
 		c.Result.Error = "no data to run check on"
 		return nil
@@ -148,7 +132,7 @@ func (c *DrupalFileModuleCheck) RunCheck() error {
 	return err
 }
 
-func (c *DrupalActiveModuleCheck) RunCheck() error {
-	c.InitResult(DrupalActiveModules)
-	return nil
+func (c *DrupalFileModuleCheck) Init(pd string, ct CheckType) {
+	c.CheckBase.Init(pd, ct)
+	c.ConfigName = "core.extension"
 }

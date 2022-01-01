@@ -3,23 +3,47 @@ package shipshape
 import (
 	"errors"
 	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v3"
 )
 
-func ReadAndParseConfig(f string) (Config, error) {
+func ReadAndParseConfig(projectDir string, f string) (Config, error) {
 	c := Config{}
 	data, err := ioutil.ReadFile(f)
 	if err != nil {
 		return c, err
 	}
-	return ParseConfig(data)
+	err = ParseConfig(data, projectDir, &c)
+	return c, err
 }
 
-func ParseConfig(data []byte) (Config, error) {
-	c := Config{}
+func ParseConfig(data []byte, projectDir string, c *Config) error {
 	err := yaml.Unmarshal(data, &c)
-	return c, err
+	if err != nil {
+		return err
+	}
+
+	if c.ProjectDir == "" && projectDir != "" {
+		c.ProjectDir = projectDir
+	} else {
+		// Default project directory is current directory.
+		projectDir, err = os.Getwd()
+		if err != nil {
+			return err
+		}
+		c.ProjectDir = projectDir
+	}
+
+	return nil
+}
+
+func (cfg *Config) Init() {
+	for ct, checks := range cfg.Checks {
+		for _, c := range checks {
+			c.Init(cfg.ProjectDir, ct)
+		}
+	}
 }
 
 func (cfg *Config) RunChecks() ResultList {
@@ -37,6 +61,7 @@ func (cfg *Config) RunChecks() ResultList {
 }
 
 func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
+	c.Init(cfg.ProjectDir, "")
 	err := c.FetchData()
 	if err != nil {
 		rl.Errors[c.GetName()] = err
@@ -86,24 +111,25 @@ func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 	return nil
 }
 
+func (c *CheckBase) Init(pd string, ct CheckType) {
+	c.ProjectDir = pd
+	if c.Result.CheckType == "" {
+		c.Result = Result{CheckType: ct}
+	}
+}
+
 func (c *CheckBase) GetName() string {
 	return c.Name
+}
+
+func (c *CheckBase) FetchData() error {
+	return nil
 }
 
 func (c *CheckBase) RunCheck() error {
 	return nil
 }
 
-func (c *CheckBase) InitResult(ct CheckType) {
-	if c.Result.CheckType == "" {
-		c.Result = Result{CheckType: ct}
-	}
-}
-
 func (c *CheckBase) GetResult() Result {
 	return c.Result
-}
-
-func (c *CheckBase) FetchData() error {
-	return nil
 }

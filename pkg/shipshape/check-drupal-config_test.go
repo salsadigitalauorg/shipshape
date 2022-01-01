@@ -137,8 +137,9 @@ func TestDrupalFileConfig(t *testing.T) {
 					},
 				},
 			},
+			ConfigName: "update.settings",
 		},
-		ConfigPath: "testdata/drupal-file-config/update.settings.yml",
+		ConfigPath: "testdata/drupal-file-config",
 	}
 	if err := c.FetchData(); err != nil {
 		t.Errorf("FetchData should succeed, but failed: %s", err)
@@ -160,7 +161,10 @@ func TestDrupalFileConfig(t *testing.T) {
 func TestDrupalModules(t *testing.T) {
 	c := shipshape.DrupalFileModuleCheck{
 		DrupalFileConfigCheck: shipshape.DrupalFileConfigCheck{
-			ConfigPath: "testdata/drupal-file-config/core.extension.yml",
+			DrupalConfigBase: shipshape.DrupalConfigBase{
+				ConfigName: "core.extension",
+			},
+			ConfigPath: "testdata/drupal-file-config",
 		},
 		Required: []string{
 			"node",

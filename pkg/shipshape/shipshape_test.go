@@ -1,6 +1,7 @@
 package shipshape_test
 
 import (
+	"os"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"strings"
 	"testing"
@@ -11,7 +12,8 @@ func TestParseConfig(t *testing.T) {
 checks:
   drupal-db-config: foo
 `
-	c, err := shipshape.ParseConfig([]byte(invalidData))
+	cfg := shipshape.Config{}
+	err := shipshape.ParseConfig([]byte(invalidData), "", &cfg)
 	if err == nil || !strings.Contains(err.Error(), "yaml: unmarshal errors") {
 		t.Error("file parsing should fail")
 	}
@@ -27,29 +29,39 @@ checks:
       config-name: core.extension
       config-path: config/sync
 `
-	c, err = shipshape.ParseConfig([]byte(data))
+	cfg = shipshape.Config{}
+	err = shipshape.ParseConfig([]byte(data), "", &cfg)
 	if err != nil {
 		t.Errorf("Failed to read check file config: %+v", err)
 	}
+	cfg.Init()
 
-	if c.DrupalRoot != "web" {
-		t.Errorf("drupal root should be 'web', got %s", c.DrupalRoot)
+	currDir, err := os.Getwd()
+	if err != nil {
+		t.Fatal("Unable to get current dir.")
+	}
+	if cfg.ProjectDir != currDir {
+		t.Errorf("Project dir should be '%s', got '%s'", currDir, cfg.ProjectDir)
 	}
 
-	if len(c.Checks[shipshape.DrupalDBConfig]) == 0 {
-		t.Fatalf("DbConfig checks count should be 1, got %d", len(c.Checks[shipshape.DrupalDBConfig]))
+	if cfg.DrupalRoot != "web" {
+		t.Errorf("drupal root should be 'web', got %s", cfg.DrupalRoot)
 	}
 
-	if len(c.Checks[shipshape.DrupalFileConfig]) == 0 {
-		t.Fatalf("FileConfig checks count should be 1, got %d", len(c.Checks[shipshape.DrupalFileConfig]))
+	if len(cfg.Checks[shipshape.DrupalDBConfig]) == 0 {
+		t.Fatalf("DbConfig checks count should be 1, got %d", len(cfg.Checks[shipshape.DrupalDBConfig]))
 	}
 
-	ddc, ok := c.Checks[shipshape.DrupalDBConfig][0].(*shipshape.DrupalDBConfigCheck)
+	if len(cfg.Checks[shipshape.DrupalFileConfig]) == 0 {
+		t.Fatalf("FileConfig checks count should be 1, got %d", len(cfg.Checks[shipshape.DrupalFileConfig]))
+	}
+
+	ddc, ok := cfg.Checks[shipshape.DrupalDBConfig][0].(*shipshape.DrupalDBConfigCheck)
 	if !ok || ddc.ConfigName != "core.extension" {
 		t.Fatalf("DbConfig check 1's config name should be core.extension, got %s", ddc.ConfigName)
 	}
 
-	dfc, ok := c.Checks[shipshape.DrupalFileConfig][0].(*shipshape.DrupalFileConfigCheck)
+	dfc, ok := cfg.Checks[shipshape.DrupalFileConfig][0].(*shipshape.DrupalFileConfigCheck)
 	if !ok || dfc.ConfigName != "core.extension" {
 		t.Fatalf("FileConfig check 1's config name should be core.extension, got %s", dfc.ConfigName)
 	}
