@@ -2,6 +2,8 @@ package shipshape_test
 
 import (
 	"os"
+	"salsadigitalauorg/shipshape/pkg/core"
+	"salsadigitalauorg/shipshape/pkg/drupal"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"strings"
 	"testing"
@@ -48,20 +50,20 @@ checks:
 		t.Errorf("drupal root should be 'web', got %s", cfg.DrupalRoot)
 	}
 
-	if len(cfg.Checks[shipshape.DrupalDBConfig]) == 0 {
-		t.Fatalf("DbConfig checks count should be 1, got %d", len(cfg.Checks[shipshape.DrupalDBConfig]))
+	if len(cfg.Checks[drupal.DrupalDBConfig]) == 0 {
+		t.Fatalf("DbConfig checks count should be 1, got %d", len(cfg.Checks[drupal.DrupalDBConfig]))
 	}
 
-	if len(cfg.Checks[shipshape.DrupalFileConfig]) == 0 {
-		t.Fatalf("FileConfig checks count should be 1, got %d", len(cfg.Checks[shipshape.DrupalFileConfig]))
+	if len(cfg.Checks[drupal.DrupalFileConfig]) == 0 {
+		t.Fatalf("FileConfig checks count should be 1, got %d", len(cfg.Checks[drupal.DrupalFileConfig]))
 	}
 
-	ddc, ok := cfg.Checks[shipshape.DrupalDBConfig][0].(*shipshape.DrupalDBConfigCheck)
+	ddc, ok := cfg.Checks[drupal.DrupalDBConfig][0].(*drupal.DrupalDBConfigCheck)
 	if !ok || ddc.ConfigName != "core.extension" {
 		t.Fatalf("DbConfig check 1's config name should be core.extension, got %s", ddc.ConfigName)
 	}
 
-	dfc, ok := cfg.Checks[shipshape.DrupalFileConfig][0].(*shipshape.DrupalFileConfigCheck)
+	dfc, ok := cfg.Checks[drupal.DrupalFileConfig][0].(*drupal.DrupalFileConfigCheck)
 	if !ok || dfc.ConfigName != "core.extension" {
 		t.Fatalf("FileConfig check 1's config name should be core.extension, got %s", dfc.ConfigName)
 	}
@@ -71,16 +73,16 @@ checks:
 func TestRunChecks(t *testing.T) {
 	cfg := shipshape.Config{
 		DrupalRoot: "",
-		Checks: map[shipshape.CheckType][]shipshape.Check{
-			shipshape.DrupalDBConfig: {
-				&shipshape.DrupalDBConfigCheck{
-					DrupalConfigBase: shipshape.DrupalConfigBase{},
-					Drush:            shipshape.Drush{},
+		Checks: map[core.CheckType][]core.Check{
+			drupal.DrupalDBConfig: {
+				&drupal.DrupalDBConfigCheck{
+					DrupalConfigBase: drupal.DrupalConfigBase{},
+					Drush:            drupal.Drush{},
 				},
 			},
-			shipshape.DrupalFileConfig: {
-				&shipshape.DrupalFileConfigCheck{
-					DrupalConfigBase: shipshape.DrupalConfigBase{},
+			drupal.DrupalFileConfig: {
+				&drupal.DrupalFileConfigCheck{
+					DrupalConfigBase: drupal.DrupalConfigBase{},
 					ConfigPath:       "",
 				},
 			},

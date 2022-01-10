@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"salsadigitalauorg/shipshape/pkg/core"
+	"salsadigitalauorg/shipshape/pkg/drupal"
 
 	"gopkg.in/yaml.v3"
 )
@@ -46,9 +48,9 @@ func (cfg *Config) Init() {
 	}
 }
 
-func (cfg *Config) RunChecks() ResultList {
-	rl := ResultList{
-		Results: map[string]Result{},
+func (cfg *Config) RunChecks() core.ResultList {
+	rl := core.ResultList{
+		Results: map[string]core.Result{},
 		Errors:  map[string]error{},
 	}
 
@@ -60,7 +62,7 @@ func (cfg *Config) RunChecks() ResultList {
 	return rl
 }
 
-func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
+func (cfg *Config) ProcessCheck(rl *core.ResultList, c core.Check) {
 	c.Init(cfg.ProjectDir, "")
 	err := c.FetchData()
 	if err != nil {
@@ -77,21 +79,21 @@ func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
 func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 	newcm := make(CheckMap)
 	for _, ct := range AllChecks {
-		check_values, err := LookupYamlPath(value, string(ct))
+		check_values, err := core.LookupYamlPath(value, string(ct))
 		if err != nil {
 			return err
 		}
 		for _, cv := range check_values {
-			var c Check
+			var c core.Check
 			switch ct {
-			case DrupalDBConfig:
-				c = &DrupalDBConfigCheck{}
-			case DrupalFileConfig:
-				c = &DrupalFileConfigCheck{}
-			case DrupalModules:
-				c = &DrupalFileModuleCheck{}
-			case DrupalActiveModules:
-				c = &DrupalActiveModuleCheck{}
+			case drupal.DrupalDBConfig:
+				c = &drupal.DrupalDBConfigCheck{}
+			case drupal.DrupalFileConfig:
+				c = &drupal.DrupalFileConfigCheck{}
+			case drupal.DrupalModules:
+				c = &drupal.DrupalFileModuleCheck{}
+			case drupal.DrupalActiveModules:
+				c = &drupal.DrupalActiveModuleCheck{}
 			default:
 				continue
 			}
@@ -109,27 +111,4 @@ func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 	}
 	*cm = newcm
 	return nil
-}
-
-func (c *CheckBase) Init(pd string, ct CheckType) {
-	c.ProjectDir = pd
-	if c.Result.CheckType == "" {
-		c.Result = Result{CheckType: ct}
-	}
-}
-
-func (c *CheckBase) GetName() string {
-	return c.Name
-}
-
-func (c *CheckBase) FetchData() error {
-	return nil
-}
-
-func (c *CheckBase) RunCheck() error {
-	return nil
-}
-
-func (c *CheckBase) GetResult() Result {
-	return c.Result
 }

@@ -1,4 +1,4 @@
-package shipshape
+package core
 
 import (
 	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"

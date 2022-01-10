@@ -1,7 +1,7 @@
-package shipshape_test
+package core_test
 
 import (
-	"salsadigitalauorg/shipshape/pkg/shipshape"
+	"salsadigitalauorg/shipshape/pkg/core"
 	"strings"
 	"testing"
 )
@@ -12,7 +12,7 @@ checks:
   drupal-db-config:
 	foo
 `)
-	y := shipshape.YamlCheck{}
+	y := core.YamlCheck{}
 	err := y.UnmarshalData(invalidData)
 	if err == nil || !strings.Contains(err.Error(), "yaml: line 4: found character that cannot start any token") {
 		t.Error("file parsing should fail")
@@ -24,7 +24,7 @@ checks:
     - name: My db check
       config-name: core.extension
 `)
-	y = shipshape.YamlCheck{}
+	y = core.YamlCheck{}
 	err = y.UnmarshalData(validData)
 	if err != nil {
 		t.Error("file parsing should succeed")
@@ -38,11 +38,11 @@ foo:
     - baz: zoo
 
 `)
-	y := shipshape.YamlCheck{}
+	y := core.YamlCheck{}
 	y.UnmarshalData(data)
 
 	// Invalid path.
-	_, err := y.CheckKeyValue(shipshape.KeyValue{
+	_, err := y.CheckKeyValue(core.KeyValue{
 		Key:   "&*&^);",
 		Value: "foo",
 	})
@@ -51,38 +51,38 @@ foo:
 	}
 
 	// Non-existent path.
-	kvr, err := y.CheckKeyValue(shipshape.KeyValue{
+	kvr, err := y.CheckKeyValue(core.KeyValue{
 		Key:   "foo.baz",
 		Value: "foo",
 	})
 	if err != nil {
 		t.Error("path lookup should succeed")
 	}
-	if kvr != shipshape.KeyValueNotFound {
+	if kvr != core.KeyValueNotFound {
 		t.Errorf("result should be KeyValueNotFound(-1), got %d", kvr)
 	}
 
 	// Wrong value.
-	kvr, err = y.CheckKeyValue(shipshape.KeyValue{
+	kvr, err = y.CheckKeyValue(core.KeyValue{
 		Key:   "foo.bar[0].baz",
 		Value: "zoom",
 	})
 	if err != nil {
 		t.Error("path lookup should succeed")
 	}
-	if kvr != shipshape.KeyValueNotEqual {
+	if kvr != core.KeyValueNotEqual {
 		t.Errorf("result should be KeyValueNotEqual(0), got %d", kvr)
 	}
 
 	// Correct value.
-	kvr, err = y.CheckKeyValue(shipshape.KeyValue{
+	kvr, err = y.CheckKeyValue(core.KeyValue{
 		Key:   "foo.bar[0].baz",
 		Value: "zoo",
 	})
 	if err != nil {
 		t.Error("path lookup should succeed")
 	}
-	if kvr != shipshape.KeyValueEqual {
+	if kvr != core.KeyValueEqual {
 		t.Errorf("result should be KeyValueEqual(1), got %d", kvr)
 	}
 }

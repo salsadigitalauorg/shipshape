@@ -1,20 +1,21 @@
-package shipshape_test
+package drupal_test
 
 import (
-	"salsadigitalauorg/shipshape/pkg/shipshape"
+	"salsadigitalauorg/shipshape/pkg/core"
+	"salsadigitalauorg/shipshape/pkg/drupal"
 	"testing"
 )
 
 func TestDrupalConfig(t *testing.T) {
-	c := shipshape.DrupalConfigBase{}
+	c := drupal.DrupalConfigBase{}
 	err := c.RunCheck()
 	if c.Result.Error != "no data to run check on" {
 		t.Errorf("Check should fail with error 'no data to run check on', got '%+v'", err)
 	}
 
-	mockCheck := func() shipshape.DrupalConfigBase {
-		return shipshape.DrupalConfigBase{
-			CheckBase: shipshape.CheckBase{
+	mockCheck := func() drupal.DrupalConfigBase {
+		return drupal.DrupalConfigBase{
+			CheckBase: core.CheckBase{
 				Data: []byte(`
 check:
   interval_days: 7
@@ -23,8 +24,8 @@ notification:
     - admin@example.com
 `),
 			},
-			YamlCheck: shipshape.YamlCheck{
-				Values: []shipshape.KeyValue{
+			YamlCheck: core.YamlCheck{
+				Values: []core.KeyValue{
 					{
 						Key:   "check.interval_days",
 						Value: "7",
@@ -40,7 +41,7 @@ notification:
 	if err != nil {
 		t.Errorf("Check should be successful, got error: %+v", err)
 	}
-	if c.Result.Status == shipshape.Fail {
+	if c.Result.Status == core.Fail {
 		t.Errorf("Check status should be Pass, got %s", c.Result.Status)
 	}
 	if len(c.Result.Passes) != 1 ||
@@ -53,7 +54,7 @@ notification:
 
 	// Wrong key, correct value.
 	c = mockCheck()
-	c.Values = []shipshape.KeyValue{
+	c.Values = []core.KeyValue{
 		{
 			Key:   "check.interval",
 			Value: "7",
@@ -63,7 +64,7 @@ notification:
 	if err != nil {
 		t.Errorf("Check should be successful, got error: %+v", err)
 	}
-	if c.Result.Status == shipshape.Pass {
+	if c.Result.Status == core.Pass {
 		t.Errorf("Check status should be Fail, got %s", c.Result.Status)
 	}
 	if len(c.Result.Failures) != 1 ||
@@ -76,7 +77,7 @@ notification:
 
 	// Correct key, wrong value.
 	c = mockCheck()
-	c.Values = []shipshape.KeyValue{
+	c.Values = []core.KeyValue{
 		{
 			Key:   "check.interval_days",
 			Value: "8",
@@ -86,7 +87,7 @@ notification:
 	if err != nil {
 		t.Errorf("Check should be successful, got error: %+v", err)
 	}
-	if c.Result.Status == shipshape.Pass {
+	if c.Result.Status == core.Pass {
 		t.Errorf("Check status should be Fail, got %s", c.Result.Status)
 	}
 	if len(c.Result.Failures) != 1 ||
@@ -99,7 +100,7 @@ notification:
 
 	// Multiple config values - all correct.
 	c = mockCheck()
-	c.Values = []shipshape.KeyValue{
+	c.Values = []core.KeyValue{
 		{
 			Key:   "check.interval_days",
 			Value: "7",
@@ -113,7 +114,7 @@ notification:
 	if err != nil {
 		t.Errorf("Check should be successful, got error: %+v", err)
 	}
-	if c.Result.Status == shipshape.Fail {
+	if c.Result.Status == core.Fail {
 		t.Errorf("Check status should be Pass, got %s", c.Result.Status)
 	}
 	if len(c.Result.Passes) != 2 ||
@@ -127,10 +128,10 @@ notification:
 }
 
 func TestDrupalFileConfig(t *testing.T) {
-	c := shipshape.DrupalFileConfigCheck{
-		DrupalConfigBase: shipshape.DrupalConfigBase{
-			YamlCheck: shipshape.YamlCheck{
-				Values: []shipshape.KeyValue{
+	c := drupal.DrupalFileConfigCheck{
+		DrupalConfigBase: drupal.DrupalConfigBase{
+			YamlCheck: core.YamlCheck{
+				Values: []core.KeyValue{
 					{
 						Key:   "check.interval_days",
 						Value: "7",
@@ -150,7 +151,7 @@ func TestDrupalFileConfig(t *testing.T) {
 	if err := c.RunCheck(); err != nil {
 		t.Errorf("RunCheck should succeed, but failed: %s", err)
 	}
-	if c.Result.Status != shipshape.Pass {
+	if c.Result.Status != core.Pass {
 		t.Errorf("Check result should be Pass, but got: %s", c.Result.Status)
 	}
 	if len(c.Result.Passes) != 1 || c.Result.Passes[0] != "'check.interval_days' is equal to '7'" {
@@ -159,9 +160,9 @@ func TestDrupalFileConfig(t *testing.T) {
 }
 
 func TestDrupalModules(t *testing.T) {
-	c := shipshape.DrupalFileModuleCheck{
-		DrupalFileConfigCheck: shipshape.DrupalFileConfigCheck{
-			DrupalConfigBase: shipshape.DrupalConfigBase{
+	c := drupal.DrupalFileModuleCheck{
+		DrupalFileConfigCheck: drupal.DrupalFileConfigCheck{
+			DrupalConfigBase: drupal.DrupalConfigBase{
 				ConfigName: "core.extension",
 			},
 			ConfigPath: "testdata/drupal-file-config",
@@ -184,7 +185,7 @@ func TestDrupalModules(t *testing.T) {
 	if err := c.RunCheck(); err != nil {
 		t.Errorf("RunCheck should succeed, but failed: %s", err)
 	}
-	if c.Result.Status != shipshape.Pass {
+	if c.Result.Status != core.Pass {
 		t.Errorf("Check result should be Pass, but got: %s", c.Result.Status)
 	}
 	if len(c.Result.Passes) != 4 {
