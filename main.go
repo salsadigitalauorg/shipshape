@@ -5,7 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
+	"text/tabwriter"
 )
 
 var projectDir string
@@ -31,7 +33,8 @@ func main() {
 		}
 		fmt.Println(string(data))
 	} else if outputFormat == "table" {
-		fmt.Printf("Result: %#v\n", r)
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+		r.TableDisplay(w)
 	}
 }
 
