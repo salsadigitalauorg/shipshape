@@ -7,15 +7,22 @@ import (
 	"salsadigitalauorg/shipshape/pkg/core"
 )
 
-func (c *DrupalConfigBase) RunCheck() error {
+func (c *DrupalConfigBase) RunCheck() {
 	if c.Data == nil {
-		c.Result.Error = "no data to run check on"
-		return nil
+		c.Result.Failures = append(
+			c.Result.Failures,
+			"no data to run check on",
+		)
+		return
 	}
 
 	err := c.UnmarshalData(c.Data)
 	if err != nil {
-		return err
+		c.Result.Failures = append(
+			c.Result.Failures,
+			err.Error(),
+		)
+		return
 	}
 
 	for _, cv := range c.Values {
@@ -49,28 +56,38 @@ func (c *DrupalConfigBase) RunCheck() error {
 			}
 		}
 	}
-	return nil
+	return
 }
 
-func (c *DrupalFileConfigCheck) FetchData() error {
+func (c *DrupalFileConfigCheck) FetchData() {
 	var err error
 	fullpath := filepath.Join(c.ProjectDir, c.ConfigPath, c.ConfigName+".yml")
 	c.Data, err = ioutil.ReadFile(fullpath)
 	if err != nil {
-		return err
+		c.Result.Failures = append(
+			c.Result.Failures,
+			err.Error(),
+		)
 	}
-	return nil
+	return
 }
 
-func (c *DrupalFileModuleCheck) RunCheck() error {
+func (c *DrupalFileModuleCheck) RunCheck() {
 	if c.Data == nil {
-		c.Result.Error = "no data to run check on"
-		return nil
+		c.Result.Failures = append(
+			c.Result.Failures,
+			"no data to run check on",
+		)
+		return
 	}
 
 	err := c.UnmarshalData(c.Data)
 	if err != nil {
-		return err
+		c.Result.Failures = append(
+			c.Result.Failures,
+			err.Error(),
+		)
+		return
 	}
 
 	for _, m := range c.Required {
@@ -129,11 +146,20 @@ func (c *DrupalFileModuleCheck) RunCheck() error {
 			}
 		}
 	}
-	err = c.DrupalFileConfigCheck.RunCheck()
-	return err
+	c.DrupalFileConfigCheck.RunCheck()
 }
 
 func (c *DrupalFileModuleCheck) Init(pd string, ct core.CheckType) {
 	c.CheckBase.Init(pd, ct)
 	c.ConfigName = "core.extension"
+}
+
+func (c *DrupalActiveModuleCheck) RunCheck() {
+	if c.Data == nil {
+		c.Result.Failures = append(
+			c.Result.Failures,
+			"no data to run check on",
+		)
+		return
+	}
 }

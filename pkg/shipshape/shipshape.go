@@ -49,10 +49,7 @@ func (cfg *Config) Init() {
 }
 
 func (cfg *Config) RunChecks() core.ResultList {
-	rl := core.ResultList{
-		Results: map[string]core.Result{},
-		Errors:  map[string]error{},
-	}
+	rl := core.ResultList{Results: map[string]core.Result{}}
 
 	for _, checks := range cfg.Checks {
 		for _, c := range checks {
@@ -64,14 +61,9 @@ func (cfg *Config) RunChecks() core.ResultList {
 
 func (cfg *Config) ProcessCheck(rl *core.ResultList, c core.Check) {
 	c.Init(cfg.ProjectDir, "")
-	err := c.FetchData()
-	if err != nil {
-		rl.Errors[c.GetName()] = err
-	}
-
-	err = c.RunCheck()
-	if err != nil {
-		rl.Errors[c.GetName()] = err
+	c.FetchData()
+	if len(c.GetResult().Failures) == 0 {
+		c.RunCheck()
 	}
 	rl.Results[c.GetName()] = c.GetResult()
 }

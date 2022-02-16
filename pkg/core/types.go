@@ -7,8 +7,8 @@ type CheckType string
 type Check interface {
 	Init(pd string, ct CheckType)
 	GetName() string
-	FetchData() error
-	RunCheck() error
+	FetchData()
+	RunCheck()
 	GetResult() Result
 }
 
@@ -25,12 +25,10 @@ type Result struct {
 	Status    CheckStatus `json:"status"`
 	Passes    []string    `json:"passes"`
 	Failures  []string    `json:"failures"`
-	Error     string      `json:"error"`
 }
 
 type ResultList struct {
 	Results map[string]Result `json:"results"`
-	Errors  map[string]error  `json:"errors"`
 }
 
 type CheckStatus string

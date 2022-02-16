@@ -8,9 +8,9 @@ import (
 
 func TestDrupalConfig(t *testing.T) {
 	c := drupal.DrupalConfigBase{}
-	err := c.RunCheck()
-	if c.Result.Error != "no data to run check on" {
-		t.Errorf("Check should fail with error 'no data to run check on', got '%+v'", err)
+	c.RunCheck()
+	if c.Result.Failures[0] != "no data to run check on" {
+		t.Errorf("Check should fail with error 'no data to run check on', got '%+v'", c.Result.Failures[0])
 	}
 
 	mockCheck := func() drupal.DrupalConfigBase {
@@ -37,10 +37,7 @@ notification:
 
 	c = mockCheck()
 
-	err = c.RunCheck()
-	if err != nil {
-		t.Errorf("Check should be successful, got error: %+v", err)
-	}
+	c.RunCheck()
 	if c.Result.Status == core.Fail {
 		t.Errorf("Check status should be Pass, got %s", c.Result.Status)
 	}
@@ -60,10 +57,7 @@ notification:
 			Value: "7",
 		},
 	}
-	err = c.RunCheck()
-	if err != nil {
-		t.Errorf("Check should be successful, got error: %+v", err)
-	}
+	c.RunCheck()
 	if c.Result.Status == core.Pass {
 		t.Errorf("Check status should be Fail, got %s", c.Result.Status)
 	}
@@ -83,10 +77,7 @@ notification:
 			Value: "8",
 		},
 	}
-	err = c.RunCheck()
-	if err != nil {
-		t.Errorf("Check should be successful, got error: %+v", err)
-	}
+	c.RunCheck()
 	if c.Result.Status == core.Pass {
 		t.Errorf("Check status should be Fail, got %s", c.Result.Status)
 	}
@@ -110,10 +101,7 @@ notification:
 			Value: "admin@example.com",
 		},
 	}
-	err = c.RunCheck()
-	if err != nil {
-		t.Errorf("Check should be successful, got error: %+v", err)
-	}
+	c.RunCheck()
 	if c.Result.Status == core.Fail {
 		t.Errorf("Check status should be Pass, got %s", c.Result.Status)
 	}
@@ -142,14 +130,16 @@ func TestDrupalFileConfig(t *testing.T) {
 		},
 		ConfigPath: "testdata/drupal-file-config",
 	}
-	if err := c.FetchData(); err != nil {
-		t.Errorf("FetchData should succeed, but failed: %s", err)
+	c.FetchData()
+	if len(c.Result.Failures) > 0 {
+		t.Errorf("FetchData should succeed, but failed: %+v", c.Result.Failures)
 	}
 	if c.Data == nil {
 		t.Errorf("c.Data should be filled, but is empty.")
 	}
-	if err := c.RunCheck(); err != nil {
-		t.Errorf("RunCheck should succeed, but failed: %s", err)
+	c.RunCheck()
+	if len(c.Result.Failures) > 0 {
+		t.Errorf("RunCheck should succeed, but failed: %+v", c.Result.Failures)
 	}
 	if c.Result.Status != core.Pass {
 		t.Errorf("Check result should be Pass, but got: %s", c.Result.Status)
@@ -176,14 +166,16 @@ func TestDrupalModules(t *testing.T) {
 			"field_ui",
 		},
 	}
-	if err := c.FetchData(); err != nil {
-		t.Errorf("FetchData should succeed, but failed: %s", err)
+	c.FetchData()
+	if len(c.Result.Failures) > 0 {
+		t.Errorf("FetchData should succeed, but failed: %+v", c.Result.Failures)
 	}
 	if c.Data == nil {
 		t.Errorf("c.Data should be filled, but is empty.")
 	}
-	if err := c.RunCheck(); err != nil {
-		t.Errorf("RunCheck should succeed, but failed: %s", err)
+	c.RunCheck()
+	if len(c.Result.Failures) > 0 {
+		t.Errorf("RunCheck should succeed, but failed: %+v", c.Result.Failures)
 	}
 	if c.Result.Status != core.Pass {
 		t.Errorf("Check result should be Pass, but got: %s", c.Result.Status)
