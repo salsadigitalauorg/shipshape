@@ -1,7 +1,6 @@
 package shipshape
 
 import (
-	"errors"
 	"io/ioutil"
 	"os"
 	"salsadigitalauorg/shipshape/pkg/core"
@@ -75,7 +74,10 @@ func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 		if err != nil {
 			return err
 		}
-		for _, cv := range check_values {
+		if len(check_values) == 0 {
+			continue
+		}
+		for _, cv := range check_values[0].Content {
 			var c core.Check
 			switch ct {
 			case drupal.DrupalDBConfig:
@@ -90,14 +92,10 @@ func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 				continue
 			}
 
-			if cv.Kind != yaml.SequenceNode {
-				return errors.New("yaml: unmarshal errors")
-			}
-			err := cv.Content[0].Decode(c)
+			err := cv.Decode(c)
 			if err != nil {
 				return err
 			}
-
 			newcm[ct] = append(newcm[ct], c)
 		}
 	}

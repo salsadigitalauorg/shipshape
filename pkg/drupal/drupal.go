@@ -56,7 +56,6 @@ func (c *DrupalConfigBase) RunCheck() {
 			}
 		}
 	}
-	return
 }
 
 func (c *DrupalFileConfigCheck) FetchData() {
@@ -69,7 +68,6 @@ func (c *DrupalFileConfigCheck) FetchData() {
 			err.Error(),
 		)
 	}
-	return
 }
 
 func (c *DrupalFileModuleCheck) RunCheck() {

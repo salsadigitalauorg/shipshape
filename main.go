@@ -19,7 +19,11 @@ func main() {
 	parseArgs()
 	validateOutputFormat(&outputFormat)
 
-	cfg, err := shipshape.ReadAndParseConfig(projectDir, "shipshape.yml")
+	if checksFile == "" {
+		checksFile = "shipshape.yml"
+	}
+
+	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFile)
 	if err != nil {
 		log.Fatal(err)
 	}
