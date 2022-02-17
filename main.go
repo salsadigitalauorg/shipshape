@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"salsadigitalauorg/shipshape/pkg/core"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"text/tabwriter"
 )
@@ -39,6 +40,10 @@ func main() {
 	} else if outputFormat == "table" {
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 		r.TableDisplay(w)
+	}
+
+	if r.Status() == core.Fail {
+		os.Exit(1)
 	}
 }
 

@@ -53,6 +53,15 @@ func (c *FileCheck) RunCheck() {
 	}
 }
 
+func (rl *ResultList) Status() CheckStatus {
+	for _, r := range rl.Results {
+		if r.Status == Fail {
+			return Fail
+		}
+	}
+	return Pass
+}
+
 func (rl *ResultList) TableDisplay(w *tabwriter.Writer) {
 	var linePass, lineFail string
 
