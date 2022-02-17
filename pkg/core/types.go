@@ -57,6 +57,7 @@ const (
 
 type FileCheck struct {
 	CheckBase         `yaml:",inline"`
+	Path              string `yaml:"path"`
 	DisallowedPattern string `yaml:"disallowed-pattern"`
 }
 

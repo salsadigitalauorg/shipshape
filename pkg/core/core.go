@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"path/filepath"
 	"salsadigitalauorg/shipshape/pkg/utils"
 	"text/tabwriter"
 )
@@ -26,12 +27,14 @@ func (c *CheckBase) GetResult() Result {
 }
 
 func (c *FileCheck) RunCheck() {
-	files, err := utils.FindFiles(c.ProjectDir, c.DisallowedPattern)
+	files, err := utils.FindFiles(filepath.Join(c.ProjectDir, c.Path), c.DisallowedPattern)
 	if err != nil {
+		c.Result.Status = Fail
 		c.Result.Failures = append(
 			c.Result.Failures,
 			err.Error(),
 		)
+		return
 	}
 	if len(files) == 0 {
 		c.Result.Status = Pass
