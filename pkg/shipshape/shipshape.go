@@ -80,6 +80,8 @@ func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 		for _, cv := range check_values[0].Content {
 			var c core.Check
 			switch ct {
+			case core.File:
+				c = &core.FileCheck{}
 			case drupal.DrupalDBConfig:
 				c = &drupal.DrupalDBConfigCheck{}
 			case drupal.DrupalFileConfig:

@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"salsadigitalauorg/shipshape/pkg/utils"
 	"text/tabwriter"
 )
 
@@ -24,11 +25,36 @@ func (c *CheckBase) GetResult() Result {
 	return c.Result
 }
 
+func (c *FileCheck) RunCheck() {
+	files, err := utils.FindFiles(c.ProjectDir, c.DisallowedPattern)
+	if err != nil {
+		c.Result.Failures = append(
+			c.Result.Failures,
+			err.Error(),
+		)
+	}
+	if len(files) == 0 {
+		c.Result.Status = Pass
+		c.Result.Passes = append(
+			c.Result.Passes,
+			"No illegal files",
+		)
+		return
+	}
+	c.Result.Status = Fail
+	for _, f := range files {
+		c.Result.Failures = append(
+			c.Result.Failures,
+			fmt.Sprintf("Illegal file found: %s", f),
+		)
+	}
+}
+
 func (rl *ResultList) TableDisplay(w *tabwriter.Writer) {
 	var linePass, lineFail string
 
 	if len(rl.Results) > 0 {
-		fmt.Fprintf(w, "NAME\tTYPE\tSTATUS\tPASSES\tFAILS\n")
+		fmt.Fprintf(w, "NAME\tSTATUS\tPASSES\tFAILS\n")
 		for _, r := range rl.Results {
 			linePass = ""
 			lineFail = ""
@@ -38,7 +64,7 @@ func (rl *ResultList) TableDisplay(w *tabwriter.Writer) {
 			if len(r.Failures) > 0 {
 				lineFail = r.Failures[0]
 			}
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", r.Name, r.CheckType, r.Status, linePass, lineFail)
+			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.Name, r.Status, linePass, lineFail)
 
 			if len(r.Passes) > 1 || len(r.Failures) > 1 {
 				numPasses := len(r.Passes)
@@ -57,9 +83,9 @@ func (rl *ResultList) TableDisplay(w *tabwriter.Writer) {
 						linePass = r.Passes[i]
 					}
 					if numFailures > i {
-						linePass = r.Failures[i]
+						lineFail = r.Failures[i]
 					}
-					fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", "", "", "", linePass, lineFail)
+					fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", "", "", linePass, lineFail)
 				}
 			}
 		}

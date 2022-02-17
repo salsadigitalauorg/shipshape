@@ -52,6 +52,15 @@ const (
 	KeyValueEqual    KeyValueResult = 1
 )
 
+type FileCheck struct {
+	CheckBase         `yaml:",inline"`
+	DisallowedPattern string `yaml:"disallowed-pattern"`
+}
+
+const (
+	File CheckType = "file"
+)
+
 type YamlCheck struct {
 	Values []KeyValue `yaml:"config-values"`
 	Node   yaml.Node

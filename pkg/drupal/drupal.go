@@ -9,6 +9,7 @@ import (
 
 func (c *DrupalConfigBase) RunCheck() {
 	if c.Data == nil {
+		c.Result.Status = core.Fail
 		c.Result.Failures = append(
 			c.Result.Failures,
 			"no data to run check on",
@@ -18,6 +19,7 @@ func (c *DrupalConfigBase) RunCheck() {
 
 	err := c.UnmarshalData(c.Data)
 	if err != nil {
+		c.Result.Status = core.Fail
 		c.Result.Failures = append(
 			c.Result.Failures,
 			err.Error(),
@@ -63,6 +65,7 @@ func (c *DrupalFileConfigCheck) FetchData() {
 	fullpath := filepath.Join(c.ProjectDir, c.ConfigPath, c.ConfigName+".yml")
 	c.Data, err = ioutil.ReadFile(fullpath)
 	if err != nil {
+		c.Result.Status = core.Fail
 		c.Result.Failures = append(
 			c.Result.Failures,
 			err.Error(),
@@ -72,6 +75,7 @@ func (c *DrupalFileConfigCheck) FetchData() {
 
 func (c *DrupalFileModuleCheck) RunCheck() {
 	if c.Data == nil {
+		c.Result.Status = core.Fail
 		c.Result.Failures = append(
 			c.Result.Failures,
 			"no data to run check on",
@@ -81,6 +85,7 @@ func (c *DrupalFileModuleCheck) RunCheck() {
 
 	err := c.UnmarshalData(c.Data)
 	if err != nil {
+		c.Result.Status = core.Fail
 		c.Result.Failures = append(
 			c.Result.Failures,
 			err.Error(),
@@ -154,6 +159,7 @@ func (c *DrupalFileModuleCheck) Init(pd string, ct core.CheckType) {
 
 func (c *DrupalActiveModuleCheck) RunCheck() {
 	if c.Data == nil {
+		c.Result.Status = core.Fail
 		c.Result.Failures = append(
 			c.Result.Failures,
 			"no data to run check on",

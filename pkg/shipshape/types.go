@@ -6,6 +6,7 @@ import (
 )
 
 var AllChecks = []core.CheckType{
+	core.File,
 	drupal.DrupalDBConfig,
 	drupal.DrupalFileConfig,
 	drupal.DrupalModules,
