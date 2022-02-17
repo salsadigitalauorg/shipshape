@@ -1,6 +1,7 @@
 package shipshape
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"salsadigitalauorg/shipshape/pkg/core"
@@ -74,9 +75,15 @@ func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 		if err != nil {
 			return err
 		}
+
 		if len(check_values) == 0 {
 			continue
 		}
+
+		if check_values[0].Kind != yaml.SequenceNode {
+			return errors.New("yaml: unmarshal errors")
+		}
+
 		for _, cv := range check_values[0].Content {
 			var c core.Check
 			switch ct {

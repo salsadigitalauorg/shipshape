@@ -24,3 +24,13 @@ func FindFiles(root, pattern string) ([]string, error) {
 	}
 	return matches, nil
 }
+
+func StringSliceContains(slice []string, item string) bool {
+	set := make(map[string]struct{}, len(slice))
+	for _, s := range slice {
+		set[s] = struct{}{}
+	}
+
+	_, ok := set[item]
+	return ok
+}

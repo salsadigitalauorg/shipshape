@@ -15,7 +15,7 @@ type Check interface {
 type CheckBase struct {
 	Name       string `yaml:"name"`
 	ProjectDir string `yaml:""`
-	Data       []byte
+	DataMap    map[string][]byte
 	Result     Result
 }
 
@@ -39,17 +39,20 @@ const (
 )
 
 type KeyValue struct {
-	Key   string `yaml:"key"`
-	Value string `yaml:"value"`
+	Key        string   `yaml:"key"`
+	Value      string   `yaml:"value"`
+	IsList     bool     `yaml:"is-list"`
+	Disallowed []string `yaml:"disallowed"`
 }
 
 type KeyValueResult int8
 
 const (
-	KeyValueError    KeyValueResult = -2
-	KeyValueNotFound KeyValueResult = -1
-	KeyValueNotEqual KeyValueResult = 0
-	KeyValueEqual    KeyValueResult = 1
+	KeyValueError           KeyValueResult = -2
+	KeyValueNotFound        KeyValueResult = -1
+	KeyValueNotEqual        KeyValueResult = 0
+	KeyValueEqual           KeyValueResult = 1
+	KeyValueDisallowedFound KeyValueResult = 2
 )
 
 type FileCheck struct {
@@ -62,6 +65,7 @@ const (
 )
 
 type YamlCheck struct {
-	Values []KeyValue `yaml:"config-values"`
-	Node   yaml.Node
+	Values  []KeyValue `yaml:"values"`
+	Node    yaml.Node
+	NodeMap map[string]yaml.Node
 }

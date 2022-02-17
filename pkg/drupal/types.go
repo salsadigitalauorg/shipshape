@@ -15,6 +15,7 @@ type DrupalConfigBase struct {
 	core.CheckBase `yaml:",inline"`
 	core.YamlCheck `yaml:",inline"`
 	ConfigName     string `yaml:"config-name"`
+	ConfigPattern  string `yaml:"config-pattern"`
 }
 
 type Drush struct {

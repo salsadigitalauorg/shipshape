@@ -3,14 +3,14 @@ checks:
   drupal-db-config:
     - name: Ensure correct update settings.
       config-name: update.settings
-      config-values:
+      values:
         - key: check.interval_days
           value: 7
   drupal-file-config:
     - name: File config check
       config-name: update.settings
       config-path: config/default
-      config-values:
+      values:
         - key: check.interval_days
           value: 7
   drupal-modules:
