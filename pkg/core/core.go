@@ -1,12 +1,13 @@
+// Package core provides the basic types and base functions for running checks
+// as well as the file check.
 package core
 
 import (
 	"fmt"
-	"path/filepath"
-	"salsadigitalauorg/shipshape/pkg/utils"
 	"text/tabwriter"
 )
 
+// Init acts as the constructor of a check and sets some initial values.
 func (c *CheckBase) Init(pd string, ct CheckType) {
 	c.ProjectDir = pd
 	if c.Result.CheckType == "" {
@@ -14,45 +15,27 @@ func (c *CheckBase) Init(pd string, ct CheckType) {
 	}
 }
 
+// GetName returns the name of a check.
 func (c *CheckBase) GetName() string {
 	return c.Name
 }
 
+// FetchData contains the logic for fetching the data over which the check is
+// going to run.
+// This is where c.DataMap should be populated.
 func (c *CheckBase) FetchData() {}
 
+// RunCheck contains the core logic for running the check and generating
+// the result.
+// This is where c.Result should be populated.
 func (c *CheckBase) RunCheck() {}
 
+// GetResult returns the value of c.Result.
 func (c *CheckBase) GetResult() Result {
 	return c.Result
 }
 
-func (c *FileCheck) RunCheck() {
-	files, err := utils.FindFiles(filepath.Join(c.ProjectDir, c.Path), c.DisallowedPattern)
-	if err != nil {
-		c.Result.Status = Fail
-		c.Result.Failures = append(
-			c.Result.Failures,
-			err.Error(),
-		)
-		return
-	}
-	if len(files) == 0 {
-		c.Result.Status = Pass
-		c.Result.Passes = append(
-			c.Result.Passes,
-			"No illegal files",
-		)
-		return
-	}
-	c.Result.Status = Fail
-	for _, f := range files {
-		c.Result.Failures = append(
-			c.Result.Failures,
-			fmt.Sprintf("Illegal file found: %s", f),
-		)
-	}
-}
-
+// Status calculates and returns the overall result of all check results.
 func (rl *ResultList) Status() CheckStatus {
 	for _, r := range rl.Results {
 		if r.Status == Fail {
@@ -62,6 +45,7 @@ func (rl *ResultList) Status() CheckStatus {
 	return Pass
 }
 
+// TableDisplay generates the tabular output for the ResultList.
 func (rl *ResultList) TableDisplay(w *tabwriter.Writer) {
 	var linePass, lineFail string
 
