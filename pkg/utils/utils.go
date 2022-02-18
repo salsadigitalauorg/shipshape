@@ -41,12 +41,15 @@ func FindFiles(root, pattern string, excludePattern string) ([]string, error) {
 	return matches, nil
 }
 
+// StringSliceContains determines whether an item exists in a slice of string.
 func StringSliceContains(slice []string, item string) bool {
+	if len(slice) == 0 {
+		return false
+	}
 	set := make(map[string]struct{}, len(slice))
 	for _, s := range slice {
 		set[s] = struct{}{}
 	}
-
 	_, ok := set[item]
 	return ok
 }

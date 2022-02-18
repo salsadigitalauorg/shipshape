@@ -44,3 +44,20 @@ func TestFindFiles(t *testing.T) {
 		t.Errorf("There should be exactly 3 files, got: %+v", files)
 	}
 }
+
+func TestStringSliceContains(t *testing.T) {
+	contains := utils.StringSliceContains([]string{}, "foo")
+	if contains == true {
+		t.Error("lookup in empty slice should be false")
+	}
+
+	contains = utils.StringSliceContains([]string{"bar"}, "foo")
+	if contains == true {
+		t.Error("lookup should return false")
+	}
+
+	contains = utils.StringSliceContains([]string{"bar", "foo"}, "foo")
+	if contains == false {
+		t.Error("lookup should return true")
+	}
+}
