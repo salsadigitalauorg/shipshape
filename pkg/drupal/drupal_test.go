@@ -130,7 +130,7 @@ func TestDrupalFileConfig(t *testing.T) {
 			},
 			ConfigName: "update.settings",
 		},
-		ConfigPath: "testdata/drupal-file-config",
+		Path: "testdata/drupal-file-config",
 	}
 	c.FetchData()
 	if len(c.Result.Failures) > 0 {
@@ -157,7 +157,7 @@ func TestDrupalModules(t *testing.T) {
 			DrupalConfigBase: drupal.DrupalConfigBase{
 				ConfigName: "core.extension",
 			},
-			ConfigPath: "testdata/drupal-file-config",
+			Path: "testdata/drupal-file-config",
 		},
 		Required: []string{
 			"node",

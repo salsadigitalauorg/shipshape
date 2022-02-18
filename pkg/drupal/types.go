@@ -25,7 +25,7 @@ type Drush struct {
 
 type DrupalFileConfigCheck struct {
 	DrupalConfigBase `yaml:",inline"`
-	ConfigPath       string `yaml:"config-path"`
+	Path             string `yaml:"path"`
 }
 
 type DrupalDBConfigCheck struct {

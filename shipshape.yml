@@ -9,13 +9,13 @@ checks:
   drupal-file-config:
     - name: File config check
       config-name: update.settings
-      config-path: config/default
+      path: config/default
       values:
         - key: check.interval_days
           value: 7
   drupal-modules:
     - name: Modules audit
-      config-path: config/default
+      path: config/default
       required:
         - govcms_security
         - tfa

@@ -87,7 +87,7 @@ func (c *DrupalFileConfigCheck) FetchData() {
 	var err error
 	c.DataMap = map[string][]byte{}
 	if c.ConfigName != "" {
-		fullPath := filepath.Join(c.ProjectDir, c.ConfigPath, c.ConfigName+".yml")
+		fullPath := filepath.Join(c.ProjectDir, c.Path, c.ConfigName+".yml")
 		c.DataMap[c.ConfigName+".yml"], err = ioutil.ReadFile(fullPath)
 		if err != nil {
 			c.Result.Status = core.Fail
@@ -101,7 +101,7 @@ func (c *DrupalFileConfigCheck) FetchData() {
 		fullPattern = strings.ReplaceAll(fullPattern, "*", ".*")
 		fullPattern = "^" + fullPattern + "\\.yml$"
 
-		configPath := filepath.Join(c.ProjectDir, c.ConfigPath)
+		configPath := filepath.Join(c.ProjectDir, c.Path)
 		files, err := utils.FindFiles(configPath, fullPattern)
 		if err != nil {
 			c.Result.Status = core.Fail

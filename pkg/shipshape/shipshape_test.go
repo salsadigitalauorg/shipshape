@@ -83,7 +83,7 @@ func TestRunChecks(t *testing.T) {
 			drupal.DrupalFileConfig: {
 				&drupal.DrupalFileConfigCheck{
 					DrupalConfigBase: drupal.DrupalConfigBase{},
-					ConfigPath:       "",
+					Path:             "",
 				},
 			},
 		},
