@@ -96,13 +96,9 @@ func (c *DrupalFileConfigCheck) FetchData() {
 				err.Error(),
 			)
 		}
-	} else if c.ConfigPattern != "" {
-		fullPattern := strings.ReplaceAll(c.ConfigPattern, ".", "\\.")
-		fullPattern = strings.ReplaceAll(fullPattern, "*", ".*")
-		fullPattern = "^" + fullPattern + "\\.yml$"
-
+	} else if c.Pattern != "" {
 		configPath := filepath.Join(c.ProjectDir, c.Path)
-		files, err := utils.FindFiles(configPath, fullPattern)
+		files, err := utils.FindFiles(configPath, c.Pattern, c.ExcludePattern)
 		if err != nil {
 			c.Result.Status = core.Fail
 			c.Result.Failures = append(
