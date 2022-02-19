@@ -62,11 +62,21 @@ type FileCheck struct {
 }
 
 const (
+	Yaml CheckType = "yaml"
 	File CheckType = "file"
 )
 
+type YamlBase struct {
+	CheckBase `yaml:",inline"`
+	Values    []KeyValue `yaml:"values"`
+	Node      yaml.Node
+	NodeMap   map[string]yaml.Node
+}
+
 type YamlCheck struct {
-	Values  []KeyValue `yaml:"values"`
-	Node    yaml.Node
-	NodeMap map[string]yaml.Node
+	YamlBase       `yaml:",inline"`
+	Path           string `yaml:"path"`
+	File           string `yaml:"file"`
+	Pattern        string `yaml:"pattern"`
+	ExcludePattern string `yaml:"exclude-pattern"`
 }

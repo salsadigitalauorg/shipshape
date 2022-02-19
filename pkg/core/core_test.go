@@ -30,8 +30,8 @@ func TestCheckBase(t *testing.T) {
 	if len(result.Failures) != 1 {
 		t.Error("there should be exactly one failure")
 	}
-	if result.Failures[0] != "Not implemented" {
-		t.Errorf("failure should be 'Not implemented', got '%s'", result.Failures[0])
+	if result.Failures[0] != "not implemented" {
+		t.Errorf("failure should be 'not implemented', got '%s'", result.Failures[0])
 	}
 }
 

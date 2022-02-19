@@ -30,7 +30,7 @@ func (c *CheckBase) FetchData() {}
 // This is where c.Result should be populated.
 func (c *CheckBase) RunCheck() {
 	c.Result.Status = Fail
-	c.Result.Failures = append(c.Result.Failures, "Not implemented")
+	c.Result.Failures = append(c.Result.Failures, "not implemented")
 }
 
 // GetResult returns the value of c.Result.

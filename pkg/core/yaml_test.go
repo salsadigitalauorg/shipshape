@@ -9,45 +9,45 @@ import (
 
 func TestYamlUnmarshalDataMap(t *testing.T) {
 	// Invalid data.
-	dataMap := map[string][]byte{
-		"data": []byte(`
+	y := core.YamlBase{
+		CheckBase: core.CheckBase{
+			DataMap: map[string][]byte{
+				"data": []byte(`
 checks:
   drupal-db-config:
 	foo
 `),
+			},
+		},
 	}
-	y := core.YamlCheck{}
-	err := y.UnmarshalDataMap(dataMap)
+	err := y.UnmarshalDataMap()
 	if err == nil || !strings.Contains(err.Error(), "yaml: line 4: found character that cannot start any token") {
-		t.Error("file parsing should fail")
+		t.Errorf("file parsing should fail with correct error, got %+v", err)
 	}
 
 	// Valid data.
-	dataMap["data"] = []byte(`
+	y.DataMap["data"] = []byte(`
 checks:
   drupal-db-config:
     - name: My db check
       config-name: core.extension
 `)
-	y = core.YamlCheck{}
-	err = y.UnmarshalDataMap(dataMap)
-	if err != nil {
-		t.Error("file parsing should succeed")
-	}
 }
 
 func TestYamlCheckKeyValue(t *testing.T) {
-	dataMap := map[string][]byte{
-		"data": []byte(`
+	y := core.YamlBase{
+		CheckBase: core.CheckBase{
+			DataMap: map[string][]byte{
+				"data": []byte(`
 foo:
   bar:
     - baz: zoo
 
 `),
+			},
+		},
 	}
-
-	y := core.YamlCheck{}
-	y.UnmarshalDataMap(dataMap)
+	y.UnmarshalDataMap()
 
 	// Invalid path.
 	_, _, err := y.CheckKeyValue(core.KeyValue{
@@ -96,8 +96,10 @@ foo:
 }
 
 func TestYamlCheckKeyValueList(t *testing.T) {
-	dataMap := map[string][]byte{
-		"data": []byte(`
+	y := core.YamlBase{
+		CheckBase: core.CheckBase{
+			DataMap: map[string][]byte{
+				"data": []byte(`
 foo:
   bar:
     - baz
@@ -105,9 +107,10 @@ foo:
     - zoom
 
 `),
+			},
+		},
 	}
-	y := core.YamlCheck{}
-	y.UnmarshalDataMap(dataMap)
+	y.UnmarshalDataMap()
 
 	// Disallowed list not provided.
 	_, _, err := y.CheckKeyValue(core.KeyValue{
@@ -150,4 +153,146 @@ foo:
 		t.Errorf("There should be no Failures, got %+v", fails)
 	}
 
+}
+
+func TestYamlBase(t *testing.T) {
+	c := core.YamlBase{}
+	c.RunCheck()
+	if c.Result.Failures[0] != "no data available" {
+		t.Errorf("Check should fail with error 'no data available', got '%+v'", c.Result.Failures[0])
+	}
+
+	mockCheck := func() core.YamlBase {
+		return core.YamlBase{
+			CheckBase: core.CheckBase{
+				DataMap: map[string][]byte{
+					"data": []byte(`
+check:
+  interval_days: 7
+notification:
+  emails:
+    - admin@example.com
+`),
+				},
+			},
+			Values: []core.KeyValue{
+				{
+					Key:   "check.interval_days",
+					Value: "7",
+				},
+			},
+		}
+	}
+
+	c = mockCheck()
+
+	c.RunCheck()
+	if c.Result.Status == core.Fail {
+		t.Logf("result: %#v", c.Result)
+		t.Error("Check should Pass")
+	}
+	if len(c.Result.Passes) != 1 ||
+		c.Result.Passes[0] != "[data] 'check.interval_days' equals '7'" {
+		t.Errorf("There should be only 1 Pass and it should be equal to ([data] 'check.interval_days' equals '7'), got %+v", c.Result.Passes)
+	}
+	if len(c.Result.Failures) != 0 {
+		t.Errorf("There should be no Failure, got %+v", c.Result.Failures)
+	}
+
+	// Wrong key, correct value.
+	c = mockCheck()
+	c.Values = []core.KeyValue{
+		{
+			Key:   "check.interval",
+			Value: "7",
+		},
+	}
+	c.RunCheck()
+	if c.Result.Status == core.Pass {
+		t.Errorf("Check status should be Fail, got %s", c.Result.Status)
+	}
+	if len(c.Result.Failures) != 1 ||
+		c.Result.Failures[0] != "[data] 'check.interval' not found" {
+		t.Errorf("There should be only 1 Failure and it should be equal to ([data] 'check.interval' not found), got %+v", c.Result.Failures)
+	}
+	if len(c.Result.Passes) != 0 {
+		t.Errorf("There should be no Pass, got %+v", c.Result.Passes)
+	}
+
+	// Correct key, wrong value.
+	c = mockCheck()
+	c.Values = []core.KeyValue{
+		{
+			Key:   "check.interval_days",
+			Value: "8",
+		},
+	}
+	c.RunCheck()
+	if c.Result.Status == core.Pass {
+		t.Errorf("Check status should be Fail, got %s", c.Result.Status)
+	}
+	if len(c.Result.Failures) != 1 ||
+		c.Result.Failures[0] != "[data] 'check.interval_days' equals '7'" {
+		t.Errorf("There should be only 1 Failure and it should be equal to ([data] 'check.interval_days' equals '7'), got %+v", c.Result.Failures)
+	}
+	if len(c.Result.Passes) != 0 {
+		t.Errorf("There should be no Pass, got %+v", c.Result.Passes)
+	}
+
+	// Multiple config values - all correct.
+	c = mockCheck()
+	c.Values = []core.KeyValue{
+		{
+			Key:   "check.interval_days",
+			Value: "7",
+		},
+		{
+			Key:   "notification.emails[0]",
+			Value: "admin@example.com",
+		},
+	}
+	c.RunCheck()
+	if c.Result.Status == core.Fail {
+		t.Errorf("Check status should be Pass, got %s", c.Result.Status)
+	}
+	if len(c.Result.Passes) != 2 ||
+		c.Result.Passes[0] != "[data] 'check.interval_days' equals '7'" ||
+		c.Result.Passes[1] != "[data] 'notification.emails[0]' equals 'admin@example.com'" {
+		t.Errorf("There should be 2 Passes, got %+v", c.Result.Passes)
+	}
+	if len(c.Result.Failures) != 0 {
+		t.Errorf("There should be no Failure, got %+v", c.Result.Failures)
+	}
+}
+
+func TestYamlCheck(t *testing.T) {
+	c := core.YamlCheck{
+		YamlBase: core.YamlBase{
+			Values: []core.KeyValue{
+				{
+					Key:   "check.interval_days",
+					Value: "7",
+				},
+			},
+		},
+		Path: "testdata/yaml",
+		File: "update.settings",
+	}
+	c.FetchData()
+	if len(c.Result.Failures) > 0 {
+		t.Errorf("FetchData should succeed, but failed: %+v", c.Result.Failures)
+	}
+	if c.DataMap == nil {
+		t.Errorf("c.DataMap should be filled, but is empty.")
+	}
+	c.RunCheck()
+	if len(c.Result.Failures) > 0 {
+		t.Errorf("RunCheck should succeed, but failed: %+v", c.Result.Failures)
+	}
+	if c.Result.Status != core.Pass {
+		t.Errorf("Check result should be Pass, but got: %s", c.Result.Status)
+	}
+	if len(c.Result.Passes) != 1 || c.Result.Passes[0] != "[update.settings.yml] 'check.interval_days' equals '7'" {
+		t.Errorf("There should be 1 Pass with value \"[update.settings.yml] 'check.interval_days' equals '7'\", but got: %+v", c.Result.Passes)
+	}
 }

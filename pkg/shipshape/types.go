@@ -7,10 +7,10 @@ import (
 
 var AllChecks = []core.CheckType{
 	core.File,
-	drupal.DBConfig,
-	drupal.FileConfig,
-	drupal.Modules,
-	drupal.ActiveModules,
+	core.Yaml,
+	drupal.DrushYaml,
+	drupal.FileModule,
+	drupal.DbModule,
 }
 
 type CheckMap map[core.CheckType][]core.Check
