@@ -5,13 +5,13 @@ import (
 )
 
 const (
-	DrupalDBConfig      core.CheckType = "drupal-db-config"
-	DrupalFileConfig    core.CheckType = "drupal-file-config"
-	DrupalModules       core.CheckType = "drupal-modules"
-	DrupalActiveModules core.CheckType = "drupal-active-modules"
+	DBConfig      core.CheckType = "drupal-db-config"
+	FileConfig    core.CheckType = "drupal-file-config"
+	Modules       core.CheckType = "drupal-modules"
+	ActiveModules core.CheckType = "drupal-active-modules"
 )
 
-type DrupalConfigBase struct {
+type ConfigBase struct {
 	core.CheckBase `yaml:",inline"`
 	core.YamlCheck `yaml:",inline"`
 	ConfigName     string `yaml:"config-name"`
@@ -24,23 +24,23 @@ type Drush struct {
 	Command string `yaml:"command"`
 }
 
-type DrupalFileConfigCheck struct {
-	DrupalConfigBase `yaml:",inline"`
-	Path             string `yaml:"path"`
+type FileConfigCheck struct {
+	ConfigBase `yaml:",inline"`
+	Path       string `yaml:"path"`
 }
 
-type DrupalDBConfigCheck struct {
-	DrupalConfigBase `yaml:",inline"`
-	Drush            `yaml:",inline"`
+type DBConfigCheck struct {
+	ConfigBase `yaml:",inline"`
+	Drush      `yaml:",inline"`
 }
 
-type DrupalFileModuleCheck struct {
-	DrupalFileConfigCheck `yaml:",inline"`
-	Required              []string `yaml:"required"`
-	Disallowed            []string `yaml:"disallowed"`
+type FileModuleCheck struct {
+	FileConfigCheck `yaml:",inline"`
+	Required        []string `yaml:"required"`
+	Disallowed      []string `yaml:"disallowed"`
 }
 
-type DrupalActiveModuleCheck struct {
+type ActiveModuleCheck struct {
 	Drush          `yaml:",inline"`
 	core.CheckBase `yaml:",inline"`
 	core.YamlCheck `yaml:",inline"`

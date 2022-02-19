@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (c *DrupalConfigBase) RunCheck() {
+func (c *ConfigBase) RunCheck() {
 	if c.DataMap == nil {
 		c.Result.Status = core.Fail
 		c.Result.Failures = append(
@@ -31,7 +31,7 @@ func (c *DrupalConfigBase) RunCheck() {
 	c.processDataMap()
 }
 
-func (c *DrupalConfigBase) processData(configName string) {
+func (c *ConfigBase) processData(configName string) {
 	for _, kv := range c.Values {
 		kvr, fails, err := c.CheckKeyValue(kv, configName)
 		switch kvr {
@@ -77,13 +77,13 @@ func (c *DrupalConfigBase) processData(configName string) {
 	}
 }
 
-func (c *DrupalConfigBase) processDataMap() {
+func (c *ConfigBase) processDataMap() {
 	for configName := range c.DataMap {
 		c.processData(configName)
 	}
 }
 
-func (c *DrupalFileConfigCheck) FetchData() {
+func (c *FileConfigCheck) FetchData() {
 	var err error
 	c.DataMap = map[string][]byte{}
 	if c.ConfigName != "" {
@@ -137,7 +137,7 @@ func (c *DrupalFileConfigCheck) FetchData() {
 	}
 }
 
-func (c *DrupalFileModuleCheck) RunCheck() {
+func (c *FileModuleCheck) RunCheck() {
 	if c.DataMap == nil {
 		c.Result.Status = core.Fail
 		c.Result.Failures = append(
@@ -213,15 +213,15 @@ func (c *DrupalFileModuleCheck) RunCheck() {
 			}
 		}
 	}
-	c.DrupalFileConfigCheck.RunCheck()
+	c.FileConfigCheck.RunCheck()
 }
 
-func (c *DrupalFileModuleCheck) Init(pd string, ct core.CheckType) {
+func (c *FileModuleCheck) Init(pd string, ct core.CheckType) {
 	c.CheckBase.Init(pd, ct)
 	c.ConfigName = "core.extension"
 }
 
-func (c *DrupalActiveModuleCheck) RunCheck() {
+func (c *ActiveModuleCheck) RunCheck() {
 	if c.DataMap == nil {
 		c.Result.Status = core.Fail
 		c.Result.Failures = append(

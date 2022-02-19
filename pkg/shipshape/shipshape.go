@@ -89,14 +89,14 @@ func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 			switch ct {
 			case core.File:
 				c = &core.FileCheck{}
-			case drupal.DrupalDBConfig:
-				c = &drupal.DrupalDBConfigCheck{}
-			case drupal.DrupalFileConfig:
-				c = &drupal.DrupalFileConfigCheck{}
-			case drupal.DrupalModules:
-				c = &drupal.DrupalFileModuleCheck{}
-			case drupal.DrupalActiveModules:
-				c = &drupal.DrupalActiveModuleCheck{}
+			case drupal.DBConfig:
+				c = &drupal.DBConfigCheck{}
+			case drupal.FileConfig:
+				c = &drupal.FileConfigCheck{}
+			case drupal.Modules:
+				c = &drupal.FileModuleCheck{}
+			case drupal.ActiveModules:
+				c = &drupal.ActiveModuleCheck{}
 			default:
 				continue
 			}

@@ -21,7 +21,6 @@ checks:
 	}
 
 	data := `
-drupal-root: web
 checks:
   drupal-db-config:
     - name: My db check
@@ -46,24 +45,20 @@ checks:
 		t.Errorf("Project dir should be '%s', got '%s'", currDir, cfg.ProjectDir)
 	}
 
-	if cfg.DrupalRoot != "web" {
-		t.Errorf("drupal root should be 'web', got %s", cfg.DrupalRoot)
+	if len(cfg.Checks[drupal.DBConfig]) == 0 {
+		t.Fatalf("DbConfig checks count should be 1, got %d", len(cfg.Checks[drupal.DBConfig]))
 	}
 
-	if len(cfg.Checks[drupal.DrupalDBConfig]) == 0 {
-		t.Fatalf("DbConfig checks count should be 1, got %d", len(cfg.Checks[drupal.DrupalDBConfig]))
+	if len(cfg.Checks[drupal.FileConfig]) == 0 {
+		t.Fatalf("FileConfig checks count should be 1, got %d", len(cfg.Checks[drupal.FileConfig]))
 	}
 
-	if len(cfg.Checks[drupal.DrupalFileConfig]) == 0 {
-		t.Fatalf("FileConfig checks count should be 1, got %d", len(cfg.Checks[drupal.DrupalFileConfig]))
-	}
-
-	ddc, ok := cfg.Checks[drupal.DrupalDBConfig][0].(*drupal.DrupalDBConfigCheck)
+	ddc, ok := cfg.Checks[drupal.DBConfig][0].(*drupal.DBConfigCheck)
 	if !ok || ddc.ConfigName != "core.extension" {
 		t.Fatalf("DbConfig check 1's config name should be core.extension, got %s", ddc.ConfigName)
 	}
 
-	dfc, ok := cfg.Checks[drupal.DrupalFileConfig][0].(*drupal.DrupalFileConfigCheck)
+	dfc, ok := cfg.Checks[drupal.FileConfig][0].(*drupal.FileConfigCheck)
 	if !ok || dfc.ConfigName != "core.extension" {
 		t.Fatalf("FileConfig check 1's config name should be core.extension, got %s", dfc.ConfigName)
 	}
@@ -72,18 +67,17 @@ checks:
 
 func TestRunChecks(t *testing.T) {
 	cfg := shipshape.Config{
-		DrupalRoot: "",
 		Checks: map[core.CheckType][]core.Check{
-			drupal.DrupalDBConfig: {
-				&drupal.DrupalDBConfigCheck{
-					DrupalConfigBase: drupal.DrupalConfigBase{},
-					Drush:            drupal.Drush{},
+			drupal.DBConfig: {
+				&drupal.DBConfigCheck{
+					ConfigBase: drupal.ConfigBase{},
+					Drush:      drupal.Drush{},
 				},
 			},
-			drupal.DrupalFileConfig: {
-				&drupal.DrupalFileConfigCheck{
-					DrupalConfigBase: drupal.DrupalConfigBase{},
-					Path:             "",
+			drupal.FileConfig: {
+				&drupal.FileConfigCheck{
+					ConfigBase: drupal.ConfigBase{},
+					Path:       "",
 				},
 			},
 		},

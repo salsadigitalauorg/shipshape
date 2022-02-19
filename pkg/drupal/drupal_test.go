@@ -7,14 +7,14 @@ import (
 )
 
 func TestDrupalConfig(t *testing.T) {
-	c := drupal.DrupalConfigBase{}
+	c := drupal.ConfigBase{}
 	c.RunCheck()
 	if c.Result.Failures[0] != "no data to run check on" {
 		t.Errorf("Check should fail with error 'no data to run check on', got '%+v'", c.Result.Failures[0])
 	}
 
-	mockCheck := func() drupal.DrupalConfigBase {
-		return drupal.DrupalConfigBase{
+	mockCheck := func() drupal.ConfigBase {
+		return drupal.ConfigBase{
 			CheckBase: core.CheckBase{
 				DataMap: map[string][]byte{
 					"data": []byte(`
@@ -118,8 +118,8 @@ notification:
 }
 
 func TestDrupalFileConfig(t *testing.T) {
-	c := drupal.DrupalFileConfigCheck{
-		DrupalConfigBase: drupal.DrupalConfigBase{
+	c := drupal.FileConfigCheck{
+		ConfigBase: drupal.ConfigBase{
 			YamlCheck: core.YamlCheck{
 				Values: []core.KeyValue{
 					{
@@ -152,9 +152,9 @@ func TestDrupalFileConfig(t *testing.T) {
 }
 
 func TestDrupalModules(t *testing.T) {
-	c := drupal.DrupalFileModuleCheck{
-		DrupalFileConfigCheck: drupal.DrupalFileConfigCheck{
-			DrupalConfigBase: drupal.DrupalConfigBase{
+	c := drupal.FileModuleCheck{
+		FileConfigCheck: drupal.FileConfigCheck{
+			ConfigBase: drupal.ConfigBase{
 				ConfigName: "core.extension",
 			},
 			Path: "testdata/drupal-file-config",
