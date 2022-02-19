@@ -49,7 +49,7 @@ func (cfg *Config) Init() {
 }
 
 func (cfg *Config) RunChecks() core.ResultList {
-	rl := core.ResultList{Results: map[string]core.Result{}}
+	rl := core.ResultList{Results: []core.Result{}}
 
 	for _, checks := range cfg.Checks {
 		for _, c := range checks {
@@ -65,7 +65,7 @@ func (cfg *Config) ProcessCheck(rl *core.ResultList, c core.Check) {
 	if len(c.GetResult().Failures) == 0 {
 		c.RunCheck()
 	}
-	rl.Results[c.GetName()] = c.GetResult()
+	rl.Results = append(rl.Results, c.GetResult())
 }
 
 func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {

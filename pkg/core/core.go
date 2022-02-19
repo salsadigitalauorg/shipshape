@@ -28,7 +28,10 @@ func (c *CheckBase) FetchData() {}
 // RunCheck contains the core logic for running the check and generating
 // the result.
 // This is where c.Result should be populated.
-func (c *CheckBase) RunCheck() {}
+func (c *CheckBase) RunCheck() {
+	c.Result.Status = Fail
+	c.Result.Failures = append(c.Result.Failures, "Not implemented")
+}
 
 // GetResult returns the value of c.Result.
 func (c *CheckBase) GetResult() Result {

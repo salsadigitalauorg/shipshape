@@ -28,7 +28,7 @@ type Result struct {
 }
 
 type ResultList struct {
-	Results map[string]Result `json:"results"`
+	Results []Result `json:"results"`
 }
 
 type CheckStatus string
