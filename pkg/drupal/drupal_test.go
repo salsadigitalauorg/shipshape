@@ -1,70 +1,107 @@
 package drupal_test
 
 import (
+	"reflect"
 	"salsadigitalauorg/shipshape/pkg/core"
 	"salsadigitalauorg/shipshape/pkg/drupal"
 	"testing"
 )
 
 func TestDrupalFileModule(t *testing.T) {
-	c := drupal.FileModuleCheck{
-		YamlCheck: core.YamlCheck{
-			YamlBase: core.YamlBase{
-				CheckBase: core.CheckBase{
-					DataMap: map[string][]byte{
-						"core.extension.yml": []byte(`
+	mockCheck := func() drupal.FileModuleCheck {
+		return drupal.FileModuleCheck{
+			YamlCheck: core.YamlCheck{
+				YamlBase: core.YamlBase{
+					CheckBase: core.CheckBase{
+						DataMap: map[string][]byte{
+							"core.extension.yml": []byte(`
 module:
   block: 0
   node: 0
 
 `),
+						},
 					},
 				},
+				File: "core.extension",
 			},
-			File: "core.extension",
-		},
-		Required: []string{
-			"node&foo",
-			"block",
-		},
-		Disallowed: []string{
-			"views_ui",
-			"field_ui",
-		},
+		}
+	}
+
+	// Invalid yaml key.
+	c := mockCheck()
+	c.Required = []string{
+		"node&foo",
+		"block",
+	}
+	c.Disallowed = []string{
+		"views_ui",
+		"field_ui&bar",
+	}
+	c.File = ""
+	c.Init("", drupal.FileModule)
+	if c.File != "core.extension" {
+		t.Errorf("File should be 'core.extension', got %s", c.File)
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	if c.Result.Status != core.Fail {
 		t.Error("RunCheck should Fail")
 	}
-	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "invalid character '&' at position 11, following \".node\"" {
-		t.Errorf("There should be exactly 1 Failure, got: %#v", c.Result.Failures)
+	expectedFails := []string{
+		"invalid character '&' at position 11, following \".node\"",
+		"invalid character '&' at position 15, following \".field_ui\"",
+	}
+	if len(c.Result.Failures) != 2 || !reflect.DeepEqual(expectedFails, c.Result.Failures) {
+		t.Errorf("There should be exactly 2 Failures, got: %#v", c.Result.Failures)
 	}
 
-	c = drupal.FileModuleCheck{
-		YamlCheck: core.YamlCheck{
-			YamlBase: core.YamlBase{
-				CheckBase: core.CheckBase{
-					DataMap: map[string][]byte{
-						"core.extension.yml": []byte(`
+	// Required is not enabled & disallowed is enabled.
+	c = mockCheck()
+	c.DataMap = map[string][]byte{
+		"core.extension.yml": []byte(`
 module:
   block: 0
-  node: 0
+  views_ui: 0
 
 `),
-					},
-				},
-			},
-			File: "core.extension",
-		},
-		Required: []string{
-			"node",
-			"block",
-		},
-		Disallowed: []string{
-			"views_ui",
-			"field_ui",
-		},
+	}
+	c.Required = []string{
+		"node",
+		"block",
+	}
+	c.Disallowed = []string{
+		"views_ui",
+		"field_ui",
+	}
+	c.UnmarshalDataMap()
+	c.RunCheck()
+	if c.Result.Status != core.Fail {
+		t.Error("Check should fail")
+	}
+	expectedFails = []string{
+		"'node' is not enabled",
+		"'views_ui' is enabled",
+	}
+	if len(c.Result.Failures) != 2 || !reflect.DeepEqual(expectedFails, c.Result.Failures) {
+		t.Errorf("There should be exactly 2 Failures, got %#v", c.Result.Failures)
+	}
+	expectedPasses := []string{
+		"'block' is enabled",
+		"'field_ui' is not enabled",
+	}
+	if len(c.Result.Passes) != 2 || !reflect.DeepEqual(expectedPasses, c.Result.Passes) {
+		t.Errorf("There should be exactly 2 Passes, got %#v", c.Result.Passes)
+	}
+
+	c = mockCheck()
+	c.Required = []string{
+		"node",
+		"block",
+	}
+	c.Disallowed = []string{
+		"views_ui",
+		"field_ui",
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
