@@ -17,26 +17,15 @@ func (c *FileCheck) RequiresData() bool { return false }
 func (c *FileCheck) RunCheck() {
 	files, err := utils.FindFiles(filepath.Join(c.ProjectDir, c.Path), c.DisallowedPattern, "")
 	if err != nil {
-		c.Result.Status = Fail
-		c.Result.Failures = append(
-			c.Result.Failures,
-			err.Error(),
-		)
+		c.AddFail(err.Error())
 		return
 	}
 	if len(files) == 0 {
 		c.Result.Status = Pass
-		c.Result.Passes = append(
-			c.Result.Passes,
-			"No illegal files",
-		)
+		c.AddPass("No illegal files")
 		return
 	}
-	c.Result.Status = Fail
 	for _, f := range files {
-		c.Result.Failures = append(
-			c.Result.Failures,
-			fmt.Sprintf("Illegal file found: %s", f),
-		)
+		c.AddFail(fmt.Sprintf("Illegal file found: %s", f))
 	}
 }

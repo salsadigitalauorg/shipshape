@@ -35,7 +35,7 @@ func (c *CheckBase) FetchData() {}
 func (c *CheckBase) HasData(failCheck bool) bool {
 	if c.DataMap == nil {
 		if failCheck {
-			c.FailCheck("no data available")
+			c.AddFail("no data available")
 		}
 		return false
 	}
@@ -46,12 +46,20 @@ func (c *CheckBase) HasData(failCheck bool) bool {
 // can be used to execute the check. Any failure here should fail the check.
 func (c *CheckBase) UnmarshalDataMap() {}
 
-// FailCheck sets the Check as Fail.
-func (c *CheckBase) FailCheck(estr string) {
+// AddFail appends a Fail to the Result and sets the Check as Fail.
+func (c *CheckBase) AddFail(msg string) {
 	c.Result.Status = Fail
 	c.Result.Failures = append(
 		c.Result.Failures,
-		estr,
+		msg,
+	)
+}
+
+// AddPass appends a Pass to the Result.
+func (c *CheckBase) AddPass(msg string) {
+	c.Result.Passes = append(
+		c.Result.Passes,
+		msg,
 	)
 }
 
@@ -59,8 +67,7 @@ func (c *CheckBase) FailCheck(estr string) {
 // the result.
 // This is where c.Result should be populated.
 func (c *CheckBase) RunCheck() {
-	c.Result.Status = Fail
-	c.Result.Failures = append(c.Result.Failures, "not implemented")
+	c.AddFail("not implemented")
 }
 
 // GetResult returns the value of c.Result.

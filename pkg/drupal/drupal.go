@@ -16,25 +16,11 @@ func (c *FileModuleCheck) RunCheck() {
 		}, c.File+".yml")
 		// It could be a value different from 0, which still means it's enabled.
 		if kvr == core.KeyValueEqual || kvr == core.KeyValueNotEqual {
-			c.Result.Passes = append(
-				c.Result.Passes,
-				fmt.Sprintf("'%s' is enabled", m),
-			)
-			if c.Result.Status == "" {
-				c.Result.Status = core.Pass
-			}
+			c.AddPass(fmt.Sprintf("'%s' is enabled", m))
 		} else if kvr == core.KeyValueError {
-			c.Result.Failures = append(
-				c.Result.Failures,
-				err.Error(),
-			)
-			c.Result.Status = core.Fail
+			c.AddFail(err.Error())
 		} else {
-			c.Result.Failures = append(
-				c.Result.Failures,
-				fmt.Sprintf("'%s' is not enabled", m),
-			)
-			c.Result.Status = core.Fail
+			c.AddFail(fmt.Sprintf("'%s' is not enabled", m))
 		}
 	}
 	for _, m := range c.Disallowed {
@@ -44,26 +30,18 @@ func (c *FileModuleCheck) RunCheck() {
 		}, c.File+".yml")
 		// It could be a value different from 0, which still means it's enabled.
 		if kvr == core.KeyValueEqual || kvr == core.KeyValueNotEqual {
-			c.Result.Failures = append(
-				c.Result.Failures,
-				fmt.Sprintf("'%s' is enabled", m),
-			)
-			c.Result.Status = core.Fail
+			c.AddFail(fmt.Sprintf("'%s' is enabled", m))
 		} else if kvr == core.KeyValueError {
-			c.Result.Failures = append(
-				c.Result.Failures,
-				err.Error(),
-			)
-			c.Result.Status = core.Fail
+			c.AddFail(err.Error())
 		} else {
-			c.Result.Passes = append(
-				c.Result.Passes,
-				fmt.Sprintf("'%s' is not enabled", m),
-			)
-			if c.Result.Status == "" {
-				c.Result.Status = core.Pass
-			}
+			c.AddPass(fmt.Sprintf("'%s' is not enabled", m))
 		}
+	}
+
+	if len(c.Result.Failures) > 0 {
+		c.Result.Status = core.Fail
+	} else {
+		c.Result.Status = core.Pass
 	}
 }
 

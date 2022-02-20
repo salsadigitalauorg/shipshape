@@ -36,7 +36,7 @@ func (y *YamlBase) UnmarshalDataMap() {
 		n := yaml.Node{}
 		err := yaml.Unmarshal([]byte(data), &n)
 		if err != nil {
-			y.FailCheck(err.Error())
+			y.AddFail(err.Error())
 			return
 		}
 		y.NodeMap[configName] = n
@@ -48,36 +48,18 @@ func (y *YamlBase) processData(configName string) {
 		kvr, fails, err := y.CheckKeyValue(kv, configName)
 		switch kvr {
 		case KeyValueError:
-			y.Result.Failures = append(
-				y.Result.Failures,
-				err.Error(),
-			)
+			y.AddFail(err.Error())
 		case KeyValueNotFound:
-			y.Result.Failures = append(
-				y.Result.Failures,
-				fmt.Sprintf("[%s] '%s' not found", configName, kv.Key),
-			)
+			y.AddFail(fmt.Sprintf("[%s] '%s' not found", configName, kv.Key))
 		case KeyValueNotEqual:
-			y.Result.Failures = append(
-				y.Result.Failures,
-				fmt.Sprintf("[%s] '%s' equals '%s'", configName, kv.Key, fails[0]),
-			)
+			y.AddFail(fmt.Sprintf("[%s] '%s' equals '%s'", configName, kv.Key, fails[0]))
 		case KeyValueDisallowedFound:
-			y.Result.Failures = append(
-				y.Result.Failures,
-				fmt.Sprintf("[%s] disallowed '%s': [%s]", configName, kv.Key, strings.Join(fails, ", ")),
-			)
+			y.AddFail(fmt.Sprintf("[%s] disallowed '%s': [%s]", configName, kv.Key, strings.Join(fails, ", ")))
 		case KeyValueEqual:
 			if kv.IsList {
-				y.Result.Passes = append(
-					y.Result.Passes,
-					fmt.Sprintf("[%s] no disallowed '%s'", configName, kv.Key),
-				)
+				y.AddPass(fmt.Sprintf("[%s] no disallowed '%s'", configName, kv.Key))
 			} else {
-				y.Result.Passes = append(
-					y.Result.Passes,
-					fmt.Sprintf("[%s] '%s' equals '%s'", configName, kv.Key, kv.Value),
-				)
+				y.AddPass(fmt.Sprintf("[%s] '%s' equals '%s'", configName, kv.Key, kv.Value))
 			}
 		}
 	}
@@ -131,30 +113,18 @@ func (y *YamlCheck) FetchData() {
 		fullPath := filepath.Join(y.ProjectDir, y.Path, y.File+".yml")
 		y.DataMap[y.File+".yml"], err = ioutil.ReadFile(fullPath)
 		if err != nil {
-			y.Result.Status = Fail
-			y.Result.Failures = append(
-				y.Result.Failures,
-				err.Error(),
-			)
+			y.AddFail(err.Error())
 		}
 	} else if y.Pattern != "" {
 		configPath := filepath.Join(y.ProjectDir, y.Path)
 		files, err := utils.FindFiles(configPath, y.Pattern, y.ExcludePattern)
 		if err != nil {
-			y.Result.Status = Fail
-			y.Result.Failures = append(
-				y.Result.Failures,
-				err.Error(),
-			)
+			y.AddFail(err.Error())
 			return
 		}
 
 		if len(files) == 0 {
-			y.Result.Status = Fail
-			y.Result.Failures = append(
-				y.Result.Failures,
-				"no matching config files found",
-			)
+			y.AddFail("no matching config files found")
 			return
 		}
 
@@ -162,20 +132,12 @@ func (y *YamlCheck) FetchData() {
 		for _, fname := range files {
 			l, err := ioutil.ReadFile(fname)
 			if err != nil {
-				y.Result.Status = Fail
-				y.Result.Failures = append(
-					y.Result.Failures,
-					err.Error(),
-				)
+				y.AddFail(err.Error())
 			}
 			_, file := filepath.Split(fname)
 			y.DataMap[file] = l
 		}
 	} else {
-		y.Result.Status = Fail
-		y.Result.Failures = append(
-			y.Result.Failures,
-			"no config file name provided",
-		)
+		y.AddFail("no config file name provided")
 	}
 }

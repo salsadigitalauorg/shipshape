@@ -24,6 +24,40 @@ module:
 			File: "core.extension",
 		},
 		Required: []string{
+			"node&foo",
+			"block",
+		},
+		Disallowed: []string{
+			"views_ui",
+			"field_ui",
+		},
+	}
+	c.UnmarshalDataMap()
+	c.RunCheck()
+	if c.Result.Status != core.Fail {
+		t.Error("RunCheck should Fail")
+	}
+	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "invalid character '&' at position 11, following \".node\"" {
+		t.Errorf("There should be exactly 1 Failure, got: %#v", c.Result.Failures)
+	}
+
+	c = drupal.FileModuleCheck{
+		YamlCheck: core.YamlCheck{
+			YamlBase: core.YamlBase{
+				CheckBase: core.CheckBase{
+					DataMap: map[string][]byte{
+						"core.extension.yml": []byte(`
+module:
+  block: 0
+  node: 0
+
+`),
+					},
+				},
+			},
+			File: "core.extension",
+		},
+		Required: []string{
 			"node",
 			"block",
 		},

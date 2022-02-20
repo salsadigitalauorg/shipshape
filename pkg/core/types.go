@@ -11,7 +11,8 @@ type Check interface {
 	HasData(failCheck bool) bool
 	FetchData()
 	UnmarshalDataMap()
-	FailCheck(estr string)
+	AddFail(msg string)
+	AddPass(msg string)
 	RunCheck()
 	GetResult() Result
 }
