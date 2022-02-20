@@ -25,41 +25,22 @@ func LookupYamlPath(y *yaml.Node, path string) ([]*yaml.Node, error) {
 }
 
 func (y *YamlBase) RunCheck() {
-	if y.DataMap == nil {
-		y.Result.Status = Fail
-		y.Result.Failures = append(
-			y.Result.Failures,
-			"no data available",
-		)
-		return
-	}
-
-	err := y.UnmarshalDataMap()
-	if err != nil {
-		y.Result.Status = Fail
-		y.Result.Failures = append(
-			y.Result.Failures,
-			err.Error(),
-		)
-		return
-	}
-
 	for configName := range y.DataMap {
 		y.processData(configName)
 	}
 }
 
-func (y *YamlBase) UnmarshalDataMap() error {
+func (y *YamlBase) UnmarshalDataMap() {
 	y.NodeMap = map[string]yaml.Node{}
 	for configName, data := range y.DataMap {
 		n := yaml.Node{}
 		err := yaml.Unmarshal([]byte(data), &n)
 		if err != nil {
-			return err
+			y.FailCheck(err.Error())
+			return
 		}
 		y.NodeMap[configName] = n
 	}
-	return nil
 }
 
 func (y *YamlBase) processData(configName string) {

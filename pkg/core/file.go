@@ -6,6 +6,11 @@ import (
 	"salsadigitalauorg/shipshape/pkg/utils"
 )
 
+// RequiresData implementation for file check.
+// Since this check acts on the existence of files on disk, it does not require
+// any data.
+func (c *FileCheck) RequiresData() bool { return false }
+
 // RunCheck implements the check logic for FileCheck.
 // It scans a directory for a list of disallowed files and fails it finds any,
 // otherwise passes.

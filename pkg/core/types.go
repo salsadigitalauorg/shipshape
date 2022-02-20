@@ -7,7 +7,11 @@ type CheckType string
 type Check interface {
 	Init(pd string, ct CheckType)
 	GetName() string
+	RequiresData() bool
+	HasData(failCheck bool) bool
 	FetchData()
+	UnmarshalDataMap()
+	FailCheck(estr string)
 	RunCheck()
 	GetResult() Result
 }

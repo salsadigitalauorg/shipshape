@@ -8,7 +8,7 @@ import (
 
 func TestYamlUnmarshalDataMap(t *testing.T) {
 	// Invalid data.
-	y := core.YamlBase{
+	c := core.YamlBase{
 		CheckBase: core.CheckBase{
 			DataMap: map[string][]byte{
 				"data": []byte(`
@@ -19,16 +19,16 @@ foo:
 			},
 		},
 	}
-	y.RunCheck()
-	if y.Result.Status != core.Fail {
+	c.UnmarshalDataMap()
+	if c.Result.Status != core.Fail {
 		t.Error("invalid yaml data should Fail")
 	}
-	if len(y.Result.Failures) != 1 || y.Result.Failures[0] != "yaml: line 4: found character that cannot start any token" {
-		t.Errorf("there should be exactly 1 error, got %#v", y.Result.Failures)
+	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "yaml: line 4: found character that cannot start any token" {
+		t.Errorf("there should be exactly 1 error, got %#v", c.Result.Failures)
 	}
 
 	// Valid data.
-	y = core.YamlBase{
+	c = core.YamlBase{
 		CheckBase: core.CheckBase{
 			DataMap: map[string][]byte{
 				"data": []byte(`
@@ -40,13 +40,13 @@ foo:
 			},
 		},
 	}
-	y.RunCheck()
-	if len(y.Result.Failures) > 0 {
-		t.Errorf("there should be no error, got %#v", y.Result.Failures)
+	c.UnmarshalDataMap()
+	if len(c.Result.Failures) > 0 {
+		t.Errorf("there should be no error, got %#v", c.Result.Failures)
 	}
 
-	// Invalid yaml key.
-	y = core.YamlBase{
+	// Invalid yaml kec.
+	c = core.YamlBase{
 		CheckBase: core.CheckBase{
 			DataMap: map[string][]byte{
 				"data": []byte(`
@@ -60,17 +60,17 @@ foo:
 			{Key: "baz&*zoom", Value: "zap"},
 		},
 	}
-	y.RunCheck()
-	if y.Result.Status != core.Fail {
+	c.RunCheck()
+	if c.Result.Status != core.Fail {
 		t.Error("invalid yaml key should Fail")
 	}
-	if len(y.Result.Failures) != 1 || y.Result.Failures[0] != "invalid character '&' at position 3, following \"baz\"" {
-		t.Errorf("there should be exactly 1 error, got %#v", y.Result.Failures)
+	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "invalid character '&' at position 3, following \"baz\"" {
+		t.Errorf("there should be exactly 1 error, got %#v", c.Result.Failures)
 	}
 }
 
 func TestYamlCheckKeyValue(t *testing.T) {
-	y := core.YamlBase{
+	c := core.YamlBase{
 		CheckBase: core.CheckBase{
 			DataMap: map[string][]byte{
 				"data": []byte(`
@@ -82,10 +82,10 @@ foo:
 			},
 		},
 	}
-	y.UnmarshalDataMap()
+	c.UnmarshalDataMap()
 
 	// Invalid path.
-	_, _, err := y.CheckKeyValue(core.KeyValue{
+	_, _, err := c.CheckKeyValue(core.KeyValue{
 		Key:   "&*&^);",
 		Value: "foo",
 	}, "data")
@@ -94,7 +94,7 @@ foo:
 	}
 
 	// Non-existent path.
-	kvr, _, err := y.CheckKeyValue(core.KeyValue{
+	kvr, _, err := c.CheckKeyValue(core.KeyValue{
 		Key:   "foo.baz",
 		Value: "foo",
 	}, "data")
@@ -106,7 +106,7 @@ foo:
 	}
 
 	// Wrong value.
-	kvr, _, err = y.CheckKeyValue(core.KeyValue{
+	kvr, _, err = c.CheckKeyValue(core.KeyValue{
 		Key:   "foo.bar[0].baz",
 		Value: "zoom",
 	}, "data")
@@ -118,7 +118,7 @@ foo:
 	}
 
 	// Correct value.
-	kvr, _, err = y.CheckKeyValue(core.KeyValue{
+	kvr, _, err = c.CheckKeyValue(core.KeyValue{
 		Key:   "foo.bar[0].baz",
 		Value: "zoo",
 	}, "data")
@@ -131,7 +131,7 @@ foo:
 }
 
 func TestYamlCheckKeyValueList(t *testing.T) {
-	y := core.YamlBase{
+	c := core.YamlBase{
 		CheckBase: core.CheckBase{
 			DataMap: map[string][]byte{
 				"data": []byte(`
@@ -145,10 +145,10 @@ foo:
 			},
 		},
 	}
-	y.UnmarshalDataMap()
+	c.UnmarshalDataMap()
 
 	// Disallowed list not provided.
-	_, _, err := y.CheckKeyValue(core.KeyValue{
+	_, _, err := c.CheckKeyValue(core.KeyValue{
 		Key:    "foo.bar",
 		IsList: true,
 	}, "data")
@@ -159,7 +159,7 @@ foo:
 	var kvr core.KeyValueResult
 	var fails []string
 	// Disallowed values in yaml.
-	kvr, fails, err = y.CheckKeyValue(core.KeyValue{
+	kvr, fails, err = c.CheckKeyValue(core.KeyValue{
 		Key:        "foo.bar",
 		IsList:     true,
 		Disallowed: []string{"baz", "zoo"},
@@ -176,7 +176,7 @@ foo:
 	}
 
 	// No disallowed values in yaml.
-	kvr, fails, _ = y.CheckKeyValue(core.KeyValue{
+	kvr, fails, _ = c.CheckKeyValue(core.KeyValue{
 		Key:        "foo.bar",
 		IsList:     true,
 		Disallowed: []string{"this should", "be a success"},
@@ -192,7 +192,7 @@ foo:
 
 func TestYamlBase(t *testing.T) {
 	c := core.YamlBase{}
-	c.RunCheck()
+	c.HasData(true)
 	if c.Result.Failures[0] != "no data available" {
 		t.Errorf("Check should fail with error 'no data available', got '%+v'", c.Result.Failures[0])
 	}
@@ -220,7 +220,7 @@ notification:
 	}
 
 	c = mockCheck()
-
+	c.UnmarshalDataMap()
 	c.RunCheck()
 	if c.Result.Status == core.Fail {
 		t.Logf("result: %#v", c.Result)
@@ -262,6 +262,7 @@ notification:
 			Value: "8",
 		},
 	}
+	c.UnmarshalDataMap()
 	c.RunCheck()
 	if c.Result.Status == core.Pass {
 		t.Errorf("Check status should be Fail, got %s", c.Result.Status)
@@ -286,6 +287,7 @@ notification:
 			Value: "admin@example.com",
 		},
 	}
+	c.UnmarshalDataMap()
 	c.RunCheck()
 	if c.Result.Status == core.Fail {
 		t.Errorf("Check status should be Pass, got %s", c.Result.Status)
@@ -323,23 +325,25 @@ foo:
 			},
 		}
 	}
-	y := mockCheck()
-	y.RunCheck()
-	if y.Result.Status != core.Fail {
+	c := mockCheck()
+	c.UnmarshalDataMap()
+	c.RunCheck()
+	if c.Result.Status != core.Fail {
 		t.Errorf("Check should Fail")
 	}
-	if len(y.Result.Failures) != 1 || y.Result.Failures[0] != "[data] disallowed 'foo': [b, c]" {
-		t.Errorf("There should be exactly 1 Failure, got: %#v", y.Result.Failures)
+	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "[data] disallowed 'foo': [b, c]" {
+		t.Errorf("There should be exactly 1 Failure, got: %#v", c.Result.Failures)
 	}
 
-	y = mockCheck()
-	y.Values[0].Disallowed = []string{"e"}
-	y.RunCheck()
-	if y.Result.Status != core.Pass {
+	c = mockCheck()
+	c.Values[0].Disallowed = []string{"e"}
+	c.UnmarshalDataMap()
+	c.RunCheck()
+	if c.Result.Status != core.Pass {
 		t.Errorf("Check should Pass")
 	}
-	if len(y.Result.Failures) > 0 {
-		t.Errorf("There should be no Failure, got: %#v", y.Result.Failures)
+	if len(c.Result.Failures) > 0 {
+		t.Errorf("There should be no Failure, got: %#v", c.Result.Failures)
 	}
 
 }
@@ -386,9 +390,10 @@ func TestYamlCheck(t *testing.T) {
 	if len(c.Result.Failures) > 0 {
 		t.Errorf("FetchData should succeed, but failed: %+v", c.Result.Failures)
 	}
-	if c.DataMap == nil {
-		t.Errorf("c.DataMap should be filled, but is empty.")
+	if !c.HasData(false) {
+		t.Errorf("c.DataMap should be filled, but is emptc.")
 	}
+	c.UnmarshalDataMap()
 	c.RunCheck()
 	if len(c.Result.Failures) > 0 {
 		t.Errorf("RunCheck should succeed, but failed: %+v", c.Result.Failures)
@@ -433,6 +438,7 @@ func TestYamlCheck(t *testing.T) {
 	if len(c.Result.Failures) > 0 {
 		t.Errorf("there should be no Failure, got: %#v", c.Result.Failures)
 	}
+	c.UnmarshalDataMap()
 	c.RunCheck()
 	if c.Result.Status != core.Fail {
 		t.Error("Check should Fail")

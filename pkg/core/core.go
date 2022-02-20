@@ -20,10 +20,40 @@ func (c *CheckBase) GetName() string {
 	return c.Name
 }
 
+// RequiresData indicates whether the check requires a DataMap to run against.
+// It is designed as opt-out, so remember to set it to false if you are creating
+// a check that does not require the DataMap.
+func (c *CheckBase) RequiresData() bool { return true }
+
 // FetchData contains the logic for fetching the data over which the check is
 // going to run.
 // This is where c.DataMap should be populated.
 func (c *CheckBase) FetchData() {}
+
+// HasData determines whether the dataMap has been populated or not.
+// The Check can optionally be marked as failed if the dataMap is not populated.
+func (c *CheckBase) HasData(failCheck bool) bool {
+	if c.DataMap == nil {
+		if failCheck {
+			c.FailCheck("no data available")
+		}
+		return false
+	}
+	return true
+}
+
+// UnmarshalDataMap attempts to parse the DataMap into a structure that
+// can be used to execute the check. Any failure here should fail the check.
+func (c *CheckBase) UnmarshalDataMap() {}
+
+// FailCheck sets the Check as Fail.
+func (c *CheckBase) FailCheck(estr string) {
+	c.Result.Status = Fail
+	c.Result.Failures = append(
+		c.Result.Failures,
+		estr,
+	)
+}
 
 // RunCheck contains the core logic for running the check and generating
 // the result.

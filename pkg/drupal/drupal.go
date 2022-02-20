@@ -5,26 +5,10 @@ import (
 	"salsadigitalauorg/shipshape/pkg/core"
 )
 
+// RunCheck applies the Check logic for Drupal Modules in config files.
+// It uses YamlCheck as a base to verify that the list of provided Required or
+// Disallowed modules are installed or not.
 func (c *FileModuleCheck) RunCheck() {
-	if c.DataMap == nil {
-		c.Result.Status = core.Fail
-		c.Result.Failures = append(
-			c.Result.Failures,
-			"no data to run check on",
-		)
-		return
-	}
-
-	err := c.UnmarshalDataMap()
-	if err != nil {
-		c.Result.Status = core.Fail
-		c.Result.Failures = append(
-			c.Result.Failures,
-			err.Error(),
-		)
-		return
-	}
-
 	for _, m := range c.Required {
 		kvr, _, err := c.CheckKeyValue(core.KeyValue{
 			Key:   "module." + m,
@@ -81,7 +65,6 @@ func (c *FileModuleCheck) RunCheck() {
 			}
 		}
 	}
-	c.YamlCheck.RunCheck()
 }
 
 func (c *FileModuleCheck) Init(pd string, ct core.CheckType) {
@@ -89,13 +72,4 @@ func (c *FileModuleCheck) Init(pd string, ct core.CheckType) {
 	c.File = "core.extension"
 }
 
-func (c *DbModuleCheck) RunCheck() {
-	if c.DataMap == nil {
-		c.Result.Status = core.Fail
-		c.Result.Failures = append(
-			c.Result.Failures,
-			"no data to run check on",
-		)
-		return
-	}
-}
+func (c *DbModuleCheck) RunCheck() {}

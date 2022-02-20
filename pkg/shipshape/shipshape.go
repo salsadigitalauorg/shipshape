@@ -11,30 +11,30 @@ import (
 )
 
 func ReadAndParseConfig(projectDir string, f string) (Config, error) {
-	c := Config{}
+	cfg := Config{}
 	data, err := ioutil.ReadFile(f)
 	if err != nil {
-		return c, err
+		return cfg, err
 	}
-	err = ParseConfig(data, projectDir, &c)
-	return c, err
+	err = ParseConfig(data, projectDir, &cfg)
+	return cfg, err
 }
 
-func ParseConfig(data []byte, projectDir string, c *Config) error {
-	err := yaml.Unmarshal(data, &c)
+func ParseConfig(data []byte, projectDir string, cfg *Config) error {
+	err := yaml.Unmarshal(data, &cfg)
 	if err != nil {
 		return err
 	}
 
-	if c.ProjectDir == "" && projectDir != "" {
-		c.ProjectDir = projectDir
+	if cfg.ProjectDir == "" && projectDir != "" {
+		cfg.ProjectDir = projectDir
 	} else {
 		// Default project directory is current directory.
 		projectDir, err = os.Getwd()
 		if err != nil {
 			return err
 		}
-		c.ProjectDir = projectDir
+		cfg.ProjectDir = projectDir
 	}
 
 	return nil
@@ -50,7 +50,6 @@ func (cfg *Config) Init() {
 
 func (cfg *Config) RunChecks() core.ResultList {
 	rl := core.ResultList{Results: []core.Result{}}
-
 	for _, checks := range cfg.Checks {
 		for _, c := range checks {
 			cfg.ProcessCheck(&rl, c)
@@ -61,7 +60,11 @@ func (cfg *Config) RunChecks() core.ResultList {
 
 func (cfg *Config) ProcessCheck(rl *core.ResultList, c core.Check) {
 	c.Init(cfg.ProjectDir, "")
-	c.FetchData()
+	if c.RequiresData() {
+		c.FetchData()
+		c.HasData(true)
+		c.UnmarshalDataMap()
+	}
 	if len(c.GetResult().Failures) == 0 {
 		c.RunCheck()
 	}

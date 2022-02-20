@@ -32,6 +32,7 @@ module:
 			"field_ui",
 		},
 	}
+	c.UnmarshalDataMap()
 	c.RunCheck()
 	if len(c.Result.Failures) > 0 {
 		t.Errorf("RunCheck should succeed, but failed: %+v", c.Result.Failures)
