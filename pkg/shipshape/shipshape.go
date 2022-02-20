@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"salsadigitalauorg/shipshape/pkg/core"
 	"salsadigitalauorg/shipshape/pkg/drupal"
 
@@ -12,7 +13,7 @@ import (
 
 func ReadAndParseConfig(projectDir string, f string) (Config, error) {
 	cfg := Config{}
-	data, err := ioutil.ReadFile(f)
+	data, err := ioutil.ReadFile(filepath.Join(projectDir, f))
 	if err != nil {
 		return cfg, err
 	}
@@ -30,10 +31,7 @@ func ParseConfig(data []byte, projectDir string, cfg *Config) error {
 		cfg.ProjectDir = projectDir
 	} else {
 		// Default project directory is current directory.
-		projectDir, err = os.Getwd()
-		if err != nil {
-			return err
-		}
+		projectDir, _ = os.Getwd()
 		cfg.ProjectDir = projectDir
 	}
 

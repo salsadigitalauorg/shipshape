@@ -1,18 +1,22 @@
 checks:
-  drupal-db-config:
-    - name: Ensure correct update settings.
-      config-name: update.settings
-      values:
-        - key: check.interval_days
-          value: 7
-  drupal-file-config:
+  file:
+    - name: Illegal files
+      path: web
+      disallowed-pattern: '^(adminer|phpmyadmin|bigdump)?\.php$'
+  yaml:
     - name: File config check
       config-name: update.settings
       path: config/default
       values:
         - key: check.interval_days
           value: 7
-  drupal-modules:
+  drush-yaml:
+    - name: Ensure correct update settings.
+      config-name: update.settings
+      values:
+        - key: check.interval_days
+          value: 7
+  drupal-file-module:
     - name: Modules audit
       path: config/default
       required:
@@ -22,7 +26,7 @@ checks:
         - dblog
         - module_permissions_ui
         - update
-  drupal-active-modules:
+  drupal-db-module:
     - name: Active modules audit
       required:
         - govcms_security

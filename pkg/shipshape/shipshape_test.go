@@ -9,6 +9,18 @@ import (
 	"testing"
 )
 
+func TestReadAndParseConfig(t *testing.T) {
+	_, err := shipshape.ReadAndParseConfig("testdata", "nonexistent.yml")
+	if err == nil || err.Error() != "open testdata/nonexistent.yml: no such file or directory" {
+		t.Errorf("file read should fail, got %#v", err)
+	}
+
+	_, err = shipshape.ReadAndParseConfig("testdata", "shipshape.yml")
+	if err != nil {
+		t.Errorf("file read should pass, got %#v", err)
+	}
+}
+
 func TestParseConfig(t *testing.T) {
 	invalidData := `
 checks:
@@ -29,6 +41,8 @@ checks:
     - name: My file check
       file: core.extension
       path: config/sync
+  foo:
+    - name: bar
 `
 	cfg = shipshape.Config{}
 	err = shipshape.ParseConfig([]byte(data), "", &cfg)
@@ -67,7 +81,10 @@ checks:
 
 func TestRunChecks(t *testing.T) {
 	cfg := shipshape.Config{
-		Checks: map[core.CheckType][]core.Check{},
+		Checks: map[core.CheckType][]core.Check{
+			core.File: {&core.FileCheck{}},
+			core.Yaml: {&core.YamlCheck{}},
+		},
 	}
 	cfg.RunChecks()
 }
