@@ -43,7 +43,10 @@ func (y *YamlBase) RunCheck() {
 		)
 		return
 	}
-	y.processDataMap()
+
+	for configName := range y.DataMap {
+		y.processData(configName)
+	}
 }
 
 func (y *YamlBase) UnmarshalDataMap() error {
@@ -89,25 +92,18 @@ func (y *YamlBase) processData(configName string) {
 					y.Result.Passes,
 					fmt.Sprintf("[%s] no disallowed '%s'", configName, kv.Key),
 				)
-				continue
-			}
-			y.Result.Passes = append(
-				y.Result.Passes,
-				fmt.Sprintf("[%s] '%s' equals '%s'", configName, kv.Key, kv.Value),
-			)
-			if y.Result.Status == "" {
-				y.Result.Status = Pass
+			} else {
+				y.Result.Passes = append(
+					y.Result.Passes,
+					fmt.Sprintf("[%s] '%s' equals '%s'", configName, kv.Key, kv.Value),
+				)
 			}
 		}
 	}
-	if y.Result.Status == "" {
+	if len(y.Result.Failures) != 0 {
 		y.Result.Status = Fail
-	}
-}
-
-func (y *YamlBase) processDataMap() {
-	for configName := range y.DataMap {
-		y.processData(configName)
+	} else {
+		y.Result.Status = Pass
 	}
 }
 
@@ -169,6 +165,7 @@ func (y *YamlCheck) FetchData() {
 				y.Result.Failures,
 				err.Error(),
 			)
+			return
 		}
 
 		if len(files) == 0 {
@@ -177,6 +174,7 @@ func (y *YamlCheck) FetchData() {
 				y.Result.Failures,
 				"no matching config files found",
 			)
+			return
 		}
 
 		y.DataMap = map[string][]byte{}

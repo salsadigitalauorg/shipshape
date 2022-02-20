@@ -3,7 +3,6 @@ package core_test
 import (
 	"reflect"
 	"salsadigitalauorg/shipshape/pkg/core"
-	"strings"
 	"testing"
 )
 
@@ -13,25 +12,61 @@ func TestYamlUnmarshalDataMap(t *testing.T) {
 		CheckBase: core.CheckBase{
 			DataMap: map[string][]byte{
 				"data": []byte(`
-checks:
-  drupal-db-config:
-	foo
+foo:
+  bar:
+	baz
 `),
 			},
 		},
 	}
-	err := y.UnmarshalDataMap()
-	if err == nil || !strings.Contains(err.Error(), "yaml: line 4: found character that cannot start any token") {
-		t.Errorf("file parsing should fail with correct error, got %+v", err)
+	y.RunCheck()
+	if y.Result.Status != core.Fail {
+		t.Error("invalid yaml data should Fail")
+	}
+	if len(y.Result.Failures) != 1 || y.Result.Failures[0] != "yaml: line 4: found character that cannot start any token" {
+		t.Errorf("there should be exactly 1 error, got %#v", y.Result.Failures)
 	}
 
 	// Valid data.
-	y.DataMap["data"] = []byte(`
-checks:
-  drupal-db-config:
-    - name: My db check
-      config-name: core.extension
-`)
+	y = core.YamlBase{
+		CheckBase: core.CheckBase{
+			DataMap: map[string][]byte{
+				"data": []byte(`
+foo:
+  bar:
+    - name: baz
+      value: zoom
+`),
+			},
+		},
+	}
+	y.RunCheck()
+	if len(y.Result.Failures) > 0 {
+		t.Errorf("there should be no error, got %#v", y.Result.Failures)
+	}
+
+	// Invalid yaml key.
+	y = core.YamlBase{
+		CheckBase: core.CheckBase{
+			DataMap: map[string][]byte{
+				"data": []byte(`
+foo:
+  bar:
+    baz&*zoom: zap
+`),
+			},
+		},
+		Values: []core.KeyValue{
+			{Key: "baz&*zoom", Value: "zap"},
+		},
+	}
+	y.RunCheck()
+	if y.Result.Status != core.Fail {
+		t.Error("invalid yaml key should Fail")
+	}
+	if len(y.Result.Failures) != 1 || y.Result.Failures[0] != "invalid character '&' at position 3, following \"baz\"" {
+		t.Errorf("there should be exactly 1 error, got %#v", y.Result.Failures)
+	}
 }
 
 func TestYamlCheckKeyValue(t *testing.T) {
@@ -265,19 +300,88 @@ notification:
 	}
 }
 
-func TestYamlCheck(t *testing.T) {
-	c := core.YamlCheck{
-		YamlBase: core.YamlBase{
-			Values: []core.KeyValue{
-				{
-					Key:   "check.interval_days",
-					Value: "7",
+func TestYamlBaseListValues(t *testing.T) {
+	mockCheck := func() core.YamlBase {
+		return core.YamlBase{
+			CheckBase: core.CheckBase{
+				DataMap: map[string][]byte{
+					"data": []byte(`
+foo:
+  - a
+  - b
+  - c
+  - d
+`),
 				},
 			},
-		},
-		Path: "testdata/yaml",
-		File: "update.settings",
+			Values: []core.KeyValue{
+				{
+					Key:        "foo",
+					IsList:     true,
+					Disallowed: []string{"b", "c"},
+				},
+			},
+		}
 	}
+	y := mockCheck()
+	y.RunCheck()
+	if y.Result.Status != core.Fail {
+		t.Errorf("Check should Fail")
+	}
+	if len(y.Result.Failures) != 1 || y.Result.Failures[0] != "[data] disallowed 'foo': [b, c]" {
+		t.Errorf("There should be exactly 1 Failure, got: %#v", y.Result.Failures)
+	}
+
+	y = mockCheck()
+	y.Values[0].Disallowed = []string{"e"}
+	y.RunCheck()
+	if y.Result.Status != core.Pass {
+		t.Errorf("Check should Pass")
+	}
+	if len(y.Result.Failures) > 0 {
+		t.Errorf("There should be no Failure, got: %#v", y.Result.Failures)
+	}
+
+}
+
+func TestYamlCheck(t *testing.T) {
+	mockCheck := func() core.YamlCheck {
+		return core.YamlCheck{
+			YamlBase: core.YamlBase{
+				Values: []core.KeyValue{
+					{
+						Key:   "check.interval_days",
+						Value: "7",
+					},
+				},
+			},
+			Path: "testdata/yaml",
+		}
+	}
+
+	c := mockCheck()
+	c.FetchData()
+	if c.Result.Status != core.Fail {
+		t.Error("Check with no File or Pattern should Fail")
+	}
+	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "no config file name provided" {
+		t.Errorf("there should be exactly 1 Failure, got: %#v", c.Result.Failures)
+	}
+
+	// Non-existent file.
+	c = mockCheck()
+	c.File = "non-existent"
+	c.FetchData()
+	if c.Result.Status != core.Fail {
+		t.Error("Check with non-existent file should Fail")
+	}
+	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "open testdata/yaml/non-existent.yml: no such file or directory" {
+		t.Errorf("there should be exactly 1 Failure, got: %#v", c.Result.Failures)
+	}
+
+	// Single file.
+	c = mockCheck()
+	c.File = "update.settings"
 	c.FetchData()
 	if len(c.Result.Failures) > 0 {
 		t.Errorf("FetchData should succeed, but failed: %+v", c.Result.Failures)
@@ -294,5 +398,49 @@ func TestYamlCheck(t *testing.T) {
 	}
 	if len(c.Result.Passes) != 1 || c.Result.Passes[0] != "[update.settings.yml] 'check.interval_days' equals '7'" {
 		t.Errorf("There should be 1 Pass with value \"[update.settings.yml] 'check.interval_days' equals '7'\", but got: %+v", c.Result.Passes)
+	}
+
+	// File pattern, no path.
+	c = mockCheck()
+	c.Pattern = "*.bar.yml"
+	c.Path = ""
+	c.FetchData()
+	if c.Result.Status != core.Fail {
+		t.Error("Check with no path or project dir should fail")
+	}
+	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "directory not provided" {
+		t.Errorf("there should be exactly 1 Failure, got: %#v", c.Result.Failures)
+	}
+
+	// File pattern with no matching files.
+	c = mockCheck()
+	c.Pattern = "bla.*.yml"
+	c.FetchData()
+	if c.Result.Status != core.Fail {
+		t.Error("Check should Fail")
+	}
+	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "no matching config files found" {
+		t.Errorf("there should be exactly 1 Failure, got: %#v", c.Result.Failures)
+	}
+
+	// Correct file pattern.
+	c = mockCheck()
+	c.Pattern = ".*.bar.yml"
+	c.FetchData()
+	if c.Result.Status == core.Fail {
+		t.Error("Check should not Fail yet")
+	}
+	if len(c.Result.Failures) > 0 {
+		t.Errorf("there should be no Failure, got: %#v", c.Result.Failures)
+	}
+	c.RunCheck()
+	if c.Result.Status != core.Fail {
+		t.Error("Check should Fail")
+	}
+	if len(c.Result.Failures) != 1 || len(c.Result.Passes) != 1 {
+		t.Errorf("there should be exactly 1 Failure and 1 Pass, got Failures: %#v, Passes: %#v", c.Result.Failures, c.Result.Passes)
+	}
+	if c.Result.Failures[0] != "[zoom.bar.yml] 'check.interval_days' equals '5'" || c.Result.Passes[0] != "[foo.bar.yml] 'check.interval_days' equals '7'" {
+		t.Errorf("wrong value for Failure or Pass, got Failures: %#v, Passes: %#v", c.Result.Failures, c.Result.Passes)
 	}
 }
