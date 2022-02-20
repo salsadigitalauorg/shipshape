@@ -10,14 +10,14 @@ import (
 )
 
 func TestReadAndParseConfig(t *testing.T) {
-	_, err := shipshape.ReadAndParseConfig("testdata", "nonexistent.yml")
+	_, err := shipshape.ReadAndParseConfig("", "testdata/nonexistent.yml")
 	if err == nil || err.Error() != "open testdata/nonexistent.yml: no such file or directory" {
-		t.Errorf("file read should fail, got %#v", err)
+		t.Errorf("file read should fail, got %#v", err.Error())
 	}
 
-	_, err = shipshape.ReadAndParseConfig("testdata", "shipshape.yml")
+	_, err = shipshape.ReadAndParseConfig("", "testdata/shipshape.yml")
 	if err != nil {
-		t.Errorf("file read should pass, got %#v", err)
+		t.Errorf("file read should pass, got %#v", err.Error())
 	}
 }
 

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"salsadigitalauorg/shipshape/pkg/core"
 	"salsadigitalauorg/shipshape/pkg/drupal"
 
@@ -13,7 +12,7 @@ import (
 
 func ReadAndParseConfig(projectDir string, f string) (Config, error) {
 	cfg := Config{}
-	data, err := ioutil.ReadFile(filepath.Join(projectDir, f))
+	data, err := ioutil.ReadFile(f)
 	if err != nil {
 		return cfg, err
 	}
