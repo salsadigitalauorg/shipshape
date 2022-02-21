@@ -374,7 +374,7 @@ func TestYamlCheck(t *testing.T) {
 
 	// Non-existent file.
 	c = mockCheck()
-	c.File = "non-existent"
+	c.File = "non-existent.yml"
 	c.FetchData()
 	if c.Result.Status != core.Fail {
 		t.Error("Check with non-existent file should Fail")
@@ -385,7 +385,7 @@ func TestYamlCheck(t *testing.T) {
 
 	// Single file.
 	c = mockCheck()
-	c.File = "update.settings"
+	c.File = "update.settings.yml"
 	c.FetchData()
 	if len(c.Result.Failures) > 0 {
 		t.Errorf("FetchData should succeed, but failed: %+v", c.Result.Failures)

@@ -39,7 +39,7 @@ checks:
       config-name: core.extension
   yaml:
     - name: My file check
-      file: core.extension
+      file: core.extension.yml
       path: config/sync
   foo:
     - name: bar
@@ -73,8 +73,8 @@ checks:
 	}
 
 	yc, ok := cfg.Checks[core.Yaml][0].(*core.YamlCheck)
-	if !ok || yc.File != "core.extension" {
-		t.Fatalf("FileConfig check 1's config name should be core.extension, got %s", yc.File)
+	if !ok || yc.File != "core.extension.yml" {
+		t.Fatalf("FileConfig check 1's config name should be core.extension.yml, got %s", yc.File)
 	}
 
 }
