@@ -14,8 +14,8 @@ func TestCheckBase(t *testing.T) {
 	}
 
 	c.Init("baz", "")
-	if c.ProjectDir != "baz" {
-		t.Errorf("name should be 'baz', got '%s'", c.ProjectDir)
+	if core.ProjectDir != "baz" {
+		t.Errorf("name should be 'baz', got '%s'", core.ProjectDir)
 	}
 	if c.Result.Name != "foo" {
 		t.Errorf("result name should be 'foo', got '%s'", c.Result.Name)

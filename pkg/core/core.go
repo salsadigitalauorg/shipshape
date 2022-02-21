@@ -7,9 +7,11 @@ import (
 	"text/tabwriter"
 )
 
+var ProjectDir string
+
 // Init acts as the constructor of a check and sets some initial values.
 func (c *CheckBase) Init(pd string, ct CheckType) {
-	c.ProjectDir = pd
+	ProjectDir = pd
 	if c.Result.CheckType == "" {
 		c.Result = Result{Name: c.Name, CheckType: ct}
 	}

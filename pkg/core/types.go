@@ -18,10 +18,9 @@ type Check interface {
 }
 
 type CheckBase struct {
-	Name       string `yaml:"name"`
-	ProjectDir string `yaml:""`
-	DataMap    map[string][]byte
-	Result     Result
+	Name    string `yaml:"name"`
+	DataMap map[string][]byte
+	Result  Result
 }
 
 type Result struct {

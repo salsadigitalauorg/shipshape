@@ -8,11 +8,10 @@ import (
 
 func TestFileCheck(t *testing.T) {
 	c := core.FileCheck{
-		CheckBase: core.CheckBase{
-			ProjectDir: "testdata/file-non-existent",
-		},
+		Path:              "file-non-existent",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
+	c.Init("testdata", core.File)
 	c.RunCheck()
 	if c.Result.Status != core.Fail {
 		t.Error("Check status should be Fail")
@@ -28,11 +27,10 @@ func TestFileCheck(t *testing.T) {
 	}
 
 	c = core.FileCheck{
-		CheckBase: core.CheckBase{
-			ProjectDir: "testdata/file",
-		},
+		Path:              "file",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
+	c.Init("testdata", core.File)
 	c.RunCheck()
 	if c.Result.Status != core.Fail {
 		t.Error("Check status should be Fail")
@@ -52,11 +50,10 @@ func TestFileCheck(t *testing.T) {
 	}
 
 	c = core.FileCheck{
-		CheckBase: core.CheckBase{
-			ProjectDir: "testdata/file/correct",
-		},
+		Path:              "file/correct",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
+	c.Init("testdata", core.File)
 	c.RunCheck()
 	if c.Result.Status != core.Pass {
 		t.Error("Check status should be Pass")

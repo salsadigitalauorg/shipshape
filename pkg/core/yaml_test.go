@@ -359,7 +359,7 @@ func TestYamlCheck(t *testing.T) {
 					},
 				},
 			},
-			Path: "testdata/yaml",
+			Path: "yaml",
 		}
 	}
 
@@ -405,15 +405,15 @@ func TestYamlCheck(t *testing.T) {
 		t.Errorf("There should be 1 Pass with value \"[update.settings.yml] 'check.interval_days' equals '7'\", but got: %+v", c.Result.Passes)
 	}
 
-	// File pattern, no path.
+	// Bad File pattern.
 	c = mockCheck()
 	c.Pattern = "*.bar.yml"
 	c.Path = ""
 	c.FetchData()
 	if c.Result.Status != core.Fail {
-		t.Error("Check with no path or project dir should fail")
+		t.Error("Check with bad file pattern should fail")
 	}
-	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "directory not provided" {
+	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "error parsing regexp: missing argument to repetition operator: `*`" {
 		t.Errorf("there should be exactly 1 Failure, got: %#v", c.Result.Failures)
 	}
 

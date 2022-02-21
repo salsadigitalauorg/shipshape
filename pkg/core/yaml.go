@@ -110,13 +110,13 @@ func (c *YamlCheck) FetchData() {
 	var err error
 	c.DataMap = map[string][]byte{}
 	if c.File != "" {
-		fullPath := filepath.Join(c.ProjectDir, c.Path, c.File+".yml")
+		fullPath := filepath.Join(ProjectDir, c.Path, c.File+".yml")
 		c.DataMap[c.File+".yml"], err = ioutil.ReadFile(fullPath)
 		if err != nil {
 			c.AddFail(err.Error())
 		}
 	} else if c.Pattern != "" {
-		configPath := filepath.Join(c.ProjectDir, c.Path)
+		configPath := filepath.Join(ProjectDir, c.Path)
 		files, err := utils.FindFiles(configPath, c.Pattern, c.ExcludePattern)
 		if err != nil {
 			c.AddFail(err.Error())
