@@ -12,6 +12,8 @@ const DrushDefaultPath = "vendor/drush/drush/drush"
 
 var ExecCommand = exec.Command
 
+// Drush is a simple wrapper around DrushCommand which allows chaining
+// commands for Drush, e.g, `Drush("", "", "status").Exec()`.
 func Drush(drushPath string, alias string, command string) *DrushCommand {
 	if drushPath == "" {
 		drushPath = DrushDefaultPath
@@ -22,6 +24,7 @@ func Drush(drushPath string, alias string, command string) *DrushCommand {
 	return &DrushCommand{DrushPath: drushPath, Alias: alias, Command: command}
 }
 
+// Exec runs the drush command and returns the output.
 func (cmd *DrushCommand) Exec() ([]byte, error) {
 	cmdSlice := strings.Split(cmd.Command, " ")
 	if cmd.Alias != "" {

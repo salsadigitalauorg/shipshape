@@ -4,6 +4,9 @@ import "gopkg.in/yaml.v3"
 
 type CheckType string
 
+// Check should be implemented by any new check that has to be run in an audit.
+// A number of the functions have a basic implementation in CheckBase; they can
+// be used as-is, or overridden as required.
 type Check interface {
 	Init(pd string, ct CheckType)
 	GetName() string
@@ -17,12 +20,14 @@ type Check interface {
 	GetResult() Result
 }
 
+// CheckBase provides the basic structure for all Checks.
 type CheckBase struct {
 	Name    string `yaml:"name"`
 	DataMap map[string][]byte
 	Result  Result
 }
 
+// Result provides the structure for a Check's outcome.
 type Result struct {
 	Name      string      `json:"name"`
 	CheckType CheckType   `json:"check-type"`
@@ -31,6 +36,8 @@ type Result struct {
 	Failures  []string    `json:"failures"`
 }
 
+// ResultList is a wrapper around a list of results, providing some useful
+// methods to manipulate and use it.
 type ResultList struct {
 	Results []Result `json:"results"`
 }

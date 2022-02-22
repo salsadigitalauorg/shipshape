@@ -12,6 +12,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// LookupYamlPath attempts to query Yaml data using a JSONPath query and returns
+// the found Node.
+// It uses the implemention by https://github.com/vmware-labs/yaml-jsonpath.
 func LookupYamlPath(n *yaml.Node, path string) ([]*yaml.Node, error) {
 	p, err := yamlpath.NewPath(path)
 	if err != nil {
@@ -24,12 +27,16 @@ func LookupYamlPath(n *yaml.Node, path string) ([]*yaml.Node, error) {
 	return q, nil
 }
 
+// RunCheck implements the base logic for running checks against Yaml data.
 func (c *YamlBase) RunCheck() {
 	for configName := range c.DataMap {
 		c.processData(configName)
 	}
 }
 
+// UnmarshalDataMap parses the DataMap into Yaml for further processing.
+// DataMap is expected to be populated from FetchData in the respective Check
+// implementation.
 func (c *YamlBase) UnmarshalDataMap() {
 	c.NodeMap = map[string]yaml.Node{}
 	for configName, data := range c.DataMap {
@@ -43,6 +50,9 @@ func (c *YamlBase) UnmarshalDataMap() {
 	}
 }
 
+// processData runs the actual checks against the list of KeyValues provided in
+// the Check configuration and determines the Status (Pass or Fail) and Pass or
+// Fail messages of the Check Result.
 func (c *YamlBase) processData(configName string) {
 	for _, kv := range c.Values {
 		kvr, fails, err := c.CheckKeyValue(kv, configName)
@@ -70,6 +80,8 @@ func (c *YamlBase) processData(configName string) {
 	}
 }
 
+// CheckKeyValue lookups the Yaml data for a specific KeyValue and returns the
+// result, actual values and errors.
 func (c *YamlBase) CheckKeyValue(kv KeyValue, mapKey string) (KeyValueResult, []string, error) {
 	node := c.NodeMap[mapKey]
 	q, err := LookupYamlPath(&node, kv.Key)
@@ -106,6 +118,9 @@ func (c *YamlBase) CheckKeyValue(kv KeyValue, mapKey string) (KeyValueResult, []
 	return KeyValueEqual, nil, nil
 }
 
+// FetchData populates the DataMap for a File-based Yaml check.
+// The check can be run either against a single File, or based on a
+// regex Pattern.
 func (c *YamlCheck) FetchData() {
 	var err error
 	c.DataMap = map[string][]byte{}
