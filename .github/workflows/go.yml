@@ -18,6 +18,9 @@ jobs:
       with:
         go-version: 1.17
 
+    - name: Vet
+      run: go vet ./...
+
     - name: Build
       run: go build -ldflags="-s -w" -o build/shipshape . && ls -lh build/shipshape
 
