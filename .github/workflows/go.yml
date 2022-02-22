@@ -22,4 +22,17 @@ jobs:
       run: go build -ldflags="-s -w" . && ls -lh shipshape
 
     - name: Test
-      run: go test -v ./... -cover
+      run: go test -v ./... -coverprofile=coverage.out
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v2
+      with:
+        name: shipshape
+        path: shipshape
+        retention-days: 10
+
+    - name: Upload test coverage
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage.out
+        path: coverage.out
