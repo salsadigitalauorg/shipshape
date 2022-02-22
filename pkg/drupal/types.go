@@ -10,14 +10,15 @@ const (
 	DbModule   core.CheckType = "drupal-db-module"
 )
 
-type Drush struct {
-	Alias   string `yaml:"alias"`
-	Command string `yaml:"command"`
+type DrushCommand struct {
+	DrushPath string `yaml:"drush-path"`
+	Alias     string `yaml:"alias"`
+	Command   string `yaml:"command"`
 }
 
 type DrushYamlCheck struct {
 	core.YamlBase `yaml:",inline"`
-	Drush         `yaml:",inline"`
+	DrushCommand  `yaml:",inline"`
 	ConfigName    string `yaml:"config-name"`
 }
 

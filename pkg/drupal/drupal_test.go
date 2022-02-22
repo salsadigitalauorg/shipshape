@@ -7,46 +7,36 @@ import (
 	"testing"
 )
 
-func TestDrupalFileModule(t *testing.T) {
-	mockCheck := func() drupal.FileModuleCheck {
-		return drupal.FileModuleCheck{
-			YamlCheck: core.YamlCheck{
-				YamlBase: core.YamlBase{
-					CheckBase: core.CheckBase{
-						DataMap: map[string][]byte{
-							"core.extension.yml": []byte(`
+func mockCheck(configName string) core.YamlBase {
+	return core.YamlBase{
+		CheckBase: core.CheckBase{
+			DataMap: map[string][]byte{
+				configName: []byte(`
 module:
   block: 0
   node: 0
 
 `),
-						},
-					},
-				},
-				File: "core.extension",
 			},
-		}
+		},
 	}
+}
 
+func TestCheckModulesInYaml(t *testing.T) {
 	// Invalid yaml key.
-	c := mockCheck()
-	c.Required = []string{
+	c := mockCheck("core.extension.yml")
+	required := []string{
 		"node&foo",
 		"block",
 	}
-	c.Disallowed = []string{
+	disallowed := []string{
 		"views_ui",
 		"field_ui&bar",
 	}
-	c.File = ""
-	c.Init("", drupal.FileModule)
-	if c.File != "core.extension" {
-		t.Errorf("File should be 'core.extension', got %s", c.File)
-	}
 	c.UnmarshalDataMap()
-	c.RunCheck()
+	drupal.CheckModulesInYaml(&c, drupal.FileModule, "core.extension.yml", required, disallowed)
 	if c.Result.Status != core.Fail {
-		t.Error("RunCheck should Fail")
+		t.Error("CheckModulesInYaml should Fail")
 	}
 	expectedFails := []string{
 		"invalid character '&' at position 11, following \".node\"",
@@ -57,7 +47,7 @@ module:
 	}
 
 	// Required is not enabled & disallowed is enabled.
-	c = mockCheck()
+	c = mockCheck("core.extension.yml")
 	c.DataMap = map[string][]byte{
 		"core.extension.yml": []byte(`
 module:
@@ -66,16 +56,16 @@ module:
 
 `),
 	}
-	c.Required = []string{
+	required = []string{
 		"node",
 		"block",
 	}
-	c.Disallowed = []string{
+	disallowed = []string{
 		"views_ui",
 		"field_ui",
 	}
 	c.UnmarshalDataMap()
-	c.RunCheck()
+	drupal.CheckModulesInYaml(&c, drupal.FileModule, "core.extension.yml", required, disallowed)
 	if c.Result.Status != core.Fail {
 		t.Error("Check should fail")
 	}
@@ -94,33 +84,49 @@ module:
 		t.Errorf("There should be exactly 2 Passes, got %#v", c.Result.Passes)
 	}
 
-	c = mockCheck()
-	c.Required = []string{
+	c = mockCheck("core.extension.yml")
+	required = []string{
 		"node",
 		"block",
 	}
-	c.Disallowed = []string{
+	disallowed = []string{
 		"views_ui",
 		"field_ui",
 	}
 	c.UnmarshalDataMap()
-	c.RunCheck()
+	drupal.CheckModulesInYaml(&c, drupal.FileModule, "core.extension.yml", required, disallowed)
+	if c.Result.Status != core.Pass {
+		t.Error("Check should Pass")
+	}
 	if len(c.Result.Failures) > 0 {
 		t.Errorf("RunCheck should succeed, but failed: %+v", c.Result.Failures)
 	}
-	if c.Result.Status != core.Pass {
-		t.Errorf("Check result should be Pass, but got: %s", c.Result.Status)
+	expectedPasses = []string{
+		"'node' is enabled",
+		"'block' is enabled",
+		"'views_ui' is not enabled",
+		"'field_ui' is not enabled",
 	}
-	if len(c.Result.Passes) != 4 {
+	if len(c.Result.Passes) != 4 || !reflect.DeepEqual(expectedPasses, c.Result.Passes) {
 		t.Errorf("There should be 4 Passes, but got: %+v", len(c.Result.Passes))
 	}
 	if len(c.Result.Failures) != 0 {
 		t.Errorf("There should be 0 Failures, but got: %+v", c.Result.Failures)
 	}
-	if c.Result.Passes[0] != "'node' is enabled" ||
-		c.Result.Passes[1] != "'block' is enabled" ||
-		c.Result.Passes[2] != "'views_ui' is not enabled" ||
-		c.Result.Passes[3] != "'field_ui' is not enabled" {
-		t.Errorf("Wrong pass messages, got: %+v", c.Result.Passes)
+}
+
+func TestFileModuleCheck(t *testing.T) {
+	c := drupal.FileModuleCheck{
+		YamlCheck: core.YamlCheck{
+			YamlBase: mockCheck("core.extension.yml"),
+		},
+		Required:   []string{"node", "block"},
+		Disallowed: []string{"views_ui", "field_ui"},
 	}
+	c.Init("", drupal.FileModule)
+	if c.File != "core.extension.yml" {
+		t.Errorf("File should be 'core.extension.yml', got %s", c.File)
+	}
+	c.UnmarshalDataMap()
+	c.RunCheck()
 }
