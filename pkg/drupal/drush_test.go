@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"reflect"
+	"salsadigitalauorg/shipshape/internal"
 	"salsadigitalauorg/shipshape/pkg/core"
 	"salsadigitalauorg/shipshape/pkg/drupal"
 	"strconv"
@@ -67,11 +67,14 @@ func TestDrushYamlCheck(t *testing.T) {
 		ConfigName:   "core.extension",
 	}
 	c.FetchData()
-	if c.Result.Status != core.Fail {
-		t.Error("FetchData should Fail")
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "vendor/drush/drush/drush: no such file or directory" {
-		t.Errorf("There should be exactly 1 Failure, got %#v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"vendor/drush/drush/drush: no such file or directory"}); !ok {
+		t.Error(msg)
 	}
 
 	c = drupal.DrushYamlCheck{
@@ -83,11 +86,14 @@ func TestDrushYamlCheck(t *testing.T) {
 	mockedExitStatus = 1
 	mockedStderr = "unable to run drush command"
 	c.FetchData()
-	if c.Result.Status != core.Fail {
-		t.Error("FetchData should Fail")
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "unable to run drush command" {
-		t.Errorf("There should be exactly 1 Failure, got %#v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"unable to run drush command"}); !ok {
+		t.Error(msg)
 	}
 
 	mockedExitStatus = 0
@@ -102,11 +108,14 @@ module:
 		ConfigName:   "core.extension",
 	}
 	c.FetchData()
-	if c.Result.Status == core.Fail {
-		t.Error("FetchData should not have Failed")
+	if msg, ok := internal.EnsureNoFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if string(c.DataMap["core.extension"]) != mockedStdout {
-		t.Errorf("Data should be equal to mocked, got %#v", string(c.DataMap["core.extension"]))
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
 	}
 }
 
@@ -146,8 +155,19 @@ node:
 	}
 
 	c = mockCheck(nil)
-	if c.Result.Status != core.Pass {
-		t.Errorf("Check should Pass, got %#v", c.Result.Failures)
+	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
+		"'block' is enabled",
+		"'node' is enabled",
+		"'views_ui' is not enabled",
+		"'field_ui' is not enabled",
+	}); !ok {
+		t.Error(msg)
 	}
 
 	c = mockCheck(map[string][]byte{
@@ -159,11 +179,20 @@ views_ui:
 
 `),
 	})
-	if c.Result.Status != core.Fail {
-		t.Errorf("Check should Fail, got %#v", c.Result.Passes)
+
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	expectedFails := []string{"'block' is not enabled", "'views_ui' is enabled"}
-	if len(c.Result.Failures) != 2 || !reflect.DeepEqual(expectedFails, c.Result.Failures) {
-		t.Errorf("There should be exactly 2 Failures, got %#v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
+		"'node' is enabled",
+		"'field_ui' is not enabled",
+	}); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{
+		"'block' is not enabled",
+		"'views_ui' is enabled",
+	}); !ok {
+		t.Error(msg)
 	}
 }

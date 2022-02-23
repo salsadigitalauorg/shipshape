@@ -1,7 +1,7 @@
 package core_test
 
 import (
-	"reflect"
+	"salsadigitalauorg/shipshape/internal"
 	"salsadigitalauorg/shipshape/pkg/core"
 	"testing"
 )
@@ -13,17 +13,14 @@ func TestFileCheck(t *testing.T) {
 	}
 	c.Init("testdata", core.File)
 	c.RunCheck()
-	if c.Result.Status != core.Fail {
-		t.Error("Check status should be Fail")
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Passes) > 0 {
-		t.Errorf("There should be no Passes, got %+v", c.Result.Passes)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) != 1 {
-		t.Errorf("There should be exactly 1 Failure, got %+v", c.Result.Failures)
-	}
-	if c.Result.Failures[0] != "lstat testdata/file-non-existent: no such file or directory" {
-		t.Errorf("Pass message should be 'lstat testdata/file-non-existent: no such file or directory', got %s", c.Result.Failures[0])
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"lstat testdata/file-non-existent: no such file or directory"}); !ok {
+		t.Error(msg)
 	}
 
 	c = core.FileCheck{
@@ -32,21 +29,17 @@ func TestFileCheck(t *testing.T) {
 	}
 	c.Init("testdata", core.File)
 	c.RunCheck()
-	if c.Result.Status != core.Fail {
-		t.Error("Check status should be Fail")
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Passes) > 0 {
-		t.Errorf("There should be no Passes, got %+v", c.Result.Passes)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) != 2 {
-		t.Errorf("There should be exactly 2 Failures, got %+v", c.Result.Failures)
-	}
-	expectedFailures := []string{
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{
 		"Illegal file found: testdata/file/adminer.php",
 		"Illegal file found: testdata/file/sub/phpmyadmin.php",
-	}
-	if !reflect.DeepEqual(c.Result.Failures, expectedFailures) {
-		t.Errorf("Values for Failures are not as expected, got %+v", c.Result.Failures)
+	}); !ok {
+		t.Error(msg)
 	}
 
 	c = core.FileCheck{
@@ -55,17 +48,14 @@ func TestFileCheck(t *testing.T) {
 	}
 	c.Init("testdata", core.File)
 	c.RunCheck()
-	if c.Result.Status != core.Pass {
-		t.Error("Check status should be Pass")
+	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) > 0 {
-		t.Errorf("There should be no Failures, got %+v", c.Result.Failures)
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Passes) != 1 {
-		t.Errorf("There should be exactly 1 Pass, got %+v", c.Result.Passes)
-	}
-	if c.Result.Passes[0] != "No illegal files" {
-		t.Errorf("Pass message should be 'No illegal files', got %s", c.Result.Passes[0])
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"No illegal files"}); !ok {
+		t.Error(msg)
 	}
 
 }

@@ -41,6 +41,16 @@ checks:
     - name: My file check
       file: core.extension.yml
       path: config/sync
+      values:
+        - key: profile
+          value: govcms
+    - name: File check - Ignore missing
+      file: core.extension.yml
+      path: config/sync
+      ignore-missing: true
+      values:
+        - key: profile
+          value: govcms
   foo:
     - name: bar
 `
@@ -60,23 +70,33 @@ checks:
 	}
 
 	if len(cfg.Checks[drupal.DrushYaml]) == 0 {
-		t.Fatalf("DbConfig checks count should be 1, got %d", len(cfg.Checks[drupal.DrushYaml]))
+		t.Fatalf("DrushYaml checks count should be 1, got %d", len(cfg.Checks[drupal.DrushYaml]))
 	}
 
 	if len(cfg.Checks[core.Yaml]) == 0 {
-		t.Fatalf("FileConfig checks count should be 1, got %d", len(cfg.Checks[core.Yaml]))
+		t.Fatalf("YamlCheck checks count should be 1, got %d", len(cfg.Checks[core.Yaml]))
 	}
 
 	dyc, ok := cfg.Checks[drupal.DrushYaml][0].(*drupal.DrushYamlCheck)
 	if !ok || dyc.ConfigName != "core.extension" {
-		t.Fatalf("DbConfig check 1's config name should be core.extension, got %s", dyc.ConfigName)
+		t.Fatalf("DrushYamlCheck check 1's config name should be core.extension, got %s", dyc.ConfigName)
 	}
 
 	yc, ok := cfg.Checks[core.Yaml][0].(*core.YamlCheck)
 	if !ok || yc.File != "core.extension.yml" {
-		t.Fatalf("FileConfig check 1's config name should be core.extension.yml, got %s", yc.File)
+		t.Fatalf("YamlCheck check 1's config name should be core.extension.yml, got %s", yc.File)
 	}
 
+	yc2, ok := cfg.Checks[core.Yaml][1].(*core.YamlCheck)
+	if !ok || yc2.File != "core.extension.yml" {
+		t.Fatalf("YamlCheck check 2's config name should be core.extension.yml, got %s", yc.File)
+	}
+	if yc2.IgnoreMissing != true {
+		t.Fatalf("IgnoreMissing should be true, got %#v", yc2.IgnoreMissing)
+	}
+
+	rl := cfg.RunChecks()
+	t.Logf("rl: %#v", rl)
 }
 
 func TestRunChecks(t *testing.T) {

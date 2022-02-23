@@ -2,6 +2,7 @@ package core_test
 
 import (
 	"bytes"
+	"salsadigitalauorg/shipshape/internal"
 	"salsadigitalauorg/shipshape/pkg/core"
 	"testing"
 	"text/tabwriter"
@@ -23,15 +24,11 @@ func TestCheckBase(t *testing.T) {
 
 	c.FetchData()
 	c.RunCheck()
-	result := c.GetResult()
-	if result.Status != core.Fail {
-		t.Error("status should be fail")
+	if msg, ok := internal.EnsureFail(t, &c); !ok {
+		t.Error(msg)
 	}
-	if len(result.Failures) != 1 {
-		t.Error("there should be exactly one failure")
-	}
-	if result.Failures[0] != "not implemented" {
-		t.Errorf("failure should be 'not implemented', got '%s'", result.Failures[0])
+	if msg, ok := internal.EnsureFailures(t, &c, []string{"not implemented"}); !ok {
+		t.Error(msg)
 	}
 }
 

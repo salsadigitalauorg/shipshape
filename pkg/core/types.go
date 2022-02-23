@@ -49,6 +49,10 @@ const (
 	Fail CheckStatus = "Fail"
 )
 
+// KeyValue represents a check to be made against Yaml data.
+// It can be a simple Key=Value check, or it can be a Key in DisallowedList
+// check, in which case IsList needs to be true, and a Disallowed list of values
+// is required.
 type KeyValue struct {
 	Key        string   `yaml:"key"`
 	Value      string   `yaml:"value"`
@@ -56,6 +60,7 @@ type KeyValue struct {
 	Disallowed []string `yaml:"disallowed"`
 }
 
+// KeyValueResult represents the different outcomes of the KeyValue check.
 type KeyValueResult int8
 
 const (
@@ -66,17 +71,20 @@ const (
 	KeyValueDisallowedFound KeyValueResult = 2
 )
 
+const (
+	File CheckType = "file" // Represents a FileCheck.
+	Yaml CheckType = "yaml" // Represents a YamlCheck.
+)
+
+// FileCheck is a simple File absence check which can be for a single
+// file or a pattern.
 type FileCheck struct {
 	CheckBase         `yaml:",inline"`
 	Path              string `yaml:"path"`
 	DisallowedPattern string `yaml:"disallowed-pattern"`
 }
 
-const (
-	Yaml CheckType = "yaml"
-	File CheckType = "file"
-)
-
+// YamlBase represents the structure for a Yaml-based check.
 type YamlBase struct {
 	CheckBase `yaml:",inline"`
 	Values    []KeyValue `yaml:"values"`
@@ -84,10 +92,13 @@ type YamlBase struct {
 	NodeMap   map[string]yaml.Node
 }
 
+// YamlCheck represents a Yaml file-based check, which can be for a single file
+// or across a number of files defined by a regex pattern.
 type YamlCheck struct {
 	YamlBase       `yaml:",inline"`
-	Path           string `yaml:"path"`
-	File           string `yaml:"file"`
-	Pattern        string `yaml:"pattern"`
-	ExcludePattern string `yaml:"exclude-pattern"`
+	Path           string `yaml:"path"`            // The directory in which to lookup files.
+	File           string `yaml:"file"`            // Single file name.
+	Pattern        string `yaml:"pattern"`         // Pattern-based files.
+	ExcludePattern string `yaml:"exclude-pattern"` // Pattern-based excluded files.
+	IgnoreMissing  bool   `yaml:"ignore-missing"`  // Allows non-existent files to not be counted as a Fail
 }

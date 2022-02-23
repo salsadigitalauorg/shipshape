@@ -2,6 +2,7 @@ package core_test
 
 import (
 	"reflect"
+	"salsadigitalauorg/shipshape/internal"
 	"salsadigitalauorg/shipshape/pkg/core"
 	"testing"
 )
@@ -20,11 +21,14 @@ foo:
 		},
 	}
 	c.UnmarshalDataMap()
-	if c.Result.Status != core.Fail {
+	if _, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error("invalid yaml data should Fail")
 	}
-	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "yaml: line 4: found character that cannot start any token" {
-		t.Errorf("there should be exactly 1 error, got %#v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"yaml: line 4: found character that cannot start any token"}); !ok {
+		t.Error(msg)
 	}
 
 	// Valid data.
@@ -41,8 +45,8 @@ foo:
 		},
 	}
 	c.UnmarshalDataMap()
-	if len(c.Result.Failures) > 0 {
-		t.Errorf("there should be no error, got %#v", c.Result.Failures)
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
 	}
 
 	// Invalid yaml kec.
@@ -61,11 +65,11 @@ foo:
 		},
 	}
 	c.RunCheck()
-	if c.Result.Status != core.Fail {
+	if _, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error("invalid yaml key should Fail")
 	}
-	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "invalid character '&' at position 3, following \"baz\"" {
-		t.Errorf("there should be exactly 1 error, got %#v", c.Result.Failures)
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"invalid character '&' at position 3, following \"baz\""}); !ok {
+		t.Error(msg)
 	}
 }
 
@@ -193,8 +197,11 @@ foo:
 func TestYamlBase(t *testing.T) {
 	c := core.YamlBase{}
 	c.HasData(true)
-	if c.Result.Failures[0] != "no data available" {
-		t.Errorf("Check should fail with error 'no data available', got '%+v'", c.Result.Failures[0])
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"no data available"}); !ok {
+		t.Error(msg)
 	}
 
 	mockCheck := func() core.YamlBase {
@@ -222,16 +229,14 @@ notification:
 	c = mockCheck()
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if c.Result.Status == core.Fail {
-		t.Logf("result: %#v", c.Result)
-		t.Error("Check should Pass")
+	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Passes) != 1 ||
-		c.Result.Passes[0] != "[data] 'check.interval_days' equals '7'" {
-		t.Errorf("There should be only 1 Pass and it should be equal to ([data] 'check.interval_days' equals '7'), got %+v", c.Result.Passes)
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) != 0 {
-		t.Errorf("There should be no Failure, got %+v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[data] 'check.interval_days' equals '7'"}); !ok {
+		t.Error(msg)
 	}
 
 	// Wrong key, correct value.
@@ -243,15 +248,14 @@ notification:
 		},
 	}
 	c.RunCheck()
-	if c.Result.Status == core.Pass {
-		t.Errorf("Check status should be Fail, got %s", c.Result.Status)
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) != 1 ||
-		c.Result.Failures[0] != "[data] 'check.interval' not found" {
-		t.Errorf("There should be only 1 Failure and it should be equal to ([data] 'check.interval' not found), got %+v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Passes) != 0 {
-		t.Errorf("There should be no Pass, got %+v", c.Result.Passes)
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] 'check.interval' not found"}); !ok {
+		t.Error(msg)
 	}
 
 	// Correct key, wrong value.
@@ -264,15 +268,14 @@ notification:
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if c.Result.Status == core.Pass {
-		t.Errorf("Check status should be Fail, got %s", c.Result.Status)
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) != 1 ||
-		c.Result.Failures[0] != "[data] 'check.interval_days' equals '7'" {
-		t.Errorf("There should be only 1 Failure and it should be equal to ([data] 'check.interval_days' equals '7'), got %+v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Passes) != 0 {
-		t.Errorf("There should be no Pass, got %+v", c.Result.Passes)
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] 'check.interval_days' equals '7'"}); !ok {
+		t.Error(msg)
 	}
 
 	// Multiple config values - all correct.
@@ -289,16 +292,17 @@ notification:
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if c.Result.Status == core.Fail {
-		t.Errorf("Check status should be Pass, got %s", c.Result.Status)
+	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Passes) != 2 ||
-		c.Result.Passes[0] != "[data] 'check.interval_days' equals '7'" ||
-		c.Result.Passes[1] != "[data] 'notification.emails[0]' equals 'admin@example.com'" {
-		t.Errorf("There should be 2 Passes, got %+v", c.Result.Passes)
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) != 0 {
-		t.Errorf("There should be no Failure, got %+v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
+		"[data] 'check.interval_days' equals '7'",
+		"[data] 'notification.emails[0]' equals 'admin@example.com'",
+	}); !ok {
+		t.Error(msg)
 	}
 }
 
@@ -328,22 +332,28 @@ foo:
 	c := mockCheck()
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if c.Result.Status != core.Fail {
-		t.Errorf("Check should Fail")
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "[data] disallowed 'foo': [b, c]" {
-		t.Errorf("There should be exactly 1 Failure, got: %#v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] disallowed 'foo': [b, c]"}); !ok {
+		t.Error(msg)
 	}
 
 	c = mockCheck()
 	c.Values[0].Disallowed = []string{"e"}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if c.Result.Status != core.Pass {
-		t.Errorf("Check should Pass")
+	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) > 0 {
-		t.Errorf("There should be no Failure, got: %#v", c.Result.Failures)
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[data] no disallowed 'foo'"}); !ok {
+		t.Error(msg)
 	}
 
 }
@@ -365,44 +375,68 @@ func TestYamlCheck(t *testing.T) {
 
 	c := mockCheck()
 	c.FetchData()
-	if c.Result.Status != core.Fail {
+	if _, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error("Check with no File or Pattern should Fail")
 	}
-	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "no config file name provided" {
-		t.Errorf("there should be exactly 1 Failure, got: %#v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"no config file name provided"}); !ok {
+		t.Error(msg)
 	}
 
 	// Non-existent file.
 	c = mockCheck()
 	c.File = "non-existent.yml"
 	c.FetchData()
-	if c.Result.Status != core.Fail {
+	if _, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error("Check with non-existent file should Fail")
 	}
-	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "open testdata/yaml/non-existent.yml: no such file or directory" {
-		t.Errorf("there should be exactly 1 Failure, got: %#v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"open testdata/yaml/non-existent.yml: no such file or directory"}); !ok {
+		t.Error(msg)
+	}
+
+	// Non-existent file with ignore missing.
+	c = mockCheck()
+	c.File = "non-existent.yml"
+	c.IgnoreMissing = true
+	c.FetchData()
+	if _, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
+		t.Error("Check with non-existent file when ignoring missing should Pass already.")
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"File does not exist"}); !ok {
+		t.Error(msg)
 	}
 
 	// Single file.
 	c = mockCheck()
 	c.File = "update.settings.yml"
 	c.FetchData()
-	if len(c.Result.Failures) > 0 {
-		t.Errorf("FetchData should succeed, but failed: %+v", c.Result.Failures)
+	if msg, ok := internal.EnsureNoFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
 	}
 	if !c.HasData(false) {
 		t.Errorf("c.DataMap should be filled, but is emptc.")
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if len(c.Result.Failures) > 0 {
-		t.Errorf("RunCheck should succeed, but failed: %+v", c.Result.Failures)
+	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if c.Result.Status != core.Pass {
-		t.Errorf("Check result should be Pass, but got: %s", c.Result.Status)
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Passes) != 1 || c.Result.Passes[0] != "[update.settings.yml] 'check.interval_days' equals '7'" {
-		t.Errorf("There should be 1 Pass with value \"[update.settings.yml] 'check.interval_days' equals '7'\", but got: %+v", c.Result.Passes)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[update.settings.yml] 'check.interval_days' equals '7'"}); !ok {
+		t.Error(msg)
 	}
 
 	// Bad File pattern.
@@ -410,22 +444,43 @@ func TestYamlCheck(t *testing.T) {
 	c.Pattern = "*.bar.yml"
 	c.Path = ""
 	c.FetchData()
-	if c.Result.Status != core.Fail {
+	if _, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error("Check with bad file pattern should fail")
 	}
-	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "error parsing regexp: missing argument to repetition operator: `*`" {
-		t.Errorf("there should be exactly 1 Failure, got: %#v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"error parsing regexp: missing argument to repetition operator: `*`"}); !ok {
+		t.Error(msg)
 	}
 
 	// File pattern with no matching files.
 	c = mockCheck()
 	c.Pattern = "bla.*.yml"
 	c.FetchData()
-	if c.Result.Status != core.Fail {
-		t.Error("Check should Fail")
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) != 1 || c.Result.Failures[0] != "no matching config files found" {
-		t.Errorf("there should be exactly 1 Failure, got: %#v", c.Result.Failures)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"no matching config files found"}); !ok {
+		t.Error(msg)
+	}
+
+	// File pattern with no matching files, ignoring missing.
+	c = mockCheck()
+	c.Pattern = "bla.*.yml"
+	c.IgnoreMissing = true
+	c.FetchData()
+	if _, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
+		t.Error("Check with non-existent file pattern when ignoring missing should Pass already.")
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"no matching config files found"}); !ok {
+		t.Error(msg)
 	}
 
 	// Correct file pattern.
@@ -440,13 +495,13 @@ func TestYamlCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if c.Result.Status != core.Fail {
-		t.Error("Check should Fail")
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
 	}
-	if len(c.Result.Failures) != 1 || len(c.Result.Passes) != 1 {
-		t.Errorf("there should be exactly 1 Failure and 1 Pass, got Failures: %#v, Passes: %#v", c.Result.Failures, c.Result.Passes)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[foo.bar.yml] 'check.interval_days' equals '7'"}); !ok {
+		t.Error(msg)
 	}
-	if c.Result.Failures[0] != "[zoom.bar.yml] 'check.interval_days' equals '5'" || c.Result.Passes[0] != "[foo.bar.yml] 'check.interval_days' equals '7'" {
-		t.Errorf("wrong value for Failure or Pass, got Failures: %#v, Passes: %#v", c.Result.Failures, c.Result.Passes)
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[zoom.bar.yml] 'check.interval_days' equals '5'"}); !ok {
+		t.Error(msg)
 	}
 }

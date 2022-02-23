@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"path/filepath"
 	"salsadigitalauorg/shipshape/pkg/utils"
@@ -128,7 +129,13 @@ func (c *YamlCheck) FetchData() {
 		fullPath := filepath.Join(ProjectDir, c.Path, c.File)
 		c.DataMap[c.File], err = ioutil.ReadFile(fullPath)
 		if err != nil {
-			c.AddFail(err.Error())
+			// No failure if missing file and ignoring missing.
+			if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing {
+				c.AddPass("File does not exist")
+				c.Result.Status = Pass
+			} else {
+				c.AddFail(err.Error())
+			}
 		}
 	} else if c.Pattern != "" {
 		configPath := filepath.Join(ProjectDir, c.Path)
@@ -138,7 +145,11 @@ func (c *YamlCheck) FetchData() {
 			return
 		}
 
-		if len(files) == 0 {
+		if len(files) == 0 && c.IgnoreMissing {
+			c.AddPass("no matching config files found")
+			c.Result.Status = Pass
+			return
+		} else if len(files) == 0 {
 			c.AddFail("no matching config files found")
 			return
 		}

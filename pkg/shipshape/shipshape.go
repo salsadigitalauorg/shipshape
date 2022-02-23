@@ -62,7 +62,7 @@ func (cfg *Config) ProcessCheck(rl *core.ResultList, c core.Check) {
 		c.HasData(true)
 		c.UnmarshalDataMap()
 	}
-	if len(c.GetResult().Failures) == 0 {
+	if len(c.GetResult().Failures) == 0 && len(c.GetResult().Passes) == 0 {
 		c.RunCheck()
 	}
 	rl.Results = append(rl.Results, c.GetResult())

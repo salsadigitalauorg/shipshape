@@ -61,4 +61,5 @@ func (c *FileModuleCheck) RunCheck() {
 func (c *FileModuleCheck) Init(pd string, ct core.CheckType) {
 	c.CheckBase.Init(pd, ct)
 	c.File = "core.extension.yml"
+	c.IgnoreMissing = true
 }
