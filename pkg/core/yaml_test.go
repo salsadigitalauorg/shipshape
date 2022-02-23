@@ -304,6 +304,41 @@ notification:
 	}); !ok {
 		t.Error(msg)
 	}
+
+	// Wildcard key.
+	c = mockCheck()
+	c.DataMap = map[string][]byte{
+		"data": []byte(`
+abcd:
+  some:
+    - thing 1
+    - thing 2
+    - thing 3
+efgh:
+  some:
+    - thing 1
+    - thing 2
+    - thing 3
+`),
+	}
+	c.Values = []core.KeyValue{
+		{
+			Key:        "*.some",
+			IsList:     true,
+			Disallowed: []string{"thing 2", "thing 4"},
+		},
+	}
+	c.UnmarshalDataMap()
+	c.RunCheck()
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] disallowed '*.some': [thing 2]"}); !ok {
+		t.Error(msg)
+	}
 }
 
 func TestYamlBaseListValues(t *testing.T) {

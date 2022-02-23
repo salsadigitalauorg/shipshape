@@ -85,19 +85,27 @@ func (c *YamlBase) processData(configName string) {
 // result, actual values and errors.
 func (c *YamlBase) CheckKeyValue(kv KeyValue, mapKey string) (KeyValueResult, []string, error) {
 	node := c.NodeMap[mapKey]
-	q, err := LookupYamlPath(&node, kv.Key)
+	foundNodes, err := LookupYamlPath(&node, kv.Key)
 	if err != nil {
 		return KeyValueError, nil, err
 	}
 
-	if len(q) == 0 {
+	if len(foundNodes) == 0 {
 		return KeyValueNotFound, nil, nil
 	}
 
 	if !kv.IsList {
-		// When checking for false, "null" is also 'falsy'.
-		if q[0].Value != kv.Value && (kv.Value != "false" || q[0].Value != "null") {
-			return KeyValueNotEqual, []string{q[0].Value}, nil
+		for _, item := range foundNodes {
+			notEquals := []string{}
+			// When checking for false, "null" is also 'falsy'.
+			if item.Value != kv.Value && (kv.Value != "false" || item.Value != "null") {
+				if !utils.StringSliceContains(notEquals, item.Value) {
+					notEquals = append(notEquals, item.Value)
+				}
+			}
+			if len(notEquals) > 0 {
+				return KeyValueNotEqual, notEquals, nil
+			}
 		}
 		return KeyValueEqual, nil, nil
 	}
@@ -108,9 +116,11 @@ func (c *YamlBase) CheckKeyValue(kv KeyValue, mapKey string) (KeyValueResult, []
 
 	// Check each yaml value against the disallowed list.
 	fails := []string{}
-	for _, v := range q[0].Content {
-		if utils.StringSliceContains(kv.Disallowed, v.Value) {
-			fails = append(fails, v.Value)
+	for _, item := range foundNodes {
+		for _, v := range item.Content {
+			if utils.StringSliceContains(kv.Disallowed, v.Value) && !utils.StringSliceContains(fails, v.Value) {
+				fails = append(fails, v.Value)
+			}
 		}
 	}
 	if len(fails) > 0 {
