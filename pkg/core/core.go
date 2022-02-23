@@ -4,6 +4,7 @@ package core
 
 import (
 	"fmt"
+	"sort"
 	"text/tabwriter"
 )
 
@@ -85,6 +86,13 @@ func (rl *ResultList) Status() CheckStatus {
 		}
 	}
 	return Pass
+}
+
+// Sorted reorders the results by name.
+func (rl *ResultList) Sort() {
+	sort.Slice(rl.Results, func(i int, j int) bool {
+		return rl.Results[i].Name < rl.Results[j].Name
+	})
 }
 
 // TableDisplay generates the tabular output for the ResultList.

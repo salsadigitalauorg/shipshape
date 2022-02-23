@@ -1,7 +1,9 @@
 package shipshape_test
 
 import (
+	"fmt"
 	"os"
+	"reflect"
 	"salsadigitalauorg/shipshape/pkg/core"
 	"salsadigitalauorg/shipshape/pkg/drupal"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
@@ -96,7 +98,32 @@ checks:
 	}
 
 	rl := cfg.RunChecks()
-	t.Logf("rl: %#v", rl)
+	expectedRl := core.ResultList{Results: []core.Result{
+		{
+			Name:      "File check - Ignore missing",
+			CheckType: "yaml",
+			Status:    "Pass",
+			Passes:    []string{"File does not exist"},
+			Failures:  []string(nil),
+		},
+		{
+			Name:      "My db check",
+			CheckType: "drush-yaml",
+			Status:    "Fail",
+			Passes:    []string(nil),
+			Failures:  []string{fmt.Sprintf("%s/vendor/drush/drush/drush: no such file or directory", core.ProjectDir)},
+		},
+		{
+			Name:      "My file check",
+			CheckType: "yaml",
+			Status:    "Fail",
+			Passes:    []string(nil),
+			Failures:  []string{fmt.Sprintf("open %s/config/sync/core.extension.yml: no such file or directory", core.ProjectDir)},
+		},
+	}}
+	if !reflect.DeepEqual(rl, expectedRl) {
+		t.Errorf("Results are not as expected, got: %#v", rl)
+	}
 }
 
 func TestRunChecks(t *testing.T) {

@@ -52,6 +52,7 @@ func (cfg *Config) RunChecks() core.ResultList {
 			cfg.ProcessCheck(&rl, c)
 		}
 	}
+	rl.Sort()
 	return rl
 }
 
