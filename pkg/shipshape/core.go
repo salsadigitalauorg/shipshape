@@ -1,6 +1,4 @@
-// Package core provides the basic types and base functions for running checks
-// as well as the file check.
-package core
+package shipshape
 
 import (
 	"fmt"

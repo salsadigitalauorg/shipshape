@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"reflect"
 	"salsadigitalauorg/shipshape/internal"
-	"salsadigitalauorg/shipshape/pkg/core"
 	"salsadigitalauorg/shipshape/pkg/drupal"
+	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"strconv"
 	"testing"
 )
@@ -140,8 +141,8 @@ node:
 		}
 		c := drupal.DbModuleCheck{
 			DrushYamlCheck: drupal.DrushYamlCheck{
-				YamlBase: core.YamlBase{
-					CheckBase: core.CheckBase{DataMap: dataMap},
+				YamlBase: shipshape.YamlBase{
+					CheckBase: shipshape.CheckBase{DataMap: dataMap},
 				},
 				ConfigName: "modules",
 			},
@@ -193,6 +194,100 @@ views_ui:
 		"'block' is not enabled",
 		"'views_ui' is enabled",
 	}); !ok {
+		t.Error(msg)
+	}
+}
+
+func TestDbPermissionsCheck(t *testing.T) {
+	// Test init.
+	c := drupal.DbPermissionsCheck{}
+	c.Init("", drupal.DbPermissions)
+	if c.Command != "role:list" {
+		t.Errorf("Command should be 'role:list', got %s", c.Command)
+	}
+	if c.ConfigName != "permissions" {
+		t.Errorf("ConfigName should be 'permissions', got %s", c.ConfigName)
+	}
+
+	// Test UnmarshalDataMap.
+	c.DataMap = map[string][]byte{
+		"permissions": []byte(`
+site_administrator:
+  label: 'Site Administrator'
+  perms: {  }
+anonymous:
+  label: 'Anonymous user'
+  perms:
+    - 'access content'
+    - 'view media'
+authenticated:
+  label: 'Authenticated user'
+  perms:
+    - 'access content'
+    - 'view media'
+`),
+	}
+	c.UnmarshalDataMap()
+	if c.Permissions == nil {
+		t.Errorf("Permissions should be populated")
+	}
+	expectedPermissions := drupal.DrushPermissions{
+		"anonymous": {
+			Label: "Anonymous user",
+			Perms: []string{"access content", "view media"},
+		},
+		"authenticated": {
+			Label: "Authenticated user",
+			Perms: []string{"access content", "view media"},
+		},
+		"site_administrator": {
+			Label: "Site Administrator",
+			Perms: []string(nil),
+		},
+	}
+	if !reflect.DeepEqual(c.Permissions, expectedPermissions) {
+		t.Errorf("Permissions are not as expected, got: %+v", c.Permissions)
+	}
+
+	// Test RunCheck.
+	c = drupal.DbPermissionsCheck{}
+	c.Init("", drupal.DbPermissions)
+	c.RunCheck()
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"list of disallowed values not provided"}); !ok {
+		t.Error(msg)
+	}
+
+	c = drupal.DbPermissionsCheck{}
+	c.Init("", drupal.DbPermissions)
+	c.Permissions = drupal.DrushPermissions{
+		"anonymous": {
+			Label: "Anonymous user",
+			Perms: []string{"access content", "view media"},
+		},
+		"authenticated": {
+			Label: "Authenticated user",
+			Perms: []string{"access content", "view media"},
+		},
+		"site_administrator": {
+			Label: "Site Administrator",
+			Perms: []string(nil),
+		},
+	}
+	c.Disallowed = []string{"administer modules"}
+	c.RunCheck()
+	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[permissions] no disallowed permission found"}); !ok {
 		t.Error(msg)
 	}
 }

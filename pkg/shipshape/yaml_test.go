@@ -1,16 +1,16 @@
-package core_test
+package shipshape_test
 
 import (
 	"reflect"
 	"salsadigitalauorg/shipshape/internal"
-	"salsadigitalauorg/shipshape/pkg/core"
+	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"testing"
 )
 
 func TestYamlUnmarshalDataMap(t *testing.T) {
 	// Invalid data.
-	c := core.YamlBase{
-		CheckBase: core.CheckBase{
+	c := shipshape.YamlBase{
+		CheckBase: shipshape.CheckBase{
 			DataMap: map[string][]byte{
 				"data": []byte(`
 foo:
@@ -32,8 +32,8 @@ foo:
 	}
 
 	// Valid data.
-	c = core.YamlBase{
-		CheckBase: core.CheckBase{
+	c = shipshape.YamlBase{
+		CheckBase: shipshape.CheckBase{
 			DataMap: map[string][]byte{
 				"data": []byte(`
 foo:
@@ -50,8 +50,8 @@ foo:
 	}
 
 	// Invalid yaml kec.
-	c = core.YamlBase{
-		CheckBase: core.CheckBase{
+	c = shipshape.YamlBase{
+		CheckBase: shipshape.CheckBase{
 			DataMap: map[string][]byte{
 				"data": []byte(`
 foo:
@@ -60,7 +60,7 @@ foo:
 `),
 			},
 		},
-		Values: []core.KeyValue{
+		Values: []shipshape.KeyValue{
 			{Key: "baz&*zoom", Value: "zap"},
 		},
 	}
@@ -74,8 +74,8 @@ foo:
 }
 
 func TestYamlCheckKeyValue(t *testing.T) {
-	c := core.YamlBase{
-		CheckBase: core.CheckBase{
+	c := shipshape.YamlBase{
+		CheckBase: shipshape.CheckBase{
 			DataMap: map[string][]byte{
 				"data": []byte(`
 foo:
@@ -89,7 +89,7 @@ foo:
 	c.UnmarshalDataMap()
 
 	// Invalid path.
-	_, _, err := c.CheckKeyValue(core.KeyValue{
+	_, _, err := c.CheckKeyValue(shipshape.KeyValue{
 		Key:   "&*&^);",
 		Value: "foo",
 	}, "data")
@@ -98,45 +98,45 @@ foo:
 	}
 
 	// Non-existent path.
-	kvr, _, err := c.CheckKeyValue(core.KeyValue{
+	kvr, _, err := c.CheckKeyValue(shipshape.KeyValue{
 		Key:   "foo.baz",
 		Value: "foo",
 	}, "data")
 	if err != nil {
 		t.Error("path lookup should succeed")
 	}
-	if kvr != core.KeyValueNotFound {
+	if kvr != shipshape.KeyValueNotFound {
 		t.Errorf("result should be KeyValueNotFound(-1), got %d", kvr)
 	}
 
 	// Wrong value.
-	kvr, _, err = c.CheckKeyValue(core.KeyValue{
+	kvr, _, err = c.CheckKeyValue(shipshape.KeyValue{
 		Key:   "foo.bar[0].baz",
 		Value: "zoom",
 	}, "data")
 	if err != nil {
 		t.Error("path lookup should succeed")
 	}
-	if kvr != core.KeyValueNotEqual {
+	if kvr != shipshape.KeyValueNotEqual {
 		t.Errorf("result should be KeyValueNotEqual(0), got %d", kvr)
 	}
 
 	// Correct value.
-	kvr, _, err = c.CheckKeyValue(core.KeyValue{
+	kvr, _, err = c.CheckKeyValue(shipshape.KeyValue{
 		Key:   "foo.bar[0].baz",
 		Value: "zoo",
 	}, "data")
 	if err != nil {
 		t.Error("path lookup should succeed")
 	}
-	if kvr != core.KeyValueEqual {
+	if kvr != shipshape.KeyValueEqual {
 		t.Errorf("result should be KeyValueEqual(1), got %d", kvr)
 	}
 }
 
 func TestYamlCheckKeyValueList(t *testing.T) {
-	c := core.YamlBase{
-		CheckBase: core.CheckBase{
+	c := shipshape.YamlBase{
+		CheckBase: shipshape.CheckBase{
 			DataMap: map[string][]byte{
 				"data": []byte(`
 foo:
@@ -152,7 +152,7 @@ foo:
 	c.UnmarshalDataMap()
 
 	// Disallowed list not provided.
-	_, _, err := c.CheckKeyValue(core.KeyValue{
+	_, _, err := c.CheckKeyValue(shipshape.KeyValue{
 		Key:    "foo.bar",
 		IsList: true,
 	}, "data")
@@ -160,10 +160,10 @@ foo:
 		t.Error("should fail")
 	}
 
-	var kvr core.KeyValueResult
+	var kvr shipshape.KeyValueResult
 	var fails []string
 	// Disallowed values in yaml.
-	kvr, fails, err = c.CheckKeyValue(core.KeyValue{
+	kvr, fails, err = c.CheckKeyValue(shipshape.KeyValue{
 		Key:        "foo.bar",
 		IsList:     true,
 		Disallowed: []string{"baz", "zoo"},
@@ -171,7 +171,7 @@ foo:
 	if err != nil {
 		t.Error("path lookup should succeed")
 	}
-	if kvr != core.KeyValueDisallowedFound {
+	if kvr != shipshape.KeyValueDisallowedFound {
 		t.Errorf("result should be KeyValueDisallowedFound(-2), got %d", kvr)
 	}
 	expectedFails := []string{"baz", "zoo"}
@@ -180,12 +180,12 @@ foo:
 	}
 
 	// No disallowed values in yaml.
-	kvr, fails, _ = c.CheckKeyValue(core.KeyValue{
+	kvr, fails, _ = c.CheckKeyValue(shipshape.KeyValue{
 		Key:        "foo.bar",
 		IsList:     true,
 		Disallowed: []string{"this should", "be a success"},
 	}, "data")
-	if kvr != core.KeyValueEqual {
+	if kvr != shipshape.KeyValueEqual {
 		t.Errorf("result should be KeyValueEqual(1), got %d", kvr)
 	}
 	if len(fails) > 0 {
@@ -195,7 +195,7 @@ foo:
 }
 
 func TestYamlBase(t *testing.T) {
-	c := core.YamlBase{}
+	c := shipshape.YamlBase{}
 	c.HasData(true)
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
@@ -204,9 +204,9 @@ func TestYamlBase(t *testing.T) {
 		t.Error(msg)
 	}
 
-	mockCheck := func() core.YamlBase {
-		return core.YamlBase{
-			CheckBase: core.CheckBase{
+	mockCheck := func() shipshape.YamlBase {
+		return shipshape.YamlBase{
+			CheckBase: shipshape.CheckBase{
 				DataMap: map[string][]byte{
 					"data": []byte(`
 check:
@@ -217,7 +217,7 @@ notification:
 `),
 				},
 			},
-			Values: []core.KeyValue{
+			Values: []shipshape.KeyValue{
 				{
 					Key:   "check.interval_days",
 					Value: "7",
@@ -241,7 +241,7 @@ notification:
 
 	// Wrong key, correct value.
 	c = mockCheck()
-	c.Values = []core.KeyValue{
+	c.Values = []shipshape.KeyValue{
 		{
 			Key:   "check.interval",
 			Value: "7",
@@ -260,7 +260,7 @@ notification:
 
 	// Correct key, wrong value.
 	c = mockCheck()
-	c.Values = []core.KeyValue{
+	c.Values = []shipshape.KeyValue{
 		{
 			Key:   "check.interval_days",
 			Value: "8",
@@ -280,7 +280,7 @@ notification:
 
 	// Multiple config values - all correct.
 	c = mockCheck()
-	c.Values = []core.KeyValue{
+	c.Values = []shipshape.KeyValue{
 		{
 			Key:   "check.interval_days",
 			Value: "7",
@@ -321,7 +321,7 @@ efgh:
     - thing 3
 `),
 	}
-	c.Values = []core.KeyValue{
+	c.Values = []shipshape.KeyValue{
 		{
 			Key:        "*.some",
 			IsList:     true,
@@ -342,9 +342,9 @@ efgh:
 }
 
 func TestYamlBaseListValues(t *testing.T) {
-	mockCheck := func() core.YamlBase {
-		return core.YamlBase{
-			CheckBase: core.CheckBase{
+	mockCheck := func() shipshape.YamlBase {
+		return shipshape.YamlBase{
+			CheckBase: shipshape.CheckBase{
 				DataMap: map[string][]byte{
 					"data": []byte(`
 foo:
@@ -355,7 +355,7 @@ foo:
 `),
 				},
 			},
-			Values: []core.KeyValue{
+			Values: []shipshape.KeyValue{
 				{
 					Key:        "foo",
 					IsList:     true,
@@ -394,10 +394,10 @@ foo:
 }
 
 func TestYamlCheck(t *testing.T) {
-	mockCheck := func() core.YamlCheck {
-		return core.YamlCheck{
-			YamlBase: core.YamlBase{
-				Values: []core.KeyValue{
+	mockCheck := func() shipshape.YamlCheck {
+		return shipshape.YamlCheck{
+			YamlBase: shipshape.YamlBase{
+				Values: []shipshape.KeyValue{
 					{
 						Key:   "check.interval_days",
 						Value: "7",
@@ -422,6 +422,7 @@ func TestYamlCheck(t *testing.T) {
 
 	// Non-existent file.
 	c = mockCheck()
+	c.Init("testdata", shipshape.Yaml)
 	c.File = "non-existent.yml"
 	c.FetchData()
 	if _, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
@@ -460,7 +461,7 @@ func TestYamlCheck(t *testing.T) {
 		t.Error(msg)
 	}
 	if !c.HasData(false) {
-		t.Errorf("c.DataMap should be filled, but is emptc.")
+		t.Errorf("c.DataMap should be filled, but is empty.")
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
@@ -522,7 +523,7 @@ func TestYamlCheck(t *testing.T) {
 	c = mockCheck()
 	c.Pattern = ".*.bar.yml"
 	c.FetchData()
-	if c.Result.Status == core.Fail {
+	if c.Result.Status == shipshape.Fail {
 		t.Error("Check should not Fail yet")
 	}
 	if len(c.Result.Failures) > 0 {

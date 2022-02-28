@@ -1,17 +1,17 @@
-package core_test
+package shipshape_test
 
 import (
 	"salsadigitalauorg/shipshape/internal"
-	"salsadigitalauorg/shipshape/pkg/core"
+	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"testing"
 )
 
 func TestFileCheck(t *testing.T) {
-	c := core.FileCheck{
+	c := shipshape.FileCheck{
 		Path:              "file-non-existent",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
-	c.Init("testdata", core.File)
+	c.Init("testdata", shipshape.File)
 	c.RunCheck()
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
@@ -23,11 +23,11 @@ func TestFileCheck(t *testing.T) {
 		t.Error(msg)
 	}
 
-	c = core.FileCheck{
+	c = shipshape.FileCheck{
 		Path:              "file",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
-	c.Init("testdata", core.File)
+	c.Init("testdata", shipshape.File)
 	c.RunCheck()
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
@@ -42,11 +42,11 @@ func TestFileCheck(t *testing.T) {
 		t.Error(msg)
 	}
 
-	c = core.FileCheck{
+	c = shipshape.FileCheck{
 		Path:              "file/correct",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
-	c.Init("testdata", core.File)
+	c.Init("testdata", shipshape.File)
 	c.RunCheck()
 	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
 		t.Error(msg)

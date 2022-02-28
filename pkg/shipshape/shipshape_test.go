@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"salsadigitalauorg/shipshape/pkg/core"
 	"salsadigitalauorg/shipshape/pkg/drupal"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"strings"
@@ -38,16 +37,16 @@ checks:
 checks:
   drush-yaml:
     - name: My db check
-      config-name: core.extension
+      config-name: shipshape.extension
   yaml:
     - name: My file check
-      file: core.extension.yml
+      file: shipshape.extension.yml
       path: config/sync
       values:
         - key: profile
           value: govcms
     - name: File check - Ignore missing
-      file: core.extension.yml
+      file: shipshape.extension.yml
       path: config/sync
       ignore-missing: true
       values:
@@ -75,30 +74,30 @@ checks:
 		t.Fatalf("DrushYaml checks count should be 1, got %d", len(cfg.Checks[drupal.DrushYaml]))
 	}
 
-	if len(cfg.Checks[core.Yaml]) == 0 {
-		t.Fatalf("YamlCheck checks count should be 1, got %d", len(cfg.Checks[core.Yaml]))
+	if len(cfg.Checks[shipshape.Yaml]) == 0 {
+		t.Fatalf("YamlCheck checks count should be 1, got %d", len(cfg.Checks[shipshape.Yaml]))
 	}
 
 	dyc, ok := cfg.Checks[drupal.DrushYaml][0].(*drupal.DrushYamlCheck)
-	if !ok || dyc.ConfigName != "core.extension" {
-		t.Fatalf("DrushYamlCheck check 1's config name should be core.extension, got %s", dyc.ConfigName)
+	if !ok || dyc.ConfigName != "shipshape.extension" {
+		t.Fatalf("DrushYamlCheck check 1's config name should be shipshape.extension, got %s", dyc.ConfigName)
 	}
 
-	yc, ok := cfg.Checks[core.Yaml][0].(*core.YamlCheck)
-	if !ok || yc.File != "core.extension.yml" {
-		t.Fatalf("YamlCheck check 1's config name should be core.extension.yml, got %s", yc.File)
+	yc, ok := cfg.Checks[shipshape.Yaml][0].(*shipshape.YamlCheck)
+	if !ok || yc.File != "shipshape.extension.yml" {
+		t.Fatalf("YamlCheck check 1's config name should be shipshape.extension.yml, got %s", yc.File)
 	}
 
-	yc2, ok := cfg.Checks[core.Yaml][1].(*core.YamlCheck)
-	if !ok || yc2.File != "core.extension.yml" {
-		t.Fatalf("YamlCheck check 2's config name should be core.extension.yml, got %s", yc.File)
+	yc2, ok := cfg.Checks[shipshape.Yaml][1].(*shipshape.YamlCheck)
+	if !ok || yc2.File != "shipshape.extension.yml" {
+		t.Fatalf("YamlCheck check 2's config name should be shipshape.extension.yml, got %s", yc.File)
 	}
 	if yc2.IgnoreMissing != true {
 		t.Fatalf("IgnoreMissing should be true, got %#v", yc2.IgnoreMissing)
 	}
 
 	rl := cfg.RunChecks()
-	expectedRl := core.ResultList{Results: []core.Result{
+	expectedRl := shipshape.ResultList{Results: []shipshape.Result{
 		{
 			Name:      "File check - Ignore missing",
 			CheckType: "yaml",
@@ -111,14 +110,14 @@ checks:
 			CheckType: "drush-yaml",
 			Status:    "Fail",
 			Passes:    []string(nil),
-			Failures:  []string{fmt.Sprintf("%s/vendor/drush/drush/drush: no such file or directory", core.ProjectDir)},
+			Failures:  []string{fmt.Sprintf("%s/vendor/drush/drush/drush: no such file or directory", shipshape.ProjectDir)},
 		},
 		{
 			Name:      "My file check",
 			CheckType: "yaml",
 			Status:    "Fail",
 			Passes:    []string(nil),
-			Failures:  []string{fmt.Sprintf("open %s/config/sync/core.extension.yml: no such file or directory", core.ProjectDir)},
+			Failures:  []string{fmt.Sprintf("open %s/config/sync/shipshape.extension.yml: no such file or directory", shipshape.ProjectDir)},
 		},
 	}}
 	if !reflect.DeepEqual(rl, expectedRl) {
@@ -128,9 +127,9 @@ checks:
 
 func TestRunChecks(t *testing.T) {
 	cfg := shipshape.Config{
-		Checks: map[core.CheckType][]core.Check{
-			core.File: {&core.FileCheck{}},
-			core.Yaml: {&core.YamlCheck{}},
+		Checks: map[shipshape.CheckType][]shipshape.Check{
+			shipshape.File: {&shipshape.FileCheck{}},
+			shipshape.Yaml: {&shipshape.YamlCheck{}},
 		},
 	}
 	cfg.RunChecks()

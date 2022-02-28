@@ -2,14 +2,14 @@ package drupal_test
 
 import (
 	"salsadigitalauorg/shipshape/internal"
-	"salsadigitalauorg/shipshape/pkg/core"
 	"salsadigitalauorg/shipshape/pkg/drupal"
+	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"testing"
 )
 
-func mockCheck(configName string) core.YamlBase {
-	return core.YamlBase{
-		CheckBase: core.CheckBase{
+func mockCheck(configName string) shipshape.YamlBase {
+	return shipshape.YamlBase{
+		CheckBase: shipshape.CheckBase{
 			DataMap: map[string][]byte{
 				configName: []byte(`
 module:
@@ -24,7 +24,7 @@ module:
 
 func TestCheckModulesInYaml(t *testing.T) {
 	// Invalid yaml key.
-	c := mockCheck("core.extension.yml")
+	c := mockCheck("shipshape.extension.yml")
 	required := []string{
 		"node&foo",
 		"block",
@@ -34,7 +34,7 @@ func TestCheckModulesInYaml(t *testing.T) {
 		"field_ui&bar",
 	}
 	c.UnmarshalDataMap()
-	drupal.CheckModulesInYaml(&c, drupal.FileModule, "core.extension.yml", required, disallowed)
+	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
 	}
@@ -52,9 +52,9 @@ func TestCheckModulesInYaml(t *testing.T) {
 	}
 
 	// Required is not enabled & disallowed is enabled.
-	c = mockCheck("core.extension.yml")
+	c = mockCheck("shipshape.extension.yml")
 	c.DataMap = map[string][]byte{
-		"core.extension.yml": []byte(`
+		"shipshape.extension.yml": []byte(`
 module:
   block: 0
   views_ui: 0
@@ -70,7 +70,7 @@ module:
 		"field_ui",
 	}
 	c.UnmarshalDataMap()
-	drupal.CheckModulesInYaml(&c, drupal.FileModule, "core.extension.yml", required, disallowed)
+	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
 	}
@@ -87,7 +87,7 @@ module:
 		t.Error(msg)
 	}
 
-	c = mockCheck("core.extension.yml")
+	c = mockCheck("shipshape.extension.yml")
 	required = []string{
 		"node",
 		"block",
@@ -97,7 +97,7 @@ module:
 		"field_ui",
 	}
 	c.UnmarshalDataMap()
-	drupal.CheckModulesInYaml(&c, drupal.FileModule, "core.extension.yml", required, disallowed)
+	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
 	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
 		t.Error(msg)
 	}
@@ -116,15 +116,15 @@ module:
 
 func TestFileModuleCheck(t *testing.T) {
 	c := drupal.FileModuleCheck{
-		YamlCheck: core.YamlCheck{
-			YamlBase: mockCheck("core.extension.yml"),
+		YamlCheck: shipshape.YamlCheck{
+			YamlBase: mockCheck("shipshape.extension.yml"),
 		},
 		Required:   []string{"node", "block"},
 		Disallowed: []string{"views_ui", "field_ui"},
 	}
 	c.Init("", drupal.FileModule)
-	if c.File != "core.extension.yml" {
-		t.Errorf("File should be 'core.extension.yml', got %s", c.File)
+	if c.File != "shipshape.extension.yml" {
+		t.Errorf("File should be 'shipshape.extension.yml', got %s", c.File)
 	}
 	if c.IgnoreMissing != true {
 		t.Errorf("IgnoreMissing should be 'true', got %t", c.IgnoreMissing)

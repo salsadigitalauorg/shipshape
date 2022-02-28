@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"salsadigitalauorg/shipshape/pkg/core"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"text/tabwriter"
 )
@@ -42,7 +41,7 @@ func main() {
 		r.TableDisplay(w)
 	}
 
-	if r.Status() == core.Fail {
+	if r.Status() == shipshape.Fail {
 		os.Exit(1)
 	}
 }

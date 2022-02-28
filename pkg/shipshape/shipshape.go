@@ -1,11 +1,11 @@
+// Package shipshape provides the basic types and base functions for parsing
+// config, running checks as well as the file & yaml checks.
 package shipshape
 
 import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"salsadigitalauorg/shipshape/pkg/core"
-	"salsadigitalauorg/shipshape/pkg/drupal"
 
 	"gopkg.in/yaml.v3"
 )
@@ -45,8 +45,8 @@ func (cfg *Config) Init() {
 	}
 }
 
-func (cfg *Config) RunChecks() core.ResultList {
-	rl := core.ResultList{Results: []core.Result{}}
+func (cfg *Config) RunChecks() ResultList {
+	rl := ResultList{Results: []Result{}}
 	for _, checks := range cfg.Checks {
 		for _, c := range checks {
 			cfg.ProcessCheck(&rl, c)
@@ -56,7 +56,7 @@ func (cfg *Config) RunChecks() core.ResultList {
 	return rl
 }
 
-func (cfg *Config) ProcessCheck(rl *core.ResultList, c core.Check) {
+func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
 	c.Init(cfg.ProjectDir, "")
 	if c.RequiresData() {
 		c.FetchData()
@@ -71,8 +71,8 @@ func (cfg *Config) ProcessCheck(rl *core.ResultList, c core.Check) {
 
 func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 	newcm := make(CheckMap)
-	for _, ct := range AllChecks {
-		check_values, err := core.LookupYamlPath(value, string(ct))
+	for ct, cFunc := range ChecksRegistry {
+		check_values, err := LookupYamlPath(value, string(ct))
 		if err != nil {
 			return err
 		}
@@ -86,22 +86,7 @@ func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 		}
 
 		for _, cv := range check_values[0].Content {
-			var c core.Check
-			switch ct {
-			case core.File:
-				c = &core.FileCheck{}
-			case core.Yaml:
-				c = &core.YamlCheck{}
-			case drupal.DrushYaml:
-				c = &drupal.DrushYamlCheck{}
-			case drupal.FileModule:
-				c = &drupal.FileModuleCheck{}
-			case drupal.DbModule:
-				c = &drupal.DbModuleCheck{}
-			default:
-				continue
-			}
-
+			c := cFunc()
 			err := cv.Decode(c)
 			if err != nil {
 				return err

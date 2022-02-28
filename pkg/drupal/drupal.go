@@ -2,21 +2,28 @@ package drupal
 
 import (
 	"fmt"
-	"salsadigitalauorg/shipshape/pkg/core"
+	"salsadigitalauorg/shipshape/pkg/shipshape"
 )
+
+func init() {
+	shipshape.ChecksRegistry[DrushYaml] = func() shipshape.Check { return &DrushYamlCheck{} }
+	shipshape.ChecksRegistry[FileModule] = func() shipshape.Check { return &FileModuleCheck{} }
+	shipshape.ChecksRegistry[DbModule] = func() shipshape.Check { return &DbModuleCheck{} }
+	shipshape.ChecksRegistry[DbPermissions] = func() shipshape.Check { return &DbPermissionsCheck{} }
+}
 
 // RunCheck applies the Check logic for Drupal Modules in yaml content.
 // It uses YamlBase to verify that the list of provided Required or
 // Disallowed modules are installed or not.
-func CheckModulesInYaml(c *core.YamlBase, ct core.CheckType, configName string, required []string, disallowed []string) {
-	moduleKey := func(m string) core.KeyValue {
+func CheckModulesInYaml(c *shipshape.YamlBase, ct shipshape.CheckType, configName string, required []string, disallowed []string) {
+	moduleKey := func(m string) shipshape.KeyValue {
 		if ct == FileModule {
-			return core.KeyValue{
+			return shipshape.KeyValue{
 				Key:   "module." + m,
 				Value: "0",
 			}
 		}
-		return core.KeyValue{
+		return shipshape.KeyValue{
 			Key:   m + ".status",
 			Value: "Enabled",
 		}
@@ -25,9 +32,9 @@ func CheckModulesInYaml(c *core.YamlBase, ct core.CheckType, configName string, 
 	for _, m := range required {
 		kvr, _, err := c.CheckKeyValue(moduleKey(m), configName)
 		// It could be a value different from 0, which still means it's enabled.
-		if kvr == core.KeyValueEqual || kvr == core.KeyValueNotEqual {
+		if kvr == shipshape.KeyValueEqual || kvr == shipshape.KeyValueNotEqual {
 			c.AddPass(fmt.Sprintf("'%s' is enabled", m))
-		} else if kvr == core.KeyValueError {
+		} else if kvr == shipshape.KeyValueError {
 			c.AddFail(err.Error())
 		} else {
 			c.AddFail(fmt.Sprintf("'%s' is not enabled", m))
@@ -36,9 +43,9 @@ func CheckModulesInYaml(c *core.YamlBase, ct core.CheckType, configName string, 
 	for _, m := range disallowed {
 		kvr, _, err := c.CheckKeyValue(moduleKey(m), configName)
 		// It could be a value different from 0, which still means it's enabled.
-		if kvr == core.KeyValueEqual || kvr == core.KeyValueNotEqual {
+		if kvr == shipshape.KeyValueEqual || kvr == shipshape.KeyValueNotEqual {
 			c.AddFail(fmt.Sprintf("'%s' is enabled", m))
-		} else if kvr == core.KeyValueError {
+		} else if kvr == shipshape.KeyValueError {
 			c.AddFail(err.Error())
 		} else {
 			c.AddPass(fmt.Sprintf("'%s' is not enabled", m))
@@ -46,9 +53,9 @@ func CheckModulesInYaml(c *core.YamlBase, ct core.CheckType, configName string, 
 	}
 
 	if len(c.Result.Failures) > 0 {
-		c.Result.Status = core.Fail
+		c.Result.Status = shipshape.Fail
 	} else {
-		c.Result.Status = core.Pass
+		c.Result.Status = shipshape.Pass
 	}
 }
 
@@ -58,8 +65,8 @@ func (c *FileModuleCheck) RunCheck() {
 }
 
 // Init implementation for the File-based module check.
-func (c *FileModuleCheck) Init(pd string, ct core.CheckType) {
+func (c *FileModuleCheck) Init(pd string, ct shipshape.CheckType) {
 	c.CheckBase.Init(pd, ct)
-	c.File = "core.extension.yml"
+	c.File = "shipshape.extension.yml"
 	c.IgnoreMissing = true
 }

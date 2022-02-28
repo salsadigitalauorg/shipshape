@@ -1,22 +1,22 @@
-package core_test
+package shipshape_test
 
 import (
 	"bytes"
 	"salsadigitalauorg/shipshape/internal"
-	"salsadigitalauorg/shipshape/pkg/core"
+	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"testing"
 	"text/tabwriter"
 )
 
 func TestCheckBase(t *testing.T) {
-	c := core.CheckBase{Name: "foo"}
+	c := shipshape.CheckBase{Name: "foo"}
 	if c.GetName() != "foo" {
 		t.Errorf("name should be 'foo', got '%s'", c.GetName())
 	}
 
 	c.Init("baz", "")
-	if core.ProjectDir != "baz" {
-		t.Errorf("name should be 'baz', got '%s'", core.ProjectDir)
+	if shipshape.ProjectDir != "baz" {
+		t.Errorf("name should be 'baz', got '%s'", shipshape.ProjectDir)
 	}
 	if c.Result.Name != "foo" {
 		t.Errorf("result name should be 'foo', got '%s'", c.Result.Name)
@@ -33,33 +33,33 @@ func TestCheckBase(t *testing.T) {
 }
 
 func TestResultList(t *testing.T) {
-	rl := core.ResultList{
-		Results: []core.Result{
-			{Status: core.Pass},
-			{Status: core.Pass},
-			{Status: core.Pass},
+	rl := shipshape.ResultList{
+		Results: []shipshape.Result{
+			{Status: shipshape.Pass},
+			{Status: shipshape.Pass},
+			{Status: shipshape.Pass},
 		},
 	}
-	if rl.Status() != core.Pass {
+	if rl.Status() != shipshape.Pass {
 		t.Error("Status() should be Pass")
 	}
 
-	rl.Results[0].Status = core.Fail
-	if rl.Status() != core.Fail {
+	rl.Results[0].Status = shipshape.Fail
+	if rl.Status() != shipshape.Fail {
 		t.Error("Status() should be Fail")
 	}
 
 	var buf bytes.Buffer
 	w := tabwriter.NewWriter(&buf, 0, 0, 3, ' ', 0)
-	rl = core.ResultList{}
+	rl = shipshape.ResultList{}
 	rl.TableDisplay(w)
 	if buf.String() != "" {
 		t.Errorf("buffer should be empty, got '%s'", buf.String())
 	}
 
 	buf = bytes.Buffer{}
-	rl = core.ResultList{
-		Results: []core.Result{{Name: "a", Status: core.Pass}},
+	rl = shipshape.ResultList{
+		Results: []shipshape.Result{{Name: "a", Status: shipshape.Pass}},
 	}
 	rl.TableDisplay(w)
 	if buf.String() != "NAME   STATUS   PASSES   FAILS\na      Pass              \n" {
@@ -67,11 +67,11 @@ func TestResultList(t *testing.T) {
 	}
 
 	buf = bytes.Buffer{}
-	rl = core.ResultList{
-		Results: []core.Result{
-			{Name: "a", Status: core.Pass},
-			{Name: "b", Status: core.Pass},
-			{Name: "c", Status: core.Pass},
+	rl = shipshape.ResultList{
+		Results: []shipshape.Result{
+			{Name: "a", Status: shipshape.Pass},
+			{Name: "b", Status: shipshape.Pass},
+			{Name: "c", Status: shipshape.Pass},
 		},
 	}
 	rl.TableDisplay(w)
@@ -80,26 +80,26 @@ func TestResultList(t *testing.T) {
 	}
 
 	buf = bytes.Buffer{}
-	rl = core.ResultList{
-		Results: []core.Result{
+	rl = shipshape.ResultList{
+		Results: []shipshape.Result{
 			{
 				Name:   "a",
-				Status: core.Pass,
+				Status: shipshape.Pass,
 				Passes: []string{"Pass a", "Pass ab"},
 			},
 			{
 				Name:   "b",
-				Status: core.Pass,
+				Status: shipshape.Pass,
 				Passes: []string{"Pass b", "Pass bb", "Pass bc"},
 			},
 			{
 				Name:     "c",
-				Status:   core.Fail,
+				Status:   shipshape.Fail,
 				Failures: []string{"Fail c", "Fail cb"},
 			},
 			{
 				Name:     "d",
-				Status:   core.Fail,
+				Status:   shipshape.Fail,
 				Passes:   []string{"Pass d", "Pass db"},
 				Failures: []string{"Fail c", "Fail cb"},
 			},
