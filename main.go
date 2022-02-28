@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"salsadigitalauorg/shipshape/pkg/drupal"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"text/tabwriter"
 )
@@ -22,6 +23,8 @@ func main() {
 	if checksFile == "" {
 		checksFile = "shipshape.yml"
 	}
+
+	drupal.RegisterChecks()
 
 	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFile)
 	if err != nil {

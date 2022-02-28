@@ -208,8 +208,20 @@ func TestDbPermissionsCheck(t *testing.T) {
 	if c.ConfigName != "permissions" {
 		t.Errorf("ConfigName should be 'permissions', got %s", c.ConfigName)
 	}
+	c.UnmarshalDataMap()
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"no data provided"}); !ok {
+		t.Error(msg)
+	}
 
 	// Test UnmarshalDataMap.
+	c = drupal.DbPermissionsCheck{}
+	c.Init("", drupal.DbPermissions)
 	c.DataMap = map[string][]byte{
 		"permissions": []byte(`
 site_administrator:
@@ -225,13 +237,19 @@ authenticated:
   perms:
     - 'access content'
     - 'view media'
+site_editor:
+  label: 'Site Editor'
+  perms: {  }
 `),
 	}
 	c.UnmarshalDataMap()
+	if msg, ok := internal.EnsureNoFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
+	}
 	if c.Permissions == nil {
 		t.Errorf("Permissions should be populated")
 	}
-	expectedPermissions := drupal.DrushPermissions{
+	expectedPermissions := map[string]drupal.DrushRole{
 		"anonymous": {
 			Label: "Anonymous user",
 			Perms: []string{"access content", "view media"},
@@ -244,9 +262,13 @@ authenticated:
 			Label: "Site Administrator",
 			Perms: []string(nil),
 		},
+		"site_editor": {
+			Label: "Site Editor",
+			Perms: []string(nil),
+		},
 	}
 	if !reflect.DeepEqual(c.Permissions, expectedPermissions) {
-		t.Errorf("Permissions are not as expected, got: %+v", c.Permissions)
+		t.Errorf("Permissions are not as expected, got: %#v", c.Permissions)
 	}
 
 	// Test RunCheck.
@@ -259,13 +281,13 @@ authenticated:
 	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"list of disallowed values not provided"}); !ok {
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"list of disallowed perms not provided"}); !ok {
 		t.Error(msg)
 	}
 
 	c = drupal.DbPermissionsCheck{}
 	c.Init("", drupal.DbPermissions)
-	c.Permissions = drupal.DrushPermissions{
+	c.Permissions = map[string]drupal.DrushRole{
 		"anonymous": {
 			Label: "Anonymous user",
 			Perms: []string{"access content", "view media"},
@@ -278,16 +300,65 @@ authenticated:
 			Label: "Site Administrator",
 			Perms: []string(nil),
 		},
+		"site_editor": {
+			Label: "Site Editor",
+			Perms: []string(nil),
+		},
 	}
 	c.Disallowed = []string{"administer modules"}
 	c.RunCheck()
+	c.Result.Sort()
 	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
 		t.Error(msg)
 	}
 	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[permissions] no disallowed permission found"}); !ok {
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
+		"[anonymous] no disallowed permissions",
+		"[authenticated] no disallowed permissions",
+		"[site_administrator] no disallowed permissions",
+		"[site_editor] no disallowed permissions",
+	}); !ok {
+		t.Error(msg)
+	}
+
+	c = drupal.DbPermissionsCheck{}
+	c.Init("", drupal.DbPermissions)
+	c.Permissions = map[string]drupal.DrushRole{
+		"anonymous": {
+			Label: "Anonymous user",
+			Perms: []string{"access content", "view media"},
+		},
+		"authenticated": {
+			Label: "Authenticated user",
+			Perms: []string{"access content", "view media"},
+		},
+		"site_administrator": {
+			Label: "Site Administrator",
+			Perms: []string{"administer modules", "administer permissions"},
+		},
+		"site_editor": {
+			Label: "Site Editor",
+			Perms: []string{"administer modules"},
+		},
+	}
+	c.Disallowed = []string{"administer modules", "administer permissions"}
+	c.RunCheck()
+	c.Result.Sort()
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
+		"[anonymous] no disallowed permissions",
+		"[authenticated] no disallowed permissions",
+	}); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{
+		"[site_administrator] disallowed permissions: [administer modules, administer permissions]",
+		"[site_editor] disallowed permissions: [administer modules]",
+	}); !ok {
 		t.Error(msg)
 	}
 }

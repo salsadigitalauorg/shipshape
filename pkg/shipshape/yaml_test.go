@@ -336,7 +336,7 @@ efgh:
 	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] disallowed '*.some': [thing 2]"}); !ok {
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] disallowed *.some: [thing 2]"}); !ok {
 		t.Error(msg)
 	}
 }
@@ -373,7 +373,7 @@ foo:
 	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] disallowed 'foo': [b, c]"}); !ok {
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] disallowed foo: [b, c]"}); !ok {
 		t.Error(msg)
 	}
 

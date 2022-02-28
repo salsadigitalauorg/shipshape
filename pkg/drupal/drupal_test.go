@@ -117,14 +117,14 @@ module:
 func TestFileModuleCheck(t *testing.T) {
 	c := drupal.FileModuleCheck{
 		YamlCheck: shipshape.YamlCheck{
-			YamlBase: mockCheck("shipshape.extension.yml"),
+			YamlBase: mockCheck("core.extension.yml"),
 		},
 		Required:   []string{"node", "block"},
 		Disallowed: []string{"views_ui", "field_ui"},
 	}
 	c.Init("", drupal.FileModule)
-	if c.File != "shipshape.extension.yml" {
-		t.Errorf("File should be 'shipshape.extension.yml', got %s", c.File)
+	if c.File != "core.extension.yml" {
+		t.Errorf("File should be 'core.extension.yml', got %s", c.File)
 	}
 	if c.IgnoreMissing != true {
 		t.Errorf("IgnoreMissing should be 'true', got %t", c.IgnoreMissing)

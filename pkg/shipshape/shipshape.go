@@ -65,8 +65,9 @@ func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
 	}
 	if len(c.GetResult().Failures) == 0 && len(c.GetResult().Passes) == 0 {
 		c.RunCheck()
+		c.GetResult().Sort()
 	}
-	rl.Results = append(rl.Results, c.GetResult())
+	rl.Results = append(rl.Results, *c.GetResult())
 }
 
 func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {

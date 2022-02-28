@@ -5,11 +5,15 @@ import (
 	"salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
-func init() {
+func RegisterChecks() {
 	shipshape.ChecksRegistry[DrushYaml] = func() shipshape.Check { return &DrushYamlCheck{} }
 	shipshape.ChecksRegistry[FileModule] = func() shipshape.Check { return &FileModuleCheck{} }
 	shipshape.ChecksRegistry[DbModule] = func() shipshape.Check { return &DbModuleCheck{} }
 	shipshape.ChecksRegistry[DbPermissions] = func() shipshape.Check { return &DbPermissionsCheck{} }
+}
+
+func init() {
+	RegisterChecks()
 }
 
 // RunCheck applies the Check logic for Drupal Modules in yaml content.
@@ -52,9 +56,7 @@ func CheckModulesInYaml(c *shipshape.YamlBase, ct shipshape.CheckType, configNam
 		}
 	}
 
-	if len(c.Result.Failures) > 0 {
-		c.Result.Status = shipshape.Fail
-	} else {
+	if len(c.Result.Failures) == 0 {
 		c.Result.Status = shipshape.Pass
 	}
 }
@@ -67,6 +69,6 @@ func (c *FileModuleCheck) RunCheck() {
 // Init implementation for the File-based module check.
 func (c *FileModuleCheck) Init(pd string, ct shipshape.CheckType) {
 	c.CheckBase.Init(pd, ct)
-	c.File = "shipshape.extension.yml"
+	c.File = "core.extension.yml"
 	c.IgnoreMissing = true
 }

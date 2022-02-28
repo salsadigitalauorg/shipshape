@@ -65,7 +65,7 @@ func (c *YamlBase) processData(configName string) {
 		case KeyValueNotEqual:
 			c.AddFail(fmt.Sprintf("[%s] '%s' equals '%s'", configName, kv.Key, fails[0]))
 		case KeyValueDisallowedFound:
-			c.AddFail(fmt.Sprintf("[%s] disallowed '%s': [%s]", configName, kv.Key, strings.Join(fails, ", ")))
+			c.AddFail(fmt.Sprintf("[%s] disallowed %s: [%s]", configName, kv.Key, strings.Join(fails, ", ")))
 		case KeyValueEqual:
 			if kv.IsList {
 				c.AddPass(fmt.Sprintf("[%s] no disallowed '%s'", configName, kv.Key))

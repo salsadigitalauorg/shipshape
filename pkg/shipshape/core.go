@@ -72,8 +72,8 @@ func (c *CheckBase) RunCheck() {
 }
 
 // GetResult returns the value of c.Result.
-func (c *CheckBase) GetResult() Result {
-	return c.Result
+func (c *CheckBase) GetResult() *Result {
+	return &c.Result
 }
 
 // Status calculates and returns the overall result of all check results.
@@ -86,7 +86,22 @@ func (rl *ResultList) Status() CheckStatus {
 	return Pass
 }
 
-// Sorted reorders the results by name.
+// Sort reorders the Passes & Failures in order to get consistent output.
+func (r *Result) Sort() {
+	if len(r.Failures) > 0 {
+		sort.Slice(r.Failures, func(i int, j int) bool {
+			return r.Failures[i] < r.Failures[j]
+		})
+	}
+
+	if len(r.Passes) > 0 {
+		sort.Slice(r.Passes, func(i int, j int) bool {
+			return r.Passes[i] < r.Passes[j]
+		})
+	}
+}
+
+// Sort reorders the results by name.
 func (rl *ResultList) Sort() {
 	sort.Slice(rl.Results, func(i int, j int) bool {
 		return rl.Results[i].Name < rl.Results[j].Name

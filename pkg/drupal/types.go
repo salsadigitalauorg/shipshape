@@ -35,7 +35,7 @@ type DbModuleCheck struct {
 	Disallowed     []string `yaml:"disallowed"`
 }
 
-type DrushPermissions map[string]struct {
+type DrushRole struct {
 	Label string   `yaml:"label"`
 	Perms []string `yaml:"perms"`
 }
@@ -43,5 +43,6 @@ type DrushPermissions map[string]struct {
 type DbPermissionsCheck struct {
 	DrushYamlCheck `yaml:",inline"`
 	Disallowed     []string `yaml:"disallowed"`
-	Permissions    DrushPermissions
+	ExcludeRoles   []string `yaml:"exclude-roles"`
+	Permissions    map[string]DrushRole
 }

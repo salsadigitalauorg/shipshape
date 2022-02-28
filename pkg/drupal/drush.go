@@ -1,10 +1,13 @@
 package drupal
 
 import (
+	"fmt"
 	"io/fs"
 	"os/exec"
 	"path/filepath"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
+	"salsadigitalauorg/shipshape/pkg/utils"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -69,18 +72,44 @@ func (c *DbPermissionsCheck) Init(pd string, ct shipshape.CheckType) {
 	c.ConfigName = "permissions"
 }
 
-// UnmarshalDataMap parses the drush permissions yaml into the DrushPermissions
+// UnmarshalDataMap parses the drush permissions yaml into the DrushRoles
 // type for further processing.
 func (c *DbPermissionsCheck) UnmarshalDataMap() {
-	c.Permissions = DrushPermissions{}
+	if len(c.DataMap[c.ConfigName]) == 0 {
+		c.AddFail("no data provided")
+	}
+
+	c.Permissions = map[string]DrushRole{}
 	err := yaml.Unmarshal([]byte(c.DataMap[c.ConfigName]), &c.Permissions)
 	if err != nil {
-		c.AddFail(err.Error())
-		return
+		if _, ok := err.(*yaml.TypeError); !ok {
+			c.AddFail(err.Error())
+			return
+		}
 	}
 }
 
 // RunCheck implements the Check logic for Drupal Permissions in database config.
 func (c *DbPermissionsCheck) RunCheck() {
+	if len(c.Disallowed) == 0 {
+		c.AddFail("list of disallowed perms not provided")
+	}
 
+	for r, perms := range c.Permissions {
+		fails := utils.StringSlicesIntersect(perms.Perms, c.Disallowed)
+		if len(fails) == 0 {
+			c.AddPass(fmt.Sprintf("[%s] no disallowed permissions", r))
+			continue
+		}
+
+		// Sort fails.
+		sort.Slice(fails, func(i int, j int) bool {
+			return fails[i] < fails[j]
+		})
+		c.AddFail(fmt.Sprintf("[%s] disallowed permissions: [%s]", r, strings.Join(fails, ", ")))
+	}
+
+	if len(c.Result.Failures) == 0 {
+		c.Result.Status = shipshape.Pass
+	}
 }

@@ -53,3 +53,24 @@ func StringSliceContains(slice []string, item string) bool {
 	_, ok := set[item]
 	return ok
 }
+
+// StringSlicesIntersect finds the intersection between two slices of string.
+func StringSlicesIntersect(slc1 []string, slc2 []string) []string {
+	intersect := []string(nil)
+
+	// Create a map of the first slice for easy lookup from a loop over second
+	// slice.
+	mappedSlc := map[string]string{}
+	for _, s1 := range slc1 {
+		mappedSlc[s1] = s1
+	}
+
+	for _, s2 := range slc2 {
+		if _, ok := mappedSlc[s2]; !ok {
+			continue
+		}
+		intersect = append(intersect, s2)
+	}
+
+	return intersect
+}

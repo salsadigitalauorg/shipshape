@@ -17,7 +17,7 @@ type Check interface {
 	AddFail(msg string)
 	AddPass(msg string)
 	RunCheck()
-	GetResult() Result
+	GetResult() *Result
 }
 
 type CheckMap map[CheckType][]Check
