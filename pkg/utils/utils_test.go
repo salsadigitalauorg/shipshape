@@ -61,3 +61,24 @@ func TestStringSliceContains(t *testing.T) {
 		t.Error("lookup should return true")
 	}
 }
+
+func TestStringSlicesIntersect(t *testing.T) {
+	intersect := utils.StringSlicesIntersect(
+		[]string{"foo"}, []string{})
+	if len(intersect) != 0 {
+		t.Errorf("Intersect should be empty, got '%+v'", intersect)
+	}
+
+	intersect = utils.StringSlicesIntersect(
+		[]string{"foo"}, []string{"bar"})
+	if len(intersect) != 0 {
+		t.Errorf("Intersect should be empty, got '%+v'", intersect)
+	}
+
+	intersect = utils.StringSlicesIntersect(
+		[]string{"foo"}, []string{"bar", "foo"})
+	expectedIntersect := []string{"foo"}
+	if len(intersect) != 1 || !reflect.DeepEqual(intersect, expectedIntersect) {
+		t.Errorf("Intersect should have 1 item, got '%+v'", intersect)
+	}
+}
