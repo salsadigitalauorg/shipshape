@@ -81,4 +81,11 @@ func TestStringSlicesIntersect(t *testing.T) {
 	if len(intersect) != 1 || !reflect.DeepEqual(intersect, expectedIntersect) {
 		t.Errorf("Intersect should have 1 item, got '%+v'", intersect)
 	}
+
+	intersect = utils.StringSlicesIntersect(
+		[]string{"foo", "baz", "zoom"}, []string{"bar", "foo", "zoo", "zoom"})
+	expectedIntersect = []string{"foo", "zoom"}
+	if len(intersect) != 2 || !reflect.DeepEqual(intersect, expectedIntersect) {
+		t.Errorf("Intersect should have 2 item, got '%+v'", intersect)
+	}
 }
