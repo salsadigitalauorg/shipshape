@@ -96,7 +96,7 @@ checks:
 		t.Fatalf("IgnoreMissing should be true, got %#v", yc2.IgnoreMissing)
 	}
 
-	rl := cfg.RunChecks()
+	rl := cfg.RunChecks([]string(nil))
 	expectedRl := shipshape.ResultList{Results: []shipshape.Result{
 		{
 			Name:      "File check - Ignore missing",
@@ -132,5 +132,5 @@ func TestRunChecks(t *testing.T) {
 			shipshape.Yaml: {&shipshape.YamlCheck{}},
 		},
 	}
-	cfg.RunChecks()
+	cfg.RunChecks([]string(nil))
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
+	"salsadigitalauorg/shipshape/pkg/utils"
 
 	"gopkg.in/yaml.v3"
 )
@@ -45,9 +46,12 @@ func (cfg *Config) Init() {
 	}
 }
 
-func (cfg *Config) RunChecks() ResultList {
+func (cfg *Config) RunChecks(checkTypesToRun []string) ResultList {
 	rl := ResultList{Results: []Result{}}
-	for _, checks := range cfg.Checks {
+	for ct, checks := range cfg.Checks {
+		if len(checkTypesToRun) > 0 && !utils.StringSliceContains(checkTypesToRun, string(ct)) {
+			continue
+		}
 		for _, c := range checks {
 			cfg.ProcessCheck(&rl, c)
 		}

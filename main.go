@@ -2,27 +2,25 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"log"
 	"os"
 	"salsadigitalauorg/shipshape/pkg/drupal"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"text/tabwriter"
+
+	"github.com/spf13/pflag"
 )
 
 var projectDir string
 var checksFile string
+var checkTypesToRun []string
 var outputFormat string
 
 func main() {
 	parseFlags()
 	parseArgs()
 	validateOutputFormat(&outputFormat)
-
-	if checksFile == "" {
-		checksFile = "shipshape.yml"
-	}
 
 	drupal.RegisterChecks()
 
@@ -31,7 +29,7 @@ func main() {
 		log.Fatal(err)
 	}
 	cfg.Init()
-	r := cfg.RunChecks()
+	r := cfg.RunChecks(checkTypesToRun)
 
 	if outputFormat == "json" {
 		data, err := json.Marshal(r)
@@ -50,13 +48,14 @@ func main() {
 }
 
 func parseFlags() {
-	flag.StringVar(&checksFile, "checks-file", "shipshape.yml", "Path to the file containing the checks")
-	flag.StringVar(&outputFormat, "output", "table", "Output format (table|json); default is table.")
-	flag.Parse()
+	pflag.StringVarP(&checksFile, "checks-file", "f", "shipshape.yml", "Path to the file containing the checks")
+	pflag.StringVarP(&outputFormat, "output", "o", "table", "Output format (table|json); default is table")
+	pflag.StringSliceVarP(&checkTypesToRun, "check-types", "t", []string(nil), "Comma-separated list of checks to run; default is empty, which will run all checks")
+	pflag.Parse()
 }
 
 func parseArgs() {
-	args := flag.Args()
+	args := pflag.Args()
 	if len(args) > 1 {
 		log.Fatalf("Max 1 argument expected, got '%+v'\n", args)
 	} else if len(args) == 1 {
