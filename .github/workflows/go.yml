@@ -35,13 +35,6 @@ jobs:
         path: build
       if: github.ref_name == 'main'
 
-    - name: Upload test coverage
-      uses: actions/upload-artifact@v2
-      with:
-        name: build
-        path: build
-      if: github.ref_name == 'main'
-
     - name: Run GoReleaser
       uses: goreleaser/goreleaser-action@v2
       with:
