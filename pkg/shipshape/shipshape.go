@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"salsadigitalauorg/shipshape/pkg/utils"
+	"sync"
 
 	"gopkg.in/yaml.v3"
 )
@@ -48,14 +49,22 @@ func (cfg *Config) Init() {
 
 func (cfg *Config) RunChecks(checkTypesToRun []string) ResultList {
 	rl := ResultList{Results: []Result{}}
+	var wg sync.WaitGroup
 	for ct, checks := range cfg.Checks {
 		if len(checkTypesToRun) > 0 && !utils.StringSliceContains(checkTypesToRun, string(ct)) {
 			continue
 		}
-		for _, c := range checks {
-			cfg.ProcessCheck(&rl, c)
+		checks := checks
+		for i := range checks {
+			wg.Add(1)
+			check := checks[i]
+			go func() {
+				defer wg.Done()
+				cfg.ProcessCheck(&rl, check)
+			}()
 		}
 	}
+	wg.Wait()
 	rl.Sort()
 	return rl
 }
