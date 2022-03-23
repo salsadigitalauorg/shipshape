@@ -177,3 +177,56 @@ func (c *YamlCheck) FetchData() {
 		c.AddFail("no config file name provided")
 	}
 }
+
+// FetchData populates the DataMap for a Yaml lint check.
+func (c *YamlLintCheck) FetchData() {
+	var err error
+	c.DataMap = map[string][]byte{}
+	if c.File != "" {
+		c.DataMap[c.File], err = ioutil.ReadFile(filepath.Join(ProjectDir, c.File))
+		if err != nil {
+			// No failure if missing file and ignoring missing.
+			if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing {
+				c.AddPass("File does not exist")
+				c.Result.Status = Pass
+			} else {
+				c.AddFail(err.Error())
+			}
+		}
+	} else if len(c.Files) > 0 {
+		for _, f := range c.Files {
+			c.DataMap[f], err = ioutil.ReadFile(filepath.Join(ProjectDir, f))
+			if err != nil {
+				// No failure if missing file and ignoring missing.
+				if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing {
+					c.AddPass(fmt.Sprintf("File %s does not exist", f))
+					c.Result.Status = Pass
+				} else {
+					c.AddFail(err.Error())
+				}
+			}
+		}
+	} else {
+		c.AddFail("no file provided")
+	}
+}
+
+// UnmarshalDataMap tries to parse the yaml file and
+// returns any errors as failures.
+func (c *YamlLintCheck) UnmarshalDataMap() {
+	for f, data := range c.DataMap {
+		ifc := make(map[string]interface{})
+		err := yaml.Unmarshal([]byte(data), &ifc)
+		if err != nil {
+			c.AddFail(err.Error())
+		} else {
+			c.AddPass(fmt.Sprintf("%s has valid yaml.", f))
+		}
+	}
+	if c.Result.Status != Fail {
+		c.Result.Status = Pass
+	}
+}
+
+// RunCheck for YamlLint does nothing since the check is in UnmarshalDataMap.
+func (c *YamlLintCheck) RunCheck() {}

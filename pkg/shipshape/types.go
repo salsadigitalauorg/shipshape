@@ -79,8 +79,9 @@ const (
 )
 
 const (
-	File CheckType = "file" // Represents a FileCheck.
-	Yaml CheckType = "yaml" // Represents a YamlCheck.
+	File     CheckType = "file"     // Represents a FileCheck.
+	Yaml     CheckType = "yaml"     // Represents a YamlCheck.
+	YamlLint CheckType = "yamllint" // Represents a YamlLintCheck.
 )
 
 // FileCheck is a simple File absence check which can be for a single
@@ -110,7 +111,16 @@ type YamlCheck struct {
 	IgnoreMissing  bool   `yaml:"ignore-missing"`  // Allows non-existent files to not be counted as a Fail
 }
 
+// YamlLintCheck represents a Yaml lint file-based check for a number of files.
+type YamlLintCheck struct {
+	CheckBase     `yaml:",inline"`
+	File          string   `yaml:"file"`           // The file to lint.
+	Files         []string `yaml:"files"`          // A list of files to lint.
+	IgnoreMissing bool     `yaml:"ignore-missing"` // Allows non-existent files to not be counted as a Fail
+}
+
 var ChecksRegistry = map[CheckType]func() Check{
-	File: func() Check { return &FileCheck{} },
-	Yaml: func() Check { return &YamlCheck{} },
+	File:     func() Check { return &FileCheck{} },
+	Yaml:     func() Check { return &YamlCheck{} },
+	YamlLint: func() Check { return &YamlLintCheck{} },
 }
