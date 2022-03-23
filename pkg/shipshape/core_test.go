@@ -53,8 +53,8 @@ func TestResultList(t *testing.T) {
 	w := tabwriter.NewWriter(&buf, 0, 0, 3, ' ', 0)
 	rl = shipshape.ResultList{}
 	rl.TableDisplay(w)
-	if buf.String() != "" {
-		t.Errorf("buffer should be empty, got '%s'", buf.String())
+	if buf.String() != "No result available; ensure your shipshape.yml is configured correctly.\n" {
+		t.Errorf("Buffer should indicate bad shipshape.yml, got '%s'", buf.String())
 	}
 
 	buf = bytes.Buffer{}
