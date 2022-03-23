@@ -129,29 +129,44 @@ func (c *YamlBase) CheckKeyValue(kv KeyValue, mapKey string) (KeyValueResult, []
 	return KeyValueEqual, nil, nil
 }
 
+// readFile attempts to read a file and assign it to the check's data map using
+// the provided file key.
+func (c *YamlCheck) readFile(fkey string, fname string) {
+	var err error
+	c.DataMap[fkey], err = ioutil.ReadFile(fname)
+	if err != nil {
+		// No failure if missing file and ignoring missing.
+		if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing {
+			c.AddPass(fmt.Sprintf("File %s does not exist", fname))
+			c.Result.Status = Pass
+		} else {
+			c.AddFail(err.Error())
+		}
+	}
+}
+
 // FetchData populates the DataMap for a File-based Yaml check.
 // The check can be run either against a single File, or based on a
 // regex Pattern.
 func (c *YamlCheck) FetchData() {
-	var err error
 	c.DataMap = map[string][]byte{}
 	if c.File != "" {
-		fullPath := filepath.Join(ProjectDir, c.Path, c.File)
-		c.DataMap[c.File], err = ioutil.ReadFile(fullPath)
-		if err != nil {
-			// No failure if missing file and ignoring missing.
-			if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing {
-				c.AddPass("File does not exist")
-				c.Result.Status = Pass
-			} else {
-				c.AddFail(err.Error())
-			}
+		c.readFile(filepath.Join(c.Path, c.File), filepath.Join(ProjectDir, c.Path, c.File))
+	} else if len(c.Files) > 0 {
+		for _, f := range c.Files {
+			c.readFile(filepath.Join(c.Path, f), filepath.Join(ProjectDir, c.Path, f))
 		}
 	} else if c.Pattern != "" {
 		configPath := filepath.Join(ProjectDir, c.Path)
 		files, err := utils.FindFiles(configPath, c.Pattern, c.ExcludePattern)
 		if err != nil {
-			c.AddFail(err.Error())
+			// No failure if missing path and ignoring missing.
+			if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing {
+				c.AddPass(fmt.Sprintf("Path %s does not exist", configPath))
+				c.Result.Status = Pass
+			} else {
+				c.AddFail(err.Error())
+			}
 			return
 		}
 
@@ -166,59 +181,28 @@ func (c *YamlCheck) FetchData() {
 
 		c.DataMap = map[string][]byte{}
 		for _, fname := range files {
-			l, err := ioutil.ReadFile(fname)
-			if err != nil {
-				c.AddFail(err.Error())
-			}
 			_, file := filepath.Split(fname)
-			c.DataMap[file] = l
-		}
-	} else {
-		c.AddFail("no config file name provided")
-	}
-}
-
-// FetchData populates the DataMap for a Yaml lint check.
-func (c *YamlLintCheck) FetchData() {
-	var err error
-	c.DataMap = map[string][]byte{}
-	if c.File != "" {
-		c.DataMap[c.File], err = ioutil.ReadFile(filepath.Join(ProjectDir, c.File))
-		if err != nil {
-			// No failure if missing file and ignoring missing.
-			if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing {
-				c.AddPass("File does not exist")
-				c.Result.Status = Pass
-			} else {
-				c.AddFail(err.Error())
-			}
-		}
-	} else if len(c.Files) > 0 {
-		for _, f := range c.Files {
-			c.DataMap[f], err = ioutil.ReadFile(filepath.Join(ProjectDir, f))
-			if err != nil {
-				// No failure if missing file and ignoring missing.
-				if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing {
-					c.AddPass(fmt.Sprintf("File %s does not exist", f))
-					c.Result.Status = Pass
-				} else {
-					c.AddFail(err.Error())
-				}
-			}
+			c.readFile(filepath.Join(c.Path, file), fname)
 		}
 	} else {
 		c.AddFail("no file provided")
 	}
 }
 
-// UnmarshalDataMap tries to parse the yaml file and
+// UnmarshalDataMap tries to parse the yaml file into a generic structure and
 // returns any errors as failures.
 func (c *YamlLintCheck) UnmarshalDataMap() {
 	for f, data := range c.DataMap {
 		ifc := make(map[string]interface{})
 		err := yaml.Unmarshal([]byte(data), &ifc)
 		if err != nil {
-			c.AddFail(err.Error())
+			if typeErr, ok := err.(*yaml.TypeError); ok {
+				for _, msg := range typeErr.Errors {
+					c.AddFail(fmt.Sprintf("[%s] %s", f, msg))
+				}
+			} else {
+				c.AddFail(fmt.Sprintf("[%s] %s", f, err.Error()))
+			}
 		} else {
 			c.AddPass(fmt.Sprintf("%s has valid yaml.", f))
 		}

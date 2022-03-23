@@ -102,7 +102,7 @@ checks:
 			Name:      "File check - Ignore missing",
 			CheckType: "yaml",
 			Status:    "Pass",
-			Passes:    []string{"File does not exist"},
+			Passes:    []string{fmt.Sprintf("File %s/config/sync/shipshape.extension.yml does not exist", shipshape.ProjectDir)},
 			Failures:  []string(nil),
 		},
 		{

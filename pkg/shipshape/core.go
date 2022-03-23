@@ -170,9 +170,9 @@ func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
 		if len(r.Failures) == 0 {
 			continue
 		}
-		fmt.Fprintf(w, "  ### %s\n", r.Name)
+		fmt.Fprintf(w, "### %s\n", r.Name)
 		for _, f := range r.Failures {
-			fmt.Fprintf(w, "     -- %s\n", f)
+			fmt.Fprintf(w, "   -- %s\n", f)
 		}
 		fmt.Fprintln(w)
 	}

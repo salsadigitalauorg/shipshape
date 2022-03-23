@@ -104,19 +104,17 @@ type YamlBase struct {
 // or across a number of files defined by a regex pattern.
 type YamlCheck struct {
 	YamlBase       `yaml:",inline"`
-	Path           string `yaml:"path"`            // The directory in which to lookup files.
-	File           string `yaml:"file"`            // Single file name.
-	Pattern        string `yaml:"pattern"`         // Pattern-based files.
-	ExcludePattern string `yaml:"exclude-pattern"` // Pattern-based excluded files.
-	IgnoreMissing  bool   `yaml:"ignore-missing"`  // Allows non-existent files to not be counted as a Fail
+	Path           string   `yaml:"path"`            // The directory in which to lookup files.
+	File           string   `yaml:"file"`            // Single file name.
+	Files          []string `yaml:"files"`           // A list of files to lint.
+	Pattern        string   `yaml:"pattern"`         // Pattern-based files.
+	ExcludePattern string   `yaml:"exclude-pattern"` // Pattern-based excluded files.
+	IgnoreMissing  bool     `yaml:"ignore-missing"`  // Allows non-existent files to not be counted as a Fail
 }
 
 // YamlLintCheck represents a Yaml lint file-based check for a number of files.
 type YamlLintCheck struct {
-	CheckBase     `yaml:",inline"`
-	File          string   `yaml:"file"`           // The file to lint.
-	Files         []string `yaml:"files"`          // A list of files to lint.
-	IgnoreMissing bool     `yaml:"ignore-missing"` // Allows non-existent files to not be counted as a Fail
+	YamlCheck `yaml:",inline"`
 }
 
 var ChecksRegistry = map[CheckType]func() Check{

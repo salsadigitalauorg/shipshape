@@ -416,7 +416,7 @@ func TestYamlCheck(t *testing.T) {
 	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"no config file name provided"}); !ok {
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"no file provided"}); !ok {
 		t.Error(msg)
 	}
 
@@ -446,7 +446,7 @@ func TestYamlCheck(t *testing.T) {
 	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"File does not exist"}); !ok {
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"File testdata/yaml/non-existent.yml does not exist"}); !ok {
 		t.Error(msg)
 	}
 
@@ -471,7 +471,7 @@ func TestYamlCheck(t *testing.T) {
 	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[update.settings.yml] 'check.interval_days' equals '7'"}); !ok {
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[yaml/update.settings.yml] 'check.interval_days' equals '7'"}); !ok {
 		t.Error(msg)
 	}
 
@@ -534,10 +534,10 @@ func TestYamlCheck(t *testing.T) {
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[foo.bar.yml] 'check.interval_days' equals '7'"}); !ok {
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[yaml/foo.bar.yml] 'check.interval_days' equals '7'"}); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[zoom.bar.yml] 'check.interval_days' equals '5'"}); !ok {
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[yaml/zoom.bar.yml] 'check.interval_days' equals '5'"}); !ok {
 		t.Error(msg)
 	}
 }
@@ -545,13 +545,17 @@ func TestYamlCheck(t *testing.T) {
 func TestYamlLintCheck(t *testing.T) {
 	mockCheck := func(file string, files []string, ignoreMissing bool) shipshape.YamlLintCheck {
 		return shipshape.YamlLintCheck{
-			CheckBase: shipshape.CheckBase{
-				Name:    "Test yaml lint",
-				DataMap: map[string][]byte{},
+			YamlCheck: shipshape.YamlCheck{
+				YamlBase: shipshape.YamlBase{
+					CheckBase: shipshape.CheckBase{
+						Name:    "Test yaml lint",
+						DataMap: map[string][]byte{},
+					},
+				},
+				File:          file,
+				Files:         files,
+				IgnoreMissing: ignoreMissing,
 			},
-			File:          file,
-			Files:         files,
-			IgnoreMissing: ignoreMissing,
 		}
 	}
 
@@ -574,7 +578,7 @@ func TestYamlLintCheck(t *testing.T) {
 	if msg, ok := internal.EnsureNoFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"File does not exist"}); !ok {
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"File testdata/non-existent-file.yml does not exist"}); !ok {
 		t.Error(msg)
 	}
 	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
@@ -588,8 +592,8 @@ func TestYamlLintCheck(t *testing.T) {
 		t.Error(msg)
 	}
 	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
-		"File non-existent-file.yml does not exist",
-		"File yaml-invalid.yml does not exist",
+		"File testdata/non-existent-file.yml does not exist",
+		"File testdata/yaml-invalid.yml does not exist",
 	}); !ok {
 		t.Error(msg)
 	}
@@ -636,7 +640,7 @@ this: yaml
 	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"yaml: unmarshal errors:\n  line 3: mapping key \"this\" already defined at line 2"}); !ok {
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[yaml-invalid.yml] line 3: mapping key \"this\" already defined at line 2"}); !ok {
 		t.Error(msg)
 	}
 
