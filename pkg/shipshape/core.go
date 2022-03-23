@@ -2,6 +2,7 @@ package shipshape
 
 import (
 	"bufio"
+	"encoding/xml"
 	"fmt"
 	"sort"
 	"text/tabwriter"
@@ -102,6 +103,35 @@ func (r *Result) Sort() {
 	}
 }
 
+// IncrChecks increments the total checks count & checks count by type.
+func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
+	rl.TotalChecks = rl.TotalChecks + incr
+	if rl.CheckCountByType == nil {
+		rl.CheckCountByType = map[CheckType]int{}
+	}
+	rl.CheckCountByType[ct] = rl.CheckCountByType[ct] + incr
+}
+
+// IncrChecks increments the total breaches count & breaches count by type.
+func (rl *ResultList) IncrBreaches(ct CheckType, incr int) {
+	rl.TotalBreaches = rl.TotalBreaches + incr
+	if rl.BreachCountByType == nil {
+		rl.BreachCountByType = map[CheckType]int{}
+	}
+	rl.BreachCountByType[ct] = rl.BreachCountByType[ct] + incr
+}
+
+// GetBreachesByCheckName fetches the list of failures by check name.
+func (rl *ResultList) GetBreachesByCheckName(cn string) []string {
+	var breaches []string
+	for _, r := range rl.Results {
+		if r.Name == cn {
+			breaches = append(breaches, r.Failures...)
+		}
+	}
+	return breaches
+}
+
 // Sort reorders the results by name.
 func (rl *ResultList) Sort() {
 	sort.Slice(rl.Results, func(i int, j int) bool {
@@ -157,7 +187,7 @@ func (rl *ResultList) TableDisplay(w *tabwriter.Writer) {
 	w.Flush()
 }
 
-// SimpleDisplay output only failures to the writer.
+// SimpleDisplay outputs only failures to the writer.
 func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
 	if len(rl.Results) == 0 || rl.Status() == Pass {
 		fmt.Fprint(w, "Ship is in top shape; no breach detected!\n")
@@ -176,5 +206,50 @@ func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
 		}
 		fmt.Fprintln(w)
 	}
+	w.Flush()
+}
+
+// JUnit outputs the checks results in the JUnit XML format.
+func (rl *ResultList) JUnit(w *bufio.Writer) {
+	tss := JUnitTestSuites{
+		Tests:      rl.TotalChecks,
+		Errors:     rl.TotalBreaches,
+		TestSuites: []JUnitTestSuite{},
+	}
+
+	// Create a JUnitTestSuite for each CheckType.
+	for ct, checks := range rl.config.Checks {
+		ts := JUnitTestSuite{
+			Name:      string(ct),
+			Tests:     rl.CheckCountByType[ct],
+			Errors:    rl.BreachCountByType[ct],
+			TestCases: []JUnitTestCase{},
+		}
+
+		// Create a JUnitTestCase for each Check.
+		for _, c := range checks {
+			tc := JUnitTestCase{
+				Name:      c.GetName(),
+				ClassName: c.GetName(),
+				Errors:    []JUnitError{},
+			}
+
+			for _, b := range rl.GetBreachesByCheckName(c.GetName()) {
+				tc.Errors = append(tc.Errors, JUnitError{Message: b})
+			}
+			ts.TestCases = append(ts.TestCases, tc)
+		}
+		tss.TestSuites = append(tss.TestSuites, ts)
+	}
+
+	xmlBytes, err := xml.MarshalIndent(tss, "", "    ")
+	if err != nil {
+		fmt.Fprintf(w, "error occurred while converting to XML: %s\n", err.Error())
+		w.Flush()
+		return
+	}
+	fmt.Fprint(w, xml.Header)
+	fmt.Fprint(w, string(xmlBytes))
+	fmt.Fprintln(w)
 	w.Flush()
 }

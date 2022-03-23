@@ -48,13 +48,17 @@ func (cfg *Config) Init() {
 }
 
 func (cfg *Config) RunChecks(checkTypesToRun []string) ResultList {
-	rl := ResultList{Results: []Result{}}
+	rl := ResultList{
+		config:  cfg,
+		Results: []Result{},
+	}
 	var wg sync.WaitGroup
 	for ct, checks := range cfg.Checks {
 		if len(checkTypesToRun) > 0 && !utils.StringSliceContains(checkTypesToRun, string(ct)) {
 			continue
 		}
 		checks := checks
+		rl.IncrChecks(ct, len(checks))
 		for i := range checks {
 			wg.Add(1)
 			check := checks[i]
@@ -81,6 +85,7 @@ func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
 		c.GetResult().Sort()
 	}
 	rl.Results = append(rl.Results, *c.GetResult())
+	rl.IncrBreaches(c.GetResult().CheckType, len(c.GetResult().Failures))
 }
 
 func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {

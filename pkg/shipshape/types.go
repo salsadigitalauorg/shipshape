@@ -1,6 +1,10 @@
 package shipshape
 
-import "gopkg.in/yaml.v3"
+import (
+	"encoding/xml"
+
+	"gopkg.in/yaml.v3"
+)
 
 type CheckType string
 
@@ -46,7 +50,12 @@ type Result struct {
 // ResultList is a wrapper around a list of results, providing some useful
 // methods to manipulate and use it.
 type ResultList struct {
-	Results []Result `json:"results"`
+	config            *Config
+	TotalChecks       int               `json:"total-checks"`
+	TotalBreaches     int               `json:"total-breaches"`
+	CheckCountByType  map[CheckType]int `json:"check-count-by-type"`
+	BreachCountByType map[CheckType]int `json:"breach-count-by-type"`
+	Results           []Result          `json:"results"`
 }
 
 type CheckStatus string
@@ -121,4 +130,32 @@ var ChecksRegistry = map[CheckType]func() Check{
 	File:     func() Check { return &FileCheck{} },
 	Yaml:     func() Check { return &YamlCheck{} },
 	YamlLint: func() Check { return &YamlLintCheck{} },
+}
+
+type JUnitError struct {
+	XMLName xml.Name `xml:"error"`
+	Message string   `xml:"message,attr"`
+}
+
+type JUnitTestCase struct {
+	XMLName   xml.Name `xml:"testcase"`
+	Name      string   `xml:"name,attr"`
+	ClassName string   `xml:"classname,attr"`
+	Errors    []JUnitError
+}
+
+type JUnitTestSuite struct {
+	XMLName   xml.Name `xml:"testsuite"`
+	Name      string   `xml:"name,attr"`
+	Tests     int      `xml:"tests,attr"`
+	Errors    int      `xml:"errors,attr"`
+	TestCases []JUnitTestCase
+}
+
+// JUnit format taken from https://llg.cubic.org/docs/junit/.
+type JUnitTestSuites struct {
+	XMLName    xml.Name `xml:"testsuites"`
+	Tests      int      `xml:"tests,attr"`
+	Errors     int      `xml:"errors,attr"`
+	TestSuites []JUnitTestSuite
 }

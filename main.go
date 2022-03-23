@@ -8,6 +8,7 @@ import (
 	"os"
 	"salsadigitalauorg/shipshape/pkg/drupal"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/spf13/pflag"
@@ -48,16 +49,20 @@ func main() {
 	cfg.Init()
 	r := cfg.RunChecks(checkTypesToRun)
 
-	if outputFormat == "json" {
+	switch outputFormat {
+	case "json":
 		data, err := json.Marshal(r)
 		if err != nil {
 			log.Fatalf("Unable to convert result to json: %+v\n", err)
 		}
 		fmt.Println(string(data))
-	} else if outputFormat == "table" {
+	case "junit":
+		w := bufio.NewWriter(os.Stdout)
+		r.JUnit(w)
+	case "table":
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 		r.TableDisplay(w)
-	} else if outputFormat == "simple" {
+	case "simple":
 		w := bufio.NewWriter(os.Stdout)
 		r.SimpleDisplay(w)
 	}
@@ -70,7 +75,7 @@ func main() {
 func parseFlags() {
 	pflag.BoolVarP(&displayVersion, "version", "v", false, "Displays the application version")
 	pflag.StringVarP(&checksFile, "checks-file", "f", "shipshape.yml", "Path to the file containing the checks")
-	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format (simple|table|json); default is simple")
+	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format (json|junit|simple|table); default is simple")
 	pflag.StringSliceVarP(&checkTypesToRun, "check-types", "t", []string(nil), "Comma-separated list of checks to run; default is empty, which will run all checks")
 	pflag.Parse()
 }
@@ -85,7 +90,15 @@ func parseArgs() {
 }
 
 func validateOutputFormat(of *string) {
-	if *of != "json" && *of != "table" && *of != "simple" {
-		log.Fatal("Invalid output format; needs to be 'table' or 'json'.")
+	validFormats := []string{"json", "junit", "simple", "table"}
+	valid := false
+	for _, fm := range validFormats {
+		if *of == fm {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		log.Fatalf("Invalid output format; needs to be one of: %s.", strings.Join(validFormats, "|"))
 	}
 }

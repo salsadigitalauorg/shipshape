@@ -120,7 +120,7 @@ checks:
 			Failures:  []string{fmt.Sprintf("open %s/config/sync/shipshape.extension.yml: no such file or directory", shipshape.ProjectDir)},
 		},
 	}}
-	if !reflect.DeepEqual(rl, expectedRl) {
+	if !reflect.DeepEqual(rl.Results, expectedRl.Results) {
 		t.Errorf("Results are not as expected, got: %#v", rl)
 	}
 }
