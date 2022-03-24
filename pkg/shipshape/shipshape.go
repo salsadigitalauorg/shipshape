@@ -78,7 +78,9 @@ func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
 	if c.RequiresData() {
 		c.FetchData()
 		c.HasData(true)
-		c.UnmarshalDataMap()
+		if len(c.GetResult().Failures) == 0 {
+			c.UnmarshalDataMap()
+		}
 	}
 	if len(c.GetResult().Failures) == 0 && len(c.GetResult().Passes) == 0 {
 		c.RunCheck()

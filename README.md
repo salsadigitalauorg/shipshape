@@ -6,7 +6,7 @@
 
 ### Binary
 
-  - Download the binary for your OS (Linux/MacOs) and platform (amd64/arm64) from the [latest release](https://github.com/salsadigitalauorg/shipshape/releases/latest)
+  - Download the binary for your OS (Linux/MacOS) and platform (amd64/arm64) from the [latest release](https://github.com/salsadigitalauorg/shipshape/releases/latest)
   - Untar and move shipshape to /usr/local/bin/shipshape
 
 ### Docker

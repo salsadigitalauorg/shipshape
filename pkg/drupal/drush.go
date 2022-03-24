@@ -80,7 +80,7 @@ func (c *DbPermissionsCheck) UnmarshalDataMap() {
 	}
 
 	c.Permissions = map[string]DrushRole{}
-	err := yaml.Unmarshal([]byte(c.DataMap[c.ConfigName]), &c.Permissions)
+	err := yaml.Unmarshal(c.DataMap[c.ConfigName], &c.Permissions)
 	if err != nil {
 		if _, ok := err.(*yaml.TypeError); !ok {
 			c.AddFail(err.Error())

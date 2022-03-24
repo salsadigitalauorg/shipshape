@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"salsadigitalauorg/shipshape/pkg/drupal"
+	"salsadigitalauorg/shipshape/pkg/phpstan"
 	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"strings"
 	"text/tabwriter"
@@ -43,6 +44,7 @@ func main() {
 	validateOutputFormat(&outputFormat)
 
 	drupal.RegisterChecks()
+	phpstan.RegisterChecks()
 
 	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFile)
 	if err != nil {

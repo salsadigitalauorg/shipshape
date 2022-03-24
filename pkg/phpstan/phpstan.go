@@ -1,0 +1,132 @@
+// Package phpstan provides the types and functions for running a phpstan check
+// and parsing its output to process errors.
+package phpstan
+
+import (
+	"encoding/json"
+	"fmt"
+	"io/fs"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"salsadigitalauorg/shipshape/pkg/shipshape"
+)
+
+const PhpStan shipshape.CheckType = "phpstan"
+
+type PhpStanCheck struct {
+	shipshape.CheckBase `yaml:",inline"`
+	Config              string   `yaml:"configuration"`
+	Paths               []string `yaml:"paths"`
+	phpstanResult       PhpStanResult
+}
+
+type PhpStanResult struct {
+	Totals struct {
+		Errors     int `json:"errors"`
+		FileErrors int `json:"file_errors"`
+	} `json:"totals"`
+	Files map[string]struct {
+		Errors   int `json:"errors"`
+		Messages []struct {
+			Message   string `json:"message"`
+			Line      int    `json:"line"`
+			Ignorable bool   `json:"ignorable"`
+		} `json:"messages"`
+	} `json:"files"`
+	Errors []string `json:"errors"`
+}
+
+func RegisterChecks() {
+	shipshape.ChecksRegistry[PhpStan] = func() shipshape.Check { return &PhpStanCheck{} }
+}
+
+func init() {
+	RegisterChecks()
+}
+
+const PhpstanDefaultPath = "vendor/phpstan/phpstan/phpstan"
+
+var ExecCommand = exec.Command
+
+// FetchData runs the drush command to populate data for the Drush Yaml check.
+// Since the check is going to be Yaml-based, `--format=yaml` is automatically
+// added to the command.
+func (c *PhpStanCheck) FetchData() {
+	var err error
+
+	phpstanPath := filepath.Join(shipshape.ProjectDir, PhpstanDefaultPath)
+
+	configPath := c.Config
+	if !filepath.IsAbs(c.Config) {
+		configPath = filepath.Join(shipshape.ProjectDir, configPath)
+	}
+
+	args := []string{
+		"analyse",
+		fmt.Sprintf("--configuration=%s", configPath),
+		"--no-progress",
+		"--error-format=json",
+	}
+	for _, p := range c.Paths {
+		path := p
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(shipshape.ProjectDir, p)
+		}
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			args = append(args, path)
+		}
+	}
+
+	c.DataMap = map[string][]byte{}
+	c.DataMap["phpstan"], err = ExecCommand(phpstanPath, args...).Output()
+	if err != nil {
+		if pathErr, ok := err.(*fs.PathError); ok {
+			c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
+		} else if len(c.DataMap["phpstan"]) == 0 { // If errors were found, exit code will be 1.
+			c.AddFail("Phpstan failed to run: " + string(err.(*exec.ExitError).Stderr))
+		}
+	}
+}
+
+// UnmarshalDataMap parses the phpstan json into the PhpStan
+// type for further processing.
+func (c *PhpStanCheck) UnmarshalDataMap() {
+	if len(c.DataMap["phpstan"]) == 0 {
+		c.AddFail("no data provided")
+		return
+	}
+
+	c.phpstanResult = PhpStanResult{}
+	err := json.Unmarshal(c.DataMap["phpstan"], &c.phpstanResult)
+	if err != nil {
+		if typeErr, ok := err.(*json.UnmarshalTypeError); ok {
+			// This just means that no file errors were found.
+			if typeErr.Field != "files" || typeErr.Value != "array" {
+				c.AddFail(err.Error())
+			}
+		} else {
+			c.AddFail(err.Error())
+		}
+		return
+	}
+}
+
+// RunCheck processes the parsed data and populates the errors, if any.
+func (c *PhpStanCheck) RunCheck() {
+	if c.phpstanResult.Totals.Errors == 0 && c.phpstanResult.Totals.FileErrors == 0 {
+		c.AddPass("no error found")
+		c.Result.Status = shipshape.Pass
+		return
+	}
+
+	for file, errors := range c.phpstanResult.Files {
+		for _, er := range errors.Messages {
+			c.AddFail(fmt.Sprintf("[%s] Line %d: %s", file, er.Line, er.Message))
+		}
+	}
+
+	for _, er := range c.phpstanResult.Errors {
+		c.AddFail(er)
+	}
+}
