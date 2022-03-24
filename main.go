@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -21,6 +22,7 @@ var (
 )
 
 var (
+	displayUsage    bool
 	displayVersion  bool
 	projectDir      string
 	checksFile      string
@@ -73,11 +75,26 @@ func main() {
 }
 
 func parseFlags() {
+	pflag.ErrHelp = errors.New("shipshape: help requested")
+
+	pflag.Usage = func() {
+		fmt.Fprint(os.Stderr, "Shipshape\n\nRun checks quickly on your project.\n\n")
+		fmt.Fprintf(os.Stderr, "Usage:\n  %s [dir]\n\nFlags:\n", os.Args[0])
+		pflag.PrintDefaults()
+	}
+
+	pflag.BoolVarP(&displayUsage, "help", "h", false, "Displays usage information")
 	pflag.BoolVarP(&displayVersion, "version", "v", false, "Displays the application version")
-	pflag.StringVarP(&checksFile, "checks-file", "f", "shipshape.yml", "Path to the file containing the checks")
-	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format (json|junit|simple|table); default is simple")
-	pflag.StringSliceVarP(&checkTypesToRun, "check-types", "t", []string(nil), "Comma-separated list of checks to run; default is empty, which will run all checks")
+	pflag.StringVarP(&checksFile, "file", "f", "shipshape.yml", "Path to the file containing the checks")
+	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format (json|junit|simple|table)")
+	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "Comma-separated list of checks to run; default is empty, which will run all checks")
 	pflag.Parse()
+
+	if displayUsage {
+		pflag.Usage()
+		os.Exit(0)
+	}
+
 }
 
 func parseArgs() {
