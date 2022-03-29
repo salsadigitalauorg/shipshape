@@ -49,7 +49,8 @@ func (c *DrushYamlCheck) FetchData() {
 		if pathErr, ok := err.(*fs.PathError); ok {
 			c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
 		} else {
-			c.AddFail(string(err.(*exec.ExitError).Stderr))
+			msg := string(err.(*exec.ExitError).Stderr)
+			c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
 		}
 	}
 }
