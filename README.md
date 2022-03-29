@@ -22,6 +22,17 @@ COPY --from=ghcr.io/salsadigitalauorg/shipshape:latest /usr/local/bin/shipshape 
 ```
 
 ## Usage
+Create a config file. Can be as simple as:
+```yaml
+# shipshape.yml
+checks:
+  file:
+    - name: Illegal files
+      path: web
+      disallowed-pattern: '^(adminer|phpmyadmin|bigdump)?\.php$'
+```
+
+
 ```
 $ shipshape -h
 Shipshape
