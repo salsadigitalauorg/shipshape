@@ -1,6 +1,6 @@
 {
   "name": "shipshape",
-  "version": "0.0.1",
+  "version": "v0.1.5",
   "description": "Quickly and simply audit your project based on a set of pre-defined rules.",
   "main": "index.js",
   "authors": {

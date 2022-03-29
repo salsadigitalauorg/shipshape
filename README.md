@@ -31,7 +31,7 @@ checks:
       path: web
       disallowed-pattern: '^(adminer|phpmyadmin|bigdump)?\.php$'
 ```
-
+See the [configuration](https://salsadigitalauorg.github.io/shipshape/config) documentation for more information.
 
 ```
 $ shipshape -h
@@ -49,6 +49,9 @@ Flags:
   -t, --types strings   Comma-separated list of checks to run; default is empty, which will run all checks
   -v, --version         Displays the application version
 ```
+
+## Documentation
+Check out our documentation at https://salsadigitalauorg.github.io/shipshape/. Keep in mind that this is still a work in progress, so please go easy.
 
 ## Local development
 
