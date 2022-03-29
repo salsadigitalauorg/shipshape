@@ -24,13 +24,15 @@ var (
 )
 
 var (
-	displayUsage    bool
-	displayVersion  bool
-	selfUpdate      bool
-	projectDir      string
-	checksFile      string
-	checkTypesToRun []string
-	outputFormat    string
+	displayUsage   bool
+	displayVersion bool
+	// selfUpdate     bool
+
+	errorCodeOnFailure bool
+	projectDir         string
+	checksFile         string
+	checkTypesToRun    []string
+	outputFormat       string
 )
 
 func main() {
@@ -73,7 +75,7 @@ func main() {
 		r.SimpleDisplay(w)
 	}
 
-	if r.Status() == shipshape.Fail {
+	if r.Status() == shipshape.Fail && errorCodeOnFailure {
 		os.Exit(1)
 	}
 }
@@ -89,7 +91,9 @@ func parseFlags() {
 
 	pflag.BoolVarP(&displayUsage, "help", "h", false, "Displays usage information")
 	pflag.BoolVarP(&displayVersion, "version", "v", false, "Displays the application version")
-	pflag.BoolVarP(&selfUpdate, "self-update", "u", false, "Updates shipshape to the latest version")
+	// pflag.BoolVarP(&selfUpdate, "self-update", "u", false, "Updates shipshape to the latest version")
+
+	pflag.BoolVarP(&errorCodeOnFailure, "error-code", "e", false, "Exit with error code (1) if a failure is detected")
 	pflag.StringVarP(&checksFile, "file", "f", "shipshape.yml", "Path to the file containing the checks")
 	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format (json|junit|simple|table)")
 	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "Comma-separated list of checks to run; default is empty, which will run all checks")
