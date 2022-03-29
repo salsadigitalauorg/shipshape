@@ -4,11 +4,11 @@ tagline: Quickly and simply audit your project based on a set of pre-defined rul
 actionText: Quick Start →
 actionLink: /guide/
 features:
-- title: Feature 1 Title
-  details: Feature 1 Description
-- title: Feature 2 Title
-  details: Feature 2 Description
-- title: Feature 3 Title
-  details: Feature 3 Description
+- title: Cross-platform
+  details: Binaries are available for Mac & Linux, on amd64 & arm64
+- title: Flexible output
+  details: Choose between simple (for humans), json, junit or table, according to your needs
+- title: Tiny binary
+  details: Less than 5mb
 footer: Made by Salsa Digital with ❤️
 ---

@@ -53,7 +53,7 @@ module.exports = {
           collapsable: false,
           children: [
             '',
-            'using-vue',
+            // 'using-vue',
           ]
         }
       ],
