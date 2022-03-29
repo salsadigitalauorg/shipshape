@@ -10,8 +10,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
-	"github.com/salsadigitalauorg/shipshape/pkg/phpstan"
+	_ "github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	_ "github.com/salsadigitalauorg/shipshape/pkg/phpstan"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 
 	"github.com/spf13/pflag"
@@ -46,9 +46,6 @@ func main() {
 
 	parseArgs()
 	validateOutputFormat(&outputFormat)
-
-	drupal.RegisterChecks()
-	phpstan.RegisterChecks()
 
 	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFile)
 	if err != nil {
