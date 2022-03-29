@@ -26,14 +26,18 @@ type PhpStanResult struct {
 		Errors     int `json:"errors"`
 		FileErrors int `json:"file_errors"`
 	} `json:"totals"`
-	Files map[string]struct {
+
+	// Keep the raw json, as it could be an empty slice if no errors,
+	// a map otherwise.
+	FilesRaw json.RawMessage `json:"files"`
+	Files    map[string]struct {
 		Errors   int `json:"errors"`
 		Messages []struct {
 			Message   string `json:"message"`
 			Line      int    `json:"line"`
 			Ignorable bool   `json:"ignorable"`
 		} `json:"messages"`
-	} `json:"files"`
+	}
 	Errors []string `json:"errors"`
 }
 
@@ -100,14 +104,19 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 	c.phpstanResult = PhpStanResult{}
 	err := json.Unmarshal(c.DataMap["phpstan"], &c.phpstanResult)
 	if err != nil {
-		if typeErr, ok := err.(*json.UnmarshalTypeError); ok {
-			// This just means that no file errors were found.
-			if typeErr.Field != "files" || typeErr.Value != "array" {
-				c.AddFail(err.Error())
-			}
-		} else {
-			c.AddFail(err.Error())
-		}
+		c.AddFail(err.Error())
+		return
+	}
+
+	// It's an empty slice, not a map, meaning no file errors.
+	if string(c.phpstanResult.FilesRaw) == "[]" {
+		return
+	}
+
+	// Unmarshal file errors.
+	err = json.Unmarshal(c.phpstanResult.FilesRaw, &c.phpstanResult.Files)
+	if err != nil {
+		c.AddFail(err.Error())
 		return
 	}
 }
