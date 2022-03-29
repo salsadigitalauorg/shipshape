@@ -2,10 +2,11 @@ package shipshape_test
 
 import (
 	"bytes"
-	"salsadigitalauorg/shipshape/internal"
-	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"testing"
 	"text/tabwriter"
+
+	"github.com/salsadigitalauorg/shipshape/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
 func TestCheckBase(t *testing.T) {

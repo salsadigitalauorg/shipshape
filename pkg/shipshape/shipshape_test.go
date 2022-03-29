@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"salsadigitalauorg/shipshape/pkg/drupal"
-	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"strings"
 	"testing"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
 func TestReadAndParseConfig(t *testing.T) {

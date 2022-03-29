@@ -9,7 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"salsadigitalauorg/shipshape/pkg/shipshape"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
 const PhpStan shipshape.CheckType = "phpstan"

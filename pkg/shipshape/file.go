@@ -3,7 +3,8 @@ package shipshape
 import (
 	"fmt"
 	"path/filepath"
-	"salsadigitalauorg/shipshape/pkg/utils"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 // RequiresData implementation for file check.

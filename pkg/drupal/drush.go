@@ -5,10 +5,11 @@ import (
 	"io/fs"
 	"os/exec"
 	"path/filepath"
-	"salsadigitalauorg/shipshape/pkg/shipshape"
-	"salsadigitalauorg/shipshape/pkg/utils"
 	"sort"
 	"strings"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	"gopkg.in/yaml.v3"
 )

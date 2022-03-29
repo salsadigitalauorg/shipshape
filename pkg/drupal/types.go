@@ -1,7 +1,7 @@
 package drupal
 
 import (
-	"salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
 const (

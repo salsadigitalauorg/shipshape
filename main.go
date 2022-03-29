@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"salsadigitalauorg/shipshape/pkg/drupal"
-	"salsadigitalauorg/shipshape/pkg/phpstan"
-	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"strings"
 	"text/tabwriter"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	"github.com/salsadigitalauorg/shipshape/pkg/phpstan"
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 
 	"github.com/spf13/pflag"
 )
@@ -25,6 +26,7 @@ var (
 var (
 	displayUsage    bool
 	displayVersion  bool
+	selfUpdate      bool
 	projectDir      string
 	checksFile      string
 	checkTypesToRun []string
@@ -87,6 +89,7 @@ func parseFlags() {
 
 	pflag.BoolVarP(&displayUsage, "help", "h", false, "Displays usage information")
 	pflag.BoolVarP(&displayVersion, "version", "v", false, "Displays the application version")
+	pflag.BoolVarP(&selfUpdate, "self-update", "u", false, "Updates shipshape to the latest version")
 	pflag.StringVarP(&checksFile, "file", "f", "shipshape.yml", "Path to the file containing the checks")
 	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format (json|junit|simple|table)")
 	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "Comma-separated list of checks to run; default is empty, which will run all checks")
@@ -96,6 +99,11 @@ func parseFlags() {
 		pflag.Usage()
 		os.Exit(0)
 	}
+
+	// if selfUpdate {
+	// 	internal.SelfUpdate("")
+	// 	os.Exit(0)
+	// }
 
 }
 

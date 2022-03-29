@@ -2,9 +2,10 @@ package shipshape_test
 
 import (
 	"reflect"
-	"salsadigitalauorg/shipshape/internal"
-	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"testing"
+
+	"github.com/salsadigitalauorg/shipshape/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
 func TestYamlUnmarshalDataMap(t *testing.T) {

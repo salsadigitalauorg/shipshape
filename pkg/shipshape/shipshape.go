@@ -6,8 +6,9 @@ import (
 	"errors"
 	"io/ioutil"
 	"os"
-	"salsadigitalauorg/shipshape/pkg/utils"
 	"sync"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	"gopkg.in/yaml.v3"
 )

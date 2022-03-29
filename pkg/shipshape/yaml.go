@@ -6,8 +6,9 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"path/filepath"
-	"salsadigitalauorg/shipshape/pkg/utils"
 	"strings"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"

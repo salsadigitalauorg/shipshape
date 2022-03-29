@@ -5,11 +5,12 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
-	"salsadigitalauorg/shipshape/internal"
-	"salsadigitalauorg/shipshape/pkg/drupal"
-	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"strconv"
 	"testing"
+
+	"github.com/salsadigitalauorg/shipshape/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
 var mockedExitStatus = 0

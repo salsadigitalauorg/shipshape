@@ -2,8 +2,9 @@ package utils_test
 
 import (
 	"reflect"
-	"salsadigitalauorg/shipshape/pkg/utils"
 	"testing"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 func TestFindFiles(t *testing.T) {

@@ -2,7 +2,8 @@ package drupal
 
 import (
 	"fmt"
-	"salsadigitalauorg/shipshape/pkg/shipshape"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
 func RegisterChecks() {

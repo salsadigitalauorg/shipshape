@@ -3,8 +3,9 @@ package internal
 import (
 	"fmt"
 	"reflect"
-	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"testing"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
 func EnsureFail(t *testing.T, c *shipshape.CheckBase) (msg string, ok bool) {

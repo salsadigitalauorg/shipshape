@@ -1,9 +1,10 @@
 package shipshape_test
 
 import (
-	"salsadigitalauorg/shipshape/internal"
-	"salsadigitalauorg/shipshape/pkg/shipshape"
 	"testing"
+
+	"github.com/salsadigitalauorg/shipshape/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
 func TestFileCheck(t *testing.T) {
