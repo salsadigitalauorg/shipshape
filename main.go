@@ -47,6 +47,15 @@ func main() {
 	parseArgs()
 	validateOutputFormat(&outputFormat)
 
+	if _, err := os.Stat(checksFile); os.IsNotExist(err) {
+		fmt.Fprintf(os.Stderr, "checks file '%s' not found\n", checksFile)
+
+		if errorCodeOnFailure {
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
+
 	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFile)
 	if err != nil {
 		log.Fatal(err)
@@ -73,7 +82,7 @@ func main() {
 	}
 
 	if r.Status() == shipshape.Fail && errorCodeOnFailure {
-		os.Exit(1)
+		os.Exit(2)
 	}
 }
 
