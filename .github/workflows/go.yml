@@ -32,7 +32,6 @@ jobs:
 
     - uses: shogo82148/actions-goveralls@v1
       with:
-        github-token: ${{ secrets.COVERALLS_TOKEN }}
         path-to-profile: build/coverage.out
 
     - name: Upload test coverage
