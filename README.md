@@ -11,8 +11,7 @@
 
 The preferred method is installation via [Homebrew](https://brew.sh/).
 ```sh
-brew tap salsadigitalauorg/shipshape
-brew install shipshape
+brew install salsadigitalauorg/shipshape
 ```
 
 ### Linux

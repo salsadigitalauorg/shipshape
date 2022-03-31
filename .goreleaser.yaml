@@ -49,6 +49,7 @@ brews:
     tap:
       owner: "salsadigitalauorg"
       name: homebrew-shipshape
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     homepage: "https://github.com/salsadigitalauorg/shipshape"
     description: "Golang CLI tool to run checks/audits on your systems"
     skip_upload: "false"
