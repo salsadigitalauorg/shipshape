@@ -30,6 +30,11 @@ jobs:
     - name: Test
       run: go test -v ./... -coverprofile=build/coverage.out
 
+    - uses: shogo82148/actions-goveralls@v1
+      with:
+        github-token: ${{ secrets.COVERALLS_TOKEN }}
+        path-to-profile: build/coverage.out
+
     - name: Upload test coverage
       uses: actions/upload-artifact@v2
       with:
