@@ -2,6 +2,8 @@
 [![Go](https://github.com/salsadigitalauorg/shipshape/actions/workflows/go.yml/badge.svg)](https://github.com/salsadigitalauorg/shipshape/actions/workflows/go.yml)
 [![Docker](https://github.com/salsadigitalauorg/shipshape/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/salsadigitalauorg/shipshape/actions/workflows/docker-publish.yml)
 [![Coverage Status](https://coveralls.io/repos/github/salsadigitalauorg/shipshape/badge.svg?branch=main)](https://coveralls.io/github/salsadigitalauorg/shipshape?branch=main)
+[![Release](https://img.shields.io/github/v/release/salsadigitalauorg/shipshape)](https://github.com/salsadigitalauorg/shipshape/releases/latest)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/salsadigitalauorg/shipshape)
 
 ## Installation
 
