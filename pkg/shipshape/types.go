@@ -58,6 +58,8 @@ type ResultList struct {
 	Results           []Result          `json:"results"`
 }
 
+var OutputFormats = []string{"json", "junit", "simple", "table"}
+
 type CheckStatus string
 
 const (

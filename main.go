@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 
@@ -37,6 +38,8 @@ var (
 
 func main() {
 	parseFlags()
+	// Parse env vars, overriding flags.
+	parseEnvVars()
 
 	if displayVersion {
 		fmt.Printf("Version: %s\n", version)
@@ -45,7 +48,9 @@ func main() {
 	}
 
 	parseArgs()
-	validateOutputFormat(&outputFormat)
+	if !isValidOutputFormat(&outputFormat) {
+		log.Fatalf("Invalid output format; needs to be one of: %s.", strings.Join(shipshape.OutputFormats, "|"))
+	}
 
 	if _, err := os.Stat(checksFile); os.IsNotExist(err) {
 		fmt.Fprintf(os.Stderr, "checks file '%s' not found\n", checksFile)
@@ -99,9 +104,9 @@ func parseFlags() {
 	pflag.BoolVarP(&displayVersion, "version", "v", false, "Displays the application version")
 	// pflag.BoolVarP(&selfUpdate, "self-update", "u", false, "Updates shipshape to the latest version")
 
-	pflag.BoolVarP(&errorCodeOnFailure, "error-code", "e", false, "Exit with error code (1) if a failure is detected")
+	pflag.BoolVarP(&errorCodeOnFailure, "error-code", "e", false, "Exit with error code if a failure is detected (env: SHIPSHAPE_ERROR_ON_FAILURE)")
 	pflag.StringVarP(&checksFile, "file", "f", "shipshape.yml", "Path to the file containing the checks")
-	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format (json|junit|simple|table)")
+	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format [json|junit|simple|table] (env: SHIPSHAPE_OUTPUT_FORMAT)")
 	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "Comma-separated list of checks to run; default is empty, which will run all checks")
 	pflag.Parse()
 
@@ -117,6 +122,21 @@ func parseFlags() {
 
 }
 
+// parseEnvVars reads and applies supported environment variables.
+func parseEnvVars() {
+	errorCodeOnFailureEnv := os.Getenv("SHIPSHAPE_ERROR_ON_FAILURE")
+	if errorCodeOnFailureEnv != "" {
+		if errorCodeOnFailureEnvBool, err := strconv.ParseBool(errorCodeOnFailureEnv); err == nil {
+			errorCodeOnFailure = errorCodeOnFailureEnvBool
+		}
+	}
+
+	outputFormatEnv := os.Getenv("SHIPSHAPE_OUTPUT_FORMAT")
+	if outputFormatEnv != "" {
+		outputFormat = outputFormatEnv
+	}
+}
+
 func parseArgs() {
 	args := pflag.Args()
 	if len(args) > 1 {
@@ -126,16 +146,13 @@ func parseArgs() {
 	}
 }
 
-func validateOutputFormat(of *string) {
-	validFormats := []string{"json", "junit", "simple", "table"}
+func isValidOutputFormat(of *string) bool {
 	valid := false
-	for _, fm := range validFormats {
+	for _, fm := range shipshape.OutputFormats {
 		if *of == fm {
 			valid = true
 			break
 		}
 	}
-	if !valid {
-		log.Fatalf("Invalid output format; needs to be one of: %s.", strings.Join(validFormats, "|"))
-	}
+	return valid
 }
