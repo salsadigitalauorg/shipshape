@@ -3,6 +3,8 @@ name: Publish docs
 on:
   push:
     branches: [ main ]
+    paths:
+      - docs/**'
 
 jobs:
   build:
@@ -15,5 +17,5 @@ jobs:
         uses: jenkey2011/vuepress-deploy@master
         env:
           ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BUILD_SCRIPT: cd docs && yarn && yarn build
+          BUILD_SCRIPT: cd docs && npm install && npm run build
           BUILD_DIR: src/.vuepress/dist
