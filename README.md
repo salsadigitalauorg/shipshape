@@ -44,9 +44,11 @@ Usage:
   shipshape [dir]
 
 Flags:
+  -e, --error-code      Exit with error code if a failure is detected (env: SHIPSHAPE_ERROR_ON_FAILURE)
+  -d, --exclude-db      Exclude checks requiring a database; overrides any db checks specified by '--types'
   -f, --file string     Path to the file containing the checks (default "shipshape.yml")
-  -h, --help            Displays this help
-  -o, --output string   Output format (json|junit|simple|table) (default "simple")
+  -h, --help            Displays usage information
+  -o, --output string   Output format [json|junit|simple|table] (env: SHIPSHAPE_OUTPUT_FORMAT) (default "simple")
   -t, --types strings   Comma-separated list of checks to run; default is empty, which will run all checks
   -v, --version         Displays the application version
 ```
