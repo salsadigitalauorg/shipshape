@@ -15,12 +15,21 @@ builds:
       - arm64
 
 archives:
-  - replacements:
+  - id: targz
+    replacements:
       darwin: Darwin
       linux: Linux
       amd64: x86_64
       arm64: aarch64
-    files: []
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+  - id: binaries
+    format: binary
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      amd64: x86_64
+      arm64: aarch64
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
 
 checksum:
   name_template: 'checksums.txt'
@@ -45,3 +54,5 @@ brews:
     skip_upload: "false"
     test: system "#{bin}/shipshape version"
     install: bin.install "shipshape"
+    ids:
+      - targz

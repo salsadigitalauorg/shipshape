@@ -7,10 +7,21 @@
 
 ## Installation
 
-### Binary
+### MacOS
 
-  - Download the binary for your OS (Linux/MacOS) and platform (amd64/arm64) from the [latest release](https://github.com/salsadigitalauorg/shipshape/releases/latest)
-  - Untar and move shipshape to /usr/local/bin/shipshape
+The preferred method is installation via [Homebrew](https://brew.sh/).
+```sh
+brew tap salsadigitalauorg/shipshape
+brew install shipshape
+```
+
+### Linux
+
+```sh
+curl -L -o shipshape https://github.com/salsadigitalauorg/shipshape/releases/latest/download/shipshape-$(uname -s)-$(uname -m)
+chmod +x shipshape
+mv shipshape /usr/local/bin/shipshape
+```
 
 ### Docker
 
