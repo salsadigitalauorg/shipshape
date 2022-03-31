@@ -8,11 +8,7 @@ name: Docker
 on:
   schedule:
     - cron: '17 3 * * *'
-  push:
-    branches: [ main ]
-    tags: [ 'v*.*.*' ]
-    paths-ignore:
-      - 'docs/**'
+  workflow_call: {}
 
 env:
   REGISTRY: ghcr.io

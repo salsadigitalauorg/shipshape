@@ -13,12 +13,10 @@ on:
 
 jobs:
 
-  build:
+  test-build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
 
     - name: Set up Go
       uses: actions/setup-go@v2
@@ -45,6 +43,19 @@ jobs:
         path: build
       if: github.ref_name == 'main'
 
+  publish-binary:
+    needs: test-build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
     - name: Fetch all tags
       run: git fetch --force --tags
       if: startsWith(github.ref_name, 'v')
@@ -57,3 +68,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       if: startsWith(github.ref_name, 'v')
+
+  publish-docker:
+    needs: test-build
+    uses: ./.github/workflows/docker-publish.yml
