@@ -15,5 +15,5 @@ jobs:
         uses: jenkey2011/vuepress-deploy@master
         env:
           ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BUILD_SCRIPT: yarn && yarn build
+          BUILD_SCRIPT: cd docs && yarn && yarn build
           BUILD_DIR: docs/src/.vuepress/dist
