@@ -6,7 +6,7 @@
 
 The preferred method is installation via [Homebrew](https://brew.sh/).
 ```sh
-brew install salsadigitalauorg/shipshape
+brew install salsadigitalauorg/shipshape/shipshape
 ```
 
 ### Linux
