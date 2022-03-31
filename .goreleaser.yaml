@@ -19,6 +19,7 @@ archives:
       darwin: Darwin
       linux: Linux
       amd64: x86_64
+      arm64: aarch64
     files: []
 
 checksum:
