@@ -1,6 +1,7 @@
 # ShipShape
 [![Go](https://github.com/salsadigitalauorg/shipshape/actions/workflows/go.yml/badge.svg)](https://github.com/salsadigitalauorg/shipshape/actions/workflows/go.yml)
 [![Docker](https://github.com/salsadigitalauorg/shipshape/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/salsadigitalauorg/shipshape/actions/workflows/docker-publish.yml)
+[![Coverage Status](https://coveralls.io/repos/github/salsadigitalauorg/shipshape/badge.svg?branch=main)](https://coveralls.io/github/salsadigitalauorg/shipshape?branch=main)
 
 ## Installation
 
