@@ -39,6 +39,12 @@ func (cmd *DrushCommand) Exec() ([]byte, error) {
 	return ExecCommand(cmd.DrushPath, cmdSlice...).Output()
 }
 
+// Init implementation for the drush-based yaml check.
+func (c *DrushYamlCheck) Init(pd string, ct shipshape.CheckType) {
+	c.YamlBase.Init(pd, ct)
+	c.RequiresDb = true
+}
+
 // FetchData runs the drush command to populate data for the Drush Yaml check.
 // Since the check is going to be Yaml-based, `--format=yaml` is automatically
 // added to the command.
@@ -59,6 +65,7 @@ func (c *DrushYamlCheck) FetchData() {
 // Init implementation for the DB-based module check.
 func (c *DbModuleCheck) Init(pd string, ct shipshape.CheckType) {
 	c.CheckBase.Init(pd, ct)
+	c.RequiresDb = true
 	c.Command = "pm:list --status=enabled"
 }
 
@@ -70,6 +77,7 @@ func (c *DbModuleCheck) RunCheck() {
 // Init implementation for the DB-based permissions check.
 func (c *DbPermissionsCheck) Init(pd string, ct shipshape.CheckType) {
 	c.CheckBase.Init(pd, ct)
+	c.RequiresDb = true
 	c.Command = "role:list"
 	c.ConfigName = "permissions"
 }

@@ -28,6 +28,9 @@ func (c *CheckBase) GetName() string {
 // a check that does not require the DataMap.
 func (c *CheckBase) RequiresData() bool { return true }
 
+// RequiresDb indicates whether the check requires a database to run against.
+func (c *CheckBase) RequiresDatabase() bool { return c.RequiresDb }
+
 // FetchData contains the logic for fetching the data over which the check is
 // going to run.
 // This is where c.DataMap should be populated.

@@ -15,6 +15,7 @@ type Check interface {
 	Init(pd string, ct CheckType)
 	GetName() string
 	RequiresData() bool
+	RequiresDatabase() bool
 	HasData(failCheck bool) bool
 	FetchData()
 	UnmarshalDataMap()
@@ -33,9 +34,11 @@ type Config struct {
 
 // CheckBase provides the basic structure for all Checks.
 type CheckBase struct {
-	Name    string `yaml:"name"`
-	DataMap map[string][]byte
-	Result  Result
+	Name string `yaml:"name"`
+	// Flag indicating if the check requires a database connection to run.
+	RequiresDb bool
+	DataMap    map[string][]byte
+	Result     Result
 }
 
 // Result provides the structure for a Check's outcome.

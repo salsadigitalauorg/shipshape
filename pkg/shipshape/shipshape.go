@@ -48,16 +48,35 @@ func (cfg *Config) Init() {
 	}
 }
 
-func (cfg *Config) RunChecks(checkTypesToRun []string) ResultList {
+// FilterChecksToRun iterates over all the checks and filters them based on
+// a provided list of check types to run or whether to exclude database checks.
+func (cfg *Config) FilterChecksToRun(checkTypesToRun []string, excludeDb bool) {
+	newCm := CheckMap{}
+	for ct, checks := range cfg.Checks {
+		newChecks := []Check{}
+		for _, c := range checks {
+			if len(checkTypesToRun) > 0 && !utils.StringSliceContains(checkTypesToRun, string(ct)) {
+				continue
+			}
+			if excludeDb && c.RequiresDatabase() {
+				continue
+			}
+			newChecks = append(newChecks, c)
+		}
+		if len(newChecks) > 0 {
+			newCm[ct] = newChecks
+		}
+	}
+	cfg.Checks = newCm
+}
+
+func (cfg *Config) RunChecks() ResultList {
 	rl := ResultList{
 		config:  cfg,
 		Results: []Result{},
 	}
 	var wg sync.WaitGroup
 	for ct, checks := range cfg.Checks {
-		if len(checkTypesToRun) > 0 && !utils.StringSliceContains(checkTypesToRun, string(ct)) {
-			continue
-		}
 		checks := checks
 		rl.IncrChecks(ct, len(checks))
 		for i := range checks {

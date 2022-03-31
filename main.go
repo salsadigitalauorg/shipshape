@@ -33,6 +33,7 @@ var (
 	projectDir         string
 	checksFile         string
 	checkTypesToRun    []string
+	excludeDb          bool
 	outputFormat       string
 )
 
@@ -66,7 +67,8 @@ func main() {
 		log.Fatal(err)
 	}
 	cfg.Init()
-	r := cfg.RunChecks(checkTypesToRun)
+	cfg.FilterChecksToRun(checkTypesToRun, excludeDb)
+	r := cfg.RunChecks()
 
 	switch outputFormat {
 	case "json":
@@ -108,6 +110,7 @@ func parseFlags() {
 	pflag.StringVarP(&checksFile, "file", "f", "shipshape.yml", "Path to the file containing the checks")
 	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format [json|junit|simple|table] (env: SHIPSHAPE_OUTPUT_FORMAT)")
 	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "Comma-separated list of checks to run; default is empty, which will run all checks")
+	pflag.BoolVarP(&excludeDb, "exclude-db", "d", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
 	pflag.Parse()
 
 	if displayUsage {
