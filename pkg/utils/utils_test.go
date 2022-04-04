@@ -1,6 +1,9 @@
 package utils_test
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 
@@ -88,5 +91,48 @@ func TestStringSlicesIntersect(t *testing.T) {
 	expectedIntersect = []string{"foo", "zoom"}
 	if len(intersect) != 2 || !reflect.DeepEqual(intersect, expectedIntersect) {
 		t.Errorf("Intersect should have 2 item, got '%+v'", intersect)
+	}
+}
+
+func TestStringIsUrl(t *testing.T) {
+	isUrl := utils.StringIsUrl("foo/bar.yml")
+	if isUrl {
+		t.Error("expected isUrl to be false, got true")
+	}
+
+	isUrl = utils.StringIsUrl("~/foo/bar.yml")
+	if isUrl {
+		t.Error("expected isUrl to be false, got true")
+	}
+
+	isUrl = utils.StringIsUrl("/home/user/foo/bar.yml")
+	if isUrl {
+		t.Error("expected isUrl to be false, got true")
+	}
+
+	isUrl = utils.StringIsUrl("https://example.com/foo.yml")
+	if !isUrl {
+		t.Error("expected isUrl to be true, got false")
+	}
+
+	isUrl = utils.StringIsUrl("https://127.0.0.1:8080/foo.yml")
+	if !isUrl {
+		t.Error("expected isUrl to be true, got false")
+	}
+}
+
+func TestFetchContentFromUrl(t *testing.T) {
+	expected := "dummy data"
+	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, expected)
+	}))
+	defer svr.Close()
+
+	c, err := utils.FetchContentFromUrl(svr.URL + "/foo.yml")
+	if err != nil {
+		t.Errorf("expected err to be nil got %v", err)
+	}
+	if string(c) != expected {
+		t.Errorf("expected content to be %s, got %s", expected, c)
 	}
 }

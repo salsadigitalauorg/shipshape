@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"bytes"
 	"errors"
 	"io/fs"
+	"net/http"
+	"net/url"
 	"path/filepath"
 	"regexp"
 )
@@ -73,4 +76,25 @@ func StringSlicesIntersect(slc1 []string, slc2 []string) []string {
 	}
 
 	return intersect
+}
+
+// StringIsUrl determines whether a string is a url by trying to parse it.
+func StringIsUrl(s string) bool {
+	u, err := url.Parse(s)
+	return err == nil && u.Scheme != "" && u.Host != ""
+}
+
+// FetchContentFromUrl fetches the content from a url and returns its bytes.
+func FetchContentFromUrl(u string) ([]byte, error) {
+	rsp, err := http.Get(u)
+	if err != nil {
+		return []byte(nil), err
+	}
+
+	defer rsp.Body.Close()
+	buf := new(bytes.Buffer)
+	if _, err := buf.ReadFrom(rsp.Body); err != nil {
+		return []byte(nil), err
+	}
+	return buf.Bytes(), nil
 }

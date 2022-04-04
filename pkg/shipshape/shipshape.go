@@ -15,10 +15,22 @@ import (
 
 func ReadAndParseConfig(projectDir string, f string) (Config, error) {
 	cfg := Config{}
-	data, err := ioutil.ReadFile(f)
-	if err != nil {
-		return cfg, err
+
+	var data []byte
+	var err error
+
+	if utils.StringIsUrl(f) {
+		data, err = utils.FetchContentFromUrl(f)
+		if err != nil {
+			return cfg, err
+		}
+	} else {
+		data, err = ioutil.ReadFile(f)
+		if err != nil {
+			return cfg, err
+		}
 	}
+
 	err = ParseConfig(data, projectDir, &cfg)
 	return cfg, err
 }

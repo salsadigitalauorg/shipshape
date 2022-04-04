@@ -14,6 +14,7 @@ import (
 	_ "github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	_ "github.com/salsadigitalauorg/shipshape/pkg/phpstan"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	"github.com/spf13/pflag"
 )
@@ -53,13 +54,15 @@ func main() {
 		log.Fatalf("Invalid output format; needs to be one of: %s.", strings.Join(shipshape.OutputFormats, "|"))
 	}
 
-	if _, err := os.Stat(checksFile); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "checks file '%s' not found\n", checksFile)
+	if !utils.StringIsUrl(checksFile) {
+		if _, err := os.Stat(checksFile); os.IsNotExist(err) {
+			fmt.Fprintf(os.Stderr, "checks file '%s' not found\n", checksFile)
 
-		if errorCodeOnFailure {
-			os.Exit(1)
+			if errorCodeOnFailure {
+				os.Exit(1)
+			}
+			os.Exit(0)
 		}
-		os.Exit(0)
 	}
 
 	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFile)
