@@ -134,6 +134,23 @@ func (c *TrackingCodeCheck) Init(pd string, ct shipshape.CheckType) {
 	c.ConfigName = "uri"
 }
 
+// UnmarshalDataMap parses the drush status yaml into the DrushStatus
+// type for further processing.
+func (c *TrackingCodeCheck) UnmarshalDataMap() {
+	if len(c.DataMap[c.ConfigName]) == 0 {
+		c.AddFail("no data provided")
+	}
+
+	c.DrushStatus = DrushStatus{}
+	err := yaml.Unmarshal(c.DataMap[c.ConfigName], &c.DrushStatus)
+	if err != nil {
+		if _, ok := err.(*yaml.TypeError); !ok {
+			c.AddFail(err.Error())
+			return
+		}
+	}
+}
+
 func (c *TrackingCodeCheck) RunCheck() {
 	resp, err := http.Get(c.DrushStatus.Uri)
 
@@ -143,7 +160,7 @@ func (c *TrackingCodeCheck) RunCheck() {
 	}
 
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 
 	r, _ := regexp.Compile(c.Code)
 
