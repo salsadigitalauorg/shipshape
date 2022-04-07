@@ -9,6 +9,7 @@ const (
 	FileModule    shipshape.CheckType = "drupal-file-module"
 	DbModule      shipshape.CheckType = "drupal-db-module"
 	DbPermissions shipshape.CheckType = "drupal-db-permissions"
+	TrackingCode  shipshape.CheckType = "drupal-tracking-code"
 )
 
 type DrushCommand struct {
@@ -45,4 +46,14 @@ type DbPermissionsCheck struct {
 	Disallowed     []string `yaml:"disallowed"`
 	ExcludeRoles   []string `yaml:"exclude-roles"`
 	Permissions    map[string]DrushRole
+}
+
+type DrushStatus struct {
+	Uri string `yaml:"uri"`
+}
+
+type TrackingCodeCheck struct {
+	DrushYamlCheck `yaml:",inline"`
+	Code           string `yaml:"code"`
+	DrushStatus    DrushStatus
 }

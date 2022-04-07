@@ -363,3 +363,51 @@ site_editor:
 		t.Error(msg)
 	}
 }
+
+func TestTrackingCodeCheckFails(t *testing.T) {
+	c := drupal.TrackingCodeCheck{
+		Code: "UA-xxxxxx-1",
+	}
+	c.Init("", drupal.TrackingCode)
+	if c.Command != "status" {
+		t.Error("drush command for check should already be set")
+	}
+
+	c.DrushStatus = drupal.DrushStatus{
+		Uri: "https://google.com",
+	}
+	c.RunCheck()
+
+	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{
+		"tracking code [UA-xxxxxx-1] not present",
+	}); !ok {
+		t.Error(msg)
+	}
+}
+
+func TestTrackingCodeCheckPass(t *testing.T) {
+	c := drupal.TrackingCodeCheck{
+		Code: "UA-xxxxxx-1",
+	}
+	c.Init("", drupal.TrackingCode)
+	if c.Command != "status" {
+		t.Error("drush command for check should already be set")
+	}
+
+	c.DrushStatus = drupal.DrushStatus{
+		Uri: "https://gist.github.com/Pominova/cf7884e7418f6ebfa412d2d3dc472a97",
+	}
+	c.RunCheck()
+
+	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
+		"tracking code [UA-xxxxxx-1] present",
+	}); !ok {
+		t.Error(msg)
+	}
+}
