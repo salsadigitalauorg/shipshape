@@ -2,9 +2,12 @@ package drupal
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
+	"net/http"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -122,4 +125,33 @@ func (c *DbPermissionsCheck) RunCheck() {
 	if len(c.Result.Failures) == 0 {
 		c.Result.Status = shipshape.Pass
 	}
+}
+
+func (c *TrackingCodeCheck) Init(pd string, ct shipshape.CheckType) {
+	c.CheckBase.Init(pd, ct)
+	c.RequiresDb = true
+	c.Command = "status"
+	c.ConfigName = "uri"
+}
+
+func (c *TrackingCodeCheck) RunCheck() {
+	resp, err := http.Get(c.DrushStatus.Uri)
+
+	if err != nil {
+		c.AddFail("could not determine site uri")
+		return
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+
+	r, _ := regexp.Compile(c.Code)
+
+	if r.Match(body) {
+		c.AddPass(fmt.Sprintf("tracking code [%s] present", c.Code))
+		c.Result.Status = shipshape.Pass
+	} else {
+		c.AddFail(fmt.Sprintf("tracking code [%s] not present", c.Code))
+	}
+
 }

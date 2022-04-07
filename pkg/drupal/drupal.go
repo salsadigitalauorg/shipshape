@@ -11,6 +11,7 @@ func RegisterChecks() {
 	shipshape.ChecksRegistry[FileModule] = func() shipshape.Check { return &FileModuleCheck{} }
 	shipshape.ChecksRegistry[DbModule] = func() shipshape.Check { return &DbModuleCheck{} }
 	shipshape.ChecksRegistry[DbPermissions] = func() shipshape.Check { return &DbPermissionsCheck{} }
+	shipshape.ChecksRegistry[TrackingCode] = func() shipshape.Check { return &TrackingCodeCheck{} }
 }
 
 func init() {
