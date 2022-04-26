@@ -96,6 +96,7 @@ const (
 	File     CheckType = "file"     // Represents a FileCheck.
 	Yaml     CheckType = "yaml"     // Represents a YamlCheck.
 	YamlLint CheckType = "yamllint" // Represents a YamlLintCheck.
+	Crawler  CheckType = "crawler"  // Represents a CrawlerCheck
 )
 
 // FileCheck is a simple File absence check which can be for a single
@@ -104,6 +105,16 @@ type FileCheck struct {
 	CheckBase         `yaml:",inline"`
 	Path              string `yaml:"path"`
 	DisallowedPattern string `yaml:"disallowed-pattern"`
+}
+
+// CrawlerCheck is a lightweight crawler that can be used to determine
+// health of the project.
+type CrawlerCheck struct {
+	CheckBase    `yaml:",inline"`
+	Domain       string   `yaml:"domain"`
+	ExtraDomains []string `yaml:"extra_domains"`
+	IncludeURLs  []string `yaml:"include_urls"`
+	Limit        int      `yaml:"limit"`
 }
 
 // YamlBase represents the structure for a Yaml-based check.
@@ -135,6 +146,7 @@ var ChecksRegistry = map[CheckType]func() Check{
 	File:     func() Check { return &FileCheck{} },
 	Yaml:     func() Check { return &YamlCheck{} },
 	YamlLint: func() Check { return &YamlLintCheck{} },
+	Crawler:  func() Check { return &CrawlerCheck{} },
 }
 
 type JUnitError struct {
