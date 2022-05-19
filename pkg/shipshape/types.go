@@ -27,9 +27,22 @@ type Check interface {
 
 type CheckMap map[CheckType][]Check
 
+type Severity string
+
+const (
+	LowSeverity      Severity = "low"
+	NormalSeverity   Severity = "normal"
+	HighSeverity     Severity = "high"
+	CriticalSeverity Severity = "critical"
+)
+
 type Config struct {
-	ProjectDir string   `yaml:"project-dir"`
-	Checks     CheckMap `yaml:"checks"`
+	// The directory to audit.
+	ProjectDir string `yaml:"project-dir"`
+	// The severity level for which the program will exit with an error.
+	// Default is high.
+	FailSeverity Severity `yaml:"fail-severity"`
+	Checks       CheckMap `yaml:"checks"`
 }
 
 // CheckBase provides the basic structure for all Checks.
@@ -39,11 +52,14 @@ type CheckBase struct {
 	RequiresDb bool
 	DataMap    map[string][]byte
 	Result     Result
+	// Default severity is normal.
+	Severity Severity `yaml:"severity"`
 }
 
 // Result provides the structure for a Check's outcome.
 type Result struct {
 	Name      string      `json:"name"`
+	Severity  Severity    `json:"severity"`
 	CheckType CheckType   `json:"check-type"`
 	Status    CheckStatus `json:"status"`
 	Passes    []string    `json:"passes"`
@@ -53,12 +69,13 @@ type Result struct {
 // ResultList is a wrapper around a list of results, providing some useful
 // methods to manipulate and use it.
 type ResultList struct {
-	config            *Config
-	TotalChecks       int               `json:"total-checks"`
-	TotalBreaches     int               `json:"total-breaches"`
-	CheckCountByType  map[CheckType]int `json:"check-count-by-type"`
-	BreachCountByType map[CheckType]int `json:"breach-count-by-type"`
-	Results           []Result          `json:"results"`
+	config                *Config
+	TotalChecks           int               `json:"total-checks"`
+	TotalBreaches         int               `json:"total-breaches"`
+	CheckCountByType      map[CheckType]int `json:"check-count-by-type"`
+	BreachCountByType     map[CheckType]int `json:"breach-count-by-type"`
+	BreachCountBySeverity map[Severity]int  `json:"breach-count-by-severity"`
+	Results               []Result          `json:"results"`
 }
 
 var OutputFormats = []string{"json", "junit", "simple", "table"}

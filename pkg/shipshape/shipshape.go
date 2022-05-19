@@ -49,6 +49,10 @@ func ParseConfig(data []byte, projectDir string, cfg *Config) error {
 		cfg.ProjectDir = projectDir
 	}
 
+	if cfg.FailSeverity == "" {
+		cfg.FailSeverity = HighSeverity
+	}
+
 	return nil
 }
 
@@ -119,7 +123,7 @@ func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
 		c.GetResult().Sort()
 	}
 	rl.Results = append(rl.Results, *c.GetResult())
-	rl.IncrBreaches(c.GetResult().CheckType, len(c.GetResult().Failures))
+	rl.IncrBreaches(c, len(c.GetResult().Failures))
 }
 
 func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {

@@ -20,9 +20,7 @@ func (c *CrawlerCheck) RunCheck() {
 	links := []string{}
 	req_count := 0
 
-	for _, domain := range c.ExtraDomains {
-		allowed_domains = append(allowed_domains, domain)
-	}
+	allowed_domains = append(allowed_domains, c.ExtraDomains...)
 
 	crawler := colly.NewCollector(
 		colly.AllowedDomains(allowed_domains...),

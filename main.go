@@ -71,27 +71,29 @@ func main() {
 	}
 	cfg.Init()
 	cfg.FilterChecksToRun(checkTypesToRun, excludeDb)
-	r := cfg.RunChecks()
+	rl := cfg.RunChecks()
 
 	switch outputFormat {
 	case "json":
-		data, err := json.Marshal(r)
+		data, err := json.Marshal(rl)
 		if err != nil {
 			log.Fatalf("Unable to convert result to json: %+v\n", err)
 		}
 		fmt.Println(string(data))
 	case "junit":
 		w := bufio.NewWriter(os.Stdout)
-		r.JUnit(w)
+		rl.JUnit(w)
 	case "table":
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		r.TableDisplay(w)
+		rl.TableDisplay(w)
 	case "simple":
 		w := bufio.NewWriter(os.Stdout)
-		r.SimpleDisplay(w)
+		rl.SimpleDisplay(w)
 	}
 
-	if r.Status() == shipshape.Fail && errorCodeOnFailure {
+	if rl.Status() == shipshape.Fail && errorCodeOnFailure &&
+		len(rl.GetBreachesBySeverity(cfg.FailSeverity)) > 0 {
+
 		os.Exit(2)
 	}
 }

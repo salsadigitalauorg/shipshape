@@ -7,9 +7,11 @@ sidebar: auto
 The basic layout of the config file is as follows:
 ```yaml
 project-dir: /path/to/project # Default is the current working directory
+fail-severity: high # Default is high, other possible values are low, normal, critical
 checks:
   {check-type}:
     name: {check-name}
+    severity: normal # Only report failures, do not fail
     ... # Other check-specific fields.
 ```
 
@@ -25,22 +27,29 @@ checks:
 ## Check types
 
 The following check types are available:
+  - [file](#file)
+  - [yaml](#yaml)
+  - [yamllint](#yamllint)
+  - [crawler](#crawler)
+  - [drush-yaml](#drush-yaml)
+  - [drupal-file-module](#drupal-file-module)
+  - [drupal-db-module](#drupal-db-module)
+  - [drupal-db-permissions](#drupal-db-permissions)
+  - [phpstan](#phpstan)
 
-- [file](#file)
-- [yaml](#yaml)
-- [yamllint](#yamllint)
-- [drush-yaml](#drush-yaml)
-- [drupal-file-module](#drupal-file-module)
-- [drupal-db-module](#drupal-db-module)
-- [drupal-db-permissions](#drupal-db-permissions)
-- [phpstan](#phpstan)
+### Common fields
+The fields below are common to all checks.
+
+| Field    | Default | Required | Description               |
+| -------- | :-----: | :------: | ------------------------- |
+| name     |    -    |   Yes    | The name of the check     |
+| severity | normal  |    No    | The severity of the check |
 
 ### file
 Checks for disallowed files in the specified path using the pattern provided.
 
 | Field              | Default | Required | Description                                         |
 | ------------------ | :-----: | :------: | --------------------------------------------------- |
-| name               |    -    |   Yes    | The name of check                                   |
 | path               |    -    |   Yes    | Path (directory) to check for the presence of files |
 | disallowed-pattern |    -    |   Yes    | Regex pattern defining the disallowed files         |
 
@@ -57,7 +66,6 @@ Checks yaml files for the presence or absence of required/disallowed values.
 
 | Field           | Default | Required | Description                                             |
 | --------------- | :-----: | :------: | ------------------------------------------------------- |
-| name            |    -    |   Yes    | The name of check                                       |
 | path            |    -    |   Yes    | Path (directory) to check for the presence of files     |
 | file            |    -    |    No    | A single file to check                                  |
 | files           |    -    |    No    | A list of files to check                                |
@@ -145,3 +153,24 @@ yaml:
       - key: required_roles.authenticated
         value: authenticated
 ```
+
+### yamllint
+documentation coming soon...
+
+### crawler
+documentation coming soon...
+
+### drush-yaml
+documentation coming soon...
+
+### drupal-file-module
+documentation coming soon...
+
+### drupal-db-module
+documentation coming soon...
+
+### drupal-db-permissions
+documentation coming soon...
+
+### phpstan
+documentation coming soon...

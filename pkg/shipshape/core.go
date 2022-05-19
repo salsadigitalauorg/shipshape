@@ -13,8 +13,15 @@ var ProjectDir string
 // Init acts as the constructor of a check and sets some initial values.
 func (c *CheckBase) Init(pd string, ct CheckType) {
 	ProjectDir = pd
+	// Default severity is normal.
+	if c.Severity == "" {
+		c.Severity = NormalSeverity
+	}
 	if c.Result.CheckType == "" {
 		c.Result = Result{Name: c.Name, CheckType: ct}
+	}
+	if c.Result.Severity == "" {
+		c.Result.Severity = c.Severity
 	}
 }
 
@@ -116,12 +123,18 @@ func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
 }
 
 // IncrChecks increments the total breaches count & breaches count by type.
-func (rl *ResultList) IncrBreaches(ct CheckType, incr int) {
+func (rl *ResultList) IncrBreaches(c Check, incr int) {
+	ct := c.GetResult().CheckType
+	sev := c.GetResult().Severity
 	rl.TotalBreaches = rl.TotalBreaches + incr
 	if rl.BreachCountByType == nil {
 		rl.BreachCountByType = map[CheckType]int{}
 	}
-	rl.BreachCountByType[ct] = rl.BreachCountByType[ct] + incr
+	if rl.BreachCountBySeverity == nil {
+		rl.BreachCountBySeverity = map[Severity]int{}
+	}
+	rl.BreachCountByType[ct] += +incr
+	rl.BreachCountBySeverity[sev] += +incr
 }
 
 // GetBreachesByCheckName fetches the list of failures by check name.
@@ -129,6 +142,18 @@ func (rl *ResultList) GetBreachesByCheckName(cn string) []string {
 	var breaches []string
 	for _, r := range rl.Results {
 		if r.Name == cn {
+			breaches = append(breaches, r.Failures...)
+		}
+	}
+	return breaches
+}
+
+// GetBreachesBySeverity fetches the list of failures by severity.
+func (rl *ResultList) GetBreachesBySeverity(s Severity) []string {
+	var breaches []string
+
+	for _, r := range rl.Results {
+		if r.Severity == s {
 			breaches = append(breaches, r.Failures...)
 		}
 	}

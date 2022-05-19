@@ -101,6 +101,7 @@ checks:
 	expectedRl := shipshape.ResultList{Results: []shipshape.Result{
 		{
 			Name:      "File check - Ignore missing",
+			Severity:  "normal",
 			CheckType: "yaml",
 			Status:    "Pass",
 			Passes:    []string{fmt.Sprintf("File %s/config/sync/shipshape.extension.yml does not exist", shipshape.ProjectDir)},
@@ -108,6 +109,7 @@ checks:
 		},
 		{
 			Name:      "My db check",
+			Severity:  "normal",
 			CheckType: "drush-yaml",
 			Status:    "Fail",
 			Passes:    []string(nil),
@@ -115,6 +117,7 @@ checks:
 		},
 		{
 			Name:      "My file check",
+			Severity:  "normal",
 			CheckType: "yaml",
 			Status:    "Fail",
 			Passes:    []string(nil),

@@ -8,7 +8,5 @@ features:
   details: Binaries are available for Mac & Linux, on amd64 & arm64
 - title: Flexible output
   details: Choose between simple (for humans), json, junit or table, according to your needs
-- title: Tiny binary
-  details: Less than 5mb
 footer: Made by Salsa Digital with ❤️
 ---
