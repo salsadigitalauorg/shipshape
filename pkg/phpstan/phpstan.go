@@ -17,6 +17,7 @@ const PhpStan shipshape.CheckType = "phpstan"
 
 type PhpStanCheck struct {
 	shipshape.CheckBase `yaml:",inline"`
+	Bin                 string   `yaml:"binary"`
 	Config              string   `yaml:"configuration"`
 	Paths               []string `yaml:"paths"`
 	phpstanResult       PhpStanResult
@@ -54,13 +55,22 @@ const PhpstanDefaultPath = "vendor/phpstan/phpstan/phpstan"
 
 var ExecCommand = exec.Command
 
+func (c *PhpStanCheck) GetBinary() string {
+	var phpstanPath string
+	if len(c.Bin) == 0 {
+		phpstanPath = filepath.Join(shipshape.ProjectDir, PhpstanDefaultPath)
+	} else {
+		phpstanPath = c.Bin
+	}
+	return phpstanPath
+}
+
 // FetchData runs the drush command to populate data for the Drush Yaml check.
 // Since the check is going to be Yaml-based, `--format=yaml` is automatically
 // added to the command.
 func (c *PhpStanCheck) FetchData() {
 	var err error
-
-	phpstanPath := filepath.Join(shipshape.ProjectDir, PhpstanDefaultPath)
+	phpstanPath := c.GetBinary()
 
 	configPath := c.Config
 	if !filepath.IsAbs(c.Config) {
