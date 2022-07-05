@@ -55,14 +55,13 @@ const PhpstanDefaultPath = "vendor/phpstan/phpstan/phpstan"
 
 var ExecCommand = exec.Command
 
-func (c *PhpStanCheck) GetBinary() string {
-	var phpstanPath string
+func (c *PhpStanCheck) GetBinary() (path string) {
 	if len(c.Bin) == 0 {
-		phpstanPath = filepath.Join(shipshape.ProjectDir, PhpstanDefaultPath)
+		path = filepath.Join(shipshape.ProjectDir, PhpstanDefaultPath)
 	} else {
-		phpstanPath = c.Bin
+		path = c.Bin
 	}
-	return phpstanPath
+	return
 }
 
 // FetchData runs the drush command to populate data for the Drush Yaml check.
