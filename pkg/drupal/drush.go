@@ -109,6 +109,10 @@ func (c *DbPermissionsCheck) RunCheck() {
 	}
 
 	for r, perms := range c.Permissions {
+		if utils.StringSliceContains(c.ExcludeRoles, r) {
+			continue
+		}
+
 		fails := utils.StringSlicesIntersect(perms.Perms, c.Disallowed)
 		if len(fails) == 0 {
 			c.AddPass(fmt.Sprintf("[%s] no disallowed permissions", r))

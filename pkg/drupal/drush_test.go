@@ -345,6 +345,7 @@ site_editor:
 		},
 	}
 	c.Disallowed = []string{"administer modules", "administer permissions"}
+	c.ExcludeRoles = []string{"site_administrator"}
 	c.RunCheck()
 	c.Result.Sort()
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
@@ -357,7 +358,6 @@ site_editor:
 		t.Error(msg)
 	}
 	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{
-		"[site_administrator] disallowed permissions: [administer modules, administer permissions]",
 		"[site_editor] disallowed permissions: [administer modules]",
 	}); !ok {
 		t.Error(msg)
