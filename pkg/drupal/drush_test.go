@@ -68,6 +68,12 @@ func TestDrushYamlCheck(t *testing.T) {
 		DrushCommand: drupal.DrushCommand{Command: "status"},
 		ConfigName:   "core.extension",
 	}
+
+	c.Init("", drupal.DrushYaml)
+	if !c.RequiresDb {
+		t.Error("expected RequiresDb to be true, got false")
+	}
+
 	c.FetchData()
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
@@ -339,13 +345,17 @@ site_editor:
 			Label: "Site Administrator",
 			Perms: []string{"administer modules", "administer permissions"},
 		},
+		"another_site_administrator": {
+			Label: "Site Administrator",
+			Perms: []string{"administer modules", "administer permissions"},
+		},
 		"site_editor": {
 			Label: "Site Editor",
 			Perms: []string{"administer modules"},
 		},
 	}
 	c.Disallowed = []string{"administer modules", "administer permissions"}
-	c.ExcludeRoles = []string{"site_administrator"}
+	c.ExcludeRoles = []string{"another_site_administrator"}
 	c.RunCheck()
 	c.Result.Sort()
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
@@ -358,6 +368,7 @@ site_editor:
 		t.Error(msg)
 	}
 	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{
+		"[site_administrator] disallowed permissions: [administer modules, administer permissions]",
 		"[site_editor] disallowed permissions: [administer modules]",
 	}); !ok {
 		t.Error(msg)
