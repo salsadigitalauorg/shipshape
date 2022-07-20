@@ -1,12 +1,30 @@
 package drupal_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
+
+func TestRegisterChecks(t *testing.T) {
+	checksMap := map[shipshape.CheckType]string{
+		drupal.DrushYaml:     "*drupal.DrushYamlCheck",
+		drupal.FileModule:    "*drupal.FileModuleCheck",
+		drupal.DbModule:      "*drupal.DbModuleCheck",
+		drupal.DbPermissions: "*drupal.DbPermissionsCheck",
+		drupal.TrackingCode:  "*drupal.TrackingCodeCheck",
+	}
+	for ct, ts := range checksMap {
+		c := shipshape.ChecksRegistry[ct]()
+		ctype := reflect.TypeOf(c).String()
+		if ctype != ts {
+			t.Errorf("expecting check of type '%s', got '%s'", ts, ctype)
+		}
+	}
+}
 
 func mockCheck(configName string) shipshape.YamlBase {
 	return shipshape.YamlBase{
