@@ -88,14 +88,16 @@ const (
 )
 
 // KeyValue represents a check to be made against Yaml data.
-// It can be a simple Key=Value check, or it can be a Key in DisallowedList
-// check, in which case IsList needs to be true, and a Disallowed list of values
-// is required.
+// It can be a simple Key=Value check, or it check Keys in Disallowed or
+// Allowed lists accordingly. If the source is a list then IsList must be true.
+// If Optional is set then the validation will not fail if the key is not present.
 type KeyValue struct {
 	Key        string   `yaml:"key"`
 	Value      string   `yaml:"value"`
 	IsList     bool     `yaml:"is-list"`
+	Optional   bool     `yaml:"optional"`
 	Disallowed []string `yaml:"disallowed"`
+	Allowed    []string `yaml:"allowed"`
 }
 
 // KeyValueResult represents the different outcomes of the KeyValue check.
