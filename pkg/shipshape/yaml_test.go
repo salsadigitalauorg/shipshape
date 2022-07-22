@@ -133,6 +133,19 @@ foo:
 	if kvr != shipshape.KeyValueEqual {
 		t.Errorf("result should be KeyValueEqual(1), got %d", kvr)
 	}
+
+	// Optional value not present.
+	kvr, _, err = c.CheckKeyValue(shipshape.KeyValue{
+		Key:   "foo.bar[0].bazzle",
+		Value: "zoom",
+		Optional: true,
+	}, "data")
+	if err != nil {
+		t.Error("missing optional value should not fail")
+	}
+	if kvr != shipshape.KeyValueEqual {
+		t.Errorf("result should be KeyValueEqual(1), got %d", kvr)
+	}
 }
 
 func TestYamlCheckKeyValueList(t *testing.T) {
@@ -191,6 +204,33 @@ foo:
 	}
 	if len(fails) > 0 {
 		t.Errorf("There should be no Failures, got %+v", fails)
+	}
+
+	// Allowed values in yaml all match.
+	kvr, fails, _ = c.CheckKeyValue(shipshape.KeyValue{
+		Key:        "foo.bar",
+		IsList:     true,
+		Allowed: []string{"baz", "zoo", "zoom"},
+	}, "data")
+	if kvr != shipshape.KeyValueEqual {
+		t.Errorf("result should be KeyValueEqual(1), got %d", kvr)
+	}
+	if len(fails) > 0 {
+		t.Errorf("There should be no Failures, got %+v", fails)
+	}
+
+	// Value not in Allowed list.
+	kvr, fails, _ = c.CheckKeyValue(shipshape.KeyValue{
+		Key:        "foo.bar",
+		IsList:     true,
+		Allowed: []string{"baz", "zoo"},
+	}, "data")
+	if kvr != shipshape.KeyValueDisallowedFound {
+		t.Errorf("result should be KeyValueDisallowedFound(-2), got %d", kvr)
+	}
+	expectedAllowedFails := []string{"zoom"}
+	if len(fails) != 1 || !reflect.DeepEqual(fails, expectedAllowedFails) {
+		t.Errorf("There should be exactly 1 Failure, with values %+v, got %+v", expectedAllowedFails, fails)
 	}
 
 }
