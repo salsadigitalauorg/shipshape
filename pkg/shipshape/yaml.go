@@ -82,6 +82,28 @@ func (c *YamlBase) processData(configName string) {
 	}
 }
 
+// CheckAllowDisallowList validates against allow/disallow lists and returns
+// true if a disallowed value is present.
+func CheckAllowDisallowList(kv KeyValue, value string) (bool) {
+
+	// Ignore blank and null values.
+	if(len(value) == 0) {
+		return false
+	}
+
+	// Check disallowed list.
+	if len(kv.Disallowed) > 0 && utils.StringSliceContains(kv.Disallowed, value) {
+		return true
+	}
+
+	// Check allowed list.
+	if len(kv.Allowed) > 0 && !utils.StringSliceContains(kv.Allowed, value) {
+		return true
+	}
+
+	return false
+}
+
 // CheckKeyValue lookups the Yaml data for a specific KeyValue and returns the
 // result, actual values and errors.
 func (c *YamlBase) CheckKeyValue(kv KeyValue, mapKey string) (KeyValueResult, []string, error) {
@@ -91,11 +113,17 @@ func (c *YamlBase) CheckKeyValue(kv KeyValue, mapKey string) (KeyValueResult, []
 		return KeyValueError, nil, err
 	}
 
-	if len(foundNodes) == 0 {
+	if len(foundNodes) == 0 && !kv.Optional {
 		return KeyValueNotFound, nil, nil
 	}
 
-	if !kv.IsList {
+	// Throw an error if we are checking a list but no allow/disallow list provided.
+	if len(kv.Allowed) == 0 && len(kv.Disallowed) == 0 && kv.IsList {
+		return KeyValueError, nil, errors.New("list of allowed or disallowed values not provided")
+	}
+
+	// Perform direct comparison if no allow/disallow list provided.
+	if len(kv.Allowed) == 0 && len(kv.Disallowed) == 0 {
 		for _, item := range foundNodes {
 			notEquals := []string{}
 			// When checking for false, "null" is also 'falsy'.
@@ -111,16 +139,18 @@ func (c *YamlBase) CheckKeyValue(kv KeyValue, mapKey string) (KeyValueResult, []
 		return KeyValueEqual, nil, nil
 	}
 
-	if len(kv.Disallowed) == 0 {
-		return KeyValueError, nil, errors.New("list of disallowed values not provided")
-	}
-
 	// Check each yaml value against the disallowed list.
 	fails := []string{}
 	for _, item := range foundNodes {
-		for _, v := range item.Content {
-			if utils.StringSliceContains(kv.Disallowed, v.Value) && !utils.StringSliceContains(fails, v.Value) {
-				fails = append(fails, v.Value)
+		if kv.IsList {
+			for _, v := range item.Content {
+				if CheckAllowDisallowList(kv, v.Value) && !utils.StringSliceContains(fails, v.Value) {
+					fails = append(fails, v.Value)
+				}
+			}
+		} else {
+			if CheckAllowDisallowList(kv, item.Value) && !utils.StringSliceContains(fails, item.Value) {
+				fails = append(fails, item.Value)
 			}
 		}
 	}
