@@ -1,11 +1,8 @@
 package drupal_test
 
 import (
-	"fmt"
-	"os"
 	"os/exec"
 	"reflect"
-	"strconv"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/internal"
@@ -13,50 +10,24 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
-var mockedExitStatus = 0
-var mockedStdout string
-var mockedStderr string
-
-func fakeExecCommand(command string, args ...string) *exec.Cmd {
-	cs := []string{"-test.run=TestExecCommandHelper", "--", command}
-	cs = append(cs, args...)
-	cmd := exec.Command(os.Args[0], cs...)
-	es := strconv.Itoa(mockedExitStatus)
-	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1",
-		"STDOUT=" + mockedStdout,
-		"STDERR=" + mockedStderr,
-		"EXIT_STATUS=" + es}
-	return cmd
-}
-
 func TestExecCommandHelper(t *testing.T) {
-	if os.Getenv("GO_WANT_HELPER_PROCESS") != "1" {
-		return
-	}
-
-	i, _ := strconv.Atoi(os.Getenv("EXIT_STATUS"))
-	if i > 0 {
-		fmt.Fprint(os.Stderr, os.Getenv("STDERR"))
-	} else {
-		fmt.Fprint(os.Stdout, os.Getenv("STDOUT"))
-	}
-	os.Exit(i)
+	internal.TestExecCommandHelper(t)
 }
 
 func TestDrushExec(t *testing.T) {
-	drupal.ExecCommand = fakeExecCommand
+	drupal.ExecCommand = internal.FakeExecCommand
 	defer func() { drupal.ExecCommand = exec.Command }()
 
 	// Command not found.
-	mockedExitStatus = 127
-	mockedStderr = "bash: drushfoo: command not found"
+	internal.MockedExitStatus = 127
+	internal.MockedStderr = "bash: drushfoo: command not found"
 	_, err := drupal.Drush("", "", "status").Exec()
 	if err == nil || string(err.(*exec.ExitError).Stderr) != "bash: drushfoo: command not found" {
 		t.Errorf("Drush call should fail, got %#v", err)
 	}
 
-	mockedExitStatus = 0
-	mockedStdout = "foobar"
+	internal.MockedExitStatus = 0
+	internal.MockedStdout = "foobar"
 	_, err = drupal.Drush("", "local", "status").Exec()
 	if err != nil {
 		t.Errorf("Drush call should pass, got %#v", err)
@@ -89,10 +60,10 @@ func TestDrushYamlCheck(t *testing.T) {
 		DrushCommand: drupal.DrushCommand{Command: "status"},
 		ConfigName:   "core.extension",
 	}
-	drupal.ExecCommand = fakeExecCommand
+	drupal.ExecCommand = internal.FakeExecCommand
 	defer func() { drupal.ExecCommand = exec.Command }()
-	mockedExitStatus = 1
-	mockedStderr = "unable to run drush command"
+	internal.MockedExitStatus = 1
+	internal.MockedStderr = "unable to run drush command"
 	c.FetchData()
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
@@ -104,8 +75,8 @@ func TestDrushYamlCheck(t *testing.T) {
 		t.Error(msg)
 	}
 
-	mockedExitStatus = 0
-	mockedStdout = `
+	internal.MockedExitStatus = 0
+	internal.MockedStdout = `
 module:
   block: 0
   views_ui: 0
