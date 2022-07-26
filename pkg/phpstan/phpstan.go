@@ -64,9 +64,7 @@ func (c *PhpStanCheck) GetBinary() (path string) {
 	return
 }
 
-// FetchData runs the drush command to populate data for the Drush Yaml check.
-// Since the check is going to be Yaml-based, `--format=yaml` is automatically
-// added to the command.
+// FetchData runs the phpstan command to populate data for the check.
 func (c *PhpStanCheck) FetchData() {
 	var err error
 	phpstanPath := c.GetBinary()
