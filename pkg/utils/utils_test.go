@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFindFiles(t *testing.T) {
@@ -50,20 +51,17 @@ func TestFindFiles(t *testing.T) {
 }
 
 func TestStringSliceContains(t *testing.T) {
-	contains := utils.StringSliceContains([]string{}, "foo")
-	if contains == true {
-		t.Error("lookup in empty slice should be false")
-	}
+	assert := assert.New(t)
+	assert.False(utils.StringSliceContains([]string{}, "foo"))
+	assert.False(utils.StringSliceContains([]string{"bar"}, "foo"))
+	assert.True(utils.StringSliceContains([]string{"bar", "foo"}, "foo"))
+}
 
-	contains = utils.StringSliceContains([]string{"bar"}, "foo")
-	if contains == true {
-		t.Error("lookup should return false")
-	}
-
-	contains = utils.StringSliceContains([]string{"bar", "foo"}, "foo")
-	if contains == false {
-		t.Error("lookup should return true")
-	}
+func TestIntSliceContains(t *testing.T) {
+	assert := assert.New(t)
+	assert.False(utils.IntSliceContains([]int{}, 10))
+	assert.False(utils.IntSliceContains([]int{5}, 10))
+	assert.True(utils.IntSliceContains([]int{5, 10}, 10))
 }
 
 func TestStringSlicesIntersect(t *testing.T) {

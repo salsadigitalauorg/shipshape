@@ -57,6 +57,19 @@ func StringSliceContains(slice []string, item string) bool {
 	return ok
 }
 
+// IntSliceContains determines whether an item exists in a slice of int.
+func IntSliceContains(slice []int, item int) bool {
+	if len(slice) == 0 {
+		return false
+	}
+	set := make(map[int]struct{}, len(slice))
+	for _, s := range slice {
+		set[s] = struct{}{}
+	}
+	_, ok := set[item]
+	return ok
+}
+
 // StringSlicesIntersect finds the intersection between two slices of string.
 func StringSlicesIntersect(slc1 []string, slc2 []string) []string {
 	intersect := []string(nil)
