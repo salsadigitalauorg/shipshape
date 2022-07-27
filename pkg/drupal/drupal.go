@@ -12,13 +12,14 @@ func RegisterChecks() {
 	shipshape.ChecksRegistry[DbModule] = func() shipshape.Check { return &DbModuleCheck{} }
 	shipshape.ChecksRegistry[DbPermissions] = func() shipshape.Check { return &DbPermissionsCheck{} }
 	shipshape.ChecksRegistry[TrackingCode] = func() shipshape.Check { return &TrackingCodeCheck{} }
+	shipshape.ChecksRegistry[UserRole] = func() shipshape.Check { return &UserRoleCheck{} }
 }
 
 func init() {
 	RegisterChecks()
 }
 
-// RunCheck applies the Check logic for Drupal Modules in yaml content.
+// CheckModulesInYaml applies the Check logic for Drupal Modules in yaml content.
 // It uses YamlBase to verify that the list of provided Required or
 // Disallowed modules are installed or not.
 func CheckModulesInYaml(c *shipshape.YamlBase, ct shipshape.CheckType, configName string, required []string, disallowed []string) {

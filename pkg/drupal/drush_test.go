@@ -8,6 +8,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExecCommandHelper(t *testing.T) {
@@ -21,23 +22,30 @@ func TestDrushExec(t *testing.T) {
 	// Command not found.
 	internal.MockedExitStatus = 127
 	internal.MockedStderr = "bash: drushfoo: command not found"
-	_, err := drupal.Drush("", "", "status").Exec()
+	_, err := drupal.Drush("", "", []string{"status"}).Exec()
 	if err == nil || string(err.(*exec.ExitError).Stderr) != "bash: drushfoo: command not found" {
 		t.Errorf("Drush call should fail, got %#v", err)
 	}
 
 	internal.MockedExitStatus = 0
 	internal.MockedStdout = "foobar"
-	_, err = drupal.Drush("", "local", "status").Exec()
+	_, err = drupal.Drush("", "local", []string{"status"}).Exec()
 	if err != nil {
 		t.Errorf("Drush call should pass, got %#v", err)
 	}
 }
 
+func TestDrushQuery(t *testing.T) {
+	drupal.ExecCommand = internal.FakeExecCommand
+	defer func() { drupal.ExecCommand = exec.Command }()
+	drupal.Drush("", "", []string{}).Query("SELECT uid FROM users")
+	assert.EqualValues(t, []string{"sql:query", "SELECT uid FROM users"}, internal.FakeCommandArgs)
+}
+
 func TestDrushYamlCheck(t *testing.T) {
 	c := drupal.DrushYamlCheck{
-		DrushCommand: drupal.DrushCommand{Command: "status"},
-		ConfigName:   "core.extension",
+		Command:    "status",
+		ConfigName: "core.extension",
 	}
 
 	c.Init("", drupal.DrushYaml)
@@ -57,8 +65,8 @@ func TestDrushYamlCheck(t *testing.T) {
 	}
 
 	c = drupal.DrushYamlCheck{
-		DrushCommand: drupal.DrushCommand{Command: "status"},
-		ConfigName:   "core.extension",
+		Command:    "status",
+		ConfigName: "core.extension",
 	}
 	drupal.ExecCommand = internal.FakeExecCommand
 	defer func() { drupal.ExecCommand = exec.Command }()
@@ -83,8 +91,8 @@ module:
 
 `
 	c = drupal.DrushYamlCheck{
-		DrushCommand: drupal.DrushCommand{Command: "status"},
-		ConfigName:   "core.extension",
+		Command:    "status",
+		ConfigName: "core.extension",
 	}
 	c.FetchData()
 	if msg, ok := internal.EnsureNoFail(t, &c.CheckBase); !ok {

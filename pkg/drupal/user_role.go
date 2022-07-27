@@ -1,0 +1,110 @@
+package drupal
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/fs"
+	"os/exec"
+	"strings"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
+	"gopkg.in/yaml.v3"
+)
+
+const UserRole shipshape.CheckType = "drupal-user-role"
+
+// UserRoleCheck fetches all users from the database and verifies them against
+// the list of disallowed roles and allowed users.
+type UserRoleCheck struct {
+	shipshape.CheckBase `yaml:",inline"`
+	DrushCommand        `yaml:",inline"`
+	// List of role machine names that users should not have.
+	Roles []string `yaml:"roles"`
+	// List of user ID's allowed to have the above roles.
+	AllowedUsers []int `yaml:"allowed-users"`
+	userRoles    map[int][]string
+}
+
+type userInfo struct {
+	Roles []string
+}
+
+// Init implementation for the drush-based user role check.
+func (c *UserRoleCheck) Init(pd string, ct shipshape.CheckType) {
+	c.CheckBase.Init(pd, ct)
+	c.RequiresDb = true
+}
+
+func (c *UserRoleCheck) getUserIds() string {
+	userIds, err := Drush(c.DrushPath, c.Alias, c.Args).Query("SELECT GROUP_CONCAT(uid) FROM users")
+
+	var pathErr *fs.PathError
+	if err != nil && errors.As(err, &pathErr) {
+		c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
+	} else if err != nil {
+		msg := string(err.(*exec.ExitError).Stderr)
+		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
+	}
+	return string(userIds)
+}
+
+// FetchData runs the drush command to populate data for the user role check.
+func (c *UserRoleCheck) FetchData() {
+	var err error
+
+	userIds := c.getUserIds()
+	if c.Result.Status == shipshape.Fail {
+		return
+	}
+
+	c.DataMap = map[string][]byte{}
+	cmd := []string{"user:information", "--uid=" + userIds, "--fields=roles", "--format=json"}
+	c.DataMap["user-info"], err = Drush(c.DrushPath, c.Alias, cmd).Exec()
+	if err != nil {
+		msg := string(err.(*exec.ExitError).Stderr)
+		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
+	}
+}
+
+// UnmarshalDataMap parses the drush user info json
+// into the userRoles for further processing.
+func (c *UserRoleCheck) UnmarshalDataMap() {
+	if len(c.DataMap["user-info"]) == 0 {
+		c.AddFail("no data provided")
+	}
+
+	userInfoMap := map[int]userInfo{}
+	err := json.Unmarshal(c.DataMap["user-info"], &userInfoMap)
+	var typeErr *yaml.TypeError
+	if err != nil && errors.As(err, &typeErr) {
+		c.AddFail(err.Error())
+		return
+	}
+
+	c.userRoles = map[int][]string{}
+	for uid, uinf := range userInfoMap {
+		c.userRoles[uid] = uinf.Roles
+	}
+	fmt.Printf("c.userRoles: %#v\n", c.userRoles)
+}
+
+// RunCheck implements the Check logic for disallowed user roles.
+func (c *UserRoleCheck) RunCheck() {
+	for uid, roles := range c.userRoles {
+		allowedUser := utils.IntSliceContains(c.AllowedUsers, uid)
+		if allowedUser {
+			continue
+		}
+
+		disallowed := utils.StringSlicesIntersect(roles, c.Roles)
+		if len(disallowed) > 0 {
+			c.AddFail(fmt.Sprintf("User %d has disallowed roles: [%s]", uid, strings.Join(disallowed, ", ")))
+		}
+	}
+
+	if len(c.Result.Failures) == 0 {
+		c.Result.Status = shipshape.Pass
+	}
+}

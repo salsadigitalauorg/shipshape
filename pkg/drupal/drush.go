@@ -23,23 +23,28 @@ var ExecCommand = exec.Command
 
 // Drush is a simple wrapper around DrushCommand which allows chaining
 // commands for Drush, e.g, `Drush("", "", "status").Exec()`.
-func Drush(drushPath string, alias string, command string) *DrushCommand {
+func Drush(drushPath string, alias string, command []string) *DrushCommand {
 	if drushPath == "" {
 		drushPath = DrushDefaultPath
 	}
 	if !filepath.IsAbs(drushPath) {
 		drushPath = filepath.Join(shipshape.ProjectDir, drushPath)
 	}
-	return &DrushCommand{DrushPath: drushPath, Alias: alias, Command: command}
+	return &DrushCommand{DrushPath: drushPath, Alias: alias, Args: command}
 }
 
 // Exec runs the drush command and returns the output.
 func (cmd *DrushCommand) Exec() ([]byte, error) {
-	cmdSlice := strings.Split(cmd.Command, " ")
 	if cmd.Alias != "" {
-		cmdSlice = append([]string{"@" + cmd.Alias}, cmdSlice...)
+		cmd.Args = append([]string{"@" + cmd.Alias}, cmd.Args...)
 	}
-	return ExecCommand(cmd.DrushPath, cmdSlice...).Output()
+	return ExecCommand(cmd.DrushPath, cmd.Args...).Output()
+}
+
+// Query runs the drush sql:query command and returns the output.
+func (cmd *DrushCommand) Query(qry string) ([]byte, error) {
+	cmd.Args = []string{"sql:query", qry}
+	return cmd.Exec()
 }
 
 // Init implementation for the drush-based yaml check.
@@ -54,7 +59,8 @@ func (c *DrushYamlCheck) Init(pd string, ct shipshape.CheckType) {
 func (c *DrushYamlCheck) FetchData() {
 	var err error
 	c.DataMap = map[string][]byte{}
-	c.DataMap[c.ConfigName], err = Drush(c.DrushPath, c.Alias, c.Command+" --format=yaml").Exec()
+	c.DrushCommand.Args = append(strings.Fields(c.Command), "--format=yaml")
+	c.DataMap[c.ConfigName], err = Drush(c.DrushPath, c.Alias, c.DrushCommand.Args).Exec()
 	if err != nil {
 		if pathErr, ok := err.(*fs.PathError); ok {
 			c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
