@@ -11,11 +11,13 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
+var FakeCommandArgs []string
 var MockedExitStatus = 0
 var MockedStdout string
 var MockedStderr string
 
 func FakeExecCommand(command string, args ...string) *exec.Cmd {
+	FakeCommandArgs = args
 	cs := []string{"-test.run=TestExecCommandHelper", "--", command}
 	cs = append(cs, args...)
 	cmd := exec.Command(os.Args[0], cs...)

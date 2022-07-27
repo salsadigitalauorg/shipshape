@@ -16,6 +16,7 @@ func TestRegisterChecks(t *testing.T) {
 		drupal.DbModule:      "*drupal.DbModuleCheck",
 		drupal.DbPermissions: "*drupal.DbPermissionsCheck",
 		drupal.TrackingCode:  "*drupal.TrackingCodeCheck",
+		drupal.UserRole:      "*drupal.UserRoleCheck",
 	}
 	for ct, ts := range checksMap {
 		c := shipshape.ChecksRegistry[ct]()

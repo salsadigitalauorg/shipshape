@@ -15,12 +15,13 @@ const (
 type DrushCommand struct {
 	DrushPath string `yaml:"drush-path"`
 	Alias     string `yaml:"alias"`
-	Command   string `yaml:"command"`
+	Args      []string
 }
 
 type DrushYamlCheck struct {
 	shipshape.YamlBase `yaml:",inline"`
 	DrushCommand       `yaml:",inline"`
+	Command            string `yaml:"command"`
 	ConfigName         string `yaml:"config-name"`
 }
 
