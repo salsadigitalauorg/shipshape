@@ -93,13 +93,7 @@ func (c *DbPermissionsCheck) UnmarshalDataMap() {
 	}
 
 	c.Permissions = map[string]DrushRole{}
-	err := yaml.Unmarshal(c.DataMap[c.ConfigName], &c.Permissions)
-	if err != nil {
-		if _, ok := err.(*yaml.TypeError); !ok {
-			c.AddFail(err.Error())
-			return
-		}
-	}
+	yaml.Unmarshal(c.DataMap[c.ConfigName], &c.Permissions)
 }
 
 // RunCheck implements the Check logic for Drupal Permissions in database config.
