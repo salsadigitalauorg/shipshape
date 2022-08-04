@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"github.com/mattn/go-zglob"
+	"regexp"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
@@ -188,8 +190,8 @@ func (c *YamlCheck) FetchData() {
 			c.readFile(filepath.Join(c.Path, f), filepath.Join(ProjectDir, c.Path, f))
 		}
 	} else if c.Pattern != "" {
-		configPath := filepath.Join(ProjectDir, c.Path)
-		files, err := utils.FindFiles(configPath, c.Pattern, c.ExcludePattern)
+		configPath := filepath.Join(c.Pattern, c.Path)
+		files, err := zglob.Glob(configPath)
 		if err != nil {
 			// No failure if missing path and ignoring missing.
 			if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing {
@@ -201,12 +203,27 @@ func (c *YamlCheck) FetchData() {
 			return
 		}
 
+		// Run exclude filter.
+		if c.ExcludePattern != "" {
+			var filteredFiles []string
+			for _, file := range files {
+				found, err := regexp.MatchString(c.ExcludePattern, file)
+				if err != nil {
+					c.AddFail(err.Error())
+				}
+				if !found {
+					filteredFiles = append(filteredFiles, file)
+				}
+			}
+			files = filteredFiles
+		}
+
 		if len(files) == 0 && c.IgnoreMissing {
-			c.AddPass("no matching config files found")
+			c.AddPass("no matching files found")
 			c.Result.Status = Pass
 			return
 		} else if len(files) == 0 {
-			c.AddFail("no matching config files found")
+			c.AddFail("no matching files found")
 			return
 		}
 
