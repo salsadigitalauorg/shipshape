@@ -190,7 +190,7 @@ func (c *YamlCheck) FetchData() {
 			c.readFile(filepath.Join(c.Path, f), filepath.Join(ProjectDir, c.Path, f))
 		}
 	} else if c.Pattern != "" {
-		configPath := filepath.Join(c.Pattern, c.Path)
+		configPath := filepath.Join(c.Path, c.Pattern)
 		files, err := zglob.Glob(configPath)
 		if err != nil {
 			// No failure if missing path and ignoring missing.
@@ -229,8 +229,7 @@ func (c *YamlCheck) FetchData() {
 
 		c.DataMap = map[string][]byte{}
 		for _, fname := range files {
-			_, file := filepath.Split(fname)
-			c.readFile(filepath.Join(c.Path, file), fname)
+			c.readFile(fname, fname)
 		}
 	} else {
 		c.AddFail("no file provided")

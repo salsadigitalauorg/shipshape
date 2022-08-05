@@ -516,18 +516,23 @@ func TestYamlCheck(t *testing.T) {
 		t.Error(msg)
 	}
 
-	// Bad File pattern.
+	// File pattern with recursive depth.
 	c = mockCheck()
-	c.Pattern = "*.bar.yml"
+	c.Pattern = "**/*.bar.yml"
 	c.Path = ""
 	c.FetchData()
-	if _, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error("Check with bad file pattern should fail")
+	if c.Result.Status == shipshape.Fail {
+		t.Error("Check should not Fail yet")
 	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
+	if len(c.Result.Failures) > 0 {
+		t.Errorf("there should be no Failure, got: %#v", c.Result.Failures)
+	}
+	c.UnmarshalDataMap()
+	c.RunCheck()
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[testdata/yaml/foo.bar.yml] 'check.interval_days' equals '7'", "[testdata/yaml/dir/foo.bar.yml] 'check.interval_days' equals '7'", "[testdata/yaml/dir/subdir/foo.bar.yml] 'check.interval_days' equals '7'"}); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"error parsing regexp: missing argument to repetition operator: `*`"}); !ok {
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[testdata/yaml/zoom.bar.yml] 'check.interval_days' equals '5'", "[testdata/yaml/dir/zoom.bar.yml] 'check.interval_days' equals '5'", "[testdata/yaml/dir/subdir/zoom.bar.yml] 'check.interval_days' equals '5'"}); !ok {
 		t.Error(msg)
 	}
 
@@ -541,7 +546,7 @@ func TestYamlCheck(t *testing.T) {
 	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"no matching config files found"}); !ok {
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"no matching files found"}); !ok {
 		t.Error(msg)
 	}
 
@@ -556,13 +561,14 @@ func TestYamlCheck(t *testing.T) {
 	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"no matching config files found"}); !ok {
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"no matching files found"}); !ok {
 		t.Error(msg)
 	}
 
 	// Correct file pattern.
 	c = mockCheck()
-	c.Pattern = ".*.bar.yml"
+	c.Pattern = "*.bar.yml"
+	c.Path = "testdata/yaml"
 	c.FetchData()
 	if c.Result.Status == shipshape.Fail {
 		t.Error("Check should not Fail yet")
@@ -575,10 +581,10 @@ func TestYamlCheck(t *testing.T) {
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[yaml/foo.bar.yml] 'check.interval_days' equals '7'"}); !ok {
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[testdata/yaml/foo.bar.yml] 'check.interval_days' equals '7'"}); !ok {
 		t.Error(msg)
 	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[yaml/zoom.bar.yml] 'check.interval_days' equals '5'"}); !ok {
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[testdata/yaml/zoom.bar.yml] 'check.interval_days' equals '5'"}); !ok {
 		t.Error(msg)
 	}
 }
