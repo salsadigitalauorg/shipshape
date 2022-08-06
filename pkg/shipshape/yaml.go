@@ -212,8 +212,7 @@ func (c *YamlCheck) FetchData() {
 
 		c.DataMap = map[string][]byte{}
 		for _, fname := range files {
-			_, file := filepath.Split(fname)
-			c.readFile(filepath.Join(c.Path, file), fname)
+			c.readFile(fname, fname)
 		}
 	} else {
 		c.AddFail("no file provided")
