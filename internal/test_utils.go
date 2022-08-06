@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+	"sort"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
@@ -75,6 +76,8 @@ func EnsurePass(t *testing.T, c *shipshape.CheckBase) (msg string, ok bool) {
 
 func EnsureFailures(t *testing.T, c *shipshape.CheckBase, expectedFailures []string) (msg string, ok bool) {
 	numExpectedFailures := len(expectedFailures)
+	sort.Strings(expectedFailures)
+	sort.Strings(c.Result.Failures)
 	if len(c.Result.Failures) != numExpectedFailures || !reflect.DeepEqual(expectedFailures, c.Result.Failures) {
 		return fmt.Sprintf("there should be exactly %d Failure(s), got %#v", numExpectedFailures, c.Result.Failures), false
 	}
@@ -83,6 +86,8 @@ func EnsureFailures(t *testing.T, c *shipshape.CheckBase, expectedFailures []str
 
 func EnsurePasses(t *testing.T, c *shipshape.CheckBase, expectedPasses []string) (msg string, ok bool) {
 	numExpectedPasses := len(expectedPasses)
+	sort.Strings(expectedPasses)
+	sort.Strings(c.Result.Passes)
 	if len(c.Result.Passes) != numExpectedPasses || !reflect.DeepEqual(expectedPasses, c.Result.Passes) {
 		return fmt.Sprintf("there should be exactly %d Pass(es), got %#v", numExpectedPasses, c.Result.Passes), false
 	}
