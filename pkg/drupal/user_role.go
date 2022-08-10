@@ -10,7 +10,6 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
-	"gopkg.in/yaml.v3"
 )
 
 const UserRole shipshape.CheckType = "drupal-user-role"
@@ -73,12 +72,13 @@ func (c *UserRoleCheck) FetchData() {
 func (c *UserRoleCheck) UnmarshalDataMap() {
 	if len(c.DataMap["user-info"]) == 0 {
 		c.AddFail("no data provided")
+		return
 	}
 
 	userInfoMap := map[int]userInfo{}
 	err := json.Unmarshal(c.DataMap["user-info"], &userInfoMap)
-	var typeErr *yaml.TypeError
-	if err != nil && errors.As(err, &typeErr) {
+	var synErr *json.SyntaxError
+	if err != nil && errors.As(err, &synErr) {
 		c.AddFail(err.Error())
 		return
 	}
@@ -87,11 +87,15 @@ func (c *UserRoleCheck) UnmarshalDataMap() {
 	for uid, uinf := range userInfoMap {
 		c.userRoles[uid] = uinf.Roles
 	}
-	fmt.Printf("c.userRoles: %#v\n", c.userRoles)
 }
 
 // RunCheck implements the Check logic for disallowed user roles.
 func (c *UserRoleCheck) RunCheck() {
+	if len(c.Roles) == 0 {
+		c.AddFail("no disallowed role provided")
+		return
+	}
+
 	for uid, roles := range c.userRoles {
 		allowedUser := utils.IntSliceContains(c.AllowedUsers, uid)
 		if allowedUser {
