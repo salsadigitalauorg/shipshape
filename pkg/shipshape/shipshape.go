@@ -8,30 +8,50 @@ import (
 	"os"
 	"sync"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/merger"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	"gopkg.in/yaml.v3"
 )
 
-func ReadAndParseConfig(projectDir string, f string) (Config, error) {
+func ReadAndParseConfig(projectDir string, files []string) (Config, error) {
+
 	cfg := Config{}
+	merger := merger.NewMerger()
 
 	var data []byte
 	var err error
 
-	if utils.StringIsUrl(f) {
-		data, err = utils.FetchContentFromUrl(f)
-		if err != nil {
-			return cfg, err
+	for _, f := range files {
+
+		if utils.StringIsUrl(f) {
+			data, err = utils.FetchContentFromUrl(f)
+			if err != nil {
+				return cfg, err
+			}
+		} else {
+			data, err = ioutil.ReadFile(f)
+			if err != nil {
+				return cfg, err
+			}
 		}
-	} else {
-		data, err = ioutil.ReadFile(f)
+
+		err = merger.AddData(data)
 		if err != nil {
-			return cfg, err
+			panic(err)
 		}
 	}
 
+	err = merger.Save("/tmp/merged.yaml")
+	if err != nil {
+		panic(err)
+	}
+
 	err = ParseConfig(data, projectDir, &cfg)
+	if err != nil {
+		return cfg, err
+	}
+
 	return cfg, err
 }
 

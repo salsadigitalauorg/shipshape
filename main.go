@@ -32,7 +32,7 @@ var (
 
 	errorCodeOnFailure bool
 	projectDir         string
-	checksFile         string
+	checksFile         []string
 	checkTypesToRun    []string
 	excludeDb          bool
 	outputFormat       string
@@ -54,14 +54,16 @@ func main() {
 		log.Fatalf("Invalid output format; needs to be one of: %s.", strings.Join(shipshape.OutputFormats, "|"))
 	}
 
-	if !utils.StringIsUrl(checksFile) {
-		if _, err := os.Stat(checksFile); os.IsNotExist(err) {
-			fmt.Fprintf(os.Stderr, "checks file '%s' not found\n", checksFile)
+	for _, f := range checksFile {
+		if !utils.StringIsUrl(f) {
+			if _, err := os.Stat(f); os.IsNotExist(err) {
+				fmt.Fprintf(os.Stderr, "checks file '%s' not found\n", f)
 
-			if errorCodeOnFailure {
-				os.Exit(1)
+				if errorCodeOnFailure {
+					os.Exit(1)
+				}
+				os.Exit(0)
 			}
-			os.Exit(0)
 		}
 	}
 
@@ -112,7 +114,7 @@ func parseFlags() {
 	// pflag.BoolVarP(&selfUpdate, "self-update", "u", false, "Updates shipshape to the latest version")
 
 	pflag.BoolVarP(&errorCodeOnFailure, "error-code", "e", false, "Exit with error code if a failure is detected (env: SHIPSHAPE_ERROR_ON_FAILURE)")
-	pflag.StringVarP(&checksFile, "file", "f", "shipshape.yml", "Path to the file containing the checks")
+	pflag.StringSliceVarP(&checksFile, "file", "f", []string{"shipshape.yml"}, "Path to the file containing the checks")
 	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format [json|junit|simple|table] (env: SHIPSHAPE_OUTPUT_FORMAT)")
 	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "Comma-separated list of checks to run; default is empty, which will run all checks")
 	pflag.BoolVarP(&excludeDb, "exclude-db", "d", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
