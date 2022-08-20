@@ -26,8 +26,25 @@ func (c *CheckBase) Init(pd string, ct CheckType) {
 }
 
 // GetName returns the name of a check.
-func (c *CheckBase) GetName() string {
-	return c.Name
+func (c *CheckBase) GetName() string { return c.Name }
+
+// GetType returns the type of a check.
+func (c *CheckBase) GetType() CheckType { return c.cType }
+
+// GetSeverity returns the severity of a check.
+func (c *CheckBase) GetSeverity() Severity { return c.Severity }
+
+// Merge merges values from another check into this one.
+func (c *CheckBase) Merge(mergeCheck Check) error {
+	if c.cType != mergeCheck.GetType() {
+		return fmt.Errorf("cannot merge checks of different types")
+	}
+	if c.Name != mergeCheck.GetName() {
+		return fmt.Errorf("can only merge checks with the same name")
+	}
+	c.RequiresDb = mergeCheck.RequiresDatabase()
+	c.Severity = mergeCheck.GetSeverity()
+	return nil
 }
 
 // RequiresData indicates whether the check requires a DataMap to run against.

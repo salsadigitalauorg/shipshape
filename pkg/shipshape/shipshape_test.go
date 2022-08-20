@@ -12,12 +12,12 @@ import (
 )
 
 func TestReadAndParseConfig(t *testing.T) {
-	_, err := shipshape.ReadAndParseConfig("", "testdata/nonexistent.yml")
+	_, err := shipshape.ReadAndParseConfig("", []string{"testdata/nonexistent.yml"})
 	if err == nil || err.Error() != "open testdata/nonexistent.yml: no such file or directory" {
 		t.Errorf("file read should fail, got %#v", err.Error())
 	}
 
-	_, err = shipshape.ReadAndParseConfig("", "testdata/shipshape.yml")
+	_, err = shipshape.ReadAndParseConfig("", []string{"testdata/shipshape.yml"})
 	if err != nil {
 		t.Errorf("file read should pass, got %#v", err.Error())
 	}
@@ -127,14 +127,4 @@ checks:
 	if !reflect.DeepEqual(rl.Results, expectedRl.Results) {
 		t.Errorf("Results are not as expected, got: %#v", rl)
 	}
-}
-
-func TestRunChecks(t *testing.T) {
-	cfg := shipshape.Config{
-		Checks: map[shipshape.CheckType][]shipshape.Check{
-			shipshape.File: {&shipshape.FileCheck{}},
-			shipshape.Yaml: {&shipshape.YamlCheck{}},
-		},
-	}
-	cfg.RunChecks()
 }

@@ -14,6 +14,9 @@ type CheckType string
 type Check interface {
 	Init(pd string, ct CheckType)
 	GetName() string
+	GetType() CheckType
+	GetSeverity() Severity
+	Merge(Check) error
 	RequiresData() bool
 	RequiresDatabase() bool
 	HasData(failCheck bool) bool
@@ -48,7 +51,8 @@ type Config struct {
 
 // CheckBase provides the basic structure for all Checks.
 type CheckBase struct {
-	Name string `yaml:"name"`
+	Name  string `yaml:"name"`
+	cType CheckType
 	// Flag indicating if the check requires a database connection to run.
 	RequiresDb bool
 	DataMap    map[string][]byte

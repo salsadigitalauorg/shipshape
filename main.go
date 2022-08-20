@@ -32,7 +32,7 @@ var (
 
 	errorCodeOnFailure bool
 	projectDir         string
-	checksFile         []string
+	checksFiles        []string
 	checkTypesToRun    []string
 	excludeDb          bool
 	outputFormat       string
@@ -54,7 +54,7 @@ func main() {
 		log.Fatalf("Invalid output format; needs to be one of: %s.", strings.Join(shipshape.OutputFormats, "|"))
 	}
 
-	for _, f := range checksFile {
+	for _, f := range checksFiles {
 		if !utils.StringIsUrl(f) {
 			if _, err := os.Stat(f); os.IsNotExist(err) {
 				fmt.Fprintf(os.Stderr, "checks file '%s' not found\n", f)
@@ -67,7 +67,7 @@ func main() {
 		}
 	}
 
-	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFile)
+	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFiles)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -114,9 +114,9 @@ func parseFlags() {
 	// pflag.BoolVarP(&selfUpdate, "self-update", "u", false, "Updates shipshape to the latest version")
 
 	pflag.BoolVarP(&errorCodeOnFailure, "error-code", "e", false, "Exit with error code if a failure is detected (env: SHIPSHAPE_ERROR_ON_FAILURE)")
-	pflag.StringSliceVarP(&checksFile, "file", "f", []string{"shipshape.yml"}, "Path to the file containing the checks")
+	pflag.StringSliceVarP(&checksFiles, "file", "f", []string{"shipshape.yml"}, "Path to the file containing the checks. Can be specified as comma-separated single argument or using --types multiple times")
 	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format [json|junit|simple|table] (env: SHIPSHAPE_OUTPUT_FORMAT)")
-	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "Comma-separated list of checks to run; default is empty, which will run all checks")
+	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "List of checks to run; default is empty, which will run all checks. Can be specified as comma-separated single argument or using --types multiple times")
 	pflag.BoolVarP(&excludeDb, "exclude-db", "d", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
 	pflag.Parse()
 
