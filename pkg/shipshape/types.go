@@ -6,6 +6,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var ProjectDir string
+
 type CheckType string
 
 // Check should be implemented by any new check that has to be run in an audit.
