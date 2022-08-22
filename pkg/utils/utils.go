@@ -9,6 +9,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
+	"gopkg.in/yaml.v3"
 )
 
 // FindFiles scans a directory for files matching the provided patterns.
@@ -43,6 +46,33 @@ func FindFiles(root, pattern string, excludePattern string) ([]string, error) {
 		return nil, err
 	}
 	return matches, nil
+}
+
+// LookupYamlPath attempts to query Yaml data using a JSONPath query and returns
+// the found Node.
+// It uses the implemention by https://github.com/vmware-labs/yaml-jsonpath.
+func LookupYamlPath(n *yaml.Node, path string) ([]*yaml.Node, error) {
+	p, err := yamlpath.NewPath(path)
+	if err != nil {
+		return nil, err
+	}
+	q, err := p.Find(n)
+	if err != nil {
+		return nil, err
+	}
+	return q, nil
+}
+
+func MergeString(strA *string, strB string) {
+	if strB != "" && *strA != strB {
+		*strA = strB
+	}
+}
+
+func MergeStringSlice(strSlcA *[]string, strSlcB []string) {
+	if len(strSlcB) > 0 {
+		*strSlcA = append(*strSlcA, strSlcB...)
+	}
 }
 
 // StringSliceContains determines whether an item exists in a slice of string.

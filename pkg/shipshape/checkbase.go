@@ -15,6 +15,10 @@ func (c *CheckBase) Init(pd string, ct CheckType) {
 	if c.Result.Severity == "" {
 		c.Result.Severity = c.Severity
 	}
+
+	if c.cType == "" {
+		c.cType = ct
+	}
 }
 
 // GetName returns the name of a check.
@@ -34,8 +38,9 @@ func (c *CheckBase) Merge(mergeCheck Check) error {
 	if c.Name != mergeCheck.GetName() {
 		return fmt.Errorf("can only merge checks with the same name")
 	}
-	c.RequiresDb = mergeCheck.RequiresDatabase()
-	c.Severity = mergeCheck.GetSeverity()
+	if mergeCheck.GetSeverity() != "" {
+		c.Severity = mergeCheck.GetSeverity()
+	}
 	return nil
 }
 

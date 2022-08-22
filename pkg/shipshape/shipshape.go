@@ -72,7 +72,7 @@ func ParseConfig(data []byte, projectDir string, cfg *Config) error {
 func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 	newcm := make(CheckMap)
 	for ct, cFunc := range ChecksRegistry {
-		check_values, err := LookupYamlPath(value, string(ct))
+		check_values, err := utils.LookupYamlPath(value, string(ct))
 		if err != nil {
 			return err
 		}

@@ -1,38 +1,51 @@
 package shipshape_test
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestCheckBase(t *testing.T) {
+func TestCheckBaseInit(t *testing.T) {
+	assert := assert.New(t)
+
 	c := shipshape.CheckBase{Name: "foo"}
-	if c.GetName() != "foo" {
-		t.Errorf("name should be 'foo', got '%s'", c.GetName())
-	}
+	assert.Equal("foo", c.GetName())
 
-	c.Init("baz", "")
-	if shipshape.ProjectDir != "baz" {
-		t.Errorf("name should be 'baz', got '%s'", shipshape.ProjectDir)
-	}
-	if c.Severity != shipshape.NormalSeverity {
-		t.Errorf("severity should be '%s', got '%s'", shipshape.NormalSeverity, c.Severity)
-	}
-	if c.Result.Name != "foo" {
-		t.Errorf("result name should be 'foo', got '%s'", c.Result.Name)
-	}
-	if c.Result.Severity != shipshape.NormalSeverity {
-		t.Errorf("result severity should be '%s', got '%s'", shipshape.NormalSeverity, c.Severity)
-	}
+	c.Init("baz", shipshape.File)
+	assert.Equal("baz", shipshape.ProjectDir)
+	assert.Equal(shipshape.NormalSeverity, c.Severity)
+	assert.Equal("foo", c.Result.Name)
+	assert.Equal(shipshape.NormalSeverity, c.Result.Severity)
+	assert.Equal(shipshape.File, c.GetType())
+}
 
+func TestCheckBaseMerge(t *testing.T) {
+	assert := assert.New(t)
+
+	c := shipshape.CheckBase{Name: "foo"}
+	err := c.Merge(&shipshape.CheckBase{Name: "bar"})
+	assert.Equal(fmt.Errorf("can only merge checks with the same name"), err)
+
+	c.Init("some-dir", shipshape.File)
+	c2 := shipshape.CheckBase{Name: "bar"}
+	c2.Init("some-dir", shipshape.Yaml)
+	err = c.Merge(&c2)
+	assert.Equal(fmt.Errorf("can only merge checks of the same type"), err)
+
+	c = shipshape.CheckBase{Name: "foo", Severity: shipshape.HighSeverity}
+	c.Merge(&shipshape.CheckBase{Name: "foo"})
+	assert.Equal(shipshape.HighSeverity, c.Severity)
+}
+
+func TestCheckBaseRunCheck(t *testing.T) {
+	assert := assert.New(t)
+
+	c := shipshape.CheckBase{}
 	c.FetchData()
 	c.RunCheck()
-	if msg, ok := internal.EnsureFail(t, &c); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c, []string{"not implemented"}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.EqualValues([]string{"not implemented"}, c.Result.Failures)
 }
