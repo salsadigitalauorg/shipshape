@@ -3,9 +3,28 @@ package shipshape
 import "github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 func MergeKeyValueSlice(kvSlcA *[]KeyValue, kvSlcB []KeyValue) {
-	if len(kvSlcB) > 0 {
-		*kvSlcA = append(*kvSlcA, kvSlcB...)
+	if len(kvSlcB) == 0 {
+		return
 	}
+	newKvSlc := *kvSlcA
+	for _, kvB := range kvSlcB {
+		kvA, indA := getKeyValueFromSlice(kvSlcA, kvB.Key)
+		if kvA == nil {
+			*kvSlcA = append(*kvSlcA, kvB)
+			continue
+		}
+		newKvSlc[indA] = kvB
+	}
+	kvSlcA = &newKvSlc
+}
+
+func getKeyValueFromSlice(kvSlc *[]KeyValue, key string) (*KeyValue, int) {
+	for i, kv := range *kvSlc {
+		if kv.Key == key {
+			return &kv, i
+		}
+	}
+	return nil, -1
 }
 
 // CheckAllowDisallowList validates against allow/disallow lists and returns
