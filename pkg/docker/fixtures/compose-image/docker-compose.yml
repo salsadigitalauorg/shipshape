@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+
+  service1:
+    image: bitnami/kubectl
+
+  service2:
+    image: bitnami/postgresql
+
+  service3:
+    image: bitnami/redis
+
+  service4:
+    image: bitnami/mongodb

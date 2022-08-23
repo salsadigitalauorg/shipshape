@@ -76,6 +76,11 @@ func (c *CheckBase) AddPass(msg string) {
 	)
 }
 
+// AddWarning appends a Warning message to the result.
+func (c *CheckBase) AddWarning(msg string) {
+	c.Result.Warnings = append(c.Result.Warnings, msg)
+}
+
 // RunCheck contains the core logic for running the check and generating
 // the result.
 // This is where c.Result should be populated.

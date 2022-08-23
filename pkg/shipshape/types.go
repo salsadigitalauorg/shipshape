@@ -21,6 +21,7 @@ type Check interface {
 	UnmarshalDataMap()
 	AddFail(msg string)
 	AddPass(msg string)
+	AddWarning(msg string)
 	RunCheck()
 	GetResult() *Result
 }
@@ -64,6 +65,7 @@ type Result struct {
 	Status    CheckStatus `json:"status"`
 	Passes    []string    `json:"passes"`
 	Failures  []string    `json:"failures"`
+	Warnings  []string    `json:"warnings"`
 }
 
 // ResultList is a wrapper around a list of results, providing some useful

@@ -95,3 +95,11 @@ func EnsurePasses(t *testing.T, c *shipshape.CheckBase, expectedPasses []string)
 	}
 	return "", true
 }
+
+func EnsureWarnings(t *testing.T, c *shipshape.CheckBase, expectedWarnings []string) (msg string, ok bool) {
+	numExpectedWarnings := len(expectedWarnings)
+	if len(c.Result.Warnings) != numExpectedWarnings || !reflect.DeepEqual(expectedWarnings, c.Result.Warnings) {
+		return fmt.Sprintf("there should be exactly %d Warning(s), got %#v", numExpectedWarnings, c.Result.Warnings), false
+	}
+	return "", true
+}
