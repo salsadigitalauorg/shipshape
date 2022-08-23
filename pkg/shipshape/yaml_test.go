@@ -1,14 +1,52 @@
 package shipshape_test
 
 import (
-	"reflect"
+	"fmt"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/stretchr/testify/assert"
 )
 
+func TestYamlBaseMerge(t *testing.T) {
+	assert := assert.New(t)
+
+	c := shipshape.YamlBase{}
+	c.Init("", shipshape.File)
+
+	c2 := shipshape.FileCheck{}
+	c2.Init("", shipshape.Yaml)
+	err := c.Merge(&c2)
+	assert.Equal(fmt.Errorf("can only merge checks of the same type"), err)
+
+	c = shipshape.YamlBase{Values: []shipshape.KeyValue{{Key: "foo", Value: "bar"}}}
+	err = c.Merge(&shipshape.YamlBase{
+		Values: []shipshape.KeyValue{{Key: "baz", Value: "zoom"}},
+	})
+	assert.Equal(nil, err)
+	assert.EqualValues(
+		[]shipshape.KeyValue{
+			{Key: "foo", Value: "bar"},
+			{Key: "baz", Value: "zoom"},
+		},
+		c.Values,
+	)
+	err = c.Merge(&shipshape.YamlBase{
+		Values: []shipshape.KeyValue{{Key: "baz", Value: "zap"}},
+	})
+	assert.Equal(nil, err)
+	assert.EqualValues(
+		[]shipshape.KeyValue{
+			{Key: "foo", Value: "bar"},
+			{Key: "baz", Value: "zap"},
+		},
+		c.Values,
+	)
+}
+
 func TestYamlUnmarshalDataMap(t *testing.T) {
+	assert := assert.New(t)
+
 	// Invalid data.
 	c := shipshape.YamlBase{
 		CheckBase: shipshape.CheckBase{
@@ -22,15 +60,11 @@ foo:
 		},
 	}
 	c.UnmarshalDataMap()
-	if _, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error("invalid yaml data should Fail")
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"yaml: line 4: found character that cannot start any token"}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.EqualValues(0, len(c.Result.Passes))
+	assert.EqualValues(
+		[]string{"yaml: line 4: found character that cannot start any token"},
+		c.Result.Failures)
 
 	// Valid data.
 	c = shipshape.YamlBase{
@@ -46,9 +80,7 @@ foo:
 		},
 	}
 	c.UnmarshalDataMap()
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
+	assert.EqualValues(0, len(c.Result.Failures))
 
 	// Invalid yaml kec.
 	c = shipshape.YamlBase{
@@ -66,15 +98,16 @@ foo:
 		},
 	}
 	c.RunCheck()
-	if _, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error("invalid yaml key should Fail")
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"invalid character '&' at position 3, following \"baz\""}); !ok {
-		t.Error(msg)
-	}
+
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.EqualValues(
+		[]string{"invalid character '&' at position 3, following \"baz\""},
+		c.Result.Failures)
 }
 
 func TestYamlCheckKeyValue(t *testing.T) {
+	assert := assert.New(t)
+
 	c := shipshape.YamlBase{
 		CheckBase: shipshape.CheckBase{
 			DataMap: map[string][]byte{
@@ -94,45 +127,31 @@ foo:
 		Key:   "&*&^);",
 		Value: "foo",
 	}, "data")
-	if err == nil || err.Error() != "child name missing at position 0, following \"\"" {
-		t.Error("should fail with error 'child name missing at position 0, following \"\"', got success")
-	}
+	assert.Equal("child name missing at position 0, following \"\"", err.Error())
 
 	// Non-existent path.
 	kvr, _, err := c.CheckKeyValue(shipshape.KeyValue{
 		Key:   "foo.baz",
 		Value: "foo",
 	}, "data")
-	if err != nil {
-		t.Error("path lookup should succeed")
-	}
-	if kvr != shipshape.KeyValueNotFound {
-		t.Errorf("result should be KeyValueNotFound(-1), got %d", kvr)
-	}
+	assert.Equal(nil, err)
+	assert.Equal(shipshape.KeyValueNotFound, kvr)
 
 	// Wrong value.
 	kvr, _, err = c.CheckKeyValue(shipshape.KeyValue{
 		Key:   "foo.bar[0].baz",
 		Value: "zoom",
 	}, "data")
-	if err != nil {
-		t.Error("path lookup should succeed")
-	}
-	if kvr != shipshape.KeyValueNotEqual {
-		t.Errorf("result should be KeyValueNotEqual(0), got %d", kvr)
-	}
+	assert.Equal(nil, err)
+	assert.Equal(shipshape.KeyValueNotEqual, kvr)
 
 	// Correct value.
 	kvr, _, err = c.CheckKeyValue(shipshape.KeyValue{
 		Key:   "foo.bar[0].baz",
 		Value: "zoo",
 	}, "data")
-	if err != nil {
-		t.Error("path lookup should succeed")
-	}
-	if kvr != shipshape.KeyValueEqual {
-		t.Errorf("result should be KeyValueEqual(1), got %d", kvr)
-	}
+	assert.Equal(nil, err)
+	assert.Equal(shipshape.KeyValueEqual, kvr)
 
 	// Optional value not present.
 	kvr, _, err = c.CheckKeyValue(shipshape.KeyValue{
@@ -140,15 +159,13 @@ foo:
 		Value:    "zoom",
 		Optional: true,
 	}, "data")
-	if err != nil {
-		t.Error("missing optional value should not fail")
-	}
-	if kvr != shipshape.KeyValueEqual {
-		t.Errorf("result should be KeyValueEqual(1), got %d", kvr)
-	}
+	assert.Equal(nil, err)
+	assert.Equal(shipshape.KeyValueEqual, kvr)
 }
 
 func TestYamlCheckKeyValueList(t *testing.T) {
+	assert := assert.New(t)
+
 	c := shipshape.YamlBase{
 		CheckBase: shipshape.CheckBase{
 			DataMap: map[string][]byte{
@@ -170,9 +187,7 @@ foo:
 		Key:    "foo.bar",
 		IsList: true,
 	}, "data")
-	if err == nil {
-		t.Error("should fail")
-	}
+	assert.Equal("list of allowed or disallowed values not provided", err.Error())
 
 	var kvr shipshape.KeyValueResult
 	var fails []string
@@ -182,16 +197,9 @@ foo:
 		IsList:     true,
 		Disallowed: []string{"baz", "zoo"},
 	}, "data")
-	if err != nil {
-		t.Error("path lookup should succeed")
-	}
-	if kvr != shipshape.KeyValueDisallowedFound {
-		t.Errorf("result should be KeyValueDisallowedFound(-2), got %d", kvr)
-	}
-	expectedFails := []string{"baz", "zoo"}
-	if len(fails) != 2 || !reflect.DeepEqual(fails, expectedFails) {
-		t.Errorf("There should be exactly 2 Failures, with values %+v, got %+v", expectedFails, fails)
-	}
+	assert.Equal(nil, err)
+	assert.Equal(shipshape.KeyValueDisallowedFound, kvr)
+	assert.EqualValues([]string{"baz", "zoo"}, fails)
 
 	// No disallowed values in yaml.
 	kvr, fails, _ = c.CheckKeyValue(shipshape.KeyValue{
@@ -199,12 +207,8 @@ foo:
 		IsList:     true,
 		Disallowed: []string{"this should", "be a success"},
 	}, "data")
-	if kvr != shipshape.KeyValueEqual {
-		t.Errorf("result should be KeyValueEqual(1), got %d", kvr)
-	}
-	if len(fails) > 0 {
-		t.Errorf("There should be no Failures, got %+v", fails)
-	}
+	assert.Equal(shipshape.KeyValueEqual, kvr)
+	assert.EqualValues(0, len(fails))
 
 	// Allowed values in yaml all match.
 	kvr, fails, _ = c.CheckKeyValue(shipshape.KeyValue{
@@ -212,12 +216,8 @@ foo:
 		IsList:  true,
 		Allowed: []string{"baz", "zoo", "zoom"},
 	}, "data")
-	if kvr != shipshape.KeyValueEqual {
-		t.Errorf("result should be KeyValueEqual(1), got %d", kvr)
-	}
-	if len(fails) > 0 {
-		t.Errorf("There should be no Failures, got %+v", fails)
-	}
+	assert.Equal(shipshape.KeyValueEqual, kvr)
+	assert.EqualValues(0, len(fails))
 
 	// Value not in Allowed list.
 	kvr, fails, _ = c.CheckKeyValue(shipshape.KeyValue{
@@ -225,25 +225,18 @@ foo:
 		IsList:  true,
 		Allowed: []string{"baz", "zoo"},
 	}, "data")
-	if kvr != shipshape.KeyValueDisallowedFound {
-		t.Errorf("result should be KeyValueDisallowedFound(-2), got %d", kvr)
-	}
-	expectedAllowedFails := []string{"zoom"}
-	if len(fails) != 1 || !reflect.DeepEqual(fails, expectedAllowedFails) {
-		t.Errorf("There should be exactly 1 Failure, with values %+v, got %+v", expectedAllowedFails, fails)
-	}
+	assert.Equal(shipshape.KeyValueDisallowedFound, kvr)
+	assert.EqualValues([]string{"zoom"}, fails)
 
 }
 
 func TestYamlBase(t *testing.T) {
+	assert := assert.New(t)
+
 	c := shipshape.YamlBase{}
 	c.HasData(true)
-	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"no data available"}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.EqualValues([]string{"no data available"}, c.Result.Failures)
 
 	mockCheck := func() shipshape.YamlBase {
 		return shipshape.YamlBase{
@@ -270,15 +263,9 @@ notification:
 	c = mockCheck()
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[data] 'check.interval_days' equals '7'"}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Pass, c.Result.Status)
+	assert.EqualValues(0, len(c.Result.Failures))
+	assert.EqualValues([]string{"[data] 'check.interval_days' equals '7'"}, c.Result.Passes)
 
 	// Wrong key, correct value.
 	c = mockCheck()
@@ -289,15 +276,9 @@ notification:
 		},
 	}
 	c.RunCheck()
-	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] 'check.interval' not found"}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.EqualValues(0, len(c.Result.Passes))
+	assert.EqualValues([]string{"[data] 'check.interval' not found"}, c.Result.Failures)
 
 	// Correct key, wrong value.
 	c = mockCheck()
@@ -309,15 +290,9 @@ notification:
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] 'check.interval_days' equals '7'"}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.EqualValues(0, len(c.Result.Passes))
+	assert.EqualValues([]string{"[data] 'check.interval_days' equals '7'"}, c.Result.Failures)
 
 	// Multiple config values - all correct.
 	c = mockCheck()
@@ -333,18 +308,14 @@ notification:
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
-		"[data] 'check.interval_days' equals '7'",
-		"[data] 'notification.emails[0]' equals 'admin@example.com'",
-	}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Pass, c.Result.Status)
+	assert.EqualValues(0, len(c.Result.Failures))
+	assert.EqualValues(
+		[]string{
+			"[data] 'check.interval_days' equals '7'",
+			"[data] 'notification.emails[0]' equals 'admin@example.com'",
+		},
+		c.Result.Passes)
 
 	// Wildcard key.
 	c = mockCheck()
@@ -371,18 +342,14 @@ efgh:
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] disallowed *.some: [thing 2]"}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.EqualValues(0, len(c.Result.Passes))
+	assert.EqualValues([]string{"[data] disallowed *.some: [thing 2]"}, c.Result.Failures)
 }
 
 func TestYamlBaseListValues(t *testing.T) {
+	assert := assert.New(t)
+
 	mockCheck := func() shipshape.YamlBase {
 		return shipshape.YamlBase{
 			CheckBase: shipshape.CheckBase{
@@ -408,28 +375,15 @@ foo:
 	c := mockCheck()
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[data] disallowed foo: [b, c]"}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.EqualValues(0, len(c.Result.Passes))
+	assert.EqualValues([]string{"[data] disallowed foo: [b, c]"}, c.Result.Failures)
 
 	c = mockCheck()
 	c.Values[0].Disallowed = []string{"e"}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"[data] no disallowed 'foo'"}); !ok {
-		t.Error(msg)
-	}
-
+	assert.Equal(shipshape.Pass, c.Result.Status)
+	assert.EqualValues(0, len(c.Result.Failures))
+	assert.EqualValues([]string{"[data] no disallowed 'foo'"}, c.Result.Passes)
 }
