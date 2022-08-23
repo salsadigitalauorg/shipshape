@@ -161,7 +161,11 @@ type YamlCheck struct {
 	Files          []string `yaml:"files"`           // A list of files to lint.
 	Pattern        string   `yaml:"pattern"`         // Pattern-based files.
 	ExcludePattern string   `yaml:"exclude-pattern"` // Pattern-based excluded files.
-	IgnoreMissing  bool     `yaml:"ignore-missing"`  // Allows non-existent files to not be counted as a Fail
+
+	// IgnoreMissing allows non-existent files to not be counted as a Fail.
+	// Using a pointer here so we can differentiate between
+	// false (default value) and an empty value.
+	IgnoreMissing *bool `yaml:"ignore-missing"`
 }
 
 // YamlLintCheck represents a Yaml lint file-based check for a number of files.

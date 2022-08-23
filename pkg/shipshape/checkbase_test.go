@@ -29,12 +29,6 @@ func TestCheckBaseMerge(t *testing.T) {
 	err := c.Merge(&shipshape.CheckBase{Name: "bar"})
 	assert.Equal(fmt.Errorf("can only merge checks with the same name"), err)
 
-	c.Init("some-dir", shipshape.File)
-	c2 := shipshape.CheckBase{Name: "bar"}
-	c2.Init("some-dir", shipshape.Yaml)
-	err = c.Merge(&c2)
-	assert.Equal(fmt.Errorf("can only merge checks of the same type"), err)
-
 	c = shipshape.CheckBase{Name: "foo", Severity: shipshape.HighSeverity}
 	c.Merge(&shipshape.CheckBase{Name: "foo"})
 	assert.Equal(shipshape.HighSeverity, c.Severity)

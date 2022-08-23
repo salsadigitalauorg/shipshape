@@ -93,7 +93,7 @@ checks:
 	if !ok || yc2.File != "shipshape.extension.yml" {
 		t.Fatalf("YamlCheck check 2's config name should be shipshape.extension.yml, got %s", yc.File)
 	}
-	if yc2.IgnoreMissing != true {
+	if *yc2.IgnoreMissing != true {
 		t.Fatalf("IgnoreMissing should be true, got %#v", yc2.IgnoreMissing)
 	}
 

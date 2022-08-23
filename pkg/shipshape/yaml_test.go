@@ -1,7 +1,6 @@
 package shipshape_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
@@ -11,16 +10,8 @@ import (
 func TestYamlBaseMerge(t *testing.T) {
 	assert := assert.New(t)
 
-	c := shipshape.YamlBase{}
-	c.Init("", shipshape.File)
-
-	c2 := shipshape.FileCheck{}
-	c2.Init("", shipshape.Yaml)
-	err := c.Merge(&c2)
-	assert.Equal(fmt.Errorf("can only merge checks of the same type"), err)
-
-	c = shipshape.YamlBase{Values: []shipshape.KeyValue{{Key: "foo", Value: "bar"}}}
-	err = c.Merge(&shipshape.YamlBase{
+	c := shipshape.YamlBase{Values: []shipshape.KeyValue{{Key: "foo", Value: "bar"}}}
+	err := c.Merge(&shipshape.YamlBase{
 		Values: []shipshape.KeyValue{{Key: "baz", Value: "zoom"}},
 	})
 	assert.Equal(nil, err)

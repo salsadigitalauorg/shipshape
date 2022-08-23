@@ -19,7 +19,7 @@ func TestYamlLintCheck(t *testing.T) {
 				},
 				File:          file,
 				Files:         files,
-				IgnoreMissing: ignoreMissing,
+				IgnoreMissing: &ignoreMissing,
 			},
 		}
 	}

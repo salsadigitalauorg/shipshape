@@ -146,8 +146,8 @@ func TestFileModuleCheck(t *testing.T) {
 	if c.File != "core.extension.yml" {
 		t.Errorf("File should be 'core.extension.yml', got %s", c.File)
 	}
-	if c.IgnoreMissing != true {
-		t.Errorf("IgnoreMissing should be 'true', got %t", c.IgnoreMissing)
+	if *c.IgnoreMissing != true {
+		t.Errorf("IgnoreMissing should be 'true', got %t", *c.IgnoreMissing)
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()

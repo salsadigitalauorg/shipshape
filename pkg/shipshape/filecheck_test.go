@@ -1,7 +1,6 @@
 package shipshape_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
@@ -12,17 +11,6 @@ func TestFileCheckMerge(t *testing.T) {
 	assert := assert.New(t)
 
 	c := shipshape.FileCheck{
-		Path:              "file-initial",
-		DisallowedPattern: "pattern-initial",
-	}
-	c.Init("", shipshape.File)
-
-	c2 := shipshape.YamlCheck{}
-	c2.Init("", shipshape.Yaml)
-	err := c.Merge(&c2)
-	assert.Equal(fmt.Errorf("can only merge checks of the same type"), err)
-
-	c = shipshape.FileCheck{
 		Path:              "file-initial",
 		DisallowedPattern: "pattern-initial",
 	}

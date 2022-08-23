@@ -63,15 +63,32 @@ func LookupYamlPath(n *yaml.Node, path string) ([]*yaml.Node, error) {
 	return q, nil
 }
 
+// MergeBoolPtrs compares two bool pointers and replaces
+// boolA with boolB if the latter is non-nil.
+func MergeBoolPtrs(boolA *bool, boolB *bool) {
+	if boolB != nil && boolB != boolA {
+		*boolA = *boolB
+	}
+}
+
+// MergeString compares two strings and replaces
+// strA with strB if the latter is not empty.
 func MergeString(strA *string, strB string) {
 	if strB != "" && *strA != strB {
 		*strA = strB
 	}
 }
 
+// MergeStringSlice appends the values of a string slice to another
+// if those values do not already exist.
 func MergeStringSlice(strSlcA *[]string, strSlcB []string) {
-	if len(strSlcB) > 0 {
-		*strSlcA = append(*strSlcA, strSlcB...)
+	if len(strSlcB) == 0 {
+		return
+	}
+	for _, strB := range strSlcB {
+		if !StringSliceContains(*strSlcA, strB) {
+			*strSlcA = append(*strSlcA, strB)
+		}
 	}
 }
 

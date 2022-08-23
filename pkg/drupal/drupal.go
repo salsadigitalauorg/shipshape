@@ -73,5 +73,8 @@ func (c *FileModuleCheck) RunCheck() {
 func (c *FileModuleCheck) Init(pd string, ct shipshape.CheckType) {
 	c.CheckBase.Init(pd, ct)
 	c.File = "core.extension.yml"
-	c.IgnoreMissing = true
+	if c.IgnoreMissing == nil {
+		cTrue := true
+		c.IgnoreMissing = &cTrue
+	}
 }

@@ -21,6 +21,7 @@ func (c *YamlCheck) Merge(mergeCheck Check) error {
 	utils.MergeStringSlice(&c.Files, yCheck.Files)
 	utils.MergeString(&c.Pattern, yCheck.Pattern)
 	utils.MergeString(&c.ExcludePattern, yCheck.ExcludePattern)
+	utils.MergeBoolPtrs(c.IgnoreMissing, yCheck.IgnoreMissing)
 	return nil
 }
 
@@ -31,7 +32,7 @@ func (c *YamlCheck) readFile(fkey string, fname string) {
 	c.DataMap[fkey], err = os.ReadFile(fname)
 	if err != nil {
 		// No failure if missing file and ignoring missing.
-		if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing {
+		if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing != nil && *c.IgnoreMissing {
 			c.AddPass(fmt.Sprintf("File %s does not exist", fname))
 			c.Result.Status = Pass
 		} else {
@@ -56,7 +57,7 @@ func (c *YamlCheck) FetchData() {
 		files, err := utils.FindFiles(configPath, c.Pattern, c.ExcludePattern)
 		if err != nil {
 			// No failure if missing path and ignoring missing.
-			if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing {
+			if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing != nil && *c.IgnoreMissing {
 				c.AddPass(fmt.Sprintf("Path %s does not exist", configPath))
 				c.Result.Status = Pass
 			} else {
@@ -65,7 +66,7 @@ func (c *YamlCheck) FetchData() {
 			return
 		}
 
-		if len(files) == 0 && c.IgnoreMissing {
+		if len(files) == 0 && c.IgnoreMissing != nil && *c.IgnoreMissing {
 			c.AddPass("no matching config files found")
 			c.Result.Status = Pass
 			return
