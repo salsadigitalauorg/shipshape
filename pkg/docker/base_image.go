@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -47,12 +48,9 @@ func (c *BaseImageCheck) RunCheck() {
 			continue
 		}
 
-	SERVICES:
 		for name, def := range compose.Services {
-			for _, exclude := range c.Exclude {
-				if name == exclude {
-					continue SERVICES
-				}
+			if utils.StringSliceContains(c.Exclude, name) {
+				continue
 			}
 
 			if def.Build.Dockerfile != "" {
