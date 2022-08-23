@@ -136,13 +136,13 @@ func TestYamlCheck(t *testing.T) {
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
-	assert.EqualValues(
+	assert.ElementsMatch(
 		[]string{
 			"[testdata/yaml/dir/foo.bar.yml] 'check.interval_days' equals '7'",
 			"[testdata/yaml/dir/subdir/foo.bar.yml] 'check.interval_days' equals '7'",
 			"[testdata/yaml/foo.bar.yml] 'check.interval_days' equals '7'"},
 		c.Result.Passes)
-	assert.EqualValues(
+	assert.ElementsMatch(
 		[]string{
 			"[testdata/yaml/dir/subdir/zoom.bar.yml] 'check.interval_days' equals '5'",
 			"[testdata/yaml/dir/zoom.bar.yml] 'check.interval_days' equals '5'",
