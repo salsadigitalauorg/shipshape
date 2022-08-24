@@ -50,8 +50,7 @@ func TestValidImage(t *testing.T) {
 	}
 	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
-	sort.Strings(c.Result.Passes)
-	assert.EqualValues(
+	assert.ElementsMatch(
 		[]string{
 			"service1 is using valid base images",
 			"service2 is using valid base images",
@@ -122,8 +121,7 @@ func TestExcludeServiceMany(t *testing.T) {
 	}
 	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
-	sort.Strings(c.Result.Passes)
-	assert.EqualValues(
+	assert.ElementsMatch(
 		[]string{
 			"service1 is using valid base images",
 			"service2 is using valid base images",
