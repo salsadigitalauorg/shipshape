@@ -1,7 +1,6 @@
 package docker_test
 
 import (
-	"sort"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/docker"
