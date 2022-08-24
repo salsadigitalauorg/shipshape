@@ -51,9 +51,10 @@ func (cfg *Config) Merge(mrgCfg Config) error {
 }
 
 func (cfg *Config) Init() {
+	ProjectDir = cfg.ProjectDir
 	for ct, checks := range cfg.Checks {
 		for _, c := range checks {
-			c.Init(cfg.ProjectDir, ct)
+			c.Init(ct)
 		}
 	}
 }
@@ -104,7 +105,6 @@ func (cfg *Config) RunChecks() ResultList {
 }
 
 func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
-	c.Init(cfg.ProjectDir, "")
 	if c.RequiresData() {
 		c.FetchData()
 		c.HasData(true)

@@ -3,8 +3,7 @@ package shipshape
 import "fmt"
 
 // Init acts as the constructor of a check and sets some initial values.
-func (c *CheckBase) Init(pd string, ct CheckType) {
-	ProjectDir = pd
+func (c *CheckBase) Init(ct CheckType) {
 	// Default severity is normal.
 	if c.Severity == "" {
 		c.Severity = NormalSeverity

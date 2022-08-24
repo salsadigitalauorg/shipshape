@@ -48,8 +48,8 @@ func (cmd *DrushCommand) Query(qry string) ([]byte, error) {
 }
 
 // Init implementation for the drush-based yaml check.
-func (c *DrushYamlCheck) Init(pd string, ct shipshape.CheckType) {
-	c.YamlBase.Init(pd, ct)
+func (c *DrushYamlCheck) Init(ct shipshape.CheckType) {
+	c.YamlBase.Init(ct)
 	c.RequiresDb = true
 }
 
@@ -72,8 +72,8 @@ func (c *DrushYamlCheck) FetchData() {
 }
 
 // Init implementation for the DB-based module check.
-func (c *DbModuleCheck) Init(pd string, ct shipshape.CheckType) {
-	c.CheckBase.Init(pd, ct)
+func (c *DbModuleCheck) Init(ct shipshape.CheckType) {
+	c.CheckBase.Init(ct)
 	c.RequiresDb = true
 	c.Command = "pm:list --status=enabled"
 }
@@ -84,8 +84,8 @@ func (c *DbModuleCheck) RunCheck() {
 }
 
 // Init implementation for the DB-based permissions check.
-func (c *DbPermissionsCheck) Init(pd string, ct shipshape.CheckType) {
-	c.CheckBase.Init(pd, ct)
+func (c *DbPermissionsCheck) Init(ct shipshape.CheckType) {
+	c.CheckBase.Init(ct)
 	c.RequiresDb = true
 	c.Command = "role:list"
 	c.ConfigName = "permissions"
@@ -131,8 +131,8 @@ func (c *DbPermissionsCheck) RunCheck() {
 	}
 }
 
-func (c *TrackingCodeCheck) Init(pd string, ct shipshape.CheckType) {
-	c.CheckBase.Init(pd, ct)
+func (c *TrackingCodeCheck) Init(ct shipshape.CheckType) {
+	c.CheckBase.Init(ct)
 	c.RequiresDb = true
 	c.Command = "status"
 	c.ConfigName = "uri"

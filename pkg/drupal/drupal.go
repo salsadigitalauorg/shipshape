@@ -70,8 +70,8 @@ func (c *FileModuleCheck) RunCheck() {
 }
 
 // Init implementation for the File-based module check.
-func (c *FileModuleCheck) Init(pd string, ct shipshape.CheckType) {
-	c.CheckBase.Init(pd, ct)
+func (c *FileModuleCheck) Init(ct shipshape.CheckType) {
+	c.CheckBase.Init(ct)
 	c.File = "core.extension.yml"
 	if c.IgnoreMissing == nil {
 		cTrue := true

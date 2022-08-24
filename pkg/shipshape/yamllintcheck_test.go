@@ -25,7 +25,7 @@ func TestYamlLintCheck(t *testing.T) {
 	}
 
 	c := mockCheck("", []string{}, false)
-	c.Init("testdata", shipshape.YamlLint)
+	c.Init(shipshape.YamlLint)
 	c.FetchData()
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
@@ -38,7 +38,7 @@ func TestYamlLintCheck(t *testing.T) {
 	}
 
 	c = mockCheck("non-existent-file.yml", []string{}, true)
-	c.Init("testdata", shipshape.YamlLint)
+	c.Init(shipshape.YamlLint)
 	c.FetchData()
 	if msg, ok := internal.EnsureNoFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
@@ -51,7 +51,7 @@ func TestYamlLintCheck(t *testing.T) {
 	}
 
 	c = mockCheck("", []string{"non-existent-file.yml", "yaml-invalid.yml"}, true)
-	c.Init("testdata", shipshape.YamlLint)
+	c.Init(shipshape.YamlLint)
 	c.FetchData()
 	if msg, ok := internal.EnsureNoFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
@@ -67,7 +67,7 @@ func TestYamlLintCheck(t *testing.T) {
 	}
 
 	c = mockCheck("non-existent-file.yml", []string{}, false)
-	c.Init("testdata", shipshape.YamlLint)
+	c.Init(shipshape.YamlLint)
 	c.FetchData()
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
@@ -80,7 +80,7 @@ func TestYamlLintCheck(t *testing.T) {
 	}
 
 	c = mockCheck("", []string{"non-existent-file.yml", "yamllint-invalid.yml"}, false)
-	c.Init("testdata", shipshape.YamlLint)
+	c.Init(shipshape.YamlLint)
 	c.FetchData()
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
@@ -93,7 +93,7 @@ func TestYamlLintCheck(t *testing.T) {
 	}
 
 	c = mockCheck("", []string{}, false)
-	c.Init("testdata", shipshape.YamlLint)
+	c.Init(shipshape.YamlLint)
 	c.DataMap["yaml-invalid.yml"] = []byte(`
 this: is invalid
 this: yaml
@@ -110,7 +110,7 @@ this: yaml
 	}
 
 	c = mockCheck("", []string{}, false)
-	c.Init("testdata", shipshape.YamlLint)
+	c.Init(shipshape.YamlLint)
 	c.DataMap["yaml-valid.yml"] = []byte(`
 this: is
 valid: yaml

@@ -16,7 +16,7 @@ func TestCrawlerCheck(t *testing.T) {
 		Limit:  5,
 	}
 
-	c.Init("testdata", shipshape.File)
+	c.Init(shipshape.File)
 	c.RunCheck()
 
 	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"Invalid response for: https://httpbin.org/not-found got 404"}); !ok {
@@ -29,7 +29,7 @@ func TestCrawlerCheck(t *testing.T) {
 		Limit:       5,
 	}
 
-	c.Init("testdata", shipshape.File)
+	c.Init(shipshape.File)
 	c.RunCheck()
 
 	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {

@@ -14,7 +14,7 @@ type CheckType string
 // A number of the functions have a basic implementation in CheckBase; they can
 // be used as-is, or overridden as required.
 type Check interface {
-	Init(pd string, ct CheckType)
+	Init(ct CheckType)
 	GetName() string
 	GetType() CheckType
 	GetSeverity() Severity

@@ -34,11 +34,12 @@ func TestFileCheckMerge(t *testing.T) {
 func TestFileCheckRunCheck(t *testing.T) {
 	assert := assert.New(t)
 
+	shipshape.ProjectDir = "testdata"
 	c := shipshape.FileCheck{
 		Path:              "file-non-existent",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
-	c.Init("testdata", shipshape.File)
+	c.Init(shipshape.File)
 	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
@@ -51,7 +52,7 @@ func TestFileCheckRunCheck(t *testing.T) {
 		Path:              "file",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
-	c.Init("testdata", shipshape.File)
+	c.Init(shipshape.File)
 	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
@@ -67,7 +68,7 @@ func TestFileCheckRunCheck(t *testing.T) {
 		Path:              "file/correct",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
-	c.Init("testdata", shipshape.File)
+	c.Init(shipshape.File)
 	c.RunCheck()
 
 	assert.Equal(shipshape.Pass, c.Result.Status)

@@ -14,8 +14,7 @@ func TestCheckBaseInit(t *testing.T) {
 	c := shipshape.CheckBase{Name: "foo"}
 	assert.Equal("foo", c.GetName())
 
-	c.Init("baz", shipshape.File)
-	assert.Equal("baz", shipshape.ProjectDir)
+	c.Init(shipshape.File)
 	assert.Equal(shipshape.NormalSeverity, c.Severity)
 	assert.Equal("foo", c.Result.Name)
 	assert.Equal(shipshape.NormalSeverity, c.Result.Severity)

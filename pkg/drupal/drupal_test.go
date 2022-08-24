@@ -142,7 +142,7 @@ func TestFileModuleCheck(t *testing.T) {
 		Required:   []string{"node", "block"},
 		Disallowed: []string{"views_ui", "field_ui"},
 	}
-	c.Init("", drupal.FileModule)
+	c.Init(drupal.FileModule)
 	if c.File != "core.extension.yml" {
 		t.Errorf("File should be 'core.extension.yml', got %s", c.File)
 	}

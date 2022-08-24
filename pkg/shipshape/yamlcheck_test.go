@@ -41,10 +41,7 @@ func TestYamlCheck(t *testing.T) {
 		return shipshape.YamlCheck{
 			YamlBase: shipshape.YamlBase{
 				Values: []shipshape.KeyValue{
-					{
-						Key:   "check.interval_days",
-						Value: "7",
-					},
+					{Key: "check.interval_days", Value: "7"},
 				},
 			},
 			Path: "yaml",
@@ -58,8 +55,9 @@ func TestYamlCheck(t *testing.T) {
 	assert.EqualValues([]string{"no file provided"}, c.Result.Failures)
 
 	// Non-existent file.
+	shipshape.ProjectDir = "testdata"
 	c = mockCheck()
-	c.Init("testdata", shipshape.Yaml)
+	c.Init(shipshape.Yaml)
 	c.File = "non-existent.yml"
 	c.FetchData()
 	assert.Equal(shipshape.Fail, c.Result.Status)
