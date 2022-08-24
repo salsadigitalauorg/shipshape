@@ -92,7 +92,8 @@ func TestMerge(t *testing.T) {
 		Checks: shipshape.CheckMap{
 			shipshape.File: {&shipshape.FileCheck{
 				CheckBase: shipshape.CheckBase{Name: "filecheck2", Severity: shipshape.NormalSeverity},
-			}},
+				Path:      "path1"},
+			},
 		},
 	})
 	assert.NoError(err)
@@ -100,7 +101,9 @@ func TestMerge(t *testing.T) {
 		shipshape.CheckMap{
 			shipshape.File: {
 				&shipshape.FileCheck{CheckBase: shipshape.CheckBase{Name: "filecheck1", Severity: shipshape.NormalSeverity}},
-				&shipshape.FileCheck{CheckBase: shipshape.CheckBase{Name: "filecheck2", Severity: shipshape.NormalSeverity}},
+				&shipshape.FileCheck{
+					CheckBase: shipshape.CheckBase{Name: "filecheck2", Severity: shipshape.NormalSeverity},
+					Path:      "path1"},
 			},
 		},
 		cfg.Checks,
@@ -113,8 +116,8 @@ func TestMerge(t *testing.T) {
 				&shipshape.FileCheck{
 					CheckBase: shipshape.CheckBase{
 						Name:     "filecheck2",
-						Severity: shipshape.HighSeverity,
-					},
+						Severity: shipshape.HighSeverity},
+					Path: "path2",
 				},
 			},
 		},
@@ -134,6 +137,7 @@ func TestMerge(t *testing.T) {
 						Name:     "filecheck2",
 						Severity: shipshape.HighSeverity,
 					},
+					Path: "path2",
 				},
 			},
 		},

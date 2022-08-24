@@ -38,9 +38,10 @@ func ReadAndParseConfig(projectDir string, files []string) (Config, error) {
 			if len(files) == 1 {
 				return finalCfg, nil
 			}
+			continue
 		}
 
-		if err := cfg.Merge(cfg); err != nil {
+		if err := finalCfg.Merge(cfg); err != nil {
 			panic(err)
 		}
 	}

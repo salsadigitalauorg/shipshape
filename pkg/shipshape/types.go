@@ -56,9 +56,9 @@ type CheckBase struct {
 	Name  string `yaml:"name"`
 	cType CheckType
 	// Flag indicating if the check requires a database connection to run.
-	RequiresDb bool
-	DataMap    map[string][]byte
-	Result     Result
+	RequiresDb bool              `yaml:"-"`
+	DataMap    map[string][]byte `yaml:"-"`
+	Result     Result            `yaml:"-"`
 	// Default severity is normal.
 	Severity Severity `yaml:"severity"`
 }

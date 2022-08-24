@@ -15,6 +15,7 @@ import (
 	_ "github.com/salsadigitalauorg/shipshape/pkg/phpstan"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
+	"gopkg.in/yaml.v3"
 
 	"github.com/spf13/pflag"
 )
@@ -28,6 +29,7 @@ var (
 var (
 	displayUsage   bool
 	displayVersion bool
+	dumpConfig     bool
 	// selfUpdate     bool
 
 	errorCodeOnFailure bool
@@ -73,6 +75,15 @@ func main() {
 	}
 	cfg.Init()
 	cfg.FilterChecksToRun(checkTypesToRun, excludeDb)
+	if dumpConfig {
+		out, err := yaml.Marshal(cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("%s\n", string(out))
+		os.Exit(0)
+	}
+
 	rl := cfg.RunChecks()
 
 	switch outputFormat {
@@ -111,6 +122,7 @@ func parseFlags() {
 
 	pflag.BoolVarP(&displayUsage, "help", "h", false, "Displays usage information")
 	pflag.BoolVarP(&displayVersion, "version", "v", false, "Displays the application version")
+	pflag.BoolVar(&dumpConfig, "dump-config", false, "Dump the final config - useful to make sure multiple config files are being merged as expected")
 	// pflag.BoolVarP(&selfUpdate, "self-update", "u", false, "Updates shipshape to the latest version")
 
 	pflag.BoolVarP(&errorCodeOnFailure, "error-code", "e", false, "Exit with error code if a failure is detected (env: SHIPSHAPE_ERROR_ON_FAILURE)")
