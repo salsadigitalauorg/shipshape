@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"strings"
 )
 
 // FindFiles scans a directory for files matching the provided patterns.
@@ -110,4 +111,13 @@ func FetchContentFromUrl(u string) ([]byte, error) {
 		return []byte(nil), err
 	}
 	return buf.Bytes(), nil
+}
+
+func StringSliceMatch(slice []string, item string) bool {
+	for _, s := range slice {
+		if strings.Contains(item, s) {
+			return true
+		}
+	}
+	return false
 }

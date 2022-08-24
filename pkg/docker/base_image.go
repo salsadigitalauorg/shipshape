@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -17,6 +16,7 @@ type BaseImageCheck struct {
 	shipshape.CheckBase `yaml:",inline"`
 	Allowed             []string `yaml:"allowed"`
 	Exclude             []string `yaml:"exclude"`
+	Deprecated          []string `yaml:"deprecated"`
 	Pattern             []string `yaml:"pattern"`
 	Paths               []string `yaml:"paths"`
 }
@@ -63,35 +63,32 @@ func (c *BaseImageCheck) RunCheck() {
 				scanner := bufio.NewScanner(df)
 				for scanner.Scan() {
 					from_regex := regexp.MustCompile("^FROM (.*)")
-					match := from_regex.FindString(scanner.Text())
-					uses_allowed := false
-					if match == "" {
+					match := from_regex.FindStringSubmatch(scanner.Text())
+
+					if len(match) < 1 {
 						continue
 					}
-					for _, i := range c.Allowed {
-						if strings.Contains(match, i) {
-							uses_allowed = true
-						}
-					}
-					if !uses_allowed {
-						c.AddFail(name + " is using invalid base image " + match)
+
+					if len(c.Allowed) > 0 && !utils.StringSliceContains(c.Allowed, match[1]) {
+						c.AddFail(name + " is using invalid base image " + match[1])
+					} else if len(c.Deprecated) > 0 && utils.StringSliceMatch(c.Deprecated, match[1]) {
+						c.AddWarning(name + " is using deprecated image " + match[1])
+					} else {
+						c.AddPass(name + " is using valid base images")
 					}
 				}
 			} else {
-				uses_allowed := false
-				for _, i := range c.Allowed {
-					if strings.Contains(def.Image, i) {
-						uses_allowed = true
-					}
-				}
-				if !uses_allowed {
-					c.AddFail(name + " is using an invalid base image " + def.Image)
+				if !utils.StringSliceMatch(c.Allowed, def.Image) {
+					c.AddFail(name + " is using invalid base image " + def.Image)
+				} else if utils.StringSliceMatch(c.Deprecated, def.Image) {
+					c.AddWarning(name + " is using deprecated image " + def.Image)
+				} else {
+					c.AddPass(name + " is using valid base images")
 				}
 			}
 		}
 
 		if len(c.Result.Failures) == 0 {
-			c.AddPass("Dockerfiles adhere to the policy")
 			c.Result.Status = shipshape.Pass
 		}
 	}
