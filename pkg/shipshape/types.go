@@ -79,7 +79,7 @@ type Result struct {
 type ResultList struct {
 	config                *Config
 	TotalChecks           int               `json:"total-checks"`
-	TotalBreaches         int               `json:"total-breaches"`
+	TotalBreaches         uint32            `json:"total-breaches"`
 	CheckCountByType      map[CheckType]int `json:"check-count-by-type"`
 	BreachCountByType     map[CheckType]int `json:"breach-count-by-type"`
 	BreachCountBySeverity map[Severity]int  `json:"breach-count-by-severity"`

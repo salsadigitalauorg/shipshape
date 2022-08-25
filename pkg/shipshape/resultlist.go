@@ -5,8 +5,13 @@ import (
 	"encoding/xml"
 	"fmt"
 	"sort"
+	"sync"
+	"sync/atomic"
 	"text/tabwriter"
 )
+
+// Use locks to make map mutations concurrency-safe.
+var lock = sync.RWMutex{}
 
 // Status calculates and returns the overall result of all check results.
 func (rl *ResultList) Status() CheckStatus {
@@ -21,9 +26,9 @@ func (rl *ResultList) Status() CheckStatus {
 // IncrChecks increments the total checks count & checks count by type.
 func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
 	rl.TotalChecks = rl.TotalChecks + incr
-	if rl.CheckCountByType == nil {
-		rl.CheckCountByType = map[CheckType]int{}
-	}
+
+	lock.Lock()
+	defer lock.Unlock()
 	rl.CheckCountByType[ct] = rl.CheckCountByType[ct] + incr
 }
 
@@ -31,15 +36,12 @@ func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
 func (rl *ResultList) IncrBreaches(c Check, incr int) {
 	ct := c.GetResult().CheckType
 	sev := c.GetResult().Severity
-	rl.TotalBreaches = rl.TotalBreaches + incr
-	if rl.BreachCountByType == nil {
-		rl.BreachCountByType = map[CheckType]int{}
-	}
-	if rl.BreachCountBySeverity == nil {
-		rl.BreachCountBySeverity = map[Severity]int{}
-	}
-	rl.BreachCountByType[ct] += +incr
-	rl.BreachCountBySeverity[sev] += +incr
+	atomic.AddUint32(&rl.TotalBreaches, uint32(incr))
+
+	lock.Lock()
+	defer lock.Unlock()
+	rl.BreachCountByType[ct] = rl.BreachCountByType[ct] + incr
+	rl.BreachCountBySeverity[sev] = rl.BreachCountBySeverity[sev] + incr
 }
 
 // GetBreachesByCheckName fetches the list of failures by check name.
@@ -146,7 +148,7 @@ func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
 func (rl *ResultList) JUnit(w *bufio.Writer) {
 	tss := JUnitTestSuites{
 		Tests:      rl.TotalChecks,
-		Errors:     rl.TotalBreaches,
+		Errors:     int(rl.TotalBreaches),
 		TestSuites: []JUnitTestSuite{},
 	}
 

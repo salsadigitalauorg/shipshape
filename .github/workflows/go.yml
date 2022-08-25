@@ -31,7 +31,7 @@ jobs:
       run: go build -ldflags="-s -w" -o build/shipshape . && ls -lh build/shipshape
 
     - name: Test
-      run: go test -v ./... -coverprofile=build/coverage.out
+      run: go test -v -race ./... -coverprofile=build/coverage.out
 
     - uses: shogo82148/actions-goveralls@v1
       with:

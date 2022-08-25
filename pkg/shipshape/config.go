@@ -83,8 +83,11 @@ func (cfg *Config) FilterChecksToRun(checkTypesToRun []string, excludeDb bool) {
 
 func (cfg *Config) RunChecks() ResultList {
 	rl := ResultList{
-		config:  cfg,
-		Results: []Result{},
+		config:                cfg,
+		Results:               []Result{},
+		CheckCountByType:      map[CheckType]int{},
+		BreachCountByType:     map[CheckType]int{},
+		BreachCountBySeverity: map[Severity]int{},
 	}
 	var wg sync.WaitGroup
 	for ct, checks := range cfg.Checks {
