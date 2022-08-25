@@ -78,7 +78,7 @@ type Result struct {
 // methods to manipulate and use it.
 type ResultList struct {
 	config                *Config
-	TotalChecks           int               `json:"total-checks"`
+	TotalChecks           uint32            `json:"total-checks"`
 	TotalBreaches         uint32            `json:"total-breaches"`
 	CheckCountByType      map[CheckType]int `json:"check-count-by-type"`
 	BreachCountByType     map[CheckType]int `json:"breach-count-by-type"`
@@ -203,7 +203,7 @@ type JUnitTestSuite struct {
 // JUnit format taken from https://llg.cubic.org/docs/junit/.
 type JUnitTestSuites struct {
 	XMLName    xml.Name `xml:"testsuites"`
-	Tests      int      `xml:"tests,attr"`
-	Errors     int      `xml:"errors,attr"`
+	Tests      uint32   `xml:"tests,attr"`
+	Errors     uint32   `xml:"errors,attr"`
 	TestSuites []JUnitTestSuite
 }

@@ -82,13 +82,7 @@ func (cfg *Config) FilterChecksToRun(checkTypesToRun []string, excludeDb bool) {
 }
 
 func (cfg *Config) RunChecks() ResultList {
-	rl := ResultList{
-		config:                cfg,
-		Results:               []Result{},
-		CheckCountByType:      map[CheckType]int{},
-		BreachCountByType:     map[CheckType]int{},
-		BreachCountBySeverity: map[Severity]int{},
-	}
+	rl := NewResultList(cfg)
 	var wg sync.WaitGroup
 	for ct, checks := range cfg.Checks {
 		checks := checks
@@ -120,5 +114,8 @@ func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
 		c.GetResult().Sort()
 	}
 	rl.Results = append(rl.Results, *c.GetResult())
-	rl.IncrBreaches(c, len(c.GetResult().Failures))
+	rl.IncrBreaches(
+		c.GetResult().CheckType,
+		c.GetResult().Severity,
+		len(c.GetResult().Failures))
 }

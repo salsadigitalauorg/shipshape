@@ -15,4 +15,10 @@ func (r *Result) Sort() {
 			return r.Passes[i] < r.Passes[j]
 		})
 	}
+
+	if len(r.Warnings) > 0 {
+		sort.Slice(r.Warnings, func(i int, j int) bool {
+			return r.Warnings[i] < r.Warnings[j]
+		})
+	}
 }

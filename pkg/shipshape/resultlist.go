@@ -13,6 +13,16 @@ import (
 // Use locks to make map mutations concurrency-safe.
 var lock = sync.RWMutex{}
 
+func NewResultList(cfg *Config) ResultList {
+	return ResultList{
+		config:                cfg,
+		Results:               []Result{},
+		CheckCountByType:      map[CheckType]int{},
+		BreachCountByType:     map[CheckType]int{},
+		BreachCountBySeverity: map[Severity]int{},
+	}
+}
+
 // Status calculates and returns the overall result of all check results.
 func (rl *ResultList) Status() CheckStatus {
 	for _, r := range rl.Results {
@@ -25,7 +35,7 @@ func (rl *ResultList) Status() CheckStatus {
 
 // IncrChecks increments the total checks count & checks count by type.
 func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
-	rl.TotalChecks = rl.TotalChecks + incr
+	atomic.AddUint32(&rl.TotalChecks, uint32(incr))
 
 	lock.Lock()
 	defer lock.Unlock()
@@ -33,9 +43,7 @@ func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
 }
 
 // IncrChecks increments the total breaches count & breaches count by type.
-func (rl *ResultList) IncrBreaches(c Check, incr int) {
-	ct := c.GetResult().CheckType
-	sev := c.GetResult().Severity
+func (rl *ResultList) IncrBreaches(ct CheckType, sev Severity, incr int) {
 	atomic.AddUint32(&rl.TotalBreaches, uint32(incr))
 
 	lock.Lock()
@@ -124,7 +132,13 @@ func (rl *ResultList) TableDisplay(w *tabwriter.Writer) {
 
 // SimpleDisplay outputs only failures to the writer.
 func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
-	if len(rl.Results) == 0 || rl.Status() == Pass {
+	if len(rl.Results) == 0 {
+		fmt.Fprint(w, "No result available; ensure your shipshape.yml is configured correctly.\n")
+		w.Flush()
+		return
+	}
+
+	if rl.Status() == Pass {
 		fmt.Fprint(w, "Ship is in top shape; no breach detected!\n")
 		w.Flush()
 		return
@@ -148,7 +162,7 @@ func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
 func (rl *ResultList) JUnit(w *bufio.Writer) {
 	tss := JUnitTestSuites{
 		Tests:      rl.TotalChecks,
-		Errors:     int(rl.TotalBreaches),
+		Errors:     rl.TotalBreaches,
 		TestSuites: []JUnitTestSuite{},
 	}
 
