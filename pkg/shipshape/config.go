@@ -113,9 +113,5 @@ func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
 		c.RunCheck()
 		c.GetResult().Sort()
 	}
-	rl.Results = append(rl.Results, *c.GetResult())
-	rl.IncrBreaches(
-		c.GetResult().CheckType,
-		c.GetResult().Severity,
-		len(c.GetResult().Failures))
+	rl.AddResult(*c.GetResult())
 }
