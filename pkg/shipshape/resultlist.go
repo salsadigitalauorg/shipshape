@@ -42,14 +42,16 @@ func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
 	rl.CheckCountByType[ct] = rl.CheckCountByType[ct] + incr
 }
 
-// IncrChecks increments the total breaches count & breaches count by type.
-func (rl *ResultList) IncrBreaches(ct CheckType, sev Severity, incr int) {
-	atomic.AddUint32(&rl.TotalBreaches, uint32(incr))
-
+// AddResult safely appends a check's result to the list.
+func (rl *ResultList) AddResult(r Result) {
 	lock.Lock()
 	defer lock.Unlock()
-	rl.BreachCountByType[ct] = rl.BreachCountByType[ct] + incr
-	rl.BreachCountBySeverity[sev] = rl.BreachCountBySeverity[sev] + incr
+	rl.Results = append(rl.Results, r)
+
+	incr := len(r.Failures)
+	atomic.AddUint32(&rl.TotalBreaches, uint32(incr))
+	rl.BreachCountByType[r.CheckType] = rl.BreachCountByType[r.CheckType] + incr
+	rl.BreachCountBySeverity[r.Severity] = rl.BreachCountBySeverity[r.Severity] + incr
 }
 
 // GetBreachesByCheckName fetches the list of failures by check name.

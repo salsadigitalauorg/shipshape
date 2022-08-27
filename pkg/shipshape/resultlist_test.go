@@ -58,7 +58,7 @@ func TestResultListIncrChecks(t *testing.T) {
 	assert.Equal(105, rl.CheckCountByType[Yaml])
 }
 
-func TestResultListIncrBreaches(t *testing.T) {
+func TestResultListAddResult(t *testing.T) {
 	assert := assert.New(t)
 
 	rl := ResultList{
@@ -66,12 +66,20 @@ func TestResultListIncrBreaches(t *testing.T) {
 		BreachCountByType:     map[CheckType]int{},
 		BreachCountBySeverity: map[Severity]int{},
 	}
-	rl.IncrBreaches(File, HighSeverity, 5)
+	rl.AddResult(Result{
+		Severity:  HighSeverity,
+		CheckType: File,
+		Failures:  []string{"fail1", "fail2", "fail3", "fail4", "fail5"},
+	})
 	assert.Equal(5, int(rl.TotalBreaches))
 	assert.Equal(5, rl.BreachCountByType[File])
 	assert.Equal(5, rl.BreachCountBySeverity[HighSeverity])
 
-	rl.IncrBreaches(Yaml, CriticalSeverity, 5)
+	rl.AddResult(Result{
+		Severity:  CriticalSeverity,
+		CheckType: Yaml,
+		Failures:  []string{"fail1", "fail2", "fail3", "fail4", "fail5"},
+	})
 	assert.Equal(10, int(rl.TotalBreaches))
 	assert.Equal(5, rl.BreachCountByType[File])
 	assert.Equal(5, rl.BreachCountByType[Yaml])
@@ -83,8 +91,16 @@ func TestResultListIncrBreaches(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			rl.IncrBreaches(File, HighSeverity, 1)
-			rl.IncrBreaches(Yaml, CriticalSeverity, 1)
+			rl.AddResult(Result{
+				Severity:  HighSeverity,
+				CheckType: File,
+				Failures:  []string{"fail6"},
+			})
+			rl.AddResult(Result{
+				Severity:  CriticalSeverity,
+				CheckType: Yaml,
+				Failures:  []string{"fail6"},
+			})
 		}()
 	}
 	wg.Wait()
