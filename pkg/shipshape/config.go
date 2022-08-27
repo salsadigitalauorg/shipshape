@@ -36,7 +36,16 @@ func (cfg *Config) Merge(mrgCfg Config) error {
 	}
 
 	for cType, checks := range mrgCfg.Checks {
+		checksOfSameType := cfg.Checks[cType]
 		for _, mrgCheck := range checks {
+			if mrgCheck.GetName() == "" {
+				for _, existingCheck := range checksOfSameType {
+					if err := existingCheck.Merge(mrgCheck); err != nil {
+						panic(err)
+					}
+				}
+				continue
+			}
 			existingCheck := findCheck(cfg.Checks, cType, mrgCheck)
 			if existingCheck == nil {
 				cfg.Checks[cType] = append(cfg.Checks[cType], mrgCheck)

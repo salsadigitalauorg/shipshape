@@ -31,6 +31,10 @@ func TestCheckBaseMerge(t *testing.T) {
 	c = shipshape.CheckBase{Name: "foo", Severity: shipshape.HighSeverity}
 	c.Merge(&shipshape.CheckBase{Name: "foo"})
 	assert.Equal(shipshape.HighSeverity, c.Severity)
+
+	c = shipshape.CheckBase{Severity: shipshape.LowSeverity}
+	c.Merge(&shipshape.CheckBase{Name: "foo"})
+	assert.Equal(shipshape.LowSeverity, c.Severity)
 }
 
 func TestCheckBaseRunCheck(t *testing.T) {

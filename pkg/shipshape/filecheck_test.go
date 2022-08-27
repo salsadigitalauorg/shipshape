@@ -11,24 +11,35 @@ func TestFileCheckMerge(t *testing.T) {
 	assert := assert.New(t)
 
 	c := shipshape.FileCheck{
+		CheckBase:         shipshape.CheckBase{Name: "filecheck1"},
 		Path:              "file-initial",
 		DisallowedPattern: "pattern-initial",
 	}
-	c.Merge(&shipshape.FileCheck{
+	err := c.Merge(&shipshape.FileCheck{
 		Path: "file-final",
 	})
+	assert.Nil(err)
 	assert.EqualValues(shipshape.FileCheck{
+		CheckBase:         shipshape.CheckBase{Name: "filecheck1"},
 		Path:              "file-final",
 		DisallowedPattern: "pattern-initial",
 	}, c)
 
-	c.Merge(&shipshape.FileCheck{
+	err = c.Merge(&shipshape.FileCheck{
 		DisallowedPattern: "pattern-final",
 	})
+	assert.Nil(err)
 	assert.EqualValues(shipshape.FileCheck{
+		CheckBase:         shipshape.CheckBase{Name: "filecheck1"},
 		Path:              "file-final",
 		DisallowedPattern: "pattern-final",
 	}, c)
+
+	err = c.Merge(&shipshape.FileCheck{
+		CheckBase:         shipshape.CheckBase{Name: "filecheck2"},
+		DisallowedPattern: "pattern-final",
+	})
+	assert.Error(err, "can only merge checks with the same name")
 }
 
 func TestFileCheckRunCheck(t *testing.T) {

@@ -33,8 +33,7 @@ func TestMerge(t *testing.T) {
 	// Ensure checks are merged properly.
 	err = cfg.Merge(shipshape.Config{
 		Checks: shipshape.CheckMap{
-			shipshape.File: {&shipshape.FileCheck{}},
-			shipshape.Yaml: {&shipshape.YamlCheck{}},
+			shipshape.File: {&shipshape.FileCheck{CheckBase: shipshape.CheckBase{Name: "filecheck1"}}},
 		},
 	})
 	assert.NoError(err)
@@ -42,39 +41,48 @@ func TestMerge(t *testing.T) {
 	assert.Equal(shipshape.HighSeverity, cfg.FailSeverity)
 	assert.EqualValues(
 		shipshape.CheckMap{
-			shipshape.File: {&shipshape.FileCheck{}},
-			shipshape.Yaml: {&shipshape.YamlCheck{}},
-		},
-		cfg.Checks,
-	)
-
-	// Adding the same values should be skipped.
-	err = cfg.Merge(shipshape.Config{
-		Checks: shipshape.CheckMap{
-			shipshape.File: {&shipshape.FileCheck{}},
-			shipshape.Yaml: {&shipshape.YamlCheck{}},
-		},
-	})
-	assert.NoError(err)
-	assert.EqualValues(
-		shipshape.CheckMap{
-			shipshape.File: {&shipshape.FileCheck{}},
-			shipshape.Yaml: {&shipshape.YamlCheck{}},
+			shipshape.File: {&shipshape.FileCheck{CheckBase: shipshape.CheckBase{Name: "filecheck1"}}},
 		},
 		cfg.Checks,
 	)
 
 	err = cfg.Merge(shipshape.Config{
 		Checks: shipshape.CheckMap{
-			shipshape.Crawler: {&shipshape.CrawlerCheck{}},
+			shipshape.Yaml: {&shipshape.YamlCheck{
+				YamlBase: shipshape.YamlBase{
+					CheckBase: shipshape.CheckBase{Name: "yamlcheck1"},
+				},
+			}},
 		},
 	})
 	assert.NoError(err)
 	assert.EqualValues(
 		shipshape.CheckMap{
-			shipshape.File:    {&shipshape.FileCheck{}},
-			shipshape.Yaml:    {&shipshape.YamlCheck{}},
-			shipshape.Crawler: {&shipshape.CrawlerCheck{}},
+			shipshape.File: {&shipshape.FileCheck{CheckBase: shipshape.CheckBase{Name: "filecheck1"}}},
+			shipshape.Yaml: {&shipshape.YamlCheck{
+				YamlBase: shipshape.YamlBase{
+					CheckBase: shipshape.CheckBase{Name: "yamlcheck1"},
+				},
+			}},
+		},
+		cfg.Checks,
+	)
+
+	err = cfg.Merge(shipshape.Config{
+		Checks: shipshape.CheckMap{
+			shipshape.Crawler: {&shipshape.CrawlerCheck{CheckBase: shipshape.CheckBase{Name: "crawlercheck1"}}},
+		},
+	})
+	assert.NoError(err)
+	assert.EqualValues(
+		shipshape.CheckMap{
+			shipshape.File: {&shipshape.FileCheck{CheckBase: shipshape.CheckBase{Name: "filecheck1"}}},
+			shipshape.Yaml: {&shipshape.YamlCheck{
+				YamlBase: shipshape.YamlBase{
+					CheckBase: shipshape.CheckBase{Name: "yamlcheck1"},
+				},
+			}},
+			shipshape.Crawler: {&shipshape.CrawlerCheck{CheckBase: shipshape.CheckBase{Name: "crawlercheck1"}}},
 		},
 		cfg.Checks,
 	)
@@ -136,6 +144,35 @@ func TestMerge(t *testing.T) {
 					CheckBase: shipshape.CheckBase{
 						Name:     "filecheck2",
 						Severity: shipshape.HighSeverity,
+					},
+					Path: "path2",
+				},
+			},
+		},
+		cfg.Checks,
+	)
+
+	// Test changing values for all checks of a type.
+	err = cfg.Merge(shipshape.Config{
+		Checks: shipshape.CheckMap{
+			shipshape.File: {
+				&shipshape.FileCheck{
+					CheckBase: shipshape.CheckBase{
+						Severity: shipshape.CriticalSeverity}}}}})
+	assert.NoError(err)
+	assert.EqualValues(
+		shipshape.CheckMap{
+			shipshape.File: {
+				&shipshape.FileCheck{
+					CheckBase: shipshape.CheckBase{
+						Name:     "filecheck1",
+						Severity: shipshape.CriticalSeverity,
+					},
+				},
+				&shipshape.FileCheck{
+					CheckBase: shipshape.CheckBase{
+						Name:     "filecheck2",
+						Severity: shipshape.CriticalSeverity,
 					},
 					Path: "path2",
 				},

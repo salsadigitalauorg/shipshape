@@ -31,7 +31,8 @@ func (c *CheckBase) GetSeverity() Severity { return c.Severity }
 
 // Merge merges values from another check into this one.
 func (c *CheckBase) Merge(mergeCheck Check) error {
-	if c.Name != mergeCheck.GetName() {
+	// Empty name means the merge will be done for all checks of the same type.
+	if mergeCheck.GetName() != "" && c.Name != mergeCheck.GetName() {
 		return fmt.Errorf("can only merge checks with the same name")
 	}
 	if mergeCheck.GetSeverity() != "" {
