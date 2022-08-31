@@ -7,22 +7,22 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/utils"
+	. "github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFindFiles(t *testing.T) {
-	_, err := utils.FindFiles("", "", "")
+	_, err := FindFiles("", "", "")
 	if err == nil || err.Error() != "directory not provided" {
 		t.Error("empty directory should fail.")
 	}
 
-	_, err = utils.FindFiles("testdata/findfiles", "", "")
+	_, err = FindFiles("testdata/findfiles", "", "")
 	if err == nil || err.Error() != "pattern not provided" {
 		t.Error("empty pattern should fail.")
 	}
 
-	files, err := utils.FindFiles("testdata/findfiles", "user.role.*.yml", "")
+	files, err := FindFiles("testdata/findfiles", "user.role.*.yml", "")
 	if err != nil {
 		t.Errorf("FindFiles should succeed, but failed: %+v", err)
 	}
@@ -36,7 +36,7 @@ func TestFindFiles(t *testing.T) {
 		t.Errorf("There should be exactly 4 files, got: %+v", files)
 	}
 
-	files, err = utils.FindFiles("testdata/findfiles", "^user\\.role\\..*\\.yml$", "user.role.author.yml")
+	files, err = FindFiles("testdata/findfiles", "^user\\.role\\..*\\.yml$", "user.role.author.yml")
 	if err != nil {
 		t.Errorf("FindFiles should succeed, but failed: %+v", err)
 	}
@@ -50,41 +50,94 @@ func TestFindFiles(t *testing.T) {
 	}
 }
 
+func TestMergeBoolPtrs(t *testing.T) {
+	assert := assert.New(t)
+
+	bTrue := true
+	bFalse := false
+	var boolVarA *bool
+	var boolVarB *bool
+
+	assert.Nil(boolVarA)
+	assert.Nil(boolVarB)
+
+	boolVarA = &bTrue
+	MergeBoolPtrs(boolVarA, boolVarB)
+	assert.True(*boolVarA)
+
+	boolVarB = &bFalse
+	MergeBoolPtrs(boolVarA, boolVarB)
+	assert.False(*boolVarA)
+}
+
+func TestMergeString(t *testing.T) {
+	assert := assert.New(t)
+
+	strVarA := "foo"
+	strVarB := ""
+	MergeString(&strVarA, strVarB)
+	assert.Equal("foo", strVarA)
+
+	strVarB = "bar"
+	MergeString(&strVarA, strVarB)
+	assert.Equal("bar", strVarA)
+}
+
+func TestMergeStringSlice(t *testing.T) {
+	assert := assert.New(t)
+
+	strSlcVarA := []string{"foo", "bar"}
+	strSlcVarB := []string(nil)
+
+	MergeStringSlice(&strSlcVarA, strSlcVarB)
+	assert.EqualValues([]string{"foo", "bar"}, strSlcVarA)
+
+	strSlcVarB = []string{"foo", "baz"}
+	MergeStringSlice(&strSlcVarA, strSlcVarB)
+	assert.EqualValues([]string{"foo", "bar", "baz"}, strSlcVarA)
+
+	strSlcVarA = []string(nil)
+	strSlcVarB = []string{"zoom", "zap"}
+	MergeStringSlice(&strSlcVarA, strSlcVarB)
+	assert.EqualValues([]string{"zoom", "zap"}, strSlcVarA)
+
+}
+
 func TestStringSliceContains(t *testing.T) {
 	assert := assert.New(t)
-	assert.False(utils.StringSliceContains([]string{}, "foo"))
-	assert.False(utils.StringSliceContains([]string{"bar"}, "foo"))
-	assert.True(utils.StringSliceContains([]string{"bar", "foo"}, "foo"))
+	assert.False(StringSliceContains([]string{}, "foo"))
+	assert.False(StringSliceContains([]string{"bar"}, "foo"))
+	assert.True(StringSliceContains([]string{"bar", "foo"}, "foo"))
 }
 
 func TestIntSliceContains(t *testing.T) {
 	assert := assert.New(t)
-	assert.False(utils.IntSliceContains([]int{}, 10))
-	assert.False(utils.IntSliceContains([]int{5}, 10))
-	assert.True(utils.IntSliceContains([]int{5, 10}, 10))
+	assert.False(IntSliceContains([]int{}, 10))
+	assert.False(IntSliceContains([]int{5}, 10))
+	assert.True(IntSliceContains([]int{5, 10}, 10))
 }
 
 func TestStringSlicesIntersect(t *testing.T) {
-	intersect := utils.StringSlicesIntersect(
+	intersect := StringSlicesIntersect(
 		[]string{"foo"}, []string{})
 	if len(intersect) != 0 {
 		t.Errorf("Intersect should be empty, got '%+v'", intersect)
 	}
 
-	intersect = utils.StringSlicesIntersect(
+	intersect = StringSlicesIntersect(
 		[]string{"foo"}, []string{"bar"})
 	if len(intersect) != 0 {
 		t.Errorf("Intersect should be empty, got '%+v'", intersect)
 	}
 
-	intersect = utils.StringSlicesIntersect(
+	intersect = StringSlicesIntersect(
 		[]string{"foo"}, []string{"bar", "foo"})
 	expectedIntersect := []string{"foo"}
 	if len(intersect) != 1 || !reflect.DeepEqual(intersect, expectedIntersect) {
 		t.Errorf("Intersect should have 1 item, got '%+v'", intersect)
 	}
 
-	intersect = utils.StringSlicesIntersect(
+	intersect = StringSlicesIntersect(
 		[]string{"foo", "baz", "zoom"}, []string{"bar", "foo", "zoo", "zoom"})
 	expectedIntersect = []string{"foo", "zoom"}
 	if len(intersect) != 2 || !reflect.DeepEqual(intersect, expectedIntersect) {
@@ -93,27 +146,27 @@ func TestStringSlicesIntersect(t *testing.T) {
 }
 
 func TestStringIsUrl(t *testing.T) {
-	isUrl := utils.StringIsUrl("foo/bar.yml")
+	isUrl := StringIsUrl("foo/bar.yml")
 	if isUrl {
 		t.Error("expected isUrl to be false, got true")
 	}
 
-	isUrl = utils.StringIsUrl("~/foo/bar.yml")
+	isUrl = StringIsUrl("~/foo/bar.yml")
 	if isUrl {
 		t.Error("expected isUrl to be false, got true")
 	}
 
-	isUrl = utils.StringIsUrl("/home/user/foo/bar.yml")
+	isUrl = StringIsUrl("/home/user/foo/bar.yml")
 	if isUrl {
 		t.Error("expected isUrl to be false, got true")
 	}
 
-	isUrl = utils.StringIsUrl("https://example.com/foo.yml")
+	isUrl = StringIsUrl("https://example.com/foo.yml")
 	if !isUrl {
 		t.Error("expected isUrl to be true, got false")
 	}
 
-	isUrl = utils.StringIsUrl("https://127.0.0.1:8080/foo.yml")
+	isUrl = StringIsUrl("https://127.0.0.1:8080/foo.yml")
 	if !isUrl {
 		t.Error("expected isUrl to be true, got false")
 	}
@@ -126,7 +179,7 @@ func TestFetchContentFromUrl(t *testing.T) {
 	}))
 	defer svr.Close()
 
-	c, err := utils.FetchContentFromUrl(svr.URL + "/foo.yml")
+	c, err := FetchContentFromUrl(svr.URL + "/foo.yml")
 	if err != nil {
 		t.Errorf("expected err to be nil got %v", err)
 	}

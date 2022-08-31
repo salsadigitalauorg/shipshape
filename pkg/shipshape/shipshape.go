@@ -4,35 +4,49 @@ package shipshape
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
-	"sync"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	"gopkg.in/yaml.v3"
 )
 
-func ReadAndParseConfig(projectDir string, f string) (Config, error) {
-	cfg := Config{}
+func ReadAndParseConfig(projectDir string, files []string) (Config, error) {
+	finalCfg := Config{}
+	for i, f := range files {
+		var data []byte
+		var err error
+		cfg := Config{}
+		if utils.StringIsUrl(f) {
+			data, err = utils.FetchContentFromUrl(f)
+			if err != nil {
+				return cfg, err
+			}
+		} else {
+			data, err = os.ReadFile(f)
+			if err != nil {
+				return cfg, err
+			}
+		}
 
-	var data []byte
-	var err error
-
-	if utils.StringIsUrl(f) {
-		data, err = utils.FetchContentFromUrl(f)
-		if err != nil {
+		if err := ParseConfig(data, projectDir, &cfg); err != nil {
 			return cfg, err
 		}
-	} else {
-		data, err = ioutil.ReadFile(f)
-		if err != nil {
-			return cfg, err
+
+		if i == 0 {
+			finalCfg = cfg
+			if len(files) == 1 {
+				return finalCfg, nil
+			}
+			continue
+		}
+
+		if err := finalCfg.Merge(cfg); err != nil {
+			panic(err)
 		}
 	}
 
-	err = ParseConfig(data, projectDir, &cfg)
-	return cfg, err
+	return finalCfg, nil
 }
 
 func ParseConfig(data []byte, projectDir string, cfg *Config) error {
@@ -56,80 +70,10 @@ func ParseConfig(data []byte, projectDir string, cfg *Config) error {
 	return nil
 }
 
-func (cfg *Config) Init() {
-	for ct, checks := range cfg.Checks {
-		for _, c := range checks {
-			c.Init(cfg.ProjectDir, ct)
-		}
-	}
-}
-
-// FilterChecksToRun iterates over all the checks and filters them based on
-// a provided list of check types to run or whether to exclude database checks.
-func (cfg *Config) FilterChecksToRun(checkTypesToRun []string, excludeDb bool) {
-	newCm := CheckMap{}
-	for ct, checks := range cfg.Checks {
-		newChecks := []Check{}
-		for _, c := range checks {
-			if len(checkTypesToRun) > 0 && !utils.StringSliceContains(checkTypesToRun, string(ct)) {
-				continue
-			}
-			if excludeDb && c.RequiresDatabase() {
-				continue
-			}
-			newChecks = append(newChecks, c)
-		}
-		if len(newChecks) > 0 {
-			newCm[ct] = newChecks
-		}
-	}
-	cfg.Checks = newCm
-}
-
-func (cfg *Config) RunChecks() ResultList {
-	rl := ResultList{
-		config:  cfg,
-		Results: []Result{},
-	}
-	var wg sync.WaitGroup
-	for ct, checks := range cfg.Checks {
-		checks := checks
-		rl.IncrChecks(ct, len(checks))
-		for i := range checks {
-			wg.Add(1)
-			check := checks[i]
-			go func() {
-				defer wg.Done()
-				cfg.ProcessCheck(&rl, check)
-			}()
-		}
-	}
-	wg.Wait()
-	rl.Sort()
-	return rl
-}
-
-func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
-	c.Init(cfg.ProjectDir, "")
-	if c.RequiresData() {
-		c.FetchData()
-		c.HasData(true)
-		if len(c.GetResult().Failures) == 0 {
-			c.UnmarshalDataMap()
-		}
-	}
-	if len(c.GetResult().Failures) == 0 && len(c.GetResult().Passes) == 0 {
-		c.RunCheck()
-		c.GetResult().Sort()
-	}
-	rl.Results = append(rl.Results, *c.GetResult())
-	rl.IncrBreaches(c, len(c.GetResult().Failures))
-}
-
 func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 	newcm := make(CheckMap)
 	for ct, cFunc := range ChecksRegistry {
-		check_values, err := LookupYamlPath(value, string(ct))
+		check_values, err := utils.LookupYamlPath(value, string(ct))
 		if err != nil {
 			return err
 		}

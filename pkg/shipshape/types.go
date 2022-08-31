@@ -6,14 +6,19 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var ProjectDir string
+
 type CheckType string
 
 // Check should be implemented by any new check that has to be run in an audit.
 // A number of the functions have a basic implementation in CheckBase; they can
 // be used as-is, or overridden as required.
 type Check interface {
-	Init(pd string, ct CheckType)
+	Init(ct CheckType)
 	GetName() string
+	GetType() CheckType
+	GetSeverity() Severity
+	Merge(Check) error
 	RequiresData() bool
 	RequiresDatabase() bool
 	HasData(failCheck bool) bool
@@ -48,11 +53,12 @@ type Config struct {
 
 // CheckBase provides the basic structure for all Checks.
 type CheckBase struct {
-	Name string `yaml:"name"`
+	Name  string `yaml:"name"`
+	cType CheckType
 	// Flag indicating if the check requires a database connection to run.
-	RequiresDb bool
-	DataMap    map[string][]byte
-	Result     Result
+	RequiresDb bool              `yaml:"-"`
+	DataMap    map[string][]byte `yaml:"-"`
+	Result     Result            `yaml:"-"`
 	// Default severity is normal.
 	Severity Severity `yaml:"severity"`
 }
@@ -72,8 +78,8 @@ type Result struct {
 // methods to manipulate and use it.
 type ResultList struct {
 	config                *Config
-	TotalChecks           int               `json:"total-checks"`
-	TotalBreaches         int               `json:"total-breaches"`
+	TotalChecks           uint32            `json:"total-checks"`
+	TotalBreaches         uint32            `json:"total-breaches"`
 	CheckCountByType      map[CheckType]int `json:"check-count-by-type"`
 	BreachCountByType     map[CheckType]int `json:"breach-count-by-type"`
 	BreachCountBySeverity map[Severity]int  `json:"breach-count-by-severity"`
@@ -155,7 +161,11 @@ type YamlCheck struct {
 	Files          []string `yaml:"files"`           // A list of files to lint.
 	Pattern        string   `yaml:"pattern"`         // Pattern-based files.
 	ExcludePattern string   `yaml:"exclude-pattern"` // Pattern-based excluded files.
-	IgnoreMissing  bool     `yaml:"ignore-missing"`  // Allows non-existent files to not be counted as a Fail
+
+	// IgnoreMissing allows non-existent files to not be counted as a Fail.
+	// Using a pointer here so we can differentiate between
+	// false (default value) and an empty value.
+	IgnoreMissing *bool `yaml:"ignore-missing"`
 }
 
 // YamlLintCheck represents a Yaml lint file-based check for a number of files.
@@ -193,7 +203,7 @@ type JUnitTestSuite struct {
 // JUnit format taken from https://llg.cubic.org/docs/junit/.
 type JUnitTestSuites struct {
 	XMLName    xml.Name `xml:"testsuites"`
-	Tests      int      `xml:"tests,attr"`
-	Errors     int      `xml:"errors,attr"`
+	Tests      uint32   `xml:"tests,attr"`
+	Errors     uint32   `xml:"errors,attr"`
 	TestSuites []JUnitTestSuite
 }

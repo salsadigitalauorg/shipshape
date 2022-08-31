@@ -5,92 +5,22 @@ import (
 	"encoding/xml"
 	"fmt"
 	"sort"
+	"sync"
+	"sync/atomic"
 	"text/tabwriter"
 )
 
-var ProjectDir string
+// Use locks to make map mutations concurrency-safe.
+var lock = sync.RWMutex{}
 
-// Init acts as the constructor of a check and sets some initial values.
-func (c *CheckBase) Init(pd string, ct CheckType) {
-	ProjectDir = pd
-	// Default severity is normal.
-	if c.Severity == "" {
-		c.Severity = NormalSeverity
+func NewResultList(cfg *Config) ResultList {
+	return ResultList{
+		config:                cfg,
+		Results:               []Result{},
+		CheckCountByType:      map[CheckType]int{},
+		BreachCountByType:     map[CheckType]int{},
+		BreachCountBySeverity: map[Severity]int{},
 	}
-	if c.Result.CheckType == "" {
-		c.Result = Result{Name: c.Name, CheckType: ct}
-	}
-	if c.Result.Severity == "" {
-		c.Result.Severity = c.Severity
-	}
-}
-
-// GetName returns the name of a check.
-func (c *CheckBase) GetName() string {
-	return c.Name
-}
-
-// RequiresData indicates whether the check requires a DataMap to run against.
-// It is designed as opt-out, so remember to set it to false if you are creating
-// a check that does not require the DataMap.
-func (c *CheckBase) RequiresData() bool { return true }
-
-// RequiresDb indicates whether the check requires a database to run against.
-func (c *CheckBase) RequiresDatabase() bool { return c.RequiresDb }
-
-// FetchData contains the logic for fetching the data over which the check is
-// going to run.
-// This is where c.DataMap should be populated.
-func (c *CheckBase) FetchData() {}
-
-// HasData determines whether the dataMap has been populated or not.
-// The Check can optionally be marked as failed if the dataMap is not populated.
-func (c *CheckBase) HasData(failCheck bool) bool {
-	if c.DataMap == nil {
-		if failCheck {
-			c.AddFail("no data available")
-		}
-		return false
-	}
-	return true
-}
-
-// UnmarshalDataMap attempts to parse the DataMap into a structure that
-// can be used to execute the check. Any failure here should fail the check.
-func (c *CheckBase) UnmarshalDataMap() {}
-
-// AddFail appends a Fail to the Result and sets the Check as Fail.
-func (c *CheckBase) AddFail(msg string) {
-	c.Result.Status = Fail
-	c.Result.Failures = append(
-		c.Result.Failures,
-		msg,
-	)
-}
-
-// AddPass appends a Pass to the Result.
-func (c *CheckBase) AddPass(msg string) {
-	c.Result.Passes = append(
-		c.Result.Passes,
-		msg,
-	)
-}
-
-// AddWarning appends a Warning message to the result.
-func (c *CheckBase) AddWarning(msg string) {
-	c.Result.Warnings = append(c.Result.Warnings, msg)
-}
-
-// RunCheck contains the core logic for running the check and generating
-// the result.
-// This is where c.Result should be populated.
-func (c *CheckBase) RunCheck() {
-	c.AddFail("not implemented")
-}
-
-// GetResult returns the value of c.Result.
-func (c *CheckBase) GetResult() *Result {
-	return &c.Result
 }
 
 // Status calculates and returns the overall result of all check results.
@@ -103,43 +33,25 @@ func (rl *ResultList) Status() CheckStatus {
 	return Pass
 }
 
-// Sort reorders the Passes & Failures in order to get consistent output.
-func (r *Result) Sort() {
-	if len(r.Failures) > 0 {
-		sort.Slice(r.Failures, func(i int, j int) bool {
-			return r.Failures[i] < r.Failures[j]
-		})
-	}
-
-	if len(r.Passes) > 0 {
-		sort.Slice(r.Passes, func(i int, j int) bool {
-			return r.Passes[i] < r.Passes[j]
-		})
-	}
-}
-
 // IncrChecks increments the total checks count & checks count by type.
 func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
-	rl.TotalChecks = rl.TotalChecks + incr
-	if rl.CheckCountByType == nil {
-		rl.CheckCountByType = map[CheckType]int{}
-	}
+	atomic.AddUint32(&rl.TotalChecks, uint32(incr))
+
+	lock.Lock()
+	defer lock.Unlock()
 	rl.CheckCountByType[ct] = rl.CheckCountByType[ct] + incr
 }
 
-// IncrChecks increments the total breaches count & breaches count by type.
-func (rl *ResultList) IncrBreaches(c Check, incr int) {
-	ct := c.GetResult().CheckType
-	sev := c.GetResult().Severity
-	rl.TotalBreaches = rl.TotalBreaches + incr
-	if rl.BreachCountByType == nil {
-		rl.BreachCountByType = map[CheckType]int{}
-	}
-	if rl.BreachCountBySeverity == nil {
-		rl.BreachCountBySeverity = map[Severity]int{}
-	}
-	rl.BreachCountByType[ct] += +incr
-	rl.BreachCountBySeverity[sev] += +incr
+// AddResult safely appends a check's result to the list.
+func (rl *ResultList) AddResult(r Result) {
+	lock.Lock()
+	defer lock.Unlock()
+	rl.Results = append(rl.Results, r)
+
+	incr := len(r.Failures)
+	atomic.AddUint32(&rl.TotalBreaches, uint32(incr))
+	rl.BreachCountByType[r.CheckType] = rl.BreachCountByType[r.CheckType] + incr
+	rl.BreachCountBySeverity[r.Severity] = rl.BreachCountBySeverity[r.Severity] + incr
 }
 
 // GetBreachesByCheckName fetches the list of failures by check name.
@@ -222,7 +134,13 @@ func (rl *ResultList) TableDisplay(w *tabwriter.Writer) {
 
 // SimpleDisplay outputs only failures to the writer.
 func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
-	if len(rl.Results) == 0 || rl.Status() == Pass {
+	if len(rl.Results) == 0 {
+		fmt.Fprint(w, "No result available; ensure your shipshape.yml is configured correctly.\n")
+		w.Flush()
+		return
+	}
+
+	if rl.Status() == Pass {
 		fmt.Fprint(w, "Ship is in top shape; no breach detected!\n")
 		w.Flush()
 		return

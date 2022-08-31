@@ -31,8 +31,8 @@ type userInfo struct {
 }
 
 // Init implementation for the drush-based user role check.
-func (c *UserRoleCheck) Init(pd string, ct shipshape.CheckType) {
-	c.CheckBase.Init(pd, ct)
+func (c *UserRoleCheck) Init(ct shipshape.CheckType) {
+	c.CheckBase.Init(ct)
 	c.RequiresDb = true
 }
 

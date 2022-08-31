@@ -15,6 +15,7 @@ import (
 	_ "github.com/salsadigitalauorg/shipshape/pkg/phpstan"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
+	"gopkg.in/yaml.v3"
 
 	"github.com/spf13/pflag"
 )
@@ -28,11 +29,12 @@ var (
 var (
 	displayUsage   bool
 	displayVersion bool
+	dumpConfig     bool
 	// selfUpdate     bool
 
 	errorCodeOnFailure bool
 	projectDir         string
-	checksFile         string
+	checksFiles        []string
 	checkTypesToRun    []string
 	excludeDb          bool
 	outputFormat       string
@@ -54,23 +56,34 @@ func main() {
 		log.Fatalf("Invalid output format; needs to be one of: %s.", strings.Join(shipshape.OutputFormats, "|"))
 	}
 
-	if !utils.StringIsUrl(checksFile) {
-		if _, err := os.Stat(checksFile); os.IsNotExist(err) {
-			fmt.Fprintf(os.Stderr, "checks file '%s' not found\n", checksFile)
+	for _, f := range checksFiles {
+		if !utils.StringIsUrl(f) {
+			if _, err := os.Stat(f); os.IsNotExist(err) {
+				fmt.Fprintf(os.Stderr, "checks file '%s' not found\n", f)
 
-			if errorCodeOnFailure {
-				os.Exit(1)
+				if errorCodeOnFailure {
+					os.Exit(1)
+				}
+				os.Exit(0)
 			}
-			os.Exit(0)
 		}
 	}
 
-	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFile)
+	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFiles)
 	if err != nil {
 		log.Fatal(err)
 	}
 	cfg.Init()
 	cfg.FilterChecksToRun(checkTypesToRun, excludeDb)
+	if dumpConfig {
+		out, err := yaml.Marshal(cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("%s\n", string(out))
+		os.Exit(0)
+	}
+
 	rl := cfg.RunChecks()
 
 	switch outputFormat {
@@ -109,12 +122,13 @@ func parseFlags() {
 
 	pflag.BoolVarP(&displayUsage, "help", "h", false, "Displays usage information")
 	pflag.BoolVarP(&displayVersion, "version", "v", false, "Displays the application version")
+	pflag.BoolVar(&dumpConfig, "dump-config", false, "Dump the final config - useful to make sure multiple config files are being merged as expected")
 	// pflag.BoolVarP(&selfUpdate, "self-update", "u", false, "Updates shipshape to the latest version")
 
 	pflag.BoolVarP(&errorCodeOnFailure, "error-code", "e", false, "Exit with error code if a failure is detected (env: SHIPSHAPE_ERROR_ON_FAILURE)")
-	pflag.StringVarP(&checksFile, "file", "f", "shipshape.yml", "Path to the file containing the checks")
+	pflag.StringSliceVarP(&checksFiles, "file", "f", []string{"shipshape.yml"}, "Path to the file containing the checks. Can be specified as comma-separated single argument or using --types multiple times")
 	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format [json|junit|simple|table] (env: SHIPSHAPE_OUTPUT_FORMAT)")
-	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "Comma-separated list of checks to run; default is empty, which will run all checks")
+	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "List of checks to run; default is empty, which will run all checks. Can be specified as comma-separated single argument or using --types multiple times")
 	pflag.BoolVarP(&excludeDb, "exclude-db", "d", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
 	pflag.Parse()
 

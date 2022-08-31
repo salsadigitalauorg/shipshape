@@ -48,7 +48,7 @@ func TestDrushYamlCheck(t *testing.T) {
 		ConfigName: "core.extension",
 	}
 
-	c.Init("", drupal.DrushYaml)
+	c.Init(drupal.DrushYaml)
 	if !c.RequiresDb {
 		t.Error("expected RequiresDb to be true, got false")
 	}
@@ -108,7 +108,7 @@ module:
 
 func TestDbModuleCheck(t *testing.T) {
 	c := drupal.DbModuleCheck{}
-	c.Init("", drupal.DbModule)
+	c.Init(drupal.DbModule)
 	if c.Command != "pm:list --status=enabled" {
 		t.Errorf("drush command for check should be already set")
 	}
@@ -135,7 +135,7 @@ node:
 			Required:   []string{"block", "node"},
 			Disallowed: []string{"views_ui", "field_ui"},
 		}
-		c.Init("", drupal.DbModule)
+		c.Init(drupal.DbModule)
 		c.UnmarshalDataMap()
 		c.RunCheck()
 		return c
@@ -187,7 +187,7 @@ views_ui:
 func TestDbPermissionsCheck(t *testing.T) {
 	// Test init.
 	c := drupal.DbPermissionsCheck{}
-	c.Init("", drupal.DbPermissions)
+	c.Init(drupal.DbPermissions)
 	if c.Command != "role:list" {
 		t.Errorf("Command should be 'role:list', got %s", c.Command)
 	}
@@ -207,7 +207,7 @@ func TestDbPermissionsCheck(t *testing.T) {
 
 	// Test UnmarshalDataMap.
 	c = drupal.DbPermissionsCheck{}
-	c.Init("", drupal.DbPermissions)
+	c.Init(drupal.DbPermissions)
 	c.DataMap = map[string][]byte{
 		"permissions": []byte(`
 site_administrator:
@@ -259,7 +259,7 @@ site_editor:
 
 	// Test RunCheck.
 	c = drupal.DbPermissionsCheck{}
-	c.Init("", drupal.DbPermissions)
+	c.Init(drupal.DbPermissions)
 	c.RunCheck()
 	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
 		t.Error(msg)
@@ -272,7 +272,7 @@ site_editor:
 	}
 
 	c = drupal.DbPermissionsCheck{}
-	c.Init("", drupal.DbPermissions)
+	c.Init(drupal.DbPermissions)
 	c.Permissions = map[string]drupal.DrushRole{
 		"anonymous": {
 			Label: "Anonymous user",
@@ -310,7 +310,7 @@ site_editor:
 	}
 
 	c = drupal.DbPermissionsCheck{}
-	c.Init("", drupal.DbPermissions)
+	c.Init(drupal.DbPermissions)
 	c.Permissions = map[string]drupal.DrushRole{
 		"anonymous": {
 			Label: "Anonymous user",
@@ -358,7 +358,7 @@ func TestTrackingCodeCheckFails(t *testing.T) {
 	c := drupal.TrackingCodeCheck{
 		Code: "UA-xxxxxx-1",
 	}
-	c.Init("", drupal.TrackingCode)
+	c.Init(drupal.TrackingCode)
 	if c.Command != "status" {
 		t.Error("drush command for check should already be set")
 	}
@@ -382,7 +382,7 @@ func TestTrackingCodeCheckPass(t *testing.T) {
 	c := drupal.TrackingCodeCheck{
 		Code: "UA-xxxxxx-1",
 	}
-	c.Init("", drupal.TrackingCode)
+	c.Init(drupal.TrackingCode)
 	if c.Command != "status" {
 		t.Error("drush command for check should already be set")
 	}

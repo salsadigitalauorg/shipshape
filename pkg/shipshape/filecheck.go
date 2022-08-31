@@ -7,6 +7,18 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
+// Merge implementation for file check.
+func (c *FileCheck) Merge(mergeCheck Check) error {
+	if err := c.CheckBase.Merge(mergeCheck); err != nil {
+		return err
+	}
+	fileMergeCheck := mergeCheck.(*FileCheck)
+
+	utils.MergeString(&c.Path, fileMergeCheck.Path)
+	utils.MergeString(&c.DisallowedPattern, fileMergeCheck.DisallowedPattern)
+	return nil
+}
+
 // RequiresData implementation for file check.
 // Since this check acts on the existence of files on disk, it does not require
 // any data.

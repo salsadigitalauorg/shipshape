@@ -14,7 +14,7 @@ import (
 
 func TestInit(t *testing.T) {
 	c := drupal.UserRoleCheck{}
-	c.Init("", drupal.UserRole)
+	c.Init(drupal.UserRole)
 	assert.True(t, c.RequiresDb)
 }
 
