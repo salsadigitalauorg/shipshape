@@ -7,6 +7,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRegisterChecks(t *testing.T) {
@@ -39,6 +40,57 @@ module:
 `),
 			},
 		},
+	}
+}
+
+func TestCheckKeyValueExists(t *testing.T) {
+	c := mockCheck("shipshape.extension.yml")
+	c.UnmarshalDataMap()
+
+	m := shipshape.KeyValue{
+		Key:   "module.block",
+		Value: "0",
+	}
+	kvr, _, _ := c.CheckKeyValue(m, "shipshape.extension.yml")
+	assert.Equal(t, kvr, shipshape.KeyValueEqual)
+}
+
+func TestDisallowedIsEnabled(t *testing.T) {
+	c := mockCheck("shipshape.extension.yml")
+	c.DataMap = map[string][]byte{
+		"shipshape.extension.yml": []byte(`
+module:
+  clamav: 0
+  tfa: 0
+  dblog: 0
+
+`),
+	}
+	c.UnmarshalDataMap()
+
+	required := []string{
+		"clamav",
+		"tfa",
+	}
+	disallowed := []string{
+		"dblog",
+		"module_permissions_ui",
+		"update",
+	}
+
+	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
+	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
+		"'clamav' is enabled",
+		"'tfa' is enabled",
+		"'module_permissions_ui' is not enabled",
+		"'update' is not enabled",
+	}); !ok {
+		t.Error(msg)
+	}
+	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{
+		"'dblog' is enabled",
+	}); !ok {
+		t.Error(msg)
 	}
 }
 
