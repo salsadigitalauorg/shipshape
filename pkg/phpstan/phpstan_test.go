@@ -28,6 +28,55 @@ func TestRegisterChecks(t *testing.T) {
 	}
 }
 
+func TestMerge(t *testing.T) {
+	assert := assert.New(t)
+
+	c := phpstan.PhpStanCheck{
+		CheckBase: shipshape.CheckBase{Name: "phpstancheck1"},
+		Bin:       "/path/to/phpstan",
+		Config:    "/path/to/config",
+		Paths:     []string{"path1", "path2"},
+	}
+	err := c.Merge(&phpstan.PhpStanCheck{
+		Bin: "/new/path/to/phpstan",
+	})
+	assert.Nil(err)
+	assert.EqualValues(phpstan.PhpStanCheck{
+		CheckBase: shipshape.CheckBase{Name: "phpstancheck1"},
+		Bin:       "/new/path/to/phpstan",
+		Config:    "/path/to/config",
+		Paths:     []string{"path1", "path2"},
+	}, c)
+
+	err = c.Merge(&phpstan.PhpStanCheck{
+		Config: "/path/to/new/config",
+	})
+	assert.Nil(err)
+	assert.EqualValues(phpstan.PhpStanCheck{
+		CheckBase: shipshape.CheckBase{Name: "phpstancheck1"},
+		Bin:       "/new/path/to/phpstan",
+		Config:    "/path/to/new/config",
+		Paths:     []string{"path1", "path2"},
+	}, c)
+
+	err = c.Merge(&phpstan.PhpStanCheck{
+		Paths: []string{"path3", "path4"},
+	})
+	assert.Nil(err)
+	assert.EqualValues(phpstan.PhpStanCheck{
+		CheckBase: shipshape.CheckBase{Name: "phpstancheck1"},
+		Bin:       "/new/path/to/phpstan",
+		Config:    "/path/to/new/config",
+		Paths:     []string{"path1", "path2", "path3", "path4"},
+	}, c)
+
+	err = c.Merge(&phpstan.PhpStanCheck{
+		CheckBase: shipshape.CheckBase{Name: "phpstancheck2"},
+		Bin:       "/some/other/path/to/phpstan",
+	})
+	assert.Error(err, "can only merge checks with the same name")
+}
+
 func TestBinPathProvided(t *testing.T) {
 	assert := assert.New(t)
 	c := phpstan.PhpStanCheck{

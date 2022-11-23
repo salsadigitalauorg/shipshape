@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 const PhpStan shipshape.CheckType = "phpstan"
@@ -54,6 +55,19 @@ func init() {
 const PhpstanDefaultPath = "vendor/phpstan/phpstan/phpstan"
 
 var ExecCommand = exec.Command
+
+// Merge implementation for file check.
+func (c *PhpStanCheck) Merge(mergeCheck shipshape.Check) error {
+	if err := c.CheckBase.Merge(mergeCheck); err != nil {
+		return err
+	}
+	phpstanMergeCheck := mergeCheck.(*PhpStanCheck)
+
+	utils.MergeString(&c.Bin, phpstanMergeCheck.Bin)
+	utils.MergeString(&c.Config, phpstanMergeCheck.Config)
+	utils.MergeStringSlice(&c.Paths, phpstanMergeCheck.Paths)
+	return nil
+}
 
 func (c *PhpStanCheck) GetBinary() (path string) {
 	if len(c.Bin) == 0 {
