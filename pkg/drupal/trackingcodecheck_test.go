@@ -46,6 +46,32 @@ func TestTrackingCodeMerge(t *testing.T) {
 	}, c)
 }
 
+func TestTrackingCodeUnmarshalData(t *testing.T) {
+	assert := assert.New(t)
+
+	c := drupal.TrackingCodeCheck{}
+	c.ConfigName = "status"
+	c.DataMap = map[string][]byte{
+		"status": []byte(`
+foo: bar
+
+`),
+	}
+	c.UnmarshalDataMap()
+	assert.NotEqual(shipshape.Fail, c.Result.Status)
+	assert.Equal("", c.DrushStatus.Uri)
+
+	c.DataMap = map[string][]byte{
+		"status": []byte(`
+uri: https://foo.example
+
+`),
+	}
+	c.UnmarshalDataMap()
+	assert.NotEqual(shipshape.Fail, c.Result.Status)
+	assert.Equal("https://foo.example", c.DrushStatus.Uri)
+}
+
 func TestTrackingCodeCheckFails(t *testing.T) {
 	assert := assert.New(t)
 
