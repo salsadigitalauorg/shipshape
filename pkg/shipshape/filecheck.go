@@ -9,10 +9,10 @@ import (
 
 // Merge implementation for file check.
 func (c *FileCheck) Merge(mergeCheck Check) error {
-	if err := c.CheckBase.Merge(mergeCheck); err != nil {
+	fileMergeCheck := mergeCheck.(*FileCheck)
+	if err := c.CheckBase.Merge(&fileMergeCheck.CheckBase); err != nil {
 		return err
 	}
-	fileMergeCheck := mergeCheck.(*FileCheck)
 
 	utils.MergeString(&c.Path, fileMergeCheck.Path)
 	utils.MergeString(&c.DisallowedPattern, fileMergeCheck.DisallowedPattern)

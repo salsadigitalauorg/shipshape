@@ -18,6 +18,32 @@ func TestInit(t *testing.T) {
 	assert.True(t, c.RequiresDb)
 }
 
+func TestUserRoleMerge(t *testing.T) {
+	assert := assert.New(t)
+
+	c := drupal.UserRoleCheck{
+		DrushCommand: drupal.DrushCommand{
+			DrushPath: "/path/to/drush",
+		},
+		Roles:        []string{"role1"},
+		AllowedUsers: []int{1, 2},
+	}
+	c.Merge(&drupal.UserRoleCheck{
+		DrushCommand: drupal.DrushCommand{
+			DrushPath: "/new/path/to/drush",
+		},
+		Roles:        []string{"role2"},
+		AllowedUsers: []int{2, 3},
+	})
+	assert.EqualValues(drupal.UserRoleCheck{
+		DrushCommand: drupal.DrushCommand{
+			DrushPath: "/new/path/to/drush",
+		},
+		Roles:        []string{"role1", "role2"},
+		AllowedUsers: []int{1, 2, 3},
+	}, c)
+}
+
 func TestFetchData(t *testing.T) {
 	assert := assert.New(t)
 

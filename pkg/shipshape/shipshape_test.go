@@ -3,36 +3,45 @@ package shipshape_test
 import (
 	"fmt"
 	"os"
-	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestReadAndParseConfig(t *testing.T) {
+func TestReadAndParseConfigFileExistence(t *testing.T) {
+	assert := assert.New(t)
+
 	_, err := shipshape.ReadAndParseConfig("", []string{"testdata/nonexistent.yml"})
-	if err == nil || err.Error() != "open testdata/nonexistent.yml: no such file or directory" {
-		t.Errorf("file read should fail, got %#v", err.Error())
-	}
+	assert.Error(err)
+	assert.Equal("open testdata/nonexistent.yml: no such file or directory", err.Error())
 
 	_, err = shipshape.ReadAndParseConfig("", []string{"testdata/shipshape.yml"})
-	if err != nil {
-		t.Errorf("file read should pass, got %#v", err.Error())
-	}
+	assert.NoError(err)
+}
+
+func TestReadAndParseConfigFileMerge(t *testing.T) {
+	assert := assert.New(t)
+
+	_, err := shipshape.ReadAndParseConfig("", []string{
+		"testdata/merge/config-a.yml",
+		"testdata/merge/config-b.yml",
+	})
+	assert.NoError(err)
 }
 
 func TestParseConfig(t *testing.T) {
+	assert := assert.New(t)
+
 	invalidData := `
 checks:
   yaml: foo
 `
 	cfg := shipshape.Config{}
 	err := shipshape.ParseConfig([]byte(invalidData), "", &cfg)
-	if err == nil || !strings.Contains(err.Error(), "yaml: unmarshal errors") {
-		t.Error("file parsing should fail")
-	}
+	assert.Error(err)
+	assert.Contains(err.Error(), "yaml: unmarshal errors")
 
 	data := `
 checks:
@@ -58,44 +67,27 @@ checks:
 `
 	cfg = shipshape.Config{}
 	err = shipshape.ParseConfig([]byte(data), "", &cfg)
-	if err != nil {
-		t.Errorf("Failed to read check file config: %+v", err)
-	}
+	assert.NoError(err)
 	cfg.Init()
 
 	currDir, err := os.Getwd()
-	if err != nil {
-		t.Fatal("Unable to get current dir.")
-	}
-	if cfg.ProjectDir != currDir {
-		t.Errorf("Project dir should be '%s', got '%s'", currDir, cfg.ProjectDir)
-	}
-
-	if len(cfg.Checks[drupal.DrushYaml]) == 0 {
-		t.Fatalf("DrushYaml checks count should be 1, got %d", len(cfg.Checks[drupal.DrushYaml]))
-	}
-
-	if len(cfg.Checks[shipshape.Yaml]) == 0 {
-		t.Fatalf("YamlCheck checks count should be 1, got %d", len(cfg.Checks[shipshape.Yaml]))
-	}
+	assert.NoError(err)
+	assert.Equal(currDir, cfg.ProjectDir)
+	assert.Len(cfg.Checks[drupal.DrushYaml], 1)
+	assert.Len(cfg.Checks[shipshape.Yaml], 2)
 
 	dyc, ok := cfg.Checks[drupal.DrushYaml][0].(*drupal.DrushYamlCheck)
-	if !ok || dyc.ConfigName != "shipshape.extension" {
-		t.Fatalf("DrushYamlCheck check 1's config name should be shipshape.extension, got %s", dyc.ConfigName)
-	}
+	assert.True(ok)
+	assert.Equal("shipshape.extension", dyc.ConfigName)
 
 	yc, ok := cfg.Checks[shipshape.Yaml][0].(*shipshape.YamlCheck)
-	if !ok || yc.File != "shipshape.extension.yml" {
-		t.Fatalf("YamlCheck check 1's config name should be shipshape.extension.yml, got %s", yc.File)
-	}
+	assert.True(ok)
+	assert.Equal("shipshape.extension.yml", yc.File)
 
 	yc2, ok := cfg.Checks[shipshape.Yaml][1].(*shipshape.YamlCheck)
-	if !ok || yc2.File != "shipshape.extension.yml" {
-		t.Fatalf("YamlCheck check 2's config name should be shipshape.extension.yml, got %s", yc.File)
-	}
-	if *yc2.IgnoreMissing != true {
-		t.Fatalf("IgnoreMissing should be true, got %#v", yc2.IgnoreMissing)
-	}
+	assert.True(ok)
+	assert.Equal("shipshape.extension.yml", yc2.File)
+	assert.True(*yc2.IgnoreMissing)
 
 	rl := cfg.RunChecks()
 	expectedRl := shipshape.ResultList{Results: []shipshape.Result{
@@ -124,7 +116,5 @@ checks:
 			Failures:  []string{fmt.Sprintf("open %s/config/sync/shipshape.extension.yml: no such file or directory", shipshape.ProjectDir)},
 		},
 	}}
-	if !reflect.DeepEqual(rl.Results, expectedRl.Results) {
-		t.Errorf("Results are not as expected, got: %#v", rl)
-	}
+	assert.ElementsMatch(expectedRl.Results, rl.Results)
 }

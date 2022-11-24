@@ -36,6 +36,19 @@ func (c *UserRoleCheck) Init(ct shipshape.CheckType) {
 	c.RequiresDb = true
 }
 
+// Merge implementation for DbModuleCheck check.
+func (c *UserRoleCheck) Merge(mergeCheck shipshape.Check) error {
+	userRoleMergeCheck := mergeCheck.(*UserRoleCheck)
+	if err := c.CheckBase.Merge(&userRoleMergeCheck.CheckBase); err != nil {
+		return err
+	}
+
+	c.DrushCommand.Merge(userRoleMergeCheck.DrushCommand)
+	utils.MergeStringSlice(&c.Roles, userRoleMergeCheck.Roles)
+	utils.MergeIntSlice(&c.AllowedUsers, userRoleMergeCheck.AllowedUsers)
+	return nil
+}
+
 func (c *UserRoleCheck) getUserIds() string {
 	userIds, err := Drush(c.DrushPath, c.Alias, c.Args).Query("SELECT GROUP_CONCAT(uid) FROM users")
 
