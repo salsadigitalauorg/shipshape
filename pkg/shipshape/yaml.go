@@ -12,10 +12,10 @@ import (
 
 // Merge implementation for YamlBase.
 func (c *YamlBase) Merge(mergeCheck Check) error {
-	if err := c.CheckBase.Merge(mergeCheck); err != nil {
+	yBaseCheck := mergeCheck.(*YamlBase)
+	if err := c.CheckBase.Merge(&yBaseCheck.CheckBase); err != nil {
 		return err
 	}
-	yBaseCheck := mergeCheck.(*YamlBase)
 
 	MergeKeyValueSlice(&c.Values, yBaseCheck.Values)
 	return nil

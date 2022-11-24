@@ -7,10 +7,6 @@ import (
 
 // Merge implementation for file check.
 func (c *FileModuleCheck) Merge(mergeCheck shipshape.Check) error {
-	if err := c.CheckBase.Merge(mergeCheck); err != nil {
-		return err
-	}
-
 	fileModuleMergeCheck := mergeCheck.(*FileModuleCheck)
 	if err := c.YamlCheck.Merge(&fileModuleMergeCheck.YamlCheck); err != nil {
 		return err

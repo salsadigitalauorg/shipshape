@@ -103,6 +103,26 @@ func TestMergeStringSlice(t *testing.T) {
 
 }
 
+func TestMergeIntSlice(t *testing.T) {
+	assert := assert.New(t)
+
+	slcVarA := []int{1, 2}
+	SlcVarB := []int(nil)
+
+	MergeIntSlice(&slcVarA, SlcVarB)
+	assert.EqualValues([]int{1, 2}, slcVarA)
+
+	SlcVarB = []int{1, 3}
+	MergeIntSlice(&slcVarA, SlcVarB)
+	assert.EqualValues([]int{1, 2, 3}, slcVarA)
+
+	slcVarA = []int(nil)
+	SlcVarB = []int{4, 5}
+	MergeIntSlice(&slcVarA, SlcVarB)
+	assert.EqualValues([]int{4, 5}, slcVarA)
+
+}
+
 func TestStringSliceContains(t *testing.T) {
 	assert := assert.New(t)
 	assert.False(StringSliceContains([]string{}, "foo"))

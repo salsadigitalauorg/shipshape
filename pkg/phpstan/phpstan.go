@@ -58,10 +58,10 @@ var ExecCommand = exec.Command
 
 // Merge implementation for file check.
 func (c *PhpStanCheck) Merge(mergeCheck shipshape.Check) error {
-	if err := c.CheckBase.Merge(mergeCheck); err != nil {
+	phpstanMergeCheck := mergeCheck.(*PhpStanCheck)
+	if err := c.CheckBase.Merge(&phpstanMergeCheck.CheckBase); err != nil {
 		return err
 	}
-	phpstanMergeCheck := mergeCheck.(*PhpStanCheck)
 
 	utils.MergeString(&c.Bin, phpstanMergeCheck.Bin)
 	utils.MergeString(&c.Config, phpstanMergeCheck.Config)

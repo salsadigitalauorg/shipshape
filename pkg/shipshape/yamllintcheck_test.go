@@ -3,11 +3,33 @@ package shipshape_test
 import (
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/stretchr/testify/assert"
 )
 
+func TestYamlLintMerge(t *testing.T) {
+	assert := assert.New(t)
+
+	c := shipshape.YamlLintCheck{
+		YamlCheck: shipshape.YamlCheck{
+			Path: "/path/to/run/check",
+		},
+	}
+	c.Merge(&shipshape.YamlLintCheck{
+		YamlCheck: shipshape.YamlCheck{
+			Path: "/new/path/to/run/check",
+		},
+	})
+	assert.EqualValues(shipshape.YamlLintCheck{
+		YamlCheck: shipshape.YamlCheck{
+			Path: "/new/path/to/run/check",
+		},
+	}, c)
+}
+
 func TestYamlLintCheck(t *testing.T) {
+	assert := assert.New(t)
+
 	mockCheck := func(file string, files []string, ignoreMissing bool) shipshape.YamlLintCheck {
 		return shipshape.YamlLintCheck{
 			YamlCheck: shipshape.YamlCheck{
@@ -27,70 +49,49 @@ func TestYamlLintCheck(t *testing.T) {
 	c := mockCheck("", []string{}, false)
 	c.Init(shipshape.YamlLint)
 	c.FetchData()
-	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"no file provided"}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Empty(c.Result.Passes)
+	assert.ElementsMatch([]string{"no file provided"}, c.Result.Failures)
 
 	c = mockCheck("non-existent-file.yml", []string{}, true)
 	c.Init(shipshape.YamlLint)
 	c.FetchData()
-	if msg, ok := internal.EnsureNoFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"File testdata/non-existent-file.yml does not exist"}); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
+	assert.NotEqual(shipshape.Fail, c.Result.Status)
+	assert.Empty(c.Result.Failures)
+	assert.ElementsMatch(
+		[]string{"File testdata/non-existent-file.yml does not exist"},
+		c.Result.Passes,
+	)
 
 	c = mockCheck("", []string{"non-existent-file.yml", "yaml-invalid.yml"}, true)
 	c.Init(shipshape.YamlLint)
 	c.FetchData()
-	if msg, ok := internal.EnsureNoFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
+	assert.NotEqual(shipshape.Fail, c.Result.Status)
+	assert.Empty(c.Result.Failures)
+	assert.ElementsMatch([]string{
 		"File testdata/non-existent-file.yml does not exist",
 		"File testdata/yaml-invalid.yml does not exist",
-	}); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
+	}, c.Result.Passes)
 
 	c = mockCheck("non-existent-file.yml", []string{}, false)
 	c.Init(shipshape.YamlLint)
 	c.FetchData()
-	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"open testdata/non-existent-file.yml: no such file or directory"}); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Empty(c.Result.Passes)
+	assert.ElementsMatch(
+		[]string{"open testdata/non-existent-file.yml: no such file or directory"},
+		c.Result.Failures,
+	)
 
 	c = mockCheck("", []string{"non-existent-file.yml", "yamllint-invalid.yml"}, false)
 	c.Init(shipshape.YamlLint)
 	c.FetchData()
-	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"open testdata/non-existent-file.yml: no such file or directory"}); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Empty(c.Result.Passes)
+	assert.ElementsMatch(
+		[]string{"open testdata/non-existent-file.yml: no such file or directory"},
+		c.Result.Failures,
+	)
 
 	c = mockCheck("", []string{}, false)
 	c.Init(shipshape.YamlLint)
@@ -99,15 +100,12 @@ this: is invalid
 this: yaml
 `)
 	c.UnmarshalDataMap()
-	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{"[yaml-invalid.yml] line 3: mapping key \"this\" already defined at line 2"}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Empty(c.Result.Passes)
+	assert.ElementsMatch(
+		[]string{"[yaml-invalid.yml] line 3: mapping key \"this\" already defined at line 2"},
+		c.Result.Failures,
+	)
 
 	c = mockCheck("", []string{}, false)
 	c.Init(shipshape.YamlLint)
@@ -116,13 +114,10 @@ this: is
 valid: yaml
 `)
 	c.UnmarshalDataMap()
-	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{"yaml-valid.yml has valid yaml."}); !ok {
-		t.Error(msg)
-	}
+	assert.Equal(shipshape.Pass, c.Result.Status)
+	assert.Empty(c.Result.Failures)
+	assert.ElementsMatch(
+		[]string{"yaml-valid.yml has valid yaml."},
+		c.Result.Passes,
+	)
 }

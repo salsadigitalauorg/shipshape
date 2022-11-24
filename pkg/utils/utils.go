@@ -92,6 +92,19 @@ func MergeStringSlice(strSlcA *[]string, strSlcB []string) {
 	}
 }
 
+// MergeIntSlice appends the values of an int slice to another
+// if those values do not already exist.
+func MergeIntSlice(slcA *[]int, slcB []int) {
+	if len(slcB) == 0 {
+		return
+	}
+	for _, strB := range slcB {
+		if !IntSliceContains(*slcA, strB) {
+			*slcA = append(*slcA, strB)
+		}
+	}
+}
+
 // StringSliceContains determines whether an item exists in a slice of string.
 func StringSliceContains(slice []string, item string) bool {
 	if len(slice) == 0 {

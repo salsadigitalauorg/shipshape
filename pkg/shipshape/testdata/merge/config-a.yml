@@ -1,0 +1,23 @@
+checks:
+  file:
+    - name: My file check
+  yaml:
+    - name: My yaml file check
+  yamllint:
+    - name: My yamllint check
+  crawler:
+    - name: My crawler check
+  docker:base_image:
+    - name: My docker base image check
+  drush-yaml:
+    - name: My drush-yaml check
+  drupal-file-module:
+    - name: My drupal-file-module check
+  drupal-db-module:
+    - name: My drupal-db-module check
+  drupal-db-permissions:
+    - name: My drupal-db-permissions check
+  drupal-tracking-code:
+    - name: My drupal-tracking-code check
+  phpstan:
+    - name: My phpstan check
