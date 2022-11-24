@@ -6,7 +6,25 @@ import (
 	"net/url"
 
 	"github.com/gocolly/colly"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
+
+// Merge implementation for file check.
+func (c *CrawlerCheck) Merge(mergeCheck Check) error {
+	crawlerMergeCheck := mergeCheck.(*CrawlerCheck)
+	if err := c.CheckBase.Merge(&crawlerMergeCheck.CheckBase); err != nil {
+		return err
+	}
+
+	utils.MergeString(&c.Domain, crawlerMergeCheck.Domain)
+	utils.MergeStringSlice(&c.ExtraDomains, crawlerMergeCheck.ExtraDomains)
+	utils.MergeStringSlice(&c.IncludeURLs, crawlerMergeCheck.IncludeURLs)
+
+	if crawlerMergeCheck.Limit > 0 {
+		c.Limit = crawlerMergeCheck.Limit
+	}
+	return nil
+}
 
 // RunCheck gathers input configuration and
 // prepares the colly crawler to make HTTP requests
