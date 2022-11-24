@@ -8,6 +8,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestBaseImageMerge(t *testing.T) {
+	assert := assert.New(t)
+
+	c := docker.BaseImageCheck{
+		Allowed:    []string{"allowed1"},
+		Exclude:    []string{"excluded1"},
+		Deprecated: []string{"depr1"},
+		Pattern:    []string{"patt1"},
+		Paths:      []string{"path1"},
+	}
+	c.Merge(&docker.BaseImageCheck{
+		Allowed:    []string{"allowed2"},
+		Exclude:    []string{"excluded2"},
+		Deprecated: []string{"depr2"},
+		Pattern:    []string{"patt2"},
+		Paths:      []string{"path2"},
+	})
+	assert.EqualValues(docker.BaseImageCheck{
+		Allowed:    []string{"allowed1", "allowed2"},
+		Exclude:    []string{"excluded1", "excluded2"},
+		Deprecated: []string{"depr1", "depr2"},
+		Pattern:    []string{"patt1", "patt2"},
+		Paths:      []string{"path1", "path2"},
+	}, c)
+}
+
 func TestDockerfileCheck(t *testing.T) {
 	assert := assert.New(t)
 	c := docker.BaseImageCheck{
