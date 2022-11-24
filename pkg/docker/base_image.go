@@ -33,6 +33,21 @@ type ComposeService struct {
 	} `yaml:"build"`
 }
 
+// Merge implementation for DbModuleCheck check.
+func (c *BaseImageCheck) Merge(mergeCheck shipshape.Check) error {
+	baseImageMergeCheck := mergeCheck.(*BaseImageCheck)
+	if err := c.CheckBase.Merge(&baseImageMergeCheck.CheckBase); err != nil {
+		return err
+	}
+
+	utils.MergeStringSlice(&c.Allowed, baseImageMergeCheck.Allowed)
+	utils.MergeStringSlice(&c.Exclude, baseImageMergeCheck.Exclude)
+	utils.MergeStringSlice(&c.Deprecated, baseImageMergeCheck.Deprecated)
+	utils.MergeStringSlice(&c.Pattern, baseImageMergeCheck.Pattern)
+	utils.MergeStringSlice(&c.Paths, baseImageMergeCheck.Paths)
+	return nil
+}
+
 func (c *BaseImageCheck) RunCheck() {
 	for _, path := range c.Paths {
 		composeFile := path + string(os.PathSeparator) + "docker-compose.yml"
