@@ -5,9 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"sort"
 	"strconv"
 	"testing"
-	"sort"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
@@ -35,9 +35,10 @@ func FakeExecCommand(command string, args ...string) *exec.Cmd {
 // This func should not be called directly, but instead should be called from
 // a new definition inside the test file where fake commands are tested.
 // For example, create the following at the top of the file:
-// 		func TestExecCommandHelper(t *testing.T) {
-//			internal.TestExecCommandHelper(t)
-// 		}
+//
+//	func TestExecCommandHelper(t *testing.T) {
+//		internal.TestExecCommandHelper(t)
+//	}
 func TestExecCommandHelper(t *testing.T) {
 	if os.Getenv("GO_WANT_HELPER_PROCESS") != "1" {
 		return
@@ -92,14 +93,6 @@ func EnsurePasses(t *testing.T, c *shipshape.CheckBase, expectedPasses []string)
 	sort.Strings(c.Result.Passes)
 	if len(c.Result.Passes) != numExpectedPasses || !reflect.DeepEqual(expectedPasses, c.Result.Passes) {
 		return fmt.Sprintf("there should be exactly %d Pass(es), got %#v", numExpectedPasses, c.Result.Passes), false
-	}
-	return "", true
-}
-
-func EnsureWarnings(t *testing.T, c *shipshape.CheckBase, expectedWarnings []string) (msg string, ok bool) {
-	numExpectedWarnings := len(expectedWarnings)
-	if len(c.Result.Warnings) != numExpectedWarnings || !reflect.DeepEqual(expectedWarnings, c.Result.Warnings) {
-		return fmt.Sprintf("there should be exactly %d Warning(s), got %#v", numExpectedWarnings, c.Result.Warnings), false
 	}
 	return "", true
 }
