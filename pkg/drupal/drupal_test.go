@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
@@ -22,9 +21,7 @@ func TestRegisterChecks(t *testing.T) {
 	for ct, ts := range checksMap {
 		c := shipshape.ChecksRegistry[ct]()
 		ctype := reflect.TypeOf(c).String()
-		if ctype != ts {
-			t.Errorf("expecting check of type '%s', got '%s'", ts, ctype)
-		}
+		assert.Equal(t, ts, ctype)
 	}
 }
 
@@ -53,168 +50,4 @@ func TestCheckKeyValueExists(t *testing.T) {
 	}
 	kvr, _, _ := c.CheckKeyValue(m, "shipshape.extension.yml")
 	assert.Equal(t, kvr, shipshape.KeyValueEqual)
-}
-
-func TestDisallowedIsEnabled(t *testing.T) {
-	c := mockCheck("shipshape.extension.yml")
-	c.DataMap = map[string][]byte{
-		"shipshape.extension.yml": []byte(`
-module:
-  clamav: 0
-  tfa: 0
-  dblog: 0
-
-`),
-	}
-	c.UnmarshalDataMap()
-
-	required := []string{
-		"clamav",
-		"tfa",
-	}
-	disallowed := []string{
-		"dblog",
-		"module_permissions_ui",
-		"update",
-	}
-
-	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
-		"'clamav' is enabled",
-		"'tfa' is enabled",
-		"'module_permissions_ui' is not enabled",
-		"'update' is not enabled",
-	}); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{
-		"'dblog' is enabled",
-	}); !ok {
-		t.Error(msg)
-	}
-}
-
-func TestCheckModulesInYaml(t *testing.T) {
-	// Invalid yaml key.
-	c := mockCheck("shipshape.extension.yml")
-	required := []string{
-		"node&foo",
-		"block",
-	}
-	disallowed := []string{
-		"views_ui",
-		"field_ui&bar",
-	}
-	c.UnmarshalDataMap()
-	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
-	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
-		"'block' is enabled",
-		"'views_ui' is not enabled",
-	}); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{
-		"invalid character '&' at position 11, following \".node\"",
-		"invalid character '&' at position 15, following \".field_ui\"",
-	}); !ok {
-		t.Error(msg)
-	}
-
-	// Required is not enabled & disallowed is enabled.
-	c = mockCheck("shipshape.extension.yml")
-	c.DataMap = map[string][]byte{
-		"shipshape.extension.yml": []byte(`
-module:
-  block: 0
-  views_ui: 0
-
-`),
-	}
-	required = []string{
-		"node",
-		"block",
-	}
-	disallowed = []string{
-		"views_ui",
-		"field_ui",
-	}
-	c.UnmarshalDataMap()
-	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
-	if msg, ok := internal.EnsureFail(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
-		"'block' is enabled",
-		"'field_ui' is not enabled",
-	}); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string{
-		"'node' is not enabled",
-		"'views_ui' is enabled",
-	}); !ok {
-		t.Error(msg)
-	}
-
-	c = mockCheck("shipshape.extension.yml")
-	required = []string{
-		"node",
-		"block",
-	}
-	disallowed = []string{
-		"views_ui",
-		"field_ui",
-	}
-	c.UnmarshalDataMap()
-	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
-	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
-		"'node' is enabled",
-		"'block' is enabled",
-		"'views_ui' is not enabled",
-		"'field_ui' is not enabled",
-	}); !ok {
-		t.Error(msg)
-	}
-}
-
-func TestFileModuleCheck(t *testing.T) {
-	c := drupal.FileModuleCheck{
-		YamlCheck: shipshape.YamlCheck{
-			YamlBase: mockCheck("core.extension.yml"),
-		},
-		Required:   []string{"node", "block"},
-		Disallowed: []string{"views_ui", "field_ui"},
-	}
-	c.Init(drupal.FileModule)
-	if c.File != "core.extension.yml" {
-		t.Errorf("File should be 'core.extension.yml', got %s", c.File)
-	}
-	if *c.IgnoreMissing != true {
-		t.Errorf("IgnoreMissing should be 'true', got %t", *c.IgnoreMissing)
-	}
-	c.UnmarshalDataMap()
-	c.RunCheck()
-	if msg, ok := internal.EnsurePass(t, &c.CheckBase); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsureFailures(t, &c.CheckBase, []string(nil)); !ok {
-		t.Error(msg)
-	}
-	if msg, ok := internal.EnsurePasses(t, &c.CheckBase, []string{
-		"'node' is enabled",
-		"'block' is enabled",
-		"'views_ui' is not enabled",
-		"'field_ui' is not enabled",
-	}); !ok {
-		t.Error(msg)
-	}
 }
