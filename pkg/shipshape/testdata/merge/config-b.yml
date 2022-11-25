@@ -1,23 +1,34 @@
 checks:
-  file:
-    - name: My file check
-  yaml:
-    - name: My yaml file check
-  yamllint:
-    - name: My yamllint check
+  # Shipshape checks.
   crawler:
     - name: My crawler check
+      domain: bar.example
+  file:
+    - name: My file check
+      path: /new/path/to/check
+  yaml:
+    - name: My yaml file check
+      path: /new/path/to/check
+  yamllint:
+    - name: My yamllint check
+      path: /new/path/to/check
+  # Docker checks.
   docker:base_image:
     - name: My docker base image check
-  drush-yaml:
-    - name: My drush-yaml check
-  drupal-file-module:
-    - name: My drupal-file-module check
+      allowed: ['debian']
+  # Drupal checks.
   drupal-db-module:
     - name: My drupal-db-module check
   drupal-db-permissions:
     - name: My drupal-db-permissions check
+  drush-yaml:
+    - name: My drush-yaml check
+  drupal-file-module:
+    - name: My drupal-file-module check
   drupal-tracking-code:
     - name: My drupal-tracking-code check
+  drupal-user-role:
+    - name: My drupal-user-role check
+  # phpstan checks.
   phpstan:
     - name: My phpstan check
