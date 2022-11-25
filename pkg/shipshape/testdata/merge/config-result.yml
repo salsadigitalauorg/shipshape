@@ -2,20 +2,20 @@ checks:
   # Shipshape checks.
   crawler:
     - name: My crawler check
-      domain: foo.example
+      domain: bar.example
   file:
     - name: My file check
-      path: /path/to/check
+      path: /new/path/to/check
   yaml:
     - name: My yaml file check
-      path: /path/to/check
+      path: /new/path/to/check
   yamllint:
     - name: My yamllint check
-      path: /path/to/check
+      path: /new/path/to/check
   # Docker checks.
   docker:base_image:
     - name: My docker base image check
-      allowed: ['alpine']
+      allowed: ['alpine', 'debian']
   # Drupal checks.
   drupal-db-module:
     - name: My drupal-db-module check

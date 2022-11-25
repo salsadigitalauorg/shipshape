@@ -24,11 +24,18 @@ func TestReadAndParseConfigFileExistence(t *testing.T) {
 func TestReadAndParseConfigFileMerge(t *testing.T) {
 	assert := assert.New(t)
 
-	_, err := shipshape.ReadAndParseConfig("", []string{
+	mergedCfg, err := shipshape.ReadAndParseConfig("", []string{
 		"testdata/merge/config-a.yml",
 		"testdata/merge/config-b.yml",
 	})
 	assert.NoError(err)
+
+	resultingCfg, err := shipshape.ReadAndParseConfig("", []string{
+		"testdata/merge/config-result.yml",
+	})
+	assert.NoError(err)
+
+	assert.EqualValues(resultingCfg, mergedCfg)
 }
 
 func TestParseConfig(t *testing.T) {
