@@ -41,8 +41,8 @@ func TestDbModuleMerge(t *testing.T) {
 				},
 			},
 		},
-		Required:   []string{"req1", "req2"},
-		Disallowed: []string{"disallowed1", "disallowed2"},
+		Required:   []string{"req2"},
+		Disallowed: []string{"disallowed2"},
 	}, c)
 }
 

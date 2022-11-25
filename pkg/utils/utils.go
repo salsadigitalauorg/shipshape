@@ -79,30 +79,34 @@ func MergeString(strA *string, strB string) {
 	}
 }
 
-// MergeStringSlice appends the values of a string slice to another
-// if those values do not already exist.
-func MergeStringSlice(strSlcA *[]string, strSlcB []string) {
-	if len(strSlcB) == 0 {
+// MergeStringSlice replaces the values of a string slice with those of another.
+func MergeStringSlice(slcA *[]string, slcB []string) {
+	if len(slcB) == 0 {
 		return
 	}
-	for _, strB := range strSlcB {
-		if !StringSliceContains(*strSlcA, strB) {
-			*strSlcA = append(*strSlcA, strB)
+	// Create new slice with unique values.
+	newSlc := []string{}
+	for _, valB := range slcB {
+		if !StringSliceContains(newSlc, valB) {
+			newSlc = append(newSlc, valB)
 		}
 	}
+	*slcA = newSlc
 }
 
-// MergeIntSlice appends the values of an int slice to another
-// if those values do not already exist.
+// MergeIntSlice replaces the values of a int slice with those of another.
 func MergeIntSlice(slcA *[]int, slcB []int) {
 	if len(slcB) == 0 {
 		return
 	}
-	for _, strB := range slcB {
-		if !IntSliceContains(*slcA, strB) {
-			*slcA = append(*slcA, strB)
+	// Create new slice with unique values.
+	newSlc := []int{}
+	for _, valB := range slcB {
+		if !IntSliceContains(newSlc, valB) {
+			newSlc = append(newSlc, valB)
 		}
 	}
+	*slcA = newSlc
 }
 
 // StringSliceContains determines whether an item exists in a slice of string.
