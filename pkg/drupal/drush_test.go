@@ -29,7 +29,7 @@ func TestDrushCommandMerge(t *testing.T) {
 	assert.Equal("alias2", dc.Alias)
 
 	dc.Merge(drupal.DrushCommand{Args: []string{"arg2", "arg3"}})
-	assert.ElementsMatch([]string{"arg1", "arg2", "arg3"}, dc.Args)
+	assert.ElementsMatch([]string{"arg2", "arg3"}, dc.Args)
 }
 
 func TestDrushExec(t *testing.T) {

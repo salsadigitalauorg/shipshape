@@ -24,8 +24,8 @@ func TestCrawlerMerge(t *testing.T) {
 	})
 	assert.EqualValues(shipshape.CrawlerCheck{
 		Domain:       "bar.example",
-		ExtraDomains: []string{"dom1", "dom2"},
-		IncludeURLs:  []string{"url1", "url2"},
+		ExtraDomains: []string{"dom2"},
+		IncludeURLs:  []string{"url2"},
 		Limit:        2,
 	}, c)
 }

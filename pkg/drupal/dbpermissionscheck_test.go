@@ -41,8 +41,8 @@ func TestDbPermissionsMerge(t *testing.T) {
 				},
 			},
 		},
-		Disallowed:   []string{"disallowed1", "disallowed2"},
-		ExcludeRoles: []string{"role1", "role2"},
+		Disallowed:   []string{"disallowed2"},
+		ExcludeRoles: []string{"role2"},
 	}, c)
 }
 

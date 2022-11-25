@@ -2,20 +2,22 @@ package shipshape
 
 import "github.com/salsadigitalauorg/shipshape/pkg/utils"
 
-func MergeKeyValueSlice(kvSlcA *[]KeyValue, kvSlcB []KeyValue) {
-	if len(kvSlcB) == 0 {
+// MergeIntSlice replaces the values of a KeyValue slice with those of another.
+func MergeKeyValueSlice(slcA *[]KeyValue, slcB []KeyValue) {
+	if len(slcB) == 0 {
 		return
 	}
-	newKvSlc := *kvSlcA
-	for _, kvB := range kvSlcB {
-		kvA, indA := getKeyValueFromSlice(kvSlcA, kvB.Key)
-		if kvA == nil {
-			*kvSlcA = append(*kvSlcA, kvB)
-			continue
+	// Create new slice with unique values.
+	newSlc := []KeyValue{}
+	for _, elB := range slcB {
+		if kvB, _ := getKeyValueFromSlice(&newSlc, elB.Key); kvB == nil {
+			newSlc = append(newSlc, elB)
 		}
-		newKvSlc[indA] = kvB
 	}
-	kvSlcA = &newKvSlc
+	*slcA = newSlc
+	if len(slcB) == 0 {
+		return
+	}
 }
 
 func getKeyValueFromSlice(kvSlc *[]KeyValue, key string) (*KeyValue, int) {

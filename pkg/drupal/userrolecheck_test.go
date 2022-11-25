@@ -39,8 +39,8 @@ func TestUserRoleMerge(t *testing.T) {
 		DrushCommand: drupal.DrushCommand{
 			DrushPath: "/new/path/to/drush",
 		},
-		Roles:        []string{"role1", "role2"},
-		AllowedUsers: []int{1, 2, 3},
+		Roles:        []string{"role2"},
+		AllowedUsers: []int{2, 3},
 	}, c)
 }
 

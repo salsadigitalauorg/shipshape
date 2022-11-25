@@ -49,7 +49,7 @@ func TestDrushYamlMerge(t *testing.T) {
 		DrushCommand: drupal.DrushCommand{
 			DrushPath: "/new/path/to/drush",
 			Alias:     "alias2",
-			Args:      []string{"arg1", "arg2"},
+			Args:      []string{"arg2"},
 		},
 		Command:    "command2",
 		ConfigName: "configname1",

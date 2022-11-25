@@ -10,16 +10,15 @@ import (
 func TestYamlBaseMerge(t *testing.T) {
 	assert := assert.New(t)
 
-	c := shipshape.YamlBase{Values: []shipshape.KeyValue{{Key: "foo", Value: "bar"}}}
+	c := shipshape.YamlBase{
+		Values: []shipshape.KeyValue{{Key: "foo", Value: "bar"}},
+	}
 	err := c.Merge(&shipshape.YamlBase{
 		Values: []shipshape.KeyValue{{Key: "baz", Value: "zoom"}},
 	})
 	assert.Equal(nil, err)
 	assert.EqualValues(
-		[]shipshape.KeyValue{
-			{Key: "foo", Value: "bar"},
-			{Key: "baz", Value: "zoom"},
-		},
+		[]shipshape.KeyValue{{Key: "baz", Value: "zoom"}},
 		c.Values,
 	)
 	err = c.Merge(&shipshape.YamlBase{
@@ -27,10 +26,7 @@ func TestYamlBaseMerge(t *testing.T) {
 	})
 	assert.Equal(nil, err)
 	assert.EqualValues(
-		[]shipshape.KeyValue{
-			{Key: "foo", Value: "bar"},
-			{Key: "baz", Value: "zap"},
-		},
+		[]shipshape.KeyValue{{Key: "baz", Value: "zap"}},
 		c.Values,
 	)
 }

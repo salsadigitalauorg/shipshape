@@ -67,7 +67,7 @@ func TestMerge(t *testing.T) {
 		CheckBase: shipshape.CheckBase{Name: "phpstancheck1"},
 		Bin:       "/new/path/to/phpstan",
 		Config:    "/path/to/new/config",
-		Paths:     []string{"path1", "path2", "path3", "path4"},
+		Paths:     []string{"path3", "path4"},
 	}, c)
 
 	err = c.Merge(&phpstan.PhpStanCheck{
