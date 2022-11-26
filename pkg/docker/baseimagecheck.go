@@ -10,6 +10,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+//go:generate go run ../../cmd/gen.go registry --checkpackage=docker --checktype=BaseImage --checkstruct=BaseImageCheck
+
 const BaseImage shipshape.CheckType = "docker:base_image"
 
 type BaseImageCheck struct {
