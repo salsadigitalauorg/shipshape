@@ -1,6 +1,8 @@
 package drupal
 
 import (
+	"path/filepath"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
@@ -19,14 +21,7 @@ func (c *FileModuleCheck) Merge(mergeCheck shipshape.Check) error {
 
 // RunCheck applies the Check logic for Drupal Modules in config files.
 func (c *FileModuleCheck) RunCheck() {
-	configName := c.File
-	if len(c.Path) > 0 {
-		if c.Path[:len(c.Path)-1] != "/" {
-			configName = c.Path + "/" + c.File
-		} else {
-			configName = c.Path + c.File
-		}
-	}
+	configName := filepath.Join(c.Path, c.File)
 	CheckModulesInYaml(&c.YamlBase, FileModule, configName, c.Required, c.Disallowed)
 }
 
