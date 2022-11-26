@@ -22,7 +22,7 @@ func init() {
 // CheckModulesInYaml applies the Check logic for Drupal Modules in yaml content.
 // It uses YamlBase to verify that the list of provided Required or
 // Disallowed modules are installed or not.
-func CheckModulesInYaml(c *shipshape.YamlBase, ct shipshape.CheckType, configName string, required []string, disallowed []string) {
+var CheckModulesInYaml = func(c *shipshape.YamlBase, ct shipshape.CheckType, configName string, required []string, disallowed []string) {
 	moduleKey := func(m string) shipshape.KeyValue {
 		if ct == FileModule {
 			return shipshape.KeyValue{
