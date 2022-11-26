@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -30,6 +31,7 @@ var (
 	displayUsage   bool
 	displayVersion bool
 	dumpConfig     bool
+	listChecks     bool
 	// selfUpdate     bool
 
 	errorCodeOnFailure bool
@@ -48,6 +50,19 @@ func main() {
 	if displayVersion {
 		fmt.Printf("Version: %s\n", version)
 		fmt.Printf("Commit: %s\n", commit)
+		os.Exit(0)
+	}
+
+	if listChecks {
+		fmt.Println("Type of checks available:")
+		checks := []string{}
+		for c := range shipshape.ChecksRegistry {
+			checks = append(checks, string(c))
+		}
+		sort.Strings(checks)
+		for _, c := range checks {
+			fmt.Println("  - " + c)
+		}
 		os.Exit(0)
 	}
 
@@ -123,6 +138,7 @@ func parseFlags() {
 	pflag.BoolVarP(&displayUsage, "help", "h", false, "Displays usage information")
 	pflag.BoolVarP(&displayVersion, "version", "v", false, "Displays the application version")
 	pflag.BoolVar(&dumpConfig, "dump-config", false, "Dump the final config - useful to make sure multiple config files are being merged as expected")
+	pflag.BoolVar(&listChecks, "list-checks", false, "List available checks")
 	// pflag.BoolVarP(&selfUpdate, "self-update", "u", false, "Updates shipshape to the latest version")
 
 	pflag.BoolVarP(&errorCodeOnFailure, "error-code", "e", false, "Exit with error code if a failure is detected (env: SHIPSHAPE_ERROR_ON_FAILURE)")
