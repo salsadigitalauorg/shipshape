@@ -19,14 +19,13 @@ var (
 func main() {
 	parseFlags()
 	parseArgs()
-	log.Print("running generator for ", arg)
 
 	switch arg {
 	case "registry":
-		if checkpackage == "" || checktype == "" || checkstruct == "" {
-			log.Fatal("missing flags; checkpackage, checktype & checkstruct are all required")
+		if checkpackage == "" {
+			log.Fatal("missing flags; checkpackage is required")
 		}
-		gen.Registry(checkpackage, checktype, checkstruct)
+		gen.Registry(checkpackage)
 		break
 	}
 }

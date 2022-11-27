@@ -12,8 +12,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	_ "github.com/salsadigitalauorg/shipshape/pkg/drupal"
-	_ "github.com/salsadigitalauorg/shipshape/pkg/phpstan"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
