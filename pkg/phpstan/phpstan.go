@@ -14,6 +14,8 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
+//go:generate go run ../../cmd/gen.go registry --checkpackage=phpstan
+
 const PhpStan shipshape.CheckType = "phpstan"
 
 type PhpStanCheck struct {

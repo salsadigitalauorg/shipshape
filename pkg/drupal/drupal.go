@@ -6,6 +6,8 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
+//go:generate go run ../../cmd/gen.go registry --checkpackage=drupal
+
 func RegisterChecks() {
 	shipshape.ChecksRegistry[DrushYaml] = func() shipshape.Check { return &DrushYamlCheck{} }
 	shipshape.ChecksRegistry[FileModule] = func() shipshape.Check { return &FileModuleCheck{} }
