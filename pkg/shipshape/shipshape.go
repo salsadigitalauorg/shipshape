@@ -11,6 +11,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+//go:generate go run ../../cmd/gen.go registry --checkpackage=shipshape
+
 func ReadAndParseConfig(projectDir string, files []string) (Config, error) {
 	finalCfg := Config{}
 	for i, f := range files {

@@ -39,11 +39,7 @@ func createFile() {
 		f.Close()
 	}()
 
-	opening_code := `package main
-
-import _ "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
-`
-	if _, err := f.Write([]byte(opening_code)); err != nil {
+	if _, err := f.Write([]byte("package main\n\n")); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -76,7 +72,7 @@ func addImportLine(chkPkg string) {
 	importLine := fmt.Sprintf("import _ \"%s\"", pkgFullName)
 	newFileLines := []string{}
 	for i, line := range fileLines {
-		if i == 3 {
+		if i == 2 {
 			newFileLines = append(newFileLines, importLine)
 		}
 		newFileLines = append(newFileLines, line)
