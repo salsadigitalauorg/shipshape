@@ -12,8 +12,6 @@ import (
 var (
 	arg          string
 	checkpackage string
-	checktype    string
-	checkstruct  string
 )
 
 func main() {
@@ -32,8 +30,6 @@ func main() {
 
 func parseFlags() {
 	pflag.StringVar(&checkpackage, "checkpackage", "", "The package to which the check belongs")
-	pflag.StringVar(&checktype, "checktype", "", "The checktype constant name")
-	pflag.StringVar(&checkstruct, "checkstruct", "", "The struct defined by the check")
 	pflag.Parse()
 }
 
