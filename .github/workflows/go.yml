@@ -50,6 +50,45 @@ jobs:
         path: build
       if: github.ref_name == 'main'
 
+  nightly-release:
+    needs: test-build
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v2
+      with:
+        version: latest
+        args: release --snapshot --rm-dist
+
+    - name: Rename binaries & cleanup dist
+      run: |
+        mv dist/shipshape_darwin_amd64_v1/shipshape dist/shipshape-Darwin-x86_64
+        mv dist/shipshape_darwin_arm64/shipshape dist/shipshape-Darwin-aarch64
+        mv dist/shipshape_linux_amd64_v1/shipshape dist/shipshape-Linux-x86_64
+        mv dist/shipshape_linux_arm64/shipshape dist/shipshape-Linux-aarch64
+        rmdir dist/shipshape_darwin_amd64_v1
+        rmdir dist/shipshape_darwin_arm64
+        rmdir dist/shipshape_linux_amd64_v1
+        rmdir dist/shipshape_linux_arm64
+        rm artifacts.json config.yaml metadata.json shipshape.rb
+
+    - name: Update nightly release
+      uses: pyTooling/Actions/releaser@r0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: dist/*
+        tag: nightly
+        rm: true
+
   publish-binary:
     needs: test-build
     runs-on: ubuntu-latest
