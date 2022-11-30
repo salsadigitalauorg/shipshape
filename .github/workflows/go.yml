@@ -82,11 +82,12 @@ jobs:
         rm dist/artifacts.json dist/config.yaml dist/metadata.json dist/shipshape.rb
 
     - name: Update nightly release
-      uses: pyTooling/Actions/releaser@r0
+      uses: marvinpinto/action-automatic-releases@latest
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
         files: dist/*
-        tag: nightly
+        automatic_release_tag: nightly
+        title: Nightly
         rm: true
 
   publish-binary:
