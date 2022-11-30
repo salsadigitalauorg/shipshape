@@ -79,7 +79,7 @@ jobs:
         rmdir dist/shipshape_darwin_arm64
         rmdir dist/shipshape_linux_amd64_v1
         rmdir dist/shipshape_linux_arm64
-        rm artifacts.json config.yaml metadata.json shipshape.rb
+        rm dist/artifacts.json dist/config.yaml dist/metadata.json dist/shipshape.rb
 
     - name: Update nightly release
       uses: pyTooling/Actions/releaser@r0
