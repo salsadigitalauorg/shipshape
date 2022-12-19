@@ -29,7 +29,7 @@ func FindFiles(root, pattern string, excludePattern string) ([]string, error) {
 			return e
 		}
 		if excludePattern != "" {
-			if excluded, err := regexp.MatchString(excludePattern, d.Name()); err != nil {
+			if excluded, err := regexp.MatchString(excludePattern, fullpath); err != nil {
 				return err
 			} else if excluded {
 				return nil

@@ -1,6 +1,7 @@
 package utils_test
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -12,42 +13,61 @@ import (
 )
 
 func TestFindFiles(t *testing.T) {
-	_, err := FindFiles("", "", "")
-	if err == nil || err.Error() != "directory not provided" {
-		t.Error("empty directory should fail.")
-	}
+	assert := assert.New(t)
 
-	_, err = FindFiles("testdata/findfiles", "", "")
-	if err == nil || err.Error() != "pattern not provided" {
-		t.Error("empty pattern should fail.")
-	}
+	t.Run("missingArgs", func(t *testing.T) {
+		_, err := FindFiles("", "", "")
+		assert.Error(errors.New("directory not provided"), err)
 
-	files, err := FindFiles("testdata/findfiles", "user.role.*.yml", "")
-	if err != nil {
-		t.Errorf("FindFiles should succeed, but failed: %+v", err)
-	}
-	expectedFiles := []string{
-		"testdata/findfiles/a/b/user.role.bogus.yml",
-		"testdata/findfiles/user.role.admin.yml",
-		"testdata/findfiles/user.role.author.yml",
-		"testdata/findfiles/user.role.editor.yml",
-	}
-	if len(files) != 4 || !reflect.DeepEqual(files, expectedFiles) {
-		t.Errorf("There should be exactly 4 files, got: %+v", files)
-	}
+		_, err = FindFiles("testdata/findfiles", "", "")
+		assert.Error(errors.New("pattern not provided"), err)
+	})
 
-	files, err = FindFiles("testdata/findfiles", "^user\\.role\\..*\\.yml$", "user.role.author.yml")
-	if err != nil {
-		t.Errorf("FindFiles should succeed, but failed: %+v", err)
-	}
-	expectedFiles = []string{
-		"testdata/findfiles/a/b/user.role.bogus.yml",
-		"testdata/findfiles/user.role.admin.yml",
-		"testdata/findfiles/user.role.editor.yml",
-	}
-	if len(files) != 3 || !reflect.DeepEqual(files, expectedFiles) {
-		t.Errorf("There should be exactly 3 files, got: %+v", files)
-	}
+	t.Run("simpleFilePattern", func(t *testing.T) {
+		files, err := FindFiles("testdata/findfiles", "user.role.*.yml", "")
+		assert.NoError(err)
+		assert.ElementsMatch([]string{
+			"testdata/findfiles/a/b/user.role.bogus.yml",
+			"testdata/findfiles/user.role.admin.yml",
+			"testdata/findfiles/user.role.author.yml",
+			"testdata/findfiles/user.role.editor.yml",
+		}, files)
+	})
+
+	t.Run("filePatternWithExclusion", func(t *testing.T) {
+		files, err := FindFiles("testdata/findfiles", "^user\\.role\\..*\\.yml$", "user.role.author.yml")
+		assert.NoError(err)
+		assert.ElementsMatch([]string{
+			"testdata/findfiles/a/b/user.role.bogus.yml",
+			"testdata/findfiles/user.role.admin.yml",
+			"testdata/findfiles/user.role.editor.yml",
+		}, files)
+	})
+
+	t.Run("dirPattern", func(t *testing.T) {
+		files, err := FindFiles("testdata/findfiles", ".*.yml", "")
+		assert.NoError(err)
+		assert.ElementsMatch([]string{
+			"testdata/findfiles/a/b/user.role.bogus.yml",
+			"testdata/findfiles/user.admin.yml",
+			"testdata/findfiles/user.role.admin.yml",
+			"testdata/findfiles/user.role.author.yml",
+			"testdata/findfiles/user.role.editor.yml",
+			"testdata/findfiles/node_modules/yamllint-invalid.yml",
+		}, files)
+	})
+
+	t.Run("dirPatternWithExclusion", func(t *testing.T) {
+		files, err := FindFiles("testdata/findfiles", ".*.yml", "node_modules.*")
+		assert.NoError(err)
+		assert.ElementsMatch([]string{
+			"testdata/findfiles/a/b/user.role.bogus.yml",
+			"testdata/findfiles/user.admin.yml",
+			"testdata/findfiles/user.role.admin.yml",
+			"testdata/findfiles/user.role.author.yml",
+			"testdata/findfiles/user.role.editor.yml",
+		}, files)
+	})
 }
 
 func TestMergeBoolPtrs(t *testing.T) {
