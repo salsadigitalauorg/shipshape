@@ -227,3 +227,35 @@ func TestFetchContentFromUrl(t *testing.T) {
 		t.Errorf("expected content to be %s, got %s", expected, c)
 	}
 }
+
+func TestIsDirectory(t *testing.T) {
+	if a, e := IsDirectory("testdata"); e != nil || !a {
+		t.Errorf("expected directory 'testdata' to exist")
+	}
+	if a, _ := IsDirectory("nodir"); a {
+		t.Errorf("expected directory 'nodir' to not exist")
+	}
+}
+
+func TestFileContains(t *testing.T) {
+	if a, _ := FileContains("testdata/filecontains/index.php", "use Drupal\\Core\\DrupalKernel;"); !a {
+		t.Errorf("expected 'DrupalKernel' in index.php")
+	}
+	if b, _ := FileContains("testdata/filecontains/index.php", "notfound"); b {
+		t.Errorf("expected 'notfound' to not appear in index.php")
+	}
+}
+
+func TestHasComposerDependency(t *testing.T) {
+	deps := []string{"laravel/framework"}
+	if a, _ := HasComposerDependency("testdata/composer", deps); !a {
+		t.Errorf("expected 'laravel/framework' to be found in composer.json")
+	}
+	deps = []string{"notfound/notfound"}
+	if a, _ := HasComposerDependency("testdata/composer", deps); a {
+		t.Errorf("expected 'notfound/notfound' to not be found in composer.json")
+	}
+	if _, err := HasComposerDependency("testdata/filecontains", deps); err == nil {
+		t.Errorf("expected file not found got %s", err)
+	}
+}

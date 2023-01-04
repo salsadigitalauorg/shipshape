@@ -1,11 +1,16 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -184,4 +189,80 @@ func StringSliceMatch(slice []string, item string) bool {
 		}
 	}
 	return false
+}
+
+func Glob(dir string, match string) ([]string, error) {
+	files := []string{}
+	err := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
+		if strings.Contains(f.Name(), match) {
+			files = append(files, path)
+		}
+		return nil
+	})
+
+	return files, err
+}
+
+func IsDirectory(path string) (bool, error) {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false, err
+	}
+	return fileInfo.IsDir(), err
+}
+
+func FileContains(loc string, match string) (bool, error) {
+	if _, err := os.Stat(loc); err != nil {
+		return false, fmt.Errorf("File not found at %s", loc)
+	}
+	file, err := os.Open(loc)
+	defer file.Close()
+
+	if err != nil {
+		return false, err
+	}
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		if scanner.Text() == match {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func HasComposerDependency(loc string, deps []string) (bool, error) {
+	var composer map[string]interface{}
+	composerFile := loc + string(os.PathSeparator) + "composer.json"
+
+	if _, err := os.Stat(composerFile); err != nil {
+		return false, fmt.Errorf("File not found at %s", loc)
+	}
+
+	cf, err := os.Open(composerFile)
+
+	if err != nil {
+		return false, err
+	}
+
+	defer cf.Close()
+	byteValue, _ := ioutil.ReadAll(cf)
+
+	json.Unmarshal([]byte(byteValue), &composer)
+
+	if req, ok := composer["require"]; ok {
+		if r, ok := req.(map[string]interface{}); ok {
+			for k := range r {
+				for _, dep := range deps {
+					if k == dep {
+						return true, nil
+					}
+				}
+			}
+		}
+	}
+
+	return false, nil
 }
