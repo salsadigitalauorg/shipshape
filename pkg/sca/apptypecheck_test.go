@@ -84,7 +84,7 @@ func TestIsSymfonyCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]string{"Symfony detected at ./fixtures/symfony"},
+		[]string{"symfony detected at ./fixtures/symfony"},
 		c.Result.Failures,
 	)
 }
