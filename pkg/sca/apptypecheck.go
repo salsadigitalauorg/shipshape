@@ -17,7 +17,7 @@ Example:
 		- symfyony
 	markers:
 		symfony:
-			-     return new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);
+			- "    return new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);"
 	dirs:
 		symfony:
 			- bin
