@@ -99,9 +99,9 @@ func (c *AppTypeCheck) RunCheck() {
 				c.AddFail(framework + " detected at " + path)
 			}
 		}
-		if len(c.Result.Failures) == 0 {
-			c.AddPass("No invalid application types detected")
-			c.Result.Status = shipshape.Pass
-		}
+	}
+	if len(c.Result.Failures) == 0 {
+		c.AddPass("No invalid application types detected")
+		c.Result.Status = shipshape.Pass
 	}
 }
