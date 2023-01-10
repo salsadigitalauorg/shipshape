@@ -95,30 +95,6 @@ const (
 	Fail CheckStatus = "Fail"
 )
 
-// KeyValue represents a check to be made against Yaml data.
-// It can be a simple Key=Value check, or it check Keys in Disallowed or
-// Allowed lists accordingly. If the source is a list then IsList must be true.
-// If Optional is set then the validation will not fail if the key is not present.
-type KeyValue struct {
-	Key        string   `yaml:"key"`
-	Value      string   `yaml:"value"`
-	IsList     bool     `yaml:"is-list"`
-	Optional   bool     `yaml:"optional"`
-	Disallowed []string `yaml:"disallowed"`
-	Allowed    []string `yaml:"allowed"`
-}
-
-// KeyValueResult represents the different outcomes of the KeyValue check.
-type KeyValueResult int8
-
-const (
-	KeyValueError           KeyValueResult = -2
-	KeyValueNotFound        KeyValueResult = -1
-	KeyValueNotEqual        KeyValueResult = 0
-	KeyValueEqual           KeyValueResult = 1
-	KeyValueDisallowedFound KeyValueResult = 2
-)
-
 const (
 	File     CheckType = "file"     // Represents a FileCheck.
 	Yaml     CheckType = "yaml"     // Represents a YamlCheck.

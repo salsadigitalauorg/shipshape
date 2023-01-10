@@ -142,8 +142,8 @@ func TestYamlCheck(t *testing.T) {
 		c.Result.Passes)
 	assert.ElementsMatch(
 		[]string{
-			"[testdata/yaml/dir/subdir/zoom.bar.yml] 'check.interval_days' equals '5'",
-			"[testdata/yaml/dir/zoom.bar.yml] 'check.interval_days' equals '5'",
-			"[testdata/yaml/zoom.bar.yml] 'check.interval_days' equals '5'"},
+			"[testdata/yaml/dir/subdir/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'",
+			"[testdata/yaml/dir/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'",
+			"[testdata/yaml/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'"},
 		c.Result.Failures)
 }
