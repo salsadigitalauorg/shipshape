@@ -103,3 +103,14 @@ func (c *CheckBase) RunCheck() {
 func (c *CheckBase) GetResult() *Result {
 	return &c.Result
 }
+
+// SupportsRemediation indicates whether the check supports remediation.
+func (c *CheckBase) SupportsRemediation() bool {
+	return false
+}
+
+// Remediate tries to fix the breach(es).
+func (c *CheckBase) Remediate() error {
+	c.AddWarning("This check does not currently implement remediation.")
+	return nil
+}

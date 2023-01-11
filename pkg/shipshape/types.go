@@ -29,6 +29,8 @@ type Check interface {
 	AddWarning(msg string)
 	RunCheck()
 	GetResult() *Result
+	SupportsRemediation() bool
+	Remediate() error
 }
 
 type CheckMap map[CheckType][]Check
