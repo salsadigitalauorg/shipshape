@@ -130,8 +130,10 @@ const (
 // file or a pattern.
 type FileCheck struct {
 	CheckBase         `yaml:",inline"`
-	Path              string `yaml:"path"`
-	DisallowedPattern string `yaml:"disallowed-pattern"`
+	Path              string   `yaml:"path"`
+	DisallowedPattern string   `yaml:"disallowed-pattern"`
+	ExcludePattern    string   `yaml:"exclude-pattern"`
+	SkipDir           []string `yaml:"skip-dir"`
 }
 
 // CrawlerCheck is a lightweight crawler that can be used to determine

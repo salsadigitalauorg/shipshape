@@ -14,8 +14,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// FindFiles scans a directory for files matching the provided patterns.
-func FindFiles(root, pattern string, excludePattern string) ([]string, error) {
+// FindFiles scans a directory for files matching the provided pattern.
+// excludePattern can be used to ignore files using regex, and a list of
+// directories can be skipped using skipDir.
+func FindFiles(root, pattern string, excludePattern string, skipDir []string) ([]string, error) {
 	if root == "" {
 		return nil, errors.New("directory not provided")
 	}
@@ -28,12 +30,18 @@ func FindFiles(root, pattern string, excludePattern string) ([]string, error) {
 		if e != nil {
 			return e
 		}
+		if d.IsDir() {
+			return nil
+		}
 		if excludePattern != "" {
 			if excluded, err := regexp.MatchString(excludePattern, fullpath); err != nil {
 				return err
 			} else if excluded {
 				return nil
 			}
+		}
+		if len(skipDir) > 0 && IsFileInDirs(root, fullpath, skipDir) {
+			return nil
 		}
 		if matched, err := regexp.MatchString(pattern, d.Name()); err != nil {
 			return err
@@ -46,6 +54,27 @@ func FindFiles(root, pattern string, excludePattern string) ([]string, error) {
 		return nil, err
 	}
 	return matches, nil
+}
+
+// IsFileInDirs determines whether a file is in a list of directories.
+// root is assumed to be a reference directory, file is the file path with
+// the root prefixed and dirs is a list of relative paths from the root.
+func IsFileInDirs(root string, file string, dirs []string) bool {
+	for _, dir := range dirs {
+		dirWithRoot := filepath.Join(root, dir)
+		// Find the route to the file relative to the skipped directory.
+		// If a route is found and it does not contain the '..' prefix,
+		// the file is within the skipped dir, and therefore should be
+		// skipped.
+		rel, err := filepath.Rel(dirWithRoot, file)
+		if err != nil {
+			continue
+		}
+		if !strings.HasPrefix(rel, "..") {
+			return true
+		}
+	}
+	return false
 }
 
 // LookupYamlPath attempts to query Yaml data using a JSONPath query and returns
