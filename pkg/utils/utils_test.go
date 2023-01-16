@@ -12,19 +12,70 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestIsFileInDirs(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("fileAbsent", func(t *testing.T) {
+		assert.False(IsFileInDirs(
+			"testdata/isfileindirs",
+			"testdata/isfileindirs/dir1/dir2/file1",
+			[]string{
+				"dir3/dir4",
+				"dir5/dir6",
+				"dir7",
+			}))
+		assert.False(IsFileInDirs(
+			"testdata/isfileindirs",
+			"testdata/isfileindirs/dir1/dir2/file2",
+			[]string{
+				"dir2",
+				"dir5/dir6",
+				"dir7",
+			}))
+	})
+
+	t.Run("filePresent", func(t *testing.T) {
+		assert.True(IsFileInDirs(
+			"testdata/isfileindirs",
+			"testdata/isfileindirs/dir1/dir2/file1",
+			[]string{
+				"dir1",
+				"dir5/dir6",
+				"dir7",
+			}))
+		assert.True(IsFileInDirs(
+			"testdata/isfileindirs",
+			"testdata/isfileindirs/dir1/dir2/file2",
+			[]string{
+				"dir1/dir2",
+				"dir5/dir6",
+				"dir7",
+			}))
+		assert.True(IsFileInDirs(
+			"testdata/isfileindirs",
+			"testdata/isfileindirs/dir2/dir1/file4",
+			[]string{
+				"dir1/dir2",
+				"dir2",
+				"dir5/dir6",
+				"dir7",
+			}))
+	})
+}
+
 func TestFindFiles(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("missingArgs", func(t *testing.T) {
-		_, err := FindFiles("", "", "")
+		_, err := FindFiles("", "", "", nil)
 		assert.Error(errors.New("directory not provided"), err)
 
-		_, err = FindFiles("testdata/findfiles", "", "")
+		_, err = FindFiles("testdata/findfiles", "", "", nil)
 		assert.Error(errors.New("pattern not provided"), err)
 	})
 
 	t.Run("simpleFilePattern", func(t *testing.T) {
-		files, err := FindFiles("testdata/findfiles", "user.role.*.yml", "")
+		files, err := FindFiles("testdata/findfiles", "user.role.*.yml", "", nil)
 		assert.NoError(err)
 		assert.ElementsMatch([]string{
 			"testdata/findfiles/a/b/user.role.bogus.yml",
@@ -35,7 +86,8 @@ func TestFindFiles(t *testing.T) {
 	})
 
 	t.Run("filePatternWithExclusion", func(t *testing.T) {
-		files, err := FindFiles("testdata/findfiles", "^user\\.role\\..*\\.yml$", "user.role.author.yml")
+		files, err := FindFiles("testdata/findfiles",
+			"^user\\.role\\..*\\.yml$", "user.role.author.yml", nil)
 		assert.NoError(err)
 		assert.ElementsMatch([]string{
 			"testdata/findfiles/a/b/user.role.bogus.yml",
@@ -45,9 +97,10 @@ func TestFindFiles(t *testing.T) {
 	})
 
 	t.Run("dirPattern", func(t *testing.T) {
-		files, err := FindFiles("testdata/findfiles", ".*.yml", "")
+		files, err := FindFiles("testdata/findfiles", ".*.yml", "", nil)
 		assert.NoError(err)
 		assert.ElementsMatch([]string{
+			"testdata/findfiles/a/some-file.yml",
 			"testdata/findfiles/a/b/user.role.bogus.yml",
 			"testdata/findfiles/user.admin.yml",
 			"testdata/findfiles/user.role.admin.yml",
@@ -58,10 +111,36 @@ func TestFindFiles(t *testing.T) {
 	})
 
 	t.Run("dirPatternWithExclusion", func(t *testing.T) {
-		files, err := FindFiles("testdata/findfiles", ".*.yml", "node_modules.*")
+		files, err := FindFiles("testdata/findfiles", ".*.yml", "node_modules.*", nil)
 		assert.NoError(err)
 		assert.ElementsMatch([]string{
+			"testdata/findfiles/a/some-file.yml",
 			"testdata/findfiles/a/b/user.role.bogus.yml",
+			"testdata/findfiles/user.admin.yml",
+			"testdata/findfiles/user.role.admin.yml",
+			"testdata/findfiles/user.role.author.yml",
+			"testdata/findfiles/user.role.editor.yml",
+		}, files)
+	})
+
+	t.Run("skipDir", func(t *testing.T) {
+		files, err := FindFiles("testdata/findfiles", ".*.yml", "", []string{
+			"node_modules", "a"})
+		assert.NoError(err)
+		assert.ElementsMatch([]string{
+			"testdata/findfiles/user.admin.yml",
+			"testdata/findfiles/user.role.admin.yml",
+			"testdata/findfiles/user.role.author.yml",
+			"testdata/findfiles/user.role.editor.yml",
+		}, files)
+	})
+
+	t.Run("skipDir1Deeper", func(t *testing.T) {
+		files, err := FindFiles("testdata/findfiles", ".*.yml", "", []string{
+			"node_modules", "a/b"})
+		assert.NoError(err)
+		assert.ElementsMatch([]string{
+			"testdata/findfiles/a/some-file.yml",
 			"testdata/findfiles/user.admin.yml",
 			"testdata/findfiles/user.role.admin.yml",
 			"testdata/findfiles/user.role.author.yml",

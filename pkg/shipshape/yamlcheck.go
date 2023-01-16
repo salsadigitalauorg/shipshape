@@ -54,7 +54,7 @@ func (c *YamlCheck) FetchData() {
 		}
 	} else if c.Pattern != "" {
 		configPath := filepath.Join(ProjectDir, c.Path)
-		files, err := utils.FindFiles(configPath, c.Pattern, c.ExcludePattern)
+		files, err := utils.FindFiles(configPath, c.Pattern, c.ExcludePattern, nil)
 		if err != nil {
 			// No failure if missing path and ignoring missing.
 			if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing != nil && *c.IgnoreMissing {

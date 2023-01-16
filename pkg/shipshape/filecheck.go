@@ -24,11 +24,11 @@ func (c *FileCheck) Merge(mergeCheck Check) error {
 // any data.
 func (c *FileCheck) RequiresData() bool { return false }
 
-// RunCheck implements the check logic for FileCheck.
-// It scans a directory for a list of disallowed files and fails it finds any,
-// otherwise passes.
+// RunCheck scans a directory for a list of disallowed files, while excluding
+// the provided regex ExcludePattern and skipping the list of provided relative
+// directories.
 func (c *FileCheck) RunCheck() {
-	files, err := utils.FindFiles(filepath.Join(ProjectDir, c.Path), c.DisallowedPattern, "")
+	files, err := utils.FindFiles(filepath.Join(ProjectDir, c.Path), c.DisallowedPattern, c.ExcludePattern, c.SkipDir)
 	if err != nil {
 		c.AddFail(err.Error())
 		return
