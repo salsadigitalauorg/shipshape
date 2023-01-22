@@ -279,7 +279,7 @@ notification:
 	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.EqualValues([]string{"[data] 'check.interval_days' equals '7'"}, c.Result.Failures)
+	assert.EqualValues([]string{"[data] 'check.interval_days' equals '7', expected '8'"}, c.Result.Failures)
 
 	// Multiple config values - all correct.
 	c = mockCheck()

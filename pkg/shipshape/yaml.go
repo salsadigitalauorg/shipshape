@@ -56,7 +56,7 @@ func (c *YamlBase) processData(configName string) {
 		case KeyValueNotFound:
 			c.AddFail(fmt.Sprintf("[%s] '%s' not found", configName, kv.Key))
 		case KeyValueNotEqual:
-			c.AddFail(fmt.Sprintf("[%s] '%s' equals '%s'", configName, kv.Key, fails[0]))
+			c.AddFail(fmt.Sprintf("[%s] '%s' equals '%s', expected '%s'", configName, kv.Key, fails[0], kv.Value))
 		case KeyValueDisallowedFound:
 			c.AddFail(fmt.Sprintf("[%s] disallowed %s: [%s]", configName, kv.Key, strings.Join(fails, ", ")))
 		case KeyValueEqual:
@@ -94,17 +94,14 @@ func (c *YamlBase) CheckKeyValue(kv KeyValue, mapKey string) (KeyValueResult, []
 
 	// Perform direct comparison if no allow/disallow list provided.
 	if len(kv.Allowed) == 0 && len(kv.Disallowed) == 0 {
+		notEquals := []string{}
 		for _, item := range foundNodes {
-			notEquals := []string{}
-			// When checking for false, "null" is also 'falsy'.
-			if item.Value != kv.Value && (kv.Value != "false" || item.Value != "null") {
-				if !utils.StringSliceContains(notEquals, item.Value) {
-					notEquals = append(notEquals, item.Value)
-				}
+			if !kv.Equals(item.Value) && !utils.StringSliceContains(notEquals, item.Value) {
+				notEquals = append(notEquals, item.Value)
 			}
-			if len(notEquals) > 0 {
-				return KeyValueNotEqual, notEquals, nil
-			}
+		}
+		if len(notEquals) > 0 {
+			return KeyValueNotEqual, notEquals, nil
 		}
 		return KeyValueEqual, nil, nil
 	}
@@ -114,12 +111,12 @@ func (c *YamlBase) CheckKeyValue(kv KeyValue, mapKey string) (KeyValueResult, []
 	for _, item := range foundNodes {
 		if kv.IsList {
 			for _, v := range item.Content {
-				if kv.CheckAllowDisallowList(v.Value) && !utils.StringSliceContains(fails, v.Value) {
+				if kv.IsDisallowed(v.Value) && !utils.StringSliceContains(fails, v.Value) {
 					fails = append(fails, v.Value)
 				}
 			}
 		} else {
-			if kv.CheckAllowDisallowList(item.Value) && !utils.StringSliceContains(fails, item.Value) {
+			if kv.IsDisallowed(item.Value) && !utils.StringSliceContains(fails, item.Value) {
 				fails = append(fails, item.Value)
 			}
 		}
