@@ -120,4 +120,37 @@ valid: yaml
 		[]string{"yaml-valid.yml has valid yaml."},
 		c.Result.Passes,
 	)
+
+	t.Run("rootInvalid", func(t *testing.T) {
+		c := shipshape.YamlLintCheck{}
+		c.DataMap = map[string][]byte{
+			"yaml-invalid-root.yml": []byte(`
+foo: bar
+- item 1
+`)}
+		c.UnmarshalDataMap()
+		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Empty(c.Result.Passes)
+		assert.ElementsMatch(
+			[]string{"[yaml-invalid-root.yml] yaml: line 1: did not find expected key"},
+			c.Result.Failures,
+		)
+	})
+
+	t.Run("rootList", func(t *testing.T) {
+		c := shipshape.YamlLintCheck{}
+		c.DataMap = map[string][]byte{
+			"yaml-valid-list.yml": []byte(`
+- item 1
+- item 2:
+    foo: bar
+`)}
+		c.UnmarshalDataMap()
+		assert.Equal(shipshape.Pass, c.Result.Status)
+		assert.Empty(c.Result.Failures)
+		assert.ElementsMatch(
+			[]string{"yaml-valid-list.yml has valid yaml."},
+			c.Result.Passes,
+		)
+	})
 }

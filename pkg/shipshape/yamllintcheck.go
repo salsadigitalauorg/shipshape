@@ -19,7 +19,7 @@ func (c *YamlLintCheck) Merge(mergeCheck Check) error {
 // returns any errors as failures.
 func (c *YamlLintCheck) UnmarshalDataMap() {
 	for f, data := range c.DataMap {
-		ifc := make(map[string]interface{})
+		var ifc interface{}
 		err := yaml.Unmarshal([]byte(data), &ifc)
 		if err != nil {
 			if typeErr, ok := err.(*yaml.TypeError); ok {
