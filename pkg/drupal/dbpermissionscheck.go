@@ -10,6 +10,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type breach struct {
+	role  string
+	perms string
+}
+
 // Init implementation for the DB-based permissions check.
 func (c *DbPermissionsCheck) Init(ct shipshape.CheckType) {
 	c.CheckBase.Init(ct)
@@ -62,10 +67,29 @@ func (c *DbPermissionsCheck) RunCheck(remediate bool) {
 		sort.Slice(fails, func(i int, j int) bool {
 			return fails[i] < fails[j]
 		})
-		c.AddFail(fmt.Sprintf("[%s] disallowed permissions: [%s]", r, strings.Join(fails, ", ")))
+
+		if remediate {
+			if err := c.Remediate(breach{role: r, perms: strings.Join(fails, ",")}); err != nil {
+				c.AddFail(fmt.Sprintf("[%s] failed to fix disallowed permissions: [%s]", r, strings.Join(fails, ", ")))
+			} else {
+				c.AddRemediation(fmt.Sprintf("[%s] fixed disallowed permissions: [%s]", r, strings.Join(fails, ", ")))
+			}
+		} else {
+			c.AddFail(fmt.Sprintf("[%s] disallowed permissions: [%s]", r, strings.Join(fails, ", ")))
+		}
 	}
 
 	if len(c.Result.Failures) == 0 {
 		c.Result.Status = shipshape.Pass
 	}
+}
+
+// Remediate attempts to fix a breach.
+func (c *DbPermissionsCheck) Remediate(breachIfc interface{}) error {
+	b := breachIfc.(breach)
+	_, err := Drush(c.DrushPath, c.Alias, []string{"role:perm:remove", b.role, b.perms}).Exec()
+	if err != nil {
+		return err
+	}
+	return nil
 }

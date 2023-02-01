@@ -185,3 +185,8 @@ site_editor:
 		"[site_editor] disallowed permissions: [administer modules]",
 	}, c.Result.Failures)
 }
+
+// func TestDbPermissionsCheckRemediate(t *testing.T) {
+// 	assert := assert.New(t)
+
+// }

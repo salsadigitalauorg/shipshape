@@ -92,6 +92,11 @@ func (c *CheckBase) AddWarning(msg string) {
 	c.Result.Warnings = append(c.Result.Warnings, msg)
 }
 
+// AddWarning appends a Warning message to the result.
+func (c *CheckBase) AddRemediation(msg string) {
+	c.Result.Remediations = append(c.Result.Remediations, msg)
+}
+
 // RunCheck contains the core logic for running the check,
 // generating the result and remediating breaches.
 // This is where c.Result should be populated.
@@ -105,6 +110,8 @@ func (c *CheckBase) GetResult() *Result {
 }
 
 // Remediate should implement the logic to fix the breach(es).
-func (c *CheckBase) Remediate() error {
+// Any type or custom struct can be used for the breach; it just needs to be
+// cast to the required type before being used.
+func (c *CheckBase) Remediate(breachIfc interface{}) error {
 	return nil
 }

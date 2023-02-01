@@ -27,9 +27,10 @@ type Check interface {
 	AddFail(msg string)
 	AddPass(msg string)
 	AddWarning(msg string)
+	AddRemediation(msg string)
 	RunCheck(remediate bool)
 	GetResult() *Result
-	Remediate() error
+	Remediate(breachIfc interface{}) error
 }
 
 type CheckMap map[CheckType][]Check
@@ -66,13 +67,14 @@ type CheckBase struct {
 
 // Result provides the structure for a Check's outcome.
 type Result struct {
-	Name      string `json:"name"`
-	Severity  `json:"severity"`
-	CheckType `json:"check-type"`
-	Status    CheckStatus `json:"status"`
-	Passes    []string    `json:"passes"`
-	Failures  []string    `json:"failures"`
-	Warnings  []string    `json:"warnings"`
+	Name         string `json:"name"`
+	Severity     `json:"severity"`
+	CheckType    `json:"check-type"`
+	Status       CheckStatus `json:"status"`
+	Passes       []string    `json:"passes"`
+	Failures     []string    `json:"failures"`
+	Warnings     []string    `json:"warnings"`
+	Remediations []string    `json:"remediations"`
 }
 
 // ResultList is a wrapper around a list of results, providing some useful

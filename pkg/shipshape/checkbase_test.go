@@ -56,7 +56,7 @@ type testCheckRemediationSupported struct {
 	shipshape.YamlBase `yaml:",inline"`
 }
 
-func (c *testCheckRemediationSupported) Remediate() error {
+func (c *testCheckRemediationSupported) Remediate(interface{}) error {
 	return errors.New("foo")
 }
 
@@ -66,7 +66,7 @@ func TestRemediate(t *testing.T) {
 	t.Run("notSupported", func(t *testing.T) {
 		c := testCheckRemediationNotSupported{}
 
-		err := c.Remediate()
+		err := c.Remediate(nil)
 		assert.NoError(err)
 		assert.Empty(c.Result.Passes)
 		assert.Empty(c.Result.Failures)
@@ -78,7 +78,7 @@ func TestRemediate(t *testing.T) {
 	t.Run("supported", func(t *testing.T) {
 		c := testCheckRemediationSupported{}
 
-		err := c.Remediate()
+		err := c.Remediate(nil)
 		assert.EqualError(err, "foo")
 		assert.Empty(c.Result.Passes)
 		assert.Empty(c.Result.Warnings)
