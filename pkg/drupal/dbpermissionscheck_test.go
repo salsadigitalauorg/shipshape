@@ -12,6 +12,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestDbPermissionsInit(t *testing.T) {
+	assert := assert.New(t)
+
+	c := drupal.DbPermissionsCheck{}
+	c.Init(drupal.DbPermissions)
+	assert.Equal("role:list", c.Command)
+	assert.Equal("permissions", c.ConfigName)
+}
+
 func TestDbPermissionsMerge(t *testing.T) {
 	assert := assert.New(t)
 
@@ -50,25 +59,22 @@ func TestDbPermissionsMerge(t *testing.T) {
 	}, c)
 }
 
-func TestDbPermissionsCheck(t *testing.T) {
+func TestDbPermissionsUnmarshalDataMap(t *testing.T) {
 	assert := assert.New(t)
 
-	// Test init.
-	c := drupal.DbPermissionsCheck{}
-	c.Init(drupal.DbPermissions)
-	assert.Equal("role:list", c.Command)
-	assert.Equal("permissions", c.ConfigName)
+	t.Run("noDataProvided", func(t *testing.T) {
+		c := drupal.DbPermissionsCheck{}
+		c.UnmarshalDataMap()
+		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Empty(c.Result.Passes)
+		assert.ElementsMatch([]string{"no data provided"}, c.Result.Failures)
+	})
 
-	c.UnmarshalDataMap()
-	assert.Equal(shipshape.Fail, c.Result.Status)
-	assert.Empty(c.Result.Passes)
-	assert.ElementsMatch([]string{"no data provided"}, c.Result.Failures)
-
-	// Test UnmarshalDataMap.
-	c = drupal.DbPermissionsCheck{}
-	c.Init(drupal.DbPermissions)
-	c.DataMap = map[string][]byte{
-		"permissions": []byte(`
+	t.Run("validData", func(t *testing.T) {
+		c := drupal.DbPermissionsCheck{}
+		c.Init(drupal.DbPermissions)
+		c.DataMap = map[string][]byte{
+			"permissions": []byte(`
 site_administrator:
   label: 'Site Administrator'
   perms: {  }
@@ -86,111 +92,121 @@ site_editor:
   label: 'Site Editor'
   perms: {  }
 `),
-	}
-	c.UnmarshalDataMap()
-	assert.NotEqual(shipshape.Fail, c.Result.Status)
-	assert.EqualValues(map[string]drupal.DrushRole{
-		"anonymous": {
-			Label: "Anonymous user",
-			Perms: []string{"access content", "view media"},
-		},
-		"authenticated": {
-			Label: "Authenticated user",
-			Perms: []string{"access content", "view media"},
-		},
-		"site_administrator": {
-			Label: "Site Administrator",
-			Perms: []string(nil),
-		},
-		"site_editor": {
-			Label: "Site Editor",
-			Perms: []string(nil),
-		},
-	}, c.Permissions)
-
-	// Test RunCheck.
-	c = drupal.DbPermissionsCheck{}
-	c.Init(drupal.DbPermissions)
-	c.RunCheck(false)
-	assert.Equal(shipshape.Fail, c.Result.Status)
-	assert.Empty(c.Result.Passes)
-	assert.ElementsMatch(
-		[]string{"list of disallowed perms not provided"},
-		c.Result.Failures,
-	)
-
-	c = drupal.DbPermissionsCheck{}
-	c.Init(drupal.DbPermissions)
-	c.Permissions = map[string]drupal.DrushRole{
-		"anonymous": {
-			Label: "Anonymous user",
-			Perms: []string{"access content", "view media"},
-		},
-		"authenticated": {
-			Label: "Authenticated user",
-			Perms: []string{"access content", "view media"},
-		},
-		"site_administrator": {
-			Label: "Site Administrator",
-			Perms: []string(nil),
-		},
-		"site_editor": {
-			Label: "Site Editor",
-			Perms: []string(nil),
-		},
-	}
-	c.Disallowed = []string{"administer modules"}
-	c.RunCheck(false)
-	c.Result.Sort()
-	assert.Equal(shipshape.Pass, c.Result.Status)
-	assert.Empty(c.Result.Failures)
-	assert.ElementsMatch([]string{
-		"[anonymous] no disallowed permissions",
-		"[authenticated] no disallowed permissions",
-		"[site_administrator] no disallowed permissions",
-		"[site_editor] no disallowed permissions",
-	}, c.Result.Passes)
-
-	c = drupal.DbPermissionsCheck{}
-	c.Init(drupal.DbPermissions)
-	c.Permissions = map[string]drupal.DrushRole{
-		"anonymous": {
-			Label: "Anonymous user",
-			Perms: []string{"access content", "view media"},
-		},
-		"authenticated": {
-			Label: "Authenticated user",
-			Perms: []string{"access content", "view media"},
-		},
-		"site_administrator": {
-			Label: "Site Administrator",
-			Perms: []string{"administer modules", "administer permissions"},
-		},
-		"another_site_administrator": {
-			Label: "Site Administrator",
-			Perms: []string{"administer modules", "administer permissions"},
-		},
-		"site_editor": {
-			Label: "Site Editor",
-			Perms: []string{"administer modules"},
-		},
-	}
-	c.Disallowed = []string{"administer modules", "administer permissions"}
-	c.ExcludeRoles = []string{"another_site_administrator"}
-	c.RunCheck(false)
-	c.Result.Sort()
-	assert.Equal(shipshape.Fail, c.Result.Status)
-	assert.ElementsMatch([]string{
-		"[anonymous] no disallowed permissions",
-		"[authenticated] no disallowed permissions",
-	}, c.Result.Passes)
-	assert.ElementsMatch([]string{
-		"[site_administrator] disallowed permissions: [administer modules, administer permissions]",
-		"[site_editor] disallowed permissions: [administer modules]",
-	}, c.Result.Failures)
+		}
+		c.UnmarshalDataMap()
+		assert.NotEqual(shipshape.Fail, c.Result.Status)
+		assert.EqualValues(map[string]drupal.DrushRole{
+			"anonymous": {
+				Label: "Anonymous user",
+				Perms: []string{"access content", "view media"},
+			},
+			"authenticated": {
+				Label: "Authenticated user",
+				Perms: []string{"access content", "view media"},
+			},
+			"site_administrator": {
+				Label: "Site Administrator",
+				Perms: []string(nil),
+			},
+			"site_editor": {
+				Label: "Site Editor",
+				Perms: []string(nil),
+			},
+		}, c.Permissions)
+	})
 }
 
-func TestDbPermissionsCheckRemediate(t *testing.T) {
+func TestDbPermissionsRunCheck(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("disallowedNotProvided", func(t *testing.T) {
+		c := drupal.DbPermissionsCheck{}
+		c.Init(drupal.DbPermissions)
+		c.RunCheck(false)
+		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Empty(c.Result.Passes)
+		assert.ElementsMatch(
+			[]string{"list of disallowed perms not provided"},
+			c.Result.Failures,
+		)
+	})
+
+	t.Run("noBreaches", func(t *testing.T) {
+		c := drupal.DbPermissionsCheck{}
+		c.Init(drupal.DbPermissions)
+		c.Permissions = map[string]drupal.DrushRole{
+			"anonymous": {
+				Label: "Anonymous user",
+				Perms: []string{"access content", "view media"},
+			},
+			"authenticated": {
+				Label: "Authenticated user",
+				Perms: []string{"access content", "view media"},
+			},
+			"site_administrator": {
+				Label: "Site Administrator",
+				Perms: []string(nil),
+			},
+			"site_editor": {
+				Label: "Site Editor",
+				Perms: []string(nil),
+			},
+		}
+		c.Disallowed = []string{"administer modules"}
+		c.RunCheck(false)
+		c.Result.Sort()
+		assert.Equal(shipshape.Pass, c.Result.Status)
+		assert.Empty(c.Result.Failures)
+		assert.ElementsMatch([]string{
+			"[anonymous] no disallowed permissions",
+			"[authenticated] no disallowed permissions",
+			"[site_administrator] no disallowed permissions",
+			"[site_editor] no disallowed permissions",
+		}, c.Result.Passes)
+	})
+
+	t.Run("hasSomeBreaches", func(t *testing.T) {
+		c := drupal.DbPermissionsCheck{}
+		c.Init(drupal.DbPermissions)
+		c.Permissions = map[string]drupal.DrushRole{
+			"anonymous": {
+				Label: "Anonymous user",
+				Perms: []string{"access content", "view media"},
+			},
+			"authenticated": {
+				Label: "Authenticated user",
+				Perms: []string{"access content", "view media"},
+			},
+			"site_administrator": {
+				Label: "Site Administrator",
+				Perms: []string{"administer modules", "administer permissions"},
+			},
+			"another_site_administrator": {
+				Label: "Site Administrator",
+				Perms: []string{"administer modules", "administer permissions"},
+			},
+			"site_editor": {
+				Label: "Site Editor",
+				Perms: []string{"administer modules"},
+			},
+		}
+		c.Disallowed = []string{"administer modules", "administer permissions"}
+		c.ExcludeRoles = []string{"another_site_administrator"}
+		c.RunCheck(false)
+		c.Result.Sort()
+		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.ElementsMatch([]string{
+			"[anonymous] no disallowed permissions",
+			"[authenticated] no disallowed permissions",
+		}, c.Result.Passes)
+		assert.ElementsMatch([]string{
+			"[site_administrator] disallowed permissions: [administer modules, administer permissions]",
+			"[site_editor] disallowed permissions: [administer modules]",
+		}, c.Result.Failures)
+	})
+}
+
+func TestDbPermissionsRemediate(t *testing.T) {
 	assert := assert.New(t)
 
 	curShellCommander := command.ShellCommander
