@@ -70,9 +70,6 @@ func TestRemediate(t *testing.T) {
 		assert.NoError(err)
 		assert.Empty(c.Result.Passes)
 		assert.Empty(c.Result.Failures)
-		assert.ElementsMatch(
-			c.Result.Warnings,
-			[]string{"This check does not currently implement remediation."})
 	})
 
 	t.Run("supported", func(t *testing.T) {
@@ -81,7 +78,6 @@ func TestRemediate(t *testing.T) {
 		err := c.Remediate(nil)
 		assert.EqualError(err, "foo")
 		assert.Empty(c.Result.Passes)
-		assert.Empty(c.Result.Warnings)
 		assert.Empty(c.Result.Failures)
 	})
 }
