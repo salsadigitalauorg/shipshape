@@ -13,6 +13,14 @@ var MockedExitStatus = 0
 var MockedStdout string
 var MockedStderr string
 
+type TestShellCommand struct {
+	OutputterFunc func() ([]byte, error)
+}
+
+func (sc TestShellCommand) Output() ([]byte, error) {
+	return sc.OutputterFunc()
+}
+
 func FakeExecCommand(command string, args ...string) *exec.Cmd {
 	FakeCommandArgs = args
 	cs := []string{"-test.run=TestExecCommandHelper", "--", command}

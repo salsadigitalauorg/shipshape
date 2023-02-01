@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
@@ -47,31 +48,45 @@ func TestUserRoleMerge(t *testing.T) {
 func TestFetchData(t *testing.T) {
 	assert := assert.New(t)
 
-	// drush not found.
-	c := drupal.UserRoleCheck{}
-	c.FetchData()
-	assert.Equal(shipshape.Fail, c.Result.Status)
-	assert.EqualValues([]string{"vendor/drush/drush/drush: no such file or directory"}, c.Result.Failures)
+	t.Run("drushNotFound", func(t *testing.T) {
+		c := drupal.UserRoleCheck{}
+		c.FetchData()
+		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.EqualValues([]string{"vendor/drush/drush/drush: no such file or directory"}, c.Result.Failures)
 
-	// drush error.
-	drupal.ExecCommand = internal.FakeExecCommand
-	defer func() { drupal.ExecCommand = exec.Command }()
-	internal.MockedExitStatus = 1
-	internal.MockedStderr = "unable to run drush command"
-	c = drupal.UserRoleCheck{}
-	c.FetchData()
-	assert.Equal(shipshape.Fail, c.Result.Status)
-	assert.EqualValues([]string{"unable to run drush command"}, c.Result.Failures)
+	})
+
+	curShellCommander := command.ShellCommander
+	defer func() { command.ShellCommander = curShellCommander }()
+	t.Run("drushError", func(t *testing.T) {
+		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
+			return internal.TestShellCommand{
+				OutputterFunc: func() ([]byte, error) {
+					return nil, &exec.ExitError{Stderr: []byte("unable to run drush command")}
+				},
+			}
+		}
+		c := drupal.UserRoleCheck{}
+		c.FetchData()
+		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.EqualValues([]string{"unable to run drush command"}, c.Result.Failures)
+	})
 
 	// correct data.
-	internal.MockedExitStatus = 0
-	internal.MockedStderr = ""
-	internal.MockedStdout = `{"1":{"roles":["authenticated"]}}`
-	c = drupal.UserRoleCheck{}
-	c.FetchData()
-	assert.NotEqual(shipshape.Fail, c.Result.Status)
-	assert.NotEqual(shipshape.Pass, c.Result.Status)
-	assert.Equal(internal.MockedStdout, string(c.DataMap["user-info"]))
+	t.Run("correctData", func(t *testing.T) {
+		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
+			return internal.TestShellCommand{
+				OutputterFunc: func() ([]byte, error) {
+					return []byte(`{"1":{"roles":["authenticated"]}}`), nil
+				},
+			}
+		}
+		c := drupal.UserRoleCheck{}
+		c.FetchData()
+		assert.NotEqual(shipshape.Fail, c.Result.Status)
+		assert.NotEqual(shipshape.Pass, c.Result.Status)
+		assert.Equal([]byte(`{"1":{"roles":["authenticated"]}}`), c.DataMap["user-info"])
+	})
 }
 
 func TestUnmarshalData(t *testing.T) {

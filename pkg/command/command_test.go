@@ -4,17 +4,10 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/stretchr/testify/assert"
 )
-
-type myShellCommand struct {
-	OutputterFunc func() ([]byte, error)
-}
-
-func (sc myShellCommand) Output() ([]byte, error) {
-	return sc.OutputterFunc()
-}
 
 func myFuncThatUsesExecCmd() ([]byte, error) {
 	cmd := command.ShellCommander("git", "rev-parse", "--abbrev-ref", "HEAD")
@@ -30,7 +23,7 @@ func TestExecReplacement(t *testing.T) {
 
 	t.Run("noError", func(t *testing.T) {
 		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-			return myShellCommand{
+			return internal.TestShellCommand{
 				OutputterFunc: func() ([]byte, error) {
 					return []byte("foo"), nil
 				},
@@ -44,7 +37,7 @@ func TestExecReplacement(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-			return myShellCommand{
+			return internal.TestShellCommand{
 				OutputterFunc: func() ([]byte, error) {
 					return []byte("foo"), errors.New("bar")
 				},
