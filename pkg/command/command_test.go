@@ -17,6 +17,23 @@ func myFuncThatUsesExecCmd() ([]byte, error) {
 func TestExecReplacement(t *testing.T) {
 	assert := assert.New(t)
 
+	t.Run("differentStruct", func(t *testing.T) {
+		cmd := command.ShellCommander("foo", "bar")
+		assert.IsType(command.ExecShellCommand{}, cmd)
+
+		curShellCommander := command.ShellCommander
+		defer func() { command.ShellCommander = curShellCommander }()
+		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
+			return internal.TestShellCommand{
+				OutputterFunc: func() ([]byte, error) {
+					return nil, nil
+				},
+			}
+		}
+		cmd2 := command.ShellCommander("foo", "bar")
+		assert.IsType(internal.TestShellCommand{}, cmd2)
+	})
+
 	// temporarily swap the shell commander
 	curShellCommander := command.ShellCommander
 	defer func() { command.ShellCommander = curShellCommander }()
