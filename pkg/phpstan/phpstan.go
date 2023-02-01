@@ -146,7 +146,7 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 }
 
 // RunCheck processes the parsed data and populates the errors, if any.
-func (c *PhpStanCheck) RunCheck() {
+func (c *PhpStanCheck) RunCheck(remediate bool) {
 	if c.phpstanResult.Totals.Errors == 0 && c.phpstanResult.Totals.FileErrors == 0 {
 		c.AddPass("no error found")
 		c.Result.Status = shipshape.Pass

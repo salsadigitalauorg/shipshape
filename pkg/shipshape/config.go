@@ -90,7 +90,7 @@ func (cfg *Config) FilterChecksToRun(checkTypesToRun []string, excludeDb bool) {
 	cfg.Checks = newCm
 }
 
-func (cfg *Config) RunChecks() ResultList {
+func (cfg *Config) RunChecks(remediate bool) ResultList {
 	rl := NewResultList(cfg)
 	var wg sync.WaitGroup
 	for ct, checks := range cfg.Checks {
@@ -101,7 +101,7 @@ func (cfg *Config) RunChecks() ResultList {
 			check := checks[i]
 			go func() {
 				defer wg.Done()
-				cfg.ProcessCheck(&rl, check)
+				cfg.ProcessCheck(&rl, check, remediate)
 			}()
 		}
 	}
@@ -110,7 +110,7 @@ func (cfg *Config) RunChecks() ResultList {
 	return rl
 }
 
-func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
+func (cfg *Config) ProcessCheck(rl *ResultList, c Check, remediate bool) {
 	if c.RequiresData() {
 		c.FetchData()
 		c.HasData(true)
@@ -119,7 +119,7 @@ func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
 		}
 	}
 	if len(c.GetResult().Failures) == 0 && len(c.GetResult().Passes) == 0 {
-		c.RunCheck()
+		c.RunCheck(remediate)
 		c.GetResult().Sort()
 	}
 	rl.AddResult(*c.GetResult())

@@ -27,9 +27,8 @@ type Check interface {
 	AddFail(msg string)
 	AddPass(msg string)
 	AddWarning(msg string)
-	RunCheck()
+	RunCheck(remediate bool)
 	GetResult() *Result
-	SupportsRemediation() bool
 	Remediate() error
 }
 
@@ -67,9 +66,9 @@ type CheckBase struct {
 
 // Result provides the structure for a Check's outcome.
 type Result struct {
-	Name      string      `json:"name"`
-	Severity  Severity    `json:"severity"`
-	CheckType CheckType   `json:"check-type"`
+	Name      string `json:"name"`
+	Severity  `json:"severity"`
+	CheckType `json:"check-type"`
 	Status    CheckStatus `json:"status"`
 	Passes    []string    `json:"passes"`
 	Failures  []string    `json:"failures"`

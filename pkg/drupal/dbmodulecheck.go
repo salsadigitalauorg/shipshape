@@ -25,6 +25,6 @@ func (c *DbModuleCheck) Merge(mergeCheck shipshape.Check) error {
 }
 
 // RunCheck applies the Check logic for Drupal Modules in database config.
-func (c *DbModuleCheck) RunCheck() {
+func (c *DbModuleCheck) RunCheck(remediate bool) {
 	CheckModulesInYaml(&c.YamlBase, DbModule, c.ConfigName, c.Required, c.Disallowed)
 }

@@ -84,7 +84,7 @@ func TestTrackingCodeCheckFails(t *testing.T) {
 	c.DrushStatus = drupal.DrushStatus{
 		Uri: "https://google.com",
 	}
-	c.RunCheck()
+	c.RunCheck(false)
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{"tracking code [UA-xxxxxx-1] not present"},
@@ -104,7 +104,7 @@ func TestTrackingCodeCheckPass(t *testing.T) {
 	c.DrushStatus = drupal.DrushStatus{
 		Uri: "https://gist.github.com/Pominova/cf7884e7418f6ebfa412d2d3dc472a97",
 	}
-	c.RunCheck()
+	c.RunCheck(false)
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{"tracking code [UA-xxxxxx-1] present"},

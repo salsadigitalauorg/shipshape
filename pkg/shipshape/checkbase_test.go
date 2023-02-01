@@ -43,7 +43,7 @@ func TestCheckBaseRunCheck(t *testing.T) {
 
 	c := shipshape.CheckBase{}
 	c.FetchData()
-	c.RunCheck()
+	c.RunCheck(false)
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues([]string{"not implemented"}, c.Result.Failures)
 }
@@ -56,20 +56,15 @@ type testCheckRemediationSupported struct {
 	shipshape.YamlBase `yaml:",inline"`
 }
 
-func (c *testCheckRemediationSupported) SupportsRemediation() bool {
-	return true
-}
-
 func (c *testCheckRemediationSupported) Remediate() error {
 	return errors.New("foo")
 }
 
-func TestSupportsRemediation(t *testing.T) {
+func TestRemediate(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("notSupported", func(t *testing.T) {
 		c := testCheckRemediationNotSupported{}
-		assert.False(c.SupportsRemediation())
 
 		err := c.Remediate()
 		assert.NoError(err)
@@ -82,7 +77,6 @@ func TestSupportsRemediation(t *testing.T) {
 
 	t.Run("supported", func(t *testing.T) {
 		c := testCheckRemediationSupported{}
-		assert.True(c.SupportsRemediation())
 
 		err := c.Remediate()
 		assert.EqualError(err, "foo")

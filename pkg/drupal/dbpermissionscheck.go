@@ -42,7 +42,7 @@ func (c *DbPermissionsCheck) UnmarshalDataMap() {
 }
 
 // RunCheck implements the Check logic for Drupal Permissions in database config.
-func (c *DbPermissionsCheck) RunCheck() {
+func (c *DbPermissionsCheck) RunCheck(remediate bool) {
 	if len(c.Disallowed) == 0 {
 		c.AddFail("list of disallowed perms not provided")
 	}

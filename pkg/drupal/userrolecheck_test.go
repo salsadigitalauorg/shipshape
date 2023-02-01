@@ -119,7 +119,7 @@ func TestRunCheck(t *testing.T) {
 		},
 	}
 	c.UnmarshalDataMap()
-	c.RunCheck()
+	c.RunCheck(false)
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues([]string{"no disallowed role provided"}, c.Result.Failures)
 
@@ -132,7 +132,7 @@ func TestRunCheck(t *testing.T) {
 		Roles: []string{"site-admin", "content-admin"},
 	}
 	c.UnmarshalDataMap()
-	c.RunCheck()
+	c.RunCheck(false)
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues([]string{"User 1 has disallowed roles: [site-admin, content-admin]"}, c.Result.Failures)
 
@@ -151,6 +151,6 @@ func TestRunCheck(t *testing.T) {
 		AllowedUsers: []int{2},
 	}
 	c.UnmarshalDataMap()
-	c.RunCheck()
+	c.RunCheck(false)
 	assert.Equal(shipshape.Pass, c.Result.Status)
 }

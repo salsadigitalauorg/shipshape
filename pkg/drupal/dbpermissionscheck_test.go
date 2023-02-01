@@ -107,7 +107,7 @@ site_editor:
 	// Test RunCheck.
 	c = drupal.DbPermissionsCheck{}
 	c.Init(drupal.DbPermissions)
-	c.RunCheck()
+	c.RunCheck(false)
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
@@ -136,7 +136,7 @@ site_editor:
 		},
 	}
 	c.Disallowed = []string{"administer modules"}
-	c.RunCheck()
+	c.RunCheck(false)
 	c.Result.Sort()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
@@ -173,7 +173,7 @@ site_editor:
 	}
 	c.Disallowed = []string{"administer modules", "administer permissions"}
 	c.ExcludeRoles = []string{"another_site_administrator"}
-	c.RunCheck()
+	c.RunCheck(false)
 	c.Result.Sort()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.ElementsMatch([]string{

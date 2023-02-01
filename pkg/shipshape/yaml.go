@@ -22,7 +22,7 @@ func (c *YamlBase) Merge(mergeCheck Check) error {
 }
 
 // RunCheck implements the base logic for running checks against Yaml data.
-func (c *YamlBase) RunCheck() {
+func (c *YamlBase) RunCheck(remediate bool) {
 	for configName := range c.DataMap {
 		c.processData(configName)
 	}

@@ -20,7 +20,7 @@ func (c *FileModuleCheck) Merge(mergeCheck shipshape.Check) error {
 }
 
 // RunCheck applies the Check logic for Drupal Modules in config files.
-func (c *FileModuleCheck) RunCheck() {
+func (c *FileModuleCheck) RunCheck(remediate bool) {
 	configName := filepath.Join(c.Path, c.File)
 	CheckModulesInYaml(&c.YamlBase, FileModule, configName, c.Required, c.Disallowed)
 }

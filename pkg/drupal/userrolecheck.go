@@ -103,7 +103,7 @@ func (c *UserRoleCheck) UnmarshalDataMap() {
 }
 
 // RunCheck implements the Check logic for disallowed user roles.
-func (c *UserRoleCheck) RunCheck() {
+func (c *UserRoleCheck) RunCheck(remediate bool) {
 	if len(c.Roles) == 0 {
 		c.AddFail("no disallowed role provided")
 		return

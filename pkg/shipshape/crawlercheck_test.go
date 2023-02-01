@@ -42,7 +42,7 @@ func TestCrawlerCheck(t *testing.T) {
 	}
 
 	c.Init(shipshape.File)
-	c.RunCheck()
+	c.RunCheck(false)
 	assert.ElementsMatch(
 		[]string{"Invalid response for: https://httpbin.org/not-found got 404"},
 		c.Result.Failures,
@@ -55,7 +55,7 @@ func TestCrawlerCheck(t *testing.T) {
 	}
 
 	c.Init(shipshape.File)
-	c.RunCheck()
+	c.RunCheck(false)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(
 		[]string{"All requests completed successfully"},

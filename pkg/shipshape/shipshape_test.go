@@ -96,7 +96,7 @@ checks:
 	assert.Equal("shipshape.extension.yml", yc2.File)
 	assert.True(*yc2.IgnoreMissing)
 
-	rl := cfg.RunChecks()
+	rl := cfg.RunChecks(false)
 	expectedRl := shipshape.ResultList{Results: []shipshape.Result{
 		{
 			Name:      "File check - Ignore missing",

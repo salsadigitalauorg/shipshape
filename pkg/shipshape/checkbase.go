@@ -92,10 +92,10 @@ func (c *CheckBase) AddWarning(msg string) {
 	c.Result.Warnings = append(c.Result.Warnings, msg)
 }
 
-// RunCheck contains the core logic for running the check and generating
-// the result.
+// RunCheck contains the core logic for running the check,
+// generating the result and remediating breaches.
 // This is where c.Result should be populated.
-func (c *CheckBase) RunCheck() {
+func (c *CheckBase) RunCheck(remediate bool) {
 	c.AddFail("not implemented")
 }
 
@@ -104,13 +104,7 @@ func (c *CheckBase) GetResult() *Result {
 	return &c.Result
 }
 
-// SupportsRemediation indicates whether the check supports remediation.
-func (c *CheckBase) SupportsRemediation() bool {
-	return false
-}
-
-// Remediate tries to fix the breach(es).
+// Remediate should implement the logic to fix the breach(es).
 func (c *CheckBase) Remediate() error {
-	c.AddWarning("This check does not currently implement remediation.")
 	return nil
 }
