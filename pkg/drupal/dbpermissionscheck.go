@@ -10,9 +10,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type breach struct {
-	role  string
-	perms string
+type DbPermissionsBreach struct {
+	Role  string
+	Perms string
 }
 
 // Init implementation for the DB-based permissions check.
@@ -69,8 +69,8 @@ func (c *DbPermissionsCheck) RunCheck(remediate bool) {
 		})
 
 		if remediate {
-			if err := c.Remediate(breach{role: r, perms: strings.Join(fails, ",")}); err != nil {
-				c.AddFail(fmt.Sprintf("[%s] failed to fix disallowed permissions: [%s]", r, strings.Join(fails, ", ")))
+			if err := c.Remediate(DbPermissionsBreach{Role: r, Perms: strings.Join(fails, ",")}); err != nil {
+				c.AddFail(fmt.Sprintf("[%s] failed to fix disallowed permissions [%s] due to error: %s", r, strings.Join(fails, ", "), err))
 			} else {
 				c.AddRemediation(fmt.Sprintf("[%s] fixed disallowed permissions: [%s]", r, strings.Join(fails, ", ")))
 			}
@@ -86,8 +86,8 @@ func (c *DbPermissionsCheck) RunCheck(remediate bool) {
 
 // Remediate attempts to fix a breach.
 func (c *DbPermissionsCheck) Remediate(breachIfc interface{}) error {
-	b := breachIfc.(breach)
-	_, err := Drush(c.DrushPath, c.Alias, []string{"role:perm:remove", b.role, b.perms}).Exec()
+	b := breachIfc.(DbPermissionsBreach)
+	_, err := Drush(c.DrushPath, c.Alias, []string{"role:perm:remove", b.Role, b.Perms}).Exec()
 	if err != nil {
 		return err
 	}

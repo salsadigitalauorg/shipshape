@@ -1,8 +1,12 @@
 package drupal_test
 
 import (
+	"os/exec"
+	"strings"
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
@@ -186,7 +190,40 @@ site_editor:
 	}, c.Result.Failures)
 }
 
-// func TestDbPermissionsCheckRemediate(t *testing.T) {
-// 	assert := assert.New(t)
+func TestDbPermissionsCheckRemediate(t *testing.T) {
+	assert := assert.New(t)
 
-// }
+	curShellCommander := command.ShellCommander
+	defer func() { command.ShellCommander = curShellCommander }()
+
+	t.Run("drushError", func(t *testing.T) {
+		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
+			return internal.TestShellCommand{
+				OutputterFunc: func() ([]byte, error) {
+					return nil, &exec.ExitError{Stderr: []byte("unable to run drush command")}
+				},
+			}
+		}
+
+		c := drupal.DbPermissionsCheck{}
+		err := c.Remediate(drupal.DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
+		assert.Error(err, "unable to run drush command")
+	})
+
+	t.Run("drushCommandIsCorrect", func(t *testing.T) {
+		var generatedCommand string
+		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
+			return internal.TestShellCommand{
+				OutputterFunc: func() ([]byte, error) {
+					fullCmd := append([]string{name}, arg...)
+					generatedCommand = strings.Join(fullCmd, " ")
+					return nil, nil
+				},
+			}
+		}
+
+		c := drupal.DbPermissionsCheck{}
+		c.Remediate(drupal.DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
+		assert.Equal("vendor/drush/drush/drush role:perm:remove foo bar,baz", generatedCommand)
+	})
+}
