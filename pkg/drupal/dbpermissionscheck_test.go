@@ -2,12 +2,12 @@ package drupal_test
 
 import (
 	"os/exec"
-	"strings"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	shipshape_internal "github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
 )
@@ -117,93 +117,144 @@ site_editor:
 }
 
 func TestDbPermissionsRunCheck(t *testing.T) {
-	assert := assert.New(t)
+	tests := []shipshape_internal.RunCheckTest{
+		{
+			Name:         "disallowedNotProvided",
+			Check:        &drupal.DbPermissionsCheck{},
+			Init:         true,
+			ExpectStatus: shipshape.Fail,
+			ExpectNoPass: true,
+			ExpectFails:  []string{"list of disallowed perms not provided"},
+		},
+		{
+			Name: "noBreaches",
+			Check: &drupal.DbPermissionsCheck{
+				Permissions: map[string]drupal.DrushRole{
+					"anonymous": {
+						Label: "Anonymous user",
+						Perms: []string{"access content", "view media"},
+					},
+					"authenticated": {
+						Label: "Authenticated user",
+						Perms: []string{"access content", "view media"},
+					},
+					"site_administrator": {
+						Label: "Site Administrator",
+						Perms: []string(nil),
+					},
+					"site_editor": {
+						Label: "Site Editor",
+						Perms: []string(nil),
+					},
+				},
+				Disallowed: []string{"administer modules"},
+			},
+			Init:         true,
+			Sort:         true,
+			ExpectStatus: shipshape.Pass,
+			ExpectPasses: []string{
+				"[anonymous] no disallowed permissions",
+				"[authenticated] no disallowed permissions",
+				"[site_administrator] no disallowed permissions",
+				"[site_editor] no disallowed permissions",
+			},
+			ExpectNoFail: true,
+		},
+		{
+			Name: "hasSomeBreaches",
+			Check: &drupal.DbPermissionsCheck{
+				Permissions: map[string]drupal.DrushRole{
+					"anonymous": {
+						Label: "Anonymous user",
+						Perms: []string{"access content", "view media"},
+					},
+					"authenticated": {
+						Label: "Authenticated user",
+						Perms: []string{"access content", "view media"},
+					},
+					"site_administrator": {
+						Label: "Site Administrator",
+						Perms: []string{"administer modules", "administer permissions"},
+					},
+					"another_site_administrator": {
+						Label: "Site Administrator",
+						Perms: []string{"administer modules", "administer permissions"},
+					},
+					"site_editor": {
+						Label: "Site Editor",
+						Perms: []string{"administer modules"},
+					},
+				},
+				Disallowed:   []string{"administer modules", "administer permissions"},
+				ExcludeRoles: []string{"another_site_administrator"},
+			},
+			Init:         true,
+			Sort:         true,
+			ExpectStatus: shipshape.Fail,
+			ExpectPasses: []string{
+				"[anonymous] no disallowed permissions",
+				"[authenticated] no disallowed permissions",
+			},
+			ExpectFails: []string{
+				"[site_administrator] disallowed permissions: [administer modules, administer permissions]",
+				"[site_editor] disallowed permissions: [administer modules]",
+			},
+		},
+		{
+			Name: "breachRemediation",
+			Check: &drupal.DbPermissionsCheck{
+				Permissions: map[string]drupal.DrushRole{
+					"anonymous": {
+						Label: "Anonymous user",
+						Perms: []string{"access content", "view media"},
+					},
+					"authenticated": {
+						Label: "Authenticated user",
+						Perms: []string{"access content", "view media"},
+					},
+					"site_administrator": {
+						Label: "Site Administrator",
+						Perms: []string{"administer modules", "administer permissions"},
+					},
+					"another_site_administrator": {
+						Label: "Site Administrator",
+						Perms: []string{"administer modules", "administer permissions"},
+					},
+					"site_editor": {
+						Label: "Site Editor",
+						Perms: []string{"administer modules"},
+					},
+				},
+				Disallowed:   []string{"administer modules", "administer permissions"},
+				ExcludeRoles: []string{"another_site_administrator"},
+			},
+			Init: true,
+			PreRun: func(t *testing.T) {
+				command.ShellCommander = internal.DumbShellCommander
+			},
+			Remediate:    true,
+			Sort:         true,
+			ExpectStatus: shipshape.Pass,
+			ExpectPasses: []string{
+				"[anonymous] no disallowed permissions",
+				"[authenticated] no disallowed permissions",
+			},
+			ExpectNoFail: true,
+			ExpectRemediations: []string{
+				"[site_administrator] fixed disallowed permissions: [administer modules, administer permissions]",
+				"[site_editor] fixed disallowed permissions: [administer modules]",
+			},
+		},
+	}
 
-	t.Run("disallowedNotProvided", func(t *testing.T) {
-		c := drupal.DbPermissionsCheck{}
-		c.Init(drupal.DbPermissions)
-		c.RunCheck(false)
-		assert.Equal(shipshape.Fail, c.Result.Status)
-		assert.Empty(c.Result.Passes)
-		assert.ElementsMatch(
-			[]string{"list of disallowed perms not provided"},
-			c.Result.Failures,
-		)
-	})
+	curShellCommander := command.ShellCommander
+	defer func() { command.ShellCommander = curShellCommander }()
 
-	t.Run("noBreaches", func(t *testing.T) {
-		c := drupal.DbPermissionsCheck{}
-		c.Init(drupal.DbPermissions)
-		c.Permissions = map[string]drupal.DrushRole{
-			"anonymous": {
-				Label: "Anonymous user",
-				Perms: []string{"access content", "view media"},
-			},
-			"authenticated": {
-				Label: "Authenticated user",
-				Perms: []string{"access content", "view media"},
-			},
-			"site_administrator": {
-				Label: "Site Administrator",
-				Perms: []string(nil),
-			},
-			"site_editor": {
-				Label: "Site Editor",
-				Perms: []string(nil),
-			},
-		}
-		c.Disallowed = []string{"administer modules"}
-		c.RunCheck(false)
-		c.Result.Sort()
-		assert.Equal(shipshape.Pass, c.Result.Status)
-		assert.Empty(c.Result.Failures)
-		assert.ElementsMatch([]string{
-			"[anonymous] no disallowed permissions",
-			"[authenticated] no disallowed permissions",
-			"[site_administrator] no disallowed permissions",
-			"[site_editor] no disallowed permissions",
-		}, c.Result.Passes)
-	})
-
-	t.Run("hasSomeBreaches", func(t *testing.T) {
-		c := drupal.DbPermissionsCheck{}
-		c.Init(drupal.DbPermissions)
-		c.Permissions = map[string]drupal.DrushRole{
-			"anonymous": {
-				Label: "Anonymous user",
-				Perms: []string{"access content", "view media"},
-			},
-			"authenticated": {
-				Label: "Authenticated user",
-				Perms: []string{"access content", "view media"},
-			},
-			"site_administrator": {
-				Label: "Site Administrator",
-				Perms: []string{"administer modules", "administer permissions"},
-			},
-			"another_site_administrator": {
-				Label: "Site Administrator",
-				Perms: []string{"administer modules", "administer permissions"},
-			},
-			"site_editor": {
-				Label: "Site Editor",
-				Perms: []string{"administer modules"},
-			},
-		}
-		c.Disallowed = []string{"administer modules", "administer permissions"}
-		c.ExcludeRoles = []string{"another_site_administrator"}
-		c.RunCheck(false)
-		c.Result.Sort()
-		assert.Equal(shipshape.Fail, c.Result.Status)
-		assert.ElementsMatch([]string{
-			"[anonymous] no disallowed permissions",
-			"[authenticated] no disallowed permissions",
-		}, c.Result.Passes)
-		assert.ElementsMatch([]string{
-			"[site_administrator] disallowed permissions: [administer modules, administer permissions]",
-			"[site_editor] disallowed permissions: [administer modules]",
-		}, c.Result.Failures)
-	})
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			shipshape_internal.TestRunCheck(t, test)
+		})
+	}
 }
 
 func TestDbPermissionsRemediate(t *testing.T) {
@@ -213,13 +264,10 @@ func TestDbPermissionsRemediate(t *testing.T) {
 	defer func() { command.ShellCommander = curShellCommander }()
 
 	t.Run("drushError", func(t *testing.T) {
-		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-			return internal.TestShellCommand{
-				OutputterFunc: func() ([]byte, error) {
-					return nil, &exec.ExitError{Stderr: []byte("unable to run drush command")}
-				},
-			}
-		}
+		command.ShellCommander = internal.ShellCommanderMaker(
+			nil,
+			&exec.ExitError{Stderr: []byte("unable to run drush command")},
+			nil)
 
 		c := drupal.DbPermissionsCheck{}
 		err := c.Remediate(drupal.DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
@@ -228,15 +276,7 @@ func TestDbPermissionsRemediate(t *testing.T) {
 
 	t.Run("drushCommandIsCorrect", func(t *testing.T) {
 		var generatedCommand string
-		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-			return internal.TestShellCommand{
-				OutputterFunc: func() ([]byte, error) {
-					fullCmd := append([]string{name}, arg...)
-					generatedCommand = strings.Join(fullCmd, " ")
-					return nil, nil
-				},
-			}
-		}
+		command.ShellCommander = internal.ShellCommanderMaker(nil, nil, &generatedCommand)
 
 		c := drupal.DbPermissionsCheck{}
 		c.Remediate(drupal.DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
