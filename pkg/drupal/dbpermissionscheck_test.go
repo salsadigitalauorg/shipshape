@@ -4,10 +4,9 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
-	shipshape_internal "github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
 )
@@ -117,7 +116,7 @@ site_editor:
 }
 
 func TestDbPermissionsRunCheck(t *testing.T) {
-	tests := []shipshape_internal.RunCheckTest{
+	tests := []internal.RunCheckTest{
 		{
 			Name:         "disallowedNotProvided",
 			Check:        &drupal.DbPermissionsCheck{},
@@ -301,7 +300,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			shipshape_internal.TestRunCheck(t, test)
+			internal.TestRunCheck(t, test)
 		})
 	}
 }

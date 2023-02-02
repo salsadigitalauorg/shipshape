@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
+	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/stretchr/testify/assert"
 )
 

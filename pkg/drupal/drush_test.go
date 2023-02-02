@@ -4,9 +4,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/stretchr/testify/assert"
 )
 

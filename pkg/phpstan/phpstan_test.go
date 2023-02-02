@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
+	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/phpstan"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
