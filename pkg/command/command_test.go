@@ -2,6 +2,8 @@ package command_test
 
 import (
 	"errors"
+	"io/fs"
+	"os/exec"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/internal"
@@ -64,5 +66,29 @@ func TestExecReplacement(t *testing.T) {
 		out, err := myFuncThatUsesExecCmd()
 		assert.Equal([]byte("foo"), out)
 		assert.Error(err, "bar")
+	})
+}
+
+func TestGetMsgFromCommandError(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("pathError", func(t *testing.T) {
+		msg := command.GetMsgFromCommandError(&fs.PathError{
+			Path: "/path/to/bin",
+			Err:  errors.New("foo error"),
+		})
+		assert.Equal("/path/to/bin: foo error", msg)
+	})
+
+	t.Run("exitError", func(t *testing.T) {
+		msg := command.GetMsgFromCommandError(&exec.ExitError{
+			Stderr: []byte("some error"),
+		})
+		assert.Equal("some error", msg)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		msg := command.GetMsgFromCommandError(errors.New("basic error"))
+		assert.Equal("basic error", msg)
 	})
 }
