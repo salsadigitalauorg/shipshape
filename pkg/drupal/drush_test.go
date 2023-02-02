@@ -2,7 +2,6 @@ package drupal_test
 
 import (
 	"errors"
-	"strings"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/internal"
@@ -38,27 +37,14 @@ func TestDrushExec(t *testing.T) {
 
 	// Command not found.
 	t.Run("commandNotFound", func(t *testing.T) {
-		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-			return internal.TestShellCommand{
-				OutputterFunc: func() ([]byte, error) {
-					return nil, errors.New("bash: drushfoo: command not found")
-				},
-			}
-		}
-
+		command.ShellCommander = internal.ShellCommanderMaker(
+			nil, errors.New("bash: drushfoo: command not found"), nil)
 		_, err := drupal.Drush("", "", []string{"status"}).Exec()
 		assert.Error(err, "bash: drushfoo: command not found")
 	})
 
 	t.Run("ok", func(t *testing.T) {
-		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-			return internal.TestShellCommand{
-				OutputterFunc: func() ([]byte, error) {
-					return []byte("foobar"), nil
-				},
-			}
-		}
-
+		command.ShellCommander = internal.ShellCommanderMaker(&[]string{"foobar"}[0], nil, nil)
 		out, err := drupal.Drush("", "local", []string{"status"}).Exec()
 		assert.NoError(err)
 		assert.Equal([]byte("foobar"), out)
@@ -70,15 +56,10 @@ func TestDrushQuery(t *testing.T) {
 	curShellCommander := command.ShellCommander
 	defer func() { command.ShellCommander = curShellCommander }()
 
-	command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-		return internal.TestShellCommand{
-			OutputterFunc: func() ([]byte, error) {
-				return []byte(strings.Join(arg, ",")), nil
-			},
-		}
-	}
+	var generatedCommand string
+	command.ShellCommander = internal.ShellCommanderMaker(nil, nil, &generatedCommand)
 
-	cmd, err := drupal.Drush("", "", []string{}).Query("SELECT uid FROM users")
+	_, err := drupal.Drush("", "", []string{}).Query("SELECT uid FROM users")
 	assert.NoError(t, err)
-	assert.Equal(t, []byte("sql:query,SELECT uid FROM users"), cmd)
+	assert.Equal(t, "vendor/drush/drush/drush sql:query SELECT uid FROM users", generatedCommand)
 }

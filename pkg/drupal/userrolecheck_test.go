@@ -59,13 +59,11 @@ func TestFetchData(t *testing.T) {
 	curShellCommander := command.ShellCommander
 	defer func() { command.ShellCommander = curShellCommander }()
 	t.Run("drushError", func(t *testing.T) {
-		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-			return internal.TestShellCommand{
-				OutputterFunc: func() ([]byte, error) {
-					return nil, &exec.ExitError{Stderr: []byte("unable to run drush command")}
-				},
-			}
-		}
+		command.ShellCommander = internal.ShellCommanderMaker(
+			nil,
+			&exec.ExitError{Stderr: []byte("unable to run drush command")},
+			nil,
+		)
 		c := drupal.UserRoleCheck{}
 		c.FetchData()
 		assert.Equal(shipshape.Fail, c.Result.Status)
@@ -74,13 +72,11 @@ func TestFetchData(t *testing.T) {
 
 	// correct data.
 	t.Run("correctData", func(t *testing.T) {
-		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-			return internal.TestShellCommand{
-				OutputterFunc: func() ([]byte, error) {
-					return []byte(`{"1":{"roles":["authenticated"]}}`), nil
-				},
-			}
-		}
+		command.ShellCommander = internal.ShellCommanderMaker(
+			&[]string{`{"1":{"roles":["authenticated"]}}`}[0],
+			nil,
+			nil,
+		)
 		c := drupal.UserRoleCheck{}
 		c.FetchData()
 		assert.NotEqual(shipshape.Fail, c.Result.Status)

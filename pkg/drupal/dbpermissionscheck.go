@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
@@ -70,12 +71,18 @@ func (c *DbPermissionsCheck) RunCheck(remediate bool) {
 
 		if remediate {
 			if err := c.Remediate(DbPermissionsBreach{Role: r, Perms: strings.Join(fails, ",")}); err != nil {
-				c.AddFail(fmt.Sprintf("[%s] failed to fix disallowed permissions [%s] due to error: %s", r, strings.Join(fails, ", "), err))
+				c.AddFail(fmt.Sprintf(
+					"[%s] failed to fix disallowed permissions [%s] due to error: %s",
+					r, strings.Join(fails, ", "), command.GetMsgFromCommandError(err)))
 			} else {
-				c.AddRemediation(fmt.Sprintf("[%s] fixed disallowed permissions: [%s]", r, strings.Join(fails, ", ")))
+				c.AddRemediation(fmt.Sprintf(
+					"[%s] fixed disallowed permissions: [%s]",
+					r, strings.Join(fails, ", ")))
 			}
 		} else {
-			c.AddFail(fmt.Sprintf("[%s] disallowed permissions: [%s]", r, strings.Join(fails, ", ")))
+			c.AddFail(fmt.Sprintf(
+				"[%s] disallowed permissions: [%s]",
+				r, strings.Join(fails, ", ")))
 		}
 	}
 

@@ -87,13 +87,11 @@ func TestDrushYamlCheck(t *testing.T) {
 			ConfigName: "core.extension",
 		}
 
-		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-			return internal.TestShellCommand{
-				OutputterFunc: func() ([]byte, error) {
-					return nil, &exec.ExitError{Stderr: []byte("unable to run drush command")}
-				},
-			}
-		}
+		command.ShellCommander = internal.ShellCommanderMaker(
+			nil,
+			&exec.ExitError{Stderr: []byte("unable to run drush command")},
+			nil,
+		)
 
 		c.FetchData()
 		assert.Equal(shipshape.Fail, c.Result.Status)
@@ -105,20 +103,18 @@ func TestDrushYamlCheck(t *testing.T) {
 	})
 
 	t.Run("drushOK", func(t *testing.T) {
-		stdout := []byte(`
+		stdout := `
 module:
   block: 0
   views_ui: 0
 
-`)
+`
 
-		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-			return internal.TestShellCommand{
-				OutputterFunc: func() ([]byte, error) {
-					return stdout, nil
-				},
-			}
-		}
+		command.ShellCommander = internal.ShellCommanderMaker(
+			&stdout,
+			nil,
+			nil,
+		)
 
 		c := drupal.DrushYamlCheck{
 			Command:    "status",

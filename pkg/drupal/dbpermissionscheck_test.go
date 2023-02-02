@@ -230,7 +230,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			},
 			Init: true,
 			PreRun: func(t *testing.T) {
-				command.ShellCommander = internal.DumbShellCommander
+				command.ShellCommander = internal.ShellCommanderMaker(nil, nil, nil)
 			},
 			Remediate:    true,
 			Sort:         true,
@@ -244,6 +244,55 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 				"[site_administrator] fixed disallowed permissions: [administer modules, administer permissions]",
 				"[site_editor] fixed disallowed permissions: [administer modules]",
 			},
+		},
+		{
+			Name: "breachRemediationExitError",
+			Check: &drupal.DbPermissionsCheck{
+				Permissions: map[string]drupal.DrushRole{
+					"anonymous": {
+						Label: "Anonymous user",
+						Perms: []string{"access content", "view media"},
+					},
+					"authenticated": {
+						Label: "Authenticated user",
+						Perms: []string{"access content", "view media"},
+					},
+					"site_administrator": {
+						Label: "Site Administrator",
+						Perms: []string{"administer modules", "administer permissions"},
+					},
+					"another_site_administrator": {
+						Label: "Site Administrator",
+						Perms: []string{"administer modules", "administer permissions"},
+					},
+					"site_editor": {
+						Label: "Site Editor",
+						Perms: []string{"administer modules"},
+					},
+				},
+				Disallowed:   []string{"administer modules", "administer permissions"},
+				ExcludeRoles: []string{"another_site_administrator"},
+			},
+			Init: true,
+			PreRun: func(t *testing.T) {
+				command.ShellCommander = internal.ShellCommanderMaker(
+					nil,
+					&exec.ExitError{Stderr: []byte("unable to run drush command")},
+					nil,
+				)
+			},
+			Remediate:    true,
+			Sort:         true,
+			ExpectStatus: shipshape.Fail,
+			ExpectPasses: []string{
+				"[anonymous] no disallowed permissions",
+				"[authenticated] no disallowed permissions",
+			},
+			ExpectFails: []string{
+				"[site_administrator] failed to fix disallowed permissions [administer modules, administer permissions] due to error: unable to run drush command",
+				"[site_editor] failed to fix disallowed permissions [administer modules] due to error: unable to run drush command",
+			},
+			ExpectNoRemediations: true,
 		},
 	}
 

@@ -14,16 +14,6 @@ func (sc TestShellCommand) Output() ([]byte, error) {
 	return sc.OutputterFunc()
 }
 
-// DumbShellCommander simply returns nil - can be used to simply override
-// commands where we don't expect anything from the output or err.
-var DumbShellCommander = func(name string, arg ...string) command.IShellCommand {
-	return TestShellCommand{
-		OutputterFunc: func() ([]byte, error) {
-			return nil, nil
-		},
-	}
-}
-
 // ShellCommanderMaker is a commander generator that can return the provided
 // stdout or stderr, and can also update a given variable with the generated
 // command.
