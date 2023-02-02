@@ -98,13 +98,10 @@ func TestFetchDataBinNotExists(t *testing.T) {
 
 	curShellCommander := command.ShellCommander
 	defer func() { command.ShellCommander = curShellCommander }()
-	command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-		return internal.TestShellCommand{
-			OutputterFunc: func() ([]byte, error) {
-				return nil, &exec.ExitError{Stderr: []byte("/my/custom/path/phpstan: no such file or directory")}
-			},
-		}
-	}
+	command.ShellCommander = internal.ShellCommanderMaker(
+		nil,
+		&exec.ExitError{Stderr: []byte("/my/custom/path/phpstan: no such file or directory")},
+		nil)
 
 	// Command not found.
 	c := phpstan.PhpStanCheck{
@@ -121,17 +118,11 @@ func TestFetchDataBinNotExists(t *testing.T) {
 func TestFetchDataBinExists(t *testing.T) {
 	assert := assert.New(t)
 
-	expectedStdout := []byte(`{"totals":{"errors":0,"file_errors":0},"files":[],"errors":[]}`)
+	expectedStdout := `{"totals":{"errors":0,"file_errors":0},"files":[],"errors":[]}`
 
 	curShellCommander := command.ShellCommander
 	defer func() { command.ShellCommander = curShellCommander }()
-	command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
-		return internal.TestShellCommand{
-			OutputterFunc: func() ([]byte, error) {
-				return expectedStdout, nil
-			},
-		}
-	}
+	command.ShellCommander = internal.ShellCommanderMaker(&expectedStdout, nil, nil)
 
 	c := phpstan.PhpStanCheck{
 		Bin:    "/my/custom/path/phpstan",
@@ -142,7 +133,7 @@ func TestFetchDataBinExists(t *testing.T) {
 
 	assert.NotEqual(shipshape.Pass, c.Result.Status)
 	assert.NotEqual(shipshape.Fail, c.Result.Status)
-	assert.Equal(expectedStdout, c.DataMap["phpstan"])
+	assert.Equal([]byte(expectedStdout), c.DataMap["phpstan"])
 }
 
 func TestUnmarshalDataMap(t *testing.T) {
