@@ -100,7 +100,7 @@ func (c *CheckBase) AddRemediation(msg string) {
 // RunCheck contains the core logic for running the check,
 // generating the result and remediating breaches.
 // This is where c.Result should be populated.
-func (c *CheckBase) RunCheck(remediate bool) {
+func (c *CheckBase) RunCheck() {
 	c.AddFail("not implemented")
 }
 

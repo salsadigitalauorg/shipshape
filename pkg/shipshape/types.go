@@ -28,7 +28,7 @@ type Check interface {
 	AddPass(msg string)
 	AddWarning(msg string)
 	AddRemediation(msg string)
-	RunCheck(remediate bool)
+	RunCheck()
 	GetResult() *Result
 	Remediate(breachIfc interface{}) error
 }
@@ -51,6 +51,7 @@ type Config struct {
 	// Default is high.
 	FailSeverity Severity `yaml:"fail-severity"`
 	Checks       CheckMap `yaml:"checks"`
+	Remediate    bool     `yaml:"remediate"`
 }
 
 // CheckBase provides the basic structure for all Checks.
@@ -62,7 +63,8 @@ type CheckBase struct {
 	DataMap    map[string][]byte `yaml:"-"`
 	Result     Result            `yaml:"-"`
 	// Default severity is normal.
-	Severity Severity `yaml:"severity"`
+	Severity           Severity `yaml:"severity"`
+	PerformRemediation bool     `yaml:"-"`
 }
 
 // Result provides the structure for a Check's outcome.

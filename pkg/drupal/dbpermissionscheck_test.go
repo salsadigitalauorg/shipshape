@@ -202,6 +202,13 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 		{
 			Name: "breachRemediation",
 			Check: &drupal.DbPermissionsCheck{
+				DrushYamlCheck: drupal.DrushYamlCheck{
+					YamlBase: shipshape.YamlBase{
+						CheckBase: shipshape.CheckBase{
+							PerformRemediation: true,
+						},
+					},
+				},
 				Permissions: map[string]drupal.DrushRole{
 					"anonymous": {
 						Label: "Anonymous user",
@@ -231,7 +238,6 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			PreRun: func(t *testing.T) {
 				command.ShellCommander = internal.ShellCommanderMaker(nil, nil, nil)
 			},
-			Remediate:    true,
 			Sort:         true,
 			ExpectStatus: shipshape.Pass,
 			ExpectPasses: []string{
@@ -247,6 +253,13 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 		{
 			Name: "breachRemediationExitError",
 			Check: &drupal.DbPermissionsCheck{
+				DrushYamlCheck: drupal.DrushYamlCheck{
+					YamlBase: shipshape.YamlBase{
+						CheckBase: shipshape.CheckBase{
+							PerformRemediation: true,
+						},
+					},
+				},
 				Permissions: map[string]drupal.DrushRole{
 					"anonymous": {
 						Label: "Anonymous user",
@@ -280,7 +293,6 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 					nil,
 				)
 			},
-			Remediate:    true,
 			Sort:         true,
 			ExpectStatus: shipshape.Fail,
 			ExpectPasses: []string{

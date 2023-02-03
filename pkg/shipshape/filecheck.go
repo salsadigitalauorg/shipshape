@@ -27,7 +27,7 @@ func (c *FileCheck) RequiresData() bool { return false }
 // RunCheck scans a directory for a list of disallowed files, while excluding
 // the provided regex ExcludePattern and skipping the list of provided relative
 // directories.
-func (c *FileCheck) RunCheck(remediate bool) {
+func (c *FileCheck) RunCheck() {
 	files, err := utils.FindFiles(filepath.Join(ProjectDir, c.Path), c.DisallowedPattern, c.ExcludePattern, c.SkipDir)
 	if err != nil {
 		c.AddFail(err.Error())

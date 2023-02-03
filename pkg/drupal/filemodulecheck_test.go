@@ -57,7 +57,7 @@ func TestFileModuleConfigName(t *testing.T) {
 		defer func() {
 			drupal.CheckModulesInYaml = origCheckModulesInYaml
 		}()
-		c.RunCheck(false)
+		c.RunCheck()
 		assert.Equal("foo.bar", configNameVal)
 	})
 
@@ -70,7 +70,7 @@ func TestFileModuleConfigName(t *testing.T) {
 		defer func() {
 			drupal.CheckModulesInYaml = origCheckModulesInYaml
 		}()
-		c.RunCheck(false)
+		c.RunCheck()
 		assert.Equal("/some/path/foo.bar", configNameVal)
 	})
 
@@ -83,7 +83,7 @@ func TestFileModuleConfigName(t *testing.T) {
 		defer func() {
 			drupal.CheckModulesInYaml = origCheckModulesInYaml
 		}()
-		c.RunCheck(false)
+		c.RunCheck()
 		assert.Equal("/some/path/foo.bar", configNameVal)
 	})
 }
@@ -103,7 +103,7 @@ func TestFileModuleCheck(t *testing.T) {
 	assert.True(*c.IgnoreMissing)
 
 	c.UnmarshalDataMap()
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(c.Result.Passes, []string{

@@ -83,7 +83,7 @@ func main() {
 		}
 	}
 
-	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFiles)
+	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFiles, remediate)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -98,7 +98,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	rl := cfg.RunChecks(remediate)
+	rl := cfg.RunChecks()
 
 	switch outputFormat {
 	case "json":

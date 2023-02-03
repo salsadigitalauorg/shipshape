@@ -84,7 +84,7 @@ foo:
 			{Key: "baz&*zoom", Value: "zap"},
 		},
 	}
-	c.RunCheck(false)
+	c.RunCheck()
 
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(
@@ -249,7 +249,7 @@ notification:
 
 	c = mockCheck()
 	c.UnmarshalDataMap()
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Failures))
 	assert.EqualValues([]string{"[data] 'check.interval_days' equals '7'"}, c.Result.Passes)
@@ -262,7 +262,7 @@ notification:
 			Value: "7",
 		},
 	}
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.EqualValues([]string{"[data] 'check.interval' not found"}, c.Result.Failures)
@@ -276,7 +276,7 @@ notification:
 		},
 	}
 	c.UnmarshalDataMap()
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.EqualValues([]string{"[data] 'check.interval_days' equals '7', expected '8'"}, c.Result.Failures)
@@ -294,7 +294,7 @@ notification:
 		},
 	}
 	c.UnmarshalDataMap()
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Failures))
 	assert.EqualValues(
@@ -328,7 +328,7 @@ efgh:
 		},
 	}
 	c.UnmarshalDataMap()
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.EqualValues([]string{"[data] disallowed *.some: [thing 2]"}, c.Result.Failures)
@@ -361,7 +361,7 @@ foo:
 	}
 	c := mockCheck()
 	c.UnmarshalDataMap()
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.EqualValues([]string{"[data] disallowed foo: [b, c]"}, c.Result.Failures)
@@ -369,7 +369,7 @@ foo:
 	c = mockCheck()
 	c.Values[0].Disallowed = []string{"e"}
 	c.UnmarshalDataMap()
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Failures))
 	assert.EqualValues([]string{"[data] no disallowed 'foo'"}, c.Result.Passes)

@@ -31,7 +31,7 @@ func (c *CrawlerCheck) Merge(mergeCheck Check) error {
 // to the project.
 //
 // @see https://github.com/gocolly/colly/tree/master/_examples
-func (c *CrawlerCheck) RunCheck(remediate bool) {
+func (c *CrawlerCheck) RunCheck() {
 	u, _ := url.Parse(c.Domain)
 
 	allowed_domains := []string{u.Host}

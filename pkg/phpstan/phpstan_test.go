@@ -183,7 +183,7 @@ func TestRunCheck(t *testing.T) {
 		},
 	}
 	c.UnmarshalDataMap()
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.EqualValues([]string{"no error found"}, c.Result.Passes)
 
@@ -196,7 +196,7 @@ func TestRunCheck(t *testing.T) {
 		},
 	}
 	c.UnmarshalDataMap()
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues([]string{"[/app/web/themes/custom/custom/test-theme/info.php] Line 3: Calling curl_exec() is forbidden, please change the code"}, c.Result.Failures)
 
@@ -209,7 +209,7 @@ func TestRunCheck(t *testing.T) {
 		},
 	}
 	c.UnmarshalDataMap()
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues([]string{"Error found in file foo"}, c.Result.Failures)
 }

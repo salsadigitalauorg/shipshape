@@ -48,7 +48,7 @@ func (c *BaseImageCheck) Merge(mergeCheck shipshape.Check) error {
 	return nil
 }
 
-func (c *BaseImageCheck) RunCheck(remediate bool) {
+func (c *BaseImageCheck) RunCheck() {
 	for _, path := range c.Paths {
 		composeFile := path + string(os.PathSeparator) + "docker-compose.yml"
 		bytes, err := os.ReadFile(composeFile)

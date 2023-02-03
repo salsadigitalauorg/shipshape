@@ -38,7 +38,7 @@ func TestDockerfileCheck(t *testing.T) {
 		Allowed: []string{"bitnami/kubectl"},
 		Paths:   []string{"./fixtures/compose-dockerfile"},
 	}
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.EqualValues(
 		[]string{"service1 is using valid base images"},
@@ -52,7 +52,7 @@ func TestInvalidDockerfileCheck(t *testing.T) {
 		Allowed: []string{"bitnami/redis"},
 		Paths:   []string{"./fixtures/compose-dockerfile"},
 	}
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]string{"service1 is using invalid base image bitnami/kubectl"},
@@ -71,7 +71,7 @@ func TestValidImage(t *testing.T) {
 		},
 		Paths: []string{"./fixtures/compose-image"},
 	}
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{
@@ -94,7 +94,7 @@ func TestInvalidImageCheck(t *testing.T) {
 		},
 		Paths: []string{"./fixtures/compose-image"},
 	}
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]string{"service4 is using invalid base image bitnami/mongodb"},
@@ -108,7 +108,7 @@ func TestDockerfileWarning(t *testing.T) {
 		Allowed: []string{"bitnami/kubectl"},
 		Paths:   []string{"./fixtures/compose-dockerfile-missing"},
 	}
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.EqualValues(
 		[]string{"Unable to find Dockerfile"},
@@ -123,7 +123,7 @@ func TestExcludeServiceSingle(t *testing.T) {
 		Exclude: []string{"service1"},
 		Paths:   []string{"./fixtures/compose-dockerfile"},
 	}
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.EqualValues(
 		[]string(nil),
@@ -142,7 +142,7 @@ func TestExcludeServiceMany(t *testing.T) {
 		Exclude: []string{"service3"},
 		Paths:   []string{"./fixtures/compose-image"},
 	}
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{
@@ -160,7 +160,7 @@ func TestDeprecatedImage(t *testing.T) {
 		Deprecated: []string{"bitnami/kubectl"},
 		Paths:      []string{"./fixtures/compose-dockerfile"},
 	}
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.EqualValues(
 		[]string{"service1 is using deprecated image bitnami/kubectl"},

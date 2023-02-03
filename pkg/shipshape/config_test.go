@@ -199,7 +199,7 @@ func TestRunChecks(t *testing.T) {
 		},
 	}
 
-	rl := cfg.RunChecks(false)
+	rl := cfg.RunChecks()
 	assert.Equal(uint32(2), rl.TotalChecks)
 	assert.Equal(uint32(2), rl.TotalBreaches)
 	assert.EqualValues(map[shipshape.CheckType]int{

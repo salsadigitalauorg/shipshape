@@ -15,8 +15,6 @@ type RunCheckTest struct {
 	Check shipshape.Check
 	// Initialise the check before testing.
 	Init bool
-	// Run the check with Remediate flag.
-	Remediate bool
 	// Sort the results after running the check.
 	Sort bool
 	// Func to run before running the check
@@ -45,7 +43,7 @@ func TestRunCheck(t *testing.T, ctest RunCheckTest) {
 	if ctest.PreRun != nil {
 		ctest.PreRun(t)
 	}
-	c.RunCheck(ctest.Remediate)
+	c.RunCheck()
 
 	r := c.GetResult()
 	if ctest.Sort {

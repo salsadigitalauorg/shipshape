@@ -39,4 +39,4 @@ func (c *YamlLintCheck) UnmarshalDataMap() {
 }
 
 // RunCheck for YamlLint does nothing since the check is in UnmarshalDataMap.
-func (c *YamlLintCheck) RunCheck(remediate bool) {}
+func (c *YamlLintCheck) RunCheck() {}

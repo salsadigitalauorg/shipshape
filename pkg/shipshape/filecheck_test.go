@@ -51,7 +51,7 @@ func TestFileCheckRunCheck(t *testing.T) {
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
 	c.Init(shipshape.File)
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(
@@ -64,7 +64,7 @@ func TestFileCheckRunCheck(t *testing.T) {
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
 	c.Init(shipshape.File)
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(
@@ -80,7 +80,7 @@ func TestFileCheckRunCheck(t *testing.T) {
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
 	c.Init(shipshape.File)
-	c.RunCheck(false)
+	c.RunCheck()
 
 	assert.Equal(shipshape.Pass, c.Result.Status)
 	assert.Equal(0, len(c.Result.Failures))

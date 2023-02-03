@@ -77,7 +77,7 @@ node:
 		}
 		c.Init(drupal.DbModule)
 		c.UnmarshalDataMap()
-		c.RunCheck(false)
+		c.RunCheck()
 		return c
 	}
 

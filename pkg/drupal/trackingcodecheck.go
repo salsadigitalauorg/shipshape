@@ -47,7 +47,7 @@ func (c *TrackingCodeCheck) UnmarshalDataMap() {
 	}
 }
 
-func (c *TrackingCodeCheck) RunCheck(remediate bool) {
+func (c *TrackingCodeCheck) RunCheck() {
 	resp, err := http.Get(c.DrushStatus.Uri)
 
 	if err != nil {

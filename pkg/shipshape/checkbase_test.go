@@ -43,7 +43,7 @@ func TestCheckBaseRunCheck(t *testing.T) {
 
 	c := shipshape.CheckBase{}
 	c.FetchData()
-	c.RunCheck(false)
+	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues([]string{"not implemented"}, c.Result.Failures)
 }
