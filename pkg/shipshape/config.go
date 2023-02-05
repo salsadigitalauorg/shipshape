@@ -64,6 +64,7 @@ func (cfg *Config) Init() {
 	for ct, checks := range cfg.Checks {
 		for _, c := range checks {
 			c.Init(ct)
+			c.SetPerformRemediation(cfg.Remediate)
 		}
 	}
 }

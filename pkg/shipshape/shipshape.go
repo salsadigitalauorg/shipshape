@@ -69,6 +69,8 @@ func ParseConfig(data []byte, projectDir string, remediate bool, cfg *Config) er
 		cfg.FailSeverity = HighSeverity
 	}
 
+	cfg.Remediate = remediate
+
 	return nil
 }
 

@@ -92,6 +92,11 @@ func (c *CheckBase) AddWarning(msg string) {
 	c.Result.Warnings = append(c.Result.Warnings, msg)
 }
 
+// SetPerformRemediation sets the flag for whether to remediate or not.
+func (c *CheckBase) SetPerformRemediation(flag bool) {
+	c.PerformRemediation = flag
+}
+
 // AddWarning appends a Warning message to the result.
 func (c *CheckBase) AddRemediation(msg string) {
 	c.Result.Remediations = append(c.Result.Remediations, msg)
