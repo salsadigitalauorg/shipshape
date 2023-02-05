@@ -158,21 +158,7 @@ func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
 		return
 	}
 
-	if rl.Status() == Pass && int(rl.TotalRemediations) == 0 {
-		fmt.Fprint(w, "Ship is in top shape; no breach detected!\n")
-		w.Flush()
-		return
-	} else if rl.Status() == Pass && int(rl.TotalRemediations) > 0 {
-		fmt.Fprintf(w, "Breaches were detected but were all fixed successfully!\n\n")
-		w.Flush()
-		return
-	}
-
-	if rl.RemediationPerformed && int(rl.TotalBreaches) > 0 {
-		fmt.Fprint(w, "Breaches were detected but not all of them could "+
-			"be fixed as they are either not supported yet or there were "+
-			"errors when trying to remediate.\n\n")
-		fmt.Fprint(w, "# Remediations\n\n")
+	printRemediations := func() {
 		for _, r := range rl.Results {
 			if len(r.Remediations) == 0 {
 				continue
@@ -183,7 +169,25 @@ func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
 			}
 			fmt.Fprintln(w)
 		}
+	}
 
+	if rl.Status() == Pass && int(rl.TotalRemediations) == 0 {
+		fmt.Fprint(w, "Ship is in top shape; no breach detected!\n")
+		w.Flush()
+		return
+	} else if rl.Status() == Pass && int(rl.TotalRemediations) > 0 {
+		fmt.Fprintf(w, "Breaches were detected but were all fixed successfully!\n\n")
+		printRemediations()
+		w.Flush()
+		return
+	}
+
+	if rl.RemediationPerformed && int(rl.TotalBreaches) > 0 {
+		fmt.Fprint(w, "Breaches were detected but not all of them could "+
+			"be fixed as they are either not supported yet or there were "+
+			"errors when trying to remediate.\n\n")
+		fmt.Fprint(w, "# Remediations\n\n")
+		printRemediations()
 		fmt.Fprint(w, "# Non-remediated breaches\n\n")
 	} else if !rl.RemediationPerformed {
 		fmt.Fprint(w, "# Breaches were detected\n\n")

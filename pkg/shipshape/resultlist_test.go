@@ -339,7 +339,8 @@ func TestResultListSimpleDisplay(t *testing.T) {
 		rl.Results = append(rl.Results, Result{Name: "a", Status: Pass, Remediations: []string{"fixed 1"}})
 		buf = bytes.Buffer{}
 		rl.SimpleDisplay(w)
-		assert.Equal("Breaches were detected but were all fixed successfully!\n\n", buf.String())
+		assert.Equal("Breaches were detected but were all fixed successfully!\n\n"+
+			"  ### a\n     -- fixed 1\n\n", buf.String())
 	})
 
 	t.Run("someBreachesRemediated", func(t *testing.T) {
