@@ -5,15 +5,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
+	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/phpstan"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestExecCommandHelper(t *testing.T) {
-	internal.TestExecCommandHelper(t)
-}
 
 func TestRegisterChecks(t *testing.T) {
 	checksMap := map[shipshape.CheckType]string{
@@ -98,14 +95,13 @@ func TestBinPathDefault(t *testing.T) {
 
 func TestFetchDataBinNotExists(t *testing.T) {
 	assert := assert.New(t)
-	phpstan.ExecCommand = internal.FakeExecCommand
-	internal.MockedExitStatus = 2
-	internal.MockedStderr = "/my/custom/path/phpstan: no such file or directory"
-	defer func() {
-		phpstan.ExecCommand = exec.Command
-		internal.MockedExitStatus = 0
-		internal.MockedStderr = ""
-	}()
+
+	curShellCommander := command.ShellCommander
+	defer func() { command.ShellCommander = curShellCommander }()
+	command.ShellCommander = internal.ShellCommanderMaker(
+		nil,
+		&exec.ExitError{Stderr: []byte("/my/custom/path/phpstan: no such file or directory")},
+		nil)
 
 	// Command not found.
 	c := phpstan.PhpStanCheck{
@@ -121,12 +117,12 @@ func TestFetchDataBinNotExists(t *testing.T) {
 
 func TestFetchDataBinExists(t *testing.T) {
 	assert := assert.New(t)
-	phpstan.ExecCommand = internal.FakeExecCommand
-	internal.MockedStdout = `{"totals":{"errors":0,"file_errors":0},"files":[],"errors":[]}`
-	defer func() {
-		phpstan.ExecCommand = exec.Command
-		internal.MockedStdout = ""
-	}()
+
+	expectedStdout := `{"totals":{"errors":0,"file_errors":0},"files":[],"errors":[]}`
+
+	curShellCommander := command.ShellCommander
+	defer func() { command.ShellCommander = curShellCommander }()
+	command.ShellCommander = internal.ShellCommanderMaker(&expectedStdout, nil, nil)
 
 	c := phpstan.PhpStanCheck{
 		Bin:    "/my/custom/path/phpstan",
@@ -137,7 +133,7 @@ func TestFetchDataBinExists(t *testing.T) {
 
 	assert.NotEqual(shipshape.Pass, c.Result.Status)
 	assert.NotEqual(shipshape.Fail, c.Result.Status)
-	assert.Equal(internal.MockedStdout, string(c.DataMap["phpstan"]))
+	assert.Equal([]byte(expectedStdout), c.DataMap["phpstan"])
 }
 
 func TestUnmarshalDataMap(t *testing.T) {

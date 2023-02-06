@@ -38,6 +38,7 @@ var (
 	checkTypesToRun    []string
 	excludeDb          bool
 	outputFormat       string
+	remediate          bool
 )
 
 func main() {
@@ -82,7 +83,7 @@ func main() {
 		}
 	}
 
-	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFiles)
+	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFiles, remediate)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -144,6 +145,7 @@ func parseFlags() {
 	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format [json|junit|simple|table] (env: SHIPSHAPE_OUTPUT_FORMAT)")
 	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "List of checks to run; default is empty, which will run all checks. Can be specified as comma-separated single argument or using --types multiple times")
 	pflag.BoolVarP(&excludeDb, "exclude-db", "d", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
+	pflag.BoolVarP(&remediate, "remediate", "r", false, "Run remediation for supported checks")
 	pflag.Parse()
 
 	if displayUsage {

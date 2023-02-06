@@ -27,8 +27,11 @@ type Check interface {
 	AddFail(msg string)
 	AddPass(msg string)
 	AddWarning(msg string)
+	SetPerformRemediation(flag bool)
+	AddRemediation(msg string)
 	RunCheck()
 	GetResult() *Result
+	Remediate(breachIfc interface{}) error
 }
 
 type CheckMap map[CheckType][]Check
@@ -49,6 +52,7 @@ type Config struct {
 	// Default is high.
 	FailSeverity Severity `yaml:"fail-severity"`
 	Checks       CheckMap `yaml:"checks"`
+	Remediate    bool     `yaml:"-"`
 }
 
 // CheckBase provides the basic structure for all Checks.
@@ -60,30 +64,38 @@ type CheckBase struct {
 	DataMap    map[string][]byte `yaml:"-"`
 	Result     Result            `yaml:"-"`
 	// Default severity is normal.
-	Severity Severity `yaml:"severity"`
+	Severity           Severity `yaml:"severity"`
+	PerformRemediation bool     `yaml:"-"`
 }
 
 // Result provides the structure for a Check's outcome.
 type Result struct {
-	Name      string      `json:"name"`
-	Severity  Severity    `json:"severity"`
-	CheckType CheckType   `json:"check-type"`
-	Status    CheckStatus `json:"status"`
-	Passes    []string    `json:"passes"`
-	Failures  []string    `json:"failures"`
-	Warnings  []string    `json:"warnings"`
+	Name         string `json:"name"`
+	Severity     `json:"severity"`
+	CheckType    `json:"check-type"`
+	Status       CheckStatus `json:"status"`
+	Passes       []string    `json:"passes"`
+	Failures     []string    `json:"failures"`
+	Warnings     []string    `json:"warnings"`
+	Remediations []string    `json:"remediations"`
 }
 
 // ResultList is a wrapper around a list of results, providing some useful
 // methods to manipulate and use it.
 type ResultList struct {
-	config                *Config
-	TotalChecks           uint32            `json:"total-checks"`
-	TotalBreaches         uint32            `json:"total-breaches"`
-	CheckCountByType      map[CheckType]int `json:"check-count-by-type"`
-	BreachCountByType     map[CheckType]int `json:"breach-count-by-type"`
-	BreachCountBySeverity map[Severity]int  `json:"breach-count-by-severity"`
-	Results               []Result          `json:"results"`
+	// TODO: Remove config from here, Will help remove circular
+	// dependency on config.
+	config                       *Config
+	RemediationPerformed         bool              `json:"remediation-performed"`
+	TotalChecks                  uint32            `json:"total-checks"`
+	TotalBreaches                uint32            `json:"total-breaches"`
+	TotalRemediations            uint32            `json:"total-remediations"`
+	TotalUnsupportedRemediations uint32            `json:"total-unsupported-remediations"`
+	CheckCountByType             map[CheckType]int `json:"check-count-by-type"`
+	BreachCountByType            map[CheckType]int `json:"breach-count-by-type"`
+	BreachCountBySeverity        map[Severity]int  `json:"breach-count-by-severity"`
+	RemediationCountByType       map[CheckType]int `json:"remediation-count-by-type"`
+	Results                      []Result          `json:"results"`
 }
 
 var OutputFormats = []string{"json", "junit", "simple", "table"}

@@ -1,6 +1,7 @@
 package shipshape_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -45,4 +46,38 @@ func TestCheckBaseRunCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues([]string{"not implemented"}, c.Result.Failures)
+}
+
+type testCheckRemediationNotSupported struct {
+	shipshape.YamlBase `yaml:",inline"`
+}
+
+type testCheckRemediationSupported struct {
+	shipshape.YamlBase `yaml:",inline"`
+}
+
+func (c *testCheckRemediationSupported) Remediate(interface{}) error {
+	return errors.New("foo")
+}
+
+func TestRemediate(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("notSupported", func(t *testing.T) {
+		c := testCheckRemediationNotSupported{}
+
+		err := c.Remediate(nil)
+		assert.NoError(err)
+		assert.Empty(c.Result.Passes)
+		assert.Empty(c.Result.Failures)
+	})
+
+	t.Run("supported", func(t *testing.T) {
+		c := testCheckRemediationSupported{}
+
+		err := c.Remediate(nil)
+		assert.EqualError(err, "foo")
+		assert.Empty(c.Result.Passes)
+		assert.Empty(c.Result.Failures)
+	})
 }

@@ -13,7 +13,7 @@ import (
 
 //go:generate go run ../../cmd/gen.go registry --checkpackage=shipshape
 
-func ReadAndParseConfig(projectDir string, files []string) (Config, error) {
+func ReadAndParseConfig(projectDir string, files []string, remediate bool) (Config, error) {
 	finalCfg := Config{}
 	for i, f := range files {
 		var data []byte
@@ -31,7 +31,7 @@ func ReadAndParseConfig(projectDir string, files []string) (Config, error) {
 			}
 		}
 
-		if err := ParseConfig(data, projectDir, &cfg); err != nil {
+		if err := ParseConfig(data, projectDir, remediate, &cfg); err != nil {
 			return cfg, err
 		}
 
@@ -51,7 +51,7 @@ func ReadAndParseConfig(projectDir string, files []string) (Config, error) {
 	return finalCfg, nil
 }
 
-func ParseConfig(data []byte, projectDir string, cfg *Config) error {
+func ParseConfig(data []byte, projectDir string, remediate bool, cfg *Config) error {
 	err := yaml.Unmarshal(data, &cfg)
 	if err != nil {
 		return err
@@ -68,6 +68,8 @@ func ParseConfig(data []byte, projectDir string, cfg *Config) error {
 	if cfg.FailSeverity == "" {
 		cfg.FailSeverity = HighSeverity
 	}
+
+	cfg.Remediate = remediate
 
 	return nil
 }

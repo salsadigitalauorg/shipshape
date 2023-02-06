@@ -1,17 +1,14 @@
 package drupal_test
 
 import (
-	"os/exec"
+	"errors"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestExecCommandHelper(t *testing.T) {
-	internal.TestExecCommandHelper(t)
-}
 
 func TestDrushCommandMerge(t *testing.T) {
 	assert := assert.New(t)
@@ -33,28 +30,36 @@ func TestDrushCommandMerge(t *testing.T) {
 }
 
 func TestDrushExec(t *testing.T) {
-	drupal.ExecCommand = internal.FakeExecCommand
-	defer func() { drupal.ExecCommand = exec.Command }()
+	assert := assert.New(t)
+
+	curShellCommander := command.ShellCommander
+	defer func() { command.ShellCommander = curShellCommander }()
 
 	// Command not found.
-	internal.MockedExitStatus = 127
-	internal.MockedStderr = "bash: drushfoo: command not found"
-	_, err := drupal.Drush("", "", []string{"status"}).Exec()
-	if err == nil || string(err.(*exec.ExitError).Stderr) != "bash: drushfoo: command not found" {
-		t.Errorf("Drush call should fail, got %#v", err)
-	}
+	t.Run("commandNotFound", func(t *testing.T) {
+		command.ShellCommander = internal.ShellCommanderMaker(
+			nil, errors.New("bash: drushfoo: command not found"), nil)
+		_, err := drupal.Drush("", "", []string{"status"}).Exec()
+		assert.Error(err, "bash: drushfoo: command not found")
+	})
 
-	internal.MockedExitStatus = 0
-	internal.MockedStdout = "foobar"
-	_, err = drupal.Drush("", "local", []string{"status"}).Exec()
-	if err != nil {
-		t.Errorf("Drush call should pass, got %#v", err)
-	}
+	t.Run("ok", func(t *testing.T) {
+		command.ShellCommander = internal.ShellCommanderMaker(&[]string{"foobar"}[0], nil, nil)
+		out, err := drupal.Drush("", "local", []string{"status"}).Exec()
+		assert.NoError(err)
+		assert.Equal([]byte("foobar"), out)
+	})
+
 }
 
 func TestDrushQuery(t *testing.T) {
-	drupal.ExecCommand = internal.FakeExecCommand
-	defer func() { drupal.ExecCommand = exec.Command }()
-	drupal.Drush("", "", []string{}).Query("SELECT uid FROM users")
-	assert.EqualValues(t, []string{"sql:query", "SELECT uid FROM users"}, internal.FakeCommandArgs)
+	curShellCommander := command.ShellCommander
+	defer func() { command.ShellCommander = curShellCommander }()
+
+	var generatedCommand string
+	command.ShellCommander = internal.ShellCommanderMaker(nil, nil, &generatedCommand)
+
+	_, err := drupal.Drush("", "", []string{}).Query("SELECT uid FROM users")
+	assert.NoError(t, err)
+	assert.Equal(t, "vendor/drush/drush/drush sql:query SELECT uid FROM users", generatedCommand)
 }

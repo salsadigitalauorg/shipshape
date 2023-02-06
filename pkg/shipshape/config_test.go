@@ -5,6 +5,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
 func TestMerge(t *testing.T) {
@@ -183,11 +184,30 @@ func TestMerge(t *testing.T) {
 }
 
 func TestRunChecks(t *testing.T) {
+	assert := assert.New(t)
+
+	testFileCheck := &shipshape.FileCheck{}
+	testYamlCheck := &shipshape.FileCheck{}
+	yaml.Unmarshal([]byte("name: filecheck1"), testFileCheck)
+	testFileCheck.Init(shipshape.File)
+	yaml.Unmarshal([]byte("name: yamlcheck1"), testYamlCheck)
+	testYamlCheck.Init(shipshape.Yaml)
 	cfg := shipshape.Config{
 		Checks: shipshape.CheckMap{
-			shipshape.File: {&shipshape.FileCheck{}},
-			shipshape.Yaml: {&shipshape.YamlCheck{}},
+			shipshape.File: {testFileCheck},
+			shipshape.Yaml: {testYamlCheck},
 		},
 	}
-	cfg.RunChecks()
+
+	rl := cfg.RunChecks()
+	assert.Equal(uint32(2), rl.TotalChecks)
+	assert.Equal(uint32(2), rl.TotalBreaches)
+	assert.EqualValues(map[shipshape.CheckType]int{
+		shipshape.File: 1,
+		shipshape.Yaml: 1,
+	}, rl.BreachCountByType)
+	assert.ElementsMatch([]shipshape.Result{
+		{Name: "filecheck1", Severity: "normal", CheckType: "file", Status: "Fail", Passes: []string(nil), Failures: []string{"directory not provided"}, Warnings: []string(nil)},
+		{Name: "yamlcheck1", Severity: "normal", CheckType: "yaml", Status: "Fail", Passes: []string(nil), Failures: []string{"directory not provided"}, Warnings: []string(nil)}},
+		rl.Results)
 }

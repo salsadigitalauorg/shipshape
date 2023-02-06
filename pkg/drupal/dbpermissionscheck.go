@@ -5,10 +5,16 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
+
+type DbPermissionsBreach struct {
+	Role  string
+	Perms string
+}
 
 // Init implementation for the DB-based permissions check.
 func (c *DbPermissionsCheck) Init(ct shipshape.CheckType) {
@@ -62,10 +68,35 @@ func (c *DbPermissionsCheck) RunCheck() {
 		sort.Slice(fails, func(i int, j int) bool {
 			return fails[i] < fails[j]
 		})
-		c.AddFail(fmt.Sprintf("[%s] disallowed permissions: [%s]", r, strings.Join(fails, ", ")))
+
+		if c.PerformRemediation {
+			if err := c.Remediate(DbPermissionsBreach{Role: r, Perms: strings.Join(fails, ",")}); err != nil {
+				c.AddFail(fmt.Sprintf(
+					"[%s] failed to fix disallowed permissions [%s] due to error: %s",
+					r, strings.Join(fails, ", "), command.GetMsgFromCommandError(err)))
+			} else {
+				c.AddRemediation(fmt.Sprintf(
+					"[%s] fixed disallowed permissions: [%s]",
+					r, strings.Join(fails, ", ")))
+			}
+		} else {
+			c.AddFail(fmt.Sprintf(
+				"[%s] disallowed permissions: [%s]",
+				r, strings.Join(fails, ", ")))
+		}
 	}
 
 	if len(c.Result.Failures) == 0 {
 		c.Result.Status = shipshape.Pass
 	}
+}
+
+// Remediate attempts to fix a breach.
+func (c *DbPermissionsCheck) Remediate(breachIfc interface{}) error {
+	b := breachIfc.(DbPermissionsBreach)
+	_, err := Drush(c.DrushPath, c.Alias, []string{"role:perm:remove", b.Role, b.Perms}).Exec()
+	if err != nil {
+		return err
+	}
+	return nil
 }

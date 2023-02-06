@@ -15,11 +15,13 @@ var lock = sync.RWMutex{}
 
 func NewResultList(cfg *Config) ResultList {
 	return ResultList{
-		config:                cfg,
-		Results:               []Result{},
-		CheckCountByType:      map[CheckType]int{},
-		BreachCountByType:     map[CheckType]int{},
-		BreachCountBySeverity: map[Severity]int{},
+		config:                 cfg,
+		RemediationPerformed:   cfg.Remediate,
+		Results:                []Result{},
+		CheckCountByType:       map[CheckType]int{},
+		BreachCountByType:      map[CheckType]int{},
+		BreachCountBySeverity:  map[Severity]int{},
+		RemediationCountByType: map[CheckType]int{},
 	}
 }
 
@@ -48,10 +50,14 @@ func (rl *ResultList) AddResult(r Result) {
 	defer lock.Unlock()
 	rl.Results = append(rl.Results, r)
 
-	incr := len(r.Failures)
-	atomic.AddUint32(&rl.TotalBreaches, uint32(incr))
-	rl.BreachCountByType[r.CheckType] = rl.BreachCountByType[r.CheckType] + incr
-	rl.BreachCountBySeverity[r.Severity] = rl.BreachCountBySeverity[r.Severity] + incr
+	breachesIncr := len(r.Failures)
+	atomic.AddUint32(&rl.TotalBreaches, uint32(breachesIncr))
+	rl.BreachCountByType[r.CheckType] = rl.BreachCountByType[r.CheckType] + breachesIncr
+	rl.BreachCountBySeverity[r.Severity] = rl.BreachCountBySeverity[r.Severity] + breachesIncr
+
+	remediationsIncr := len(r.Remediations)
+	atomic.AddUint32(&rl.TotalRemediations, uint32(remediationsIncr))
+	rl.RemediationCountByType[r.CheckType] = rl.RemediationCountByType[r.CheckType] + remediationsIncr
 }
 
 // GetBreachesByCheckName fetches the list of failures by check name.
@@ -75,6 +81,17 @@ func (rl *ResultList) GetBreachesBySeverity(s Severity) []string {
 		}
 	}
 	return breaches
+}
+
+// GetBreachesByCheckName fetches the list of failures by check name.
+func (rl *ResultList) GetRemediationsByCheckName(cn string) []string {
+	var remediations []string
+	for _, r := range rl.Results {
+		if r.Name == cn {
+			remediations = append(remediations, r.Remediations...)
+		}
+	}
+	return remediations
 }
 
 // Sort reorders the results by name.
@@ -133,6 +150,8 @@ func (rl *ResultList) TableDisplay(w *tabwriter.Writer) {
 }
 
 // SimpleDisplay outputs only failures to the writer.
+// TODO: Move display funcs out of ResultList to non-struct Shipshape funcs
+// instead - will help remove circular dependencies.
 func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
 	if len(rl.Results) == 0 {
 		fmt.Fprint(w, "No result available; ensure your shipshape.yml is configured correctly.\n")
@@ -140,20 +159,48 @@ func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
 		return
 	}
 
-	if rl.Status() == Pass {
+	printRemediations := func() {
+		for _, r := range rl.Results {
+			if len(r.Remediations) == 0 {
+				continue
+			}
+			fmt.Fprintf(w, "  ### %s\n", r.Name)
+			for _, f := range r.Remediations {
+				fmt.Fprintf(w, "     -- %s\n", f)
+			}
+			fmt.Fprintln(w)
+		}
+	}
+
+	if rl.Status() == Pass && int(rl.TotalRemediations) == 0 {
 		fmt.Fprint(w, "Ship is in top shape; no breach detected!\n")
+		w.Flush()
+		return
+	} else if rl.Status() == Pass && int(rl.TotalRemediations) > 0 {
+		fmt.Fprintf(w, "Breaches were detected but were all fixed successfully!\n\n")
+		printRemediations()
 		w.Flush()
 		return
 	}
 
-	fmt.Fprint(w, "Breaches were detected!\n\n")
+	if rl.RemediationPerformed && int(rl.TotalBreaches) > 0 {
+		fmt.Fprint(w, "Breaches were detected but not all of them could "+
+			"be fixed as they are either not supported yet or there were "+
+			"errors when trying to remediate.\n\n")
+		fmt.Fprint(w, "# Remediations\n\n")
+		printRemediations()
+		fmt.Fprint(w, "# Non-remediated breaches\n\n")
+	} else if !rl.RemediationPerformed {
+		fmt.Fprint(w, "# Breaches were detected\n\n")
+	}
+
 	for _, r := range rl.Results {
 		if len(r.Failures) == 0 {
 			continue
 		}
-		fmt.Fprintf(w, "### %s\n", r.Name)
+		fmt.Fprintf(w, "  ### %s\n", r.Name)
 		for _, f := range r.Failures {
-			fmt.Fprintf(w, "   -- %s\n", f)
+			fmt.Fprintf(w, "     -- %s\n", f)
 		}
 		fmt.Fprintln(w)
 	}
@@ -161,6 +208,8 @@ func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
 }
 
 // JUnit outputs the checks results in the JUnit XML format.
+// TODO: Move display funcs out of ResultList to non-struct Shipshape funcs
+// instead - will help remove circular dependencies.
 func (rl *ResultList) JUnit(w *bufio.Writer) {
 	tss := JUnitTestSuites{
 		Tests:      rl.TotalChecks,

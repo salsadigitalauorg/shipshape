@@ -4,8 +4,9 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
 )
@@ -59,51 +60,69 @@ func TestDrushYamlMerge(t *testing.T) {
 func TestDrushYamlCheck(t *testing.T) {
 	assert := assert.New(t)
 
-	c := drupal.DrushYamlCheck{
-		Command:    "status",
-		ConfigName: "core.extension",
-	}
+	t.Run("drushNotFound", func(t *testing.T) {
+		c := drupal.DrushYamlCheck{
+			Command:    "status",
+			ConfigName: "core.extension",
+		}
 
-	c.Init(drupal.DrushYaml)
-	assert.True(c.RequiresDb)
+		c.Init(drupal.DrushYaml)
+		assert.True(c.RequiresDb)
 
-	c.FetchData()
-	assert.Equal(shipshape.Fail, c.Result.Status)
-	assert.Empty(c.Result.Passes)
-	assert.ElementsMatch(
-		[]string{"vendor/drush/drush/drush: no such file or directory"},
-		c.Result.Failures,
-	)
+		c.FetchData()
+		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Empty(c.Result.Passes)
+		assert.ElementsMatch(
+			[]string{"vendor/drush/drush/drush: no such file or directory"},
+			c.Result.Failures,
+		)
+	})
 
-	c = drupal.DrushYamlCheck{
-		Command:    "status",
-		ConfigName: "core.extension",
-	}
-	drupal.ExecCommand = internal.FakeExecCommand
-	defer func() { drupal.ExecCommand = exec.Command }()
-	internal.MockedExitStatus = 1
-	internal.MockedStderr = "unable to run drush command"
-	c.FetchData()
-	assert.Equal(shipshape.Fail, c.Result.Status)
-	assert.Empty(c.Result.Passes)
-	assert.ElementsMatch(
-		[]string{"unable to run drush command"},
-		c.Result.Failures,
-	)
+	curShellCommander := command.ShellCommander
+	defer func() { command.ShellCommander = curShellCommander }()
 
-	internal.MockedExitStatus = 0
-	internal.MockedStdout = `
+	t.Run("drushError", func(t *testing.T) {
+		c := drupal.DrushYamlCheck{
+			Command:    "status",
+			ConfigName: "core.extension",
+		}
+
+		command.ShellCommander = internal.ShellCommanderMaker(
+			nil,
+			&exec.ExitError{Stderr: []byte("unable to run drush command")},
+			nil,
+		)
+
+		c.FetchData()
+		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Empty(c.Result.Passes)
+		assert.ElementsMatch(
+			[]string{"unable to run drush command"},
+			c.Result.Failures,
+		)
+	})
+
+	t.Run("drushOK", func(t *testing.T) {
+		stdout := `
 module:
   block: 0
   views_ui: 0
 
 `
-	c = drupal.DrushYamlCheck{
-		Command:    "status",
-		ConfigName: "core.extension",
-	}
-	c.FetchData()
-	assert.NotEqual(shipshape.Fail, c.Result.Status)
-	assert.Empty(c.Result.Passes)
-	assert.Empty(c.Result.Failures)
+
+		command.ShellCommander = internal.ShellCommanderMaker(
+			&stdout,
+			nil,
+			nil,
+		)
+
+		c := drupal.DrushYamlCheck{
+			Command:    "status",
+			ConfigName: "core.extension",
+		}
+		c.FetchData()
+		assert.NotEqual(shipshape.Fail, c.Result.Status)
+		assert.Empty(c.Result.Passes)
+		assert.Empty(c.Result.Failures)
+	})
 }

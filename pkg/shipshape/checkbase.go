@@ -92,8 +92,18 @@ func (c *CheckBase) AddWarning(msg string) {
 	c.Result.Warnings = append(c.Result.Warnings, msg)
 }
 
-// RunCheck contains the core logic for running the check and generating
-// the result.
+// SetPerformRemediation sets the flag for whether to remediate or not.
+func (c *CheckBase) SetPerformRemediation(flag bool) {
+	c.PerformRemediation = flag
+}
+
+// AddWarning appends a Warning message to the result.
+func (c *CheckBase) AddRemediation(msg string) {
+	c.Result.Remediations = append(c.Result.Remediations, msg)
+}
+
+// RunCheck contains the core logic for running the check,
+// generating the result and remediating breaches.
 // This is where c.Result should be populated.
 func (c *CheckBase) RunCheck() {
 	c.AddFail("not implemented")
@@ -102,4 +112,11 @@ func (c *CheckBase) RunCheck() {
 // GetResult returns the value of c.Result.
 func (c *CheckBase) GetResult() *Result {
 	return &c.Result
+}
+
+// Remediate should implement the logic to fix the breach(es).
+// Any type or custom struct can be used for the breach; it just needs to be
+// cast to the required type before being used.
+func (c *CheckBase) Remediate(breachIfc interface{}) error {
+	return nil
 }

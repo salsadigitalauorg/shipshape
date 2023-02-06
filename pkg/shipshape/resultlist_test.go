@@ -11,6 +11,31 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewResultList(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("emptyInit", func(t *testing.T) {
+		rl := NewResultList(&Config{})
+		assert.Equal(rl.RemediationPerformed, false)
+		assert.Equal(rl.Results, []Result{})
+		assert.Equal(rl.CheckCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountBySeverity, map[Severity]int{})
+		assert.Equal(rl.RemediationCountByType, map[CheckType]int{})
+	})
+
+	t.Run("remediation", func(t *testing.T) {
+		rl := NewResultList(&Config{Remediate: true})
+		assert.Equal(rl.RemediationPerformed, true)
+		assert.Equal(rl.Results, []Result{})
+		assert.Equal(rl.CheckCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountBySeverity, map[Severity]int{})
+		assert.Equal(rl.RemediationCountByType, map[CheckType]int{})
+	})
+
+}
+
 func TestResultListStatus(t *testing.T) {
 	assert := assert.New(t)
 
@@ -65,15 +90,21 @@ func TestResultListAddResult(t *testing.T) {
 		TotalBreaches:         0,
 		BreachCountByType:     map[CheckType]int{},
 		BreachCountBySeverity: map[Severity]int{},
+
+		TotalRemediations:      0,
+		RemediationCountByType: map[CheckType]int{},
 	}
 	rl.AddResult(Result{
-		Severity:  HighSeverity,
-		CheckType: File,
-		Failures:  []string{"fail1", "fail2", "fail3", "fail4", "fail5"},
+		Severity:     HighSeverity,
+		CheckType:    File,
+		Failures:     []string{"fail1", "fail2", "fail3", "fail4", "fail5"},
+		Remediations: []string{"fixed1"},
 	})
 	assert.Equal(5, int(rl.TotalBreaches))
 	assert.Equal(5, rl.BreachCountByType[File])
 	assert.Equal(5, rl.BreachCountBySeverity[HighSeverity])
+	assert.Equal(1, int(rl.TotalRemediations))
+	assert.Equal(1, rl.RemediationCountByType[File])
 
 	rl.AddResult(Result{
 		Severity:  CriticalSeverity,
@@ -85,6 +116,9 @@ func TestResultListAddResult(t *testing.T) {
 	assert.Equal(5, rl.BreachCountByType[Yaml])
 	assert.Equal(5, rl.BreachCountBySeverity[HighSeverity])
 	assert.Equal(5, rl.BreachCountBySeverity[CriticalSeverity])
+	assert.Equal(1, int(rl.TotalRemediations))
+	assert.Equal(1, rl.RemediationCountByType[File])
+	assert.Equal(0, rl.RemediationCountByType[Yaml])
 
 	var wg sync.WaitGroup
 	for i := 0; i < 100; i++ {
@@ -97,9 +131,10 @@ func TestResultListAddResult(t *testing.T) {
 				Failures:  []string{"fail6"},
 			})
 			rl.AddResult(Result{
-				Severity:  CriticalSeverity,
-				CheckType: Yaml,
-				Failures:  []string{"fail6"},
+				Severity:     CriticalSeverity,
+				CheckType:    Yaml,
+				Failures:     []string{"fail6"},
+				Remediations: []string{"fixed2", "fixed3"},
 			})
 		}()
 	}
@@ -109,6 +144,9 @@ func TestResultListAddResult(t *testing.T) {
 	assert.Equal(105, rl.BreachCountByType[Yaml])
 	assert.Equal(105, rl.BreachCountBySeverity[HighSeverity])
 	assert.Equal(105, rl.BreachCountBySeverity[CriticalSeverity])
+	assert.Equal(201, int(rl.TotalRemediations))
+	assert.Equal(1, rl.RemediationCountByType[File])
+	assert.Equal(200, rl.RemediationCountByType[Yaml])
 }
 
 func TestResultListGetBreachesByCheckName(t *testing.T) {
@@ -155,6 +193,29 @@ func TestResultListGetBreachesBySeverity(t *testing.T) {
 	assert.EqualValues(
 		[]string{"failure3", "failure 4"},
 		rl.GetBreachesBySeverity(NormalSeverity))
+}
+
+func TestResultListGetRemediationsByCheckName(t *testing.T) {
+	assert := assert.New(t)
+
+	rl := ResultList{
+		Results: []Result{
+			{
+				Name:         "check1",
+				Remediations: []string{"fix1", "fix 2"},
+			},
+			{
+				Name:         "check2",
+				Remediations: []string{"fix3", "fix 4"},
+			},
+		},
+	}
+	assert.EqualValues(
+		[]string{"fix1", "fix 2"},
+		rl.GetRemediationsByCheckName("check1"))
+	assert.EqualValues(
+		[]string{"fix3", "fix 4"},
+		rl.GetRemediationsByCheckName("check2"))
 }
 
 func TestResultListSort(t *testing.T) {
@@ -254,24 +315,90 @@ func TestResultListTableDisplay(t *testing.T) {
 func TestResultListSimpleDisplay(t *testing.T) {
 	assert := assert.New(t)
 
-	rl := ResultList{}
-	var buf bytes.Buffer
-	w := bufio.NewWriter(&buf)
-	rl.SimpleDisplay(w)
-	assert.Equal("No result available; ensure your shipshape.yml is configured correctly.\n", buf.String())
+	t.Run("noResult", func(t *testing.T) {
+		rl := NewResultList(&Config{})
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		rl.SimpleDisplay(w)
+		assert.Equal("No result available; ensure your shipshape.yml is configured correctly.\n", buf.String())
+	})
 
-	rl.Results = append(rl.Results, Result{Name: "a", Status: Pass})
-	buf = bytes.Buffer{}
-	rl.SimpleDisplay(w)
-	assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
+	t.Run("topShape", func(t *testing.T) {
+		rl := NewResultList(&Config{})
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		rl.Results = append(rl.Results, Result{Name: "a", Status: Pass})
+		buf = bytes.Buffer{}
+		rl.SimpleDisplay(w)
+		assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
+	})
 
-	rl.Results = append(rl.Results, Result{
-		Name:     "b",
-		Status:   Fail,
-		Failures: []string{"Fail b"}})
-	buf = bytes.Buffer{}
-	rl.SimpleDisplay(w)
-	assert.Equal("Breaches were detected!\n\n### b\n   -- Fail b\n\n", buf.String())
+	t.Run("breachesDetected", func(t *testing.T) {
+		rl := NewResultList(&Config{})
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		rl.Results = append(rl.Results, Result{
+			Name:     "b",
+			Status:   Fail,
+			Failures: []string{"Fail b"}})
+		buf = bytes.Buffer{}
+		rl.SimpleDisplay(w)
+		assert.Equal("# Breaches were detected\n\n  ### b\n     -- Fail b\n\n", buf.String())
+	})
+
+	t.Run("topShapeRemediating", func(t *testing.T) {
+		rl := ResultList{RemediationPerformed: true}
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		rl.Results = append(rl.Results, Result{Name: "a", Status: Pass})
+		buf = bytes.Buffer{}
+		rl.SimpleDisplay(w)
+		assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
+	})
+
+	t.Run("allBreachesRemediated", func(t *testing.T) {
+		rl := ResultList{RemediationPerformed: true}
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		rl.TotalRemediations = 1
+		rl.Results = append(rl.Results, Result{Name: "a", Status: Pass, Remediations: []string{"fixed 1"}})
+		buf = bytes.Buffer{}
+		rl.SimpleDisplay(w)
+		assert.Equal("Breaches were detected but were all fixed successfully!\n\n"+
+			"  ### a\n     -- fixed 1\n\n", buf.String())
+	})
+
+	t.Run("someBreachesRemediated", func(t *testing.T) {
+		rl := ResultList{RemediationPerformed: true}
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		rl.TotalRemediations = 1
+		rl.TotalBreaches = 1
+		rl.Results = append(rl.Results, Result{Name: "a", Status: Fail, Remediations: []string{"fixed 1"}})
+		buf = bytes.Buffer{}
+		rl.SimpleDisplay(w)
+		assert.Equal("Breaches were detected but not all of them could be "+
+			"fixed as they are either not supported yet or there were errors "+
+			"when trying to remediate.\n\n"+
+			"# Remediations\n\n  ### a\n     -- fixed 1\n\n"+
+			"# Non-remediated breaches\n\n", buf.String())
+	})
+
+	t.Run("noBreachRemediated", func(t *testing.T) {
+		rl := ResultList{RemediationPerformed: true}
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		rl.TotalBreaches = 1
+		rl.TotalRemediations = 0
+		rl.Results = append(rl.Results, Result{Name: "a", Status: Fail})
+		buf = bytes.Buffer{}
+		rl.SimpleDisplay(w)
+		assert.Equal("Breaches were detected but not all of them could be "+
+			"fixed as they are either not supported yet or there were errors "+
+			"when trying to remediate.\n\n"+
+			"# Remediations\n\n"+
+			"# Non-remediated breaches\n\n", buf.String())
+	})
 }
 func TestResultListJUnit(t *testing.T) {
 	assert := assert.New(t)

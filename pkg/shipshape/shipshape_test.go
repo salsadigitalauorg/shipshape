@@ -13,11 +13,11 @@ import (
 func TestReadAndParseConfigFileExistence(t *testing.T) {
 	assert := assert.New(t)
 
-	_, err := shipshape.ReadAndParseConfig("", []string{"testdata/nonexistent.yml"})
+	_, err := shipshape.ReadAndParseConfig("", []string{"testdata/nonexistent.yml"}, false)
 	assert.Error(err)
 	assert.Equal("open testdata/nonexistent.yml: no such file or directory", err.Error())
 
-	_, err = shipshape.ReadAndParseConfig("", []string{"testdata/shipshape.yml"})
+	_, err = shipshape.ReadAndParseConfig("", []string{"testdata/shipshape.yml"}, false)
 	assert.NoError(err)
 }
 
@@ -27,12 +27,12 @@ func TestReadAndParseConfigFileMerge(t *testing.T) {
 	mergedCfg, err := shipshape.ReadAndParseConfig("", []string{
 		"testdata/merge/config-a.yml",
 		"testdata/merge/config-b.yml",
-	})
+	}, false)
 	assert.NoError(err)
 
 	resultingCfg, err := shipshape.ReadAndParseConfig("", []string{
 		"testdata/merge/config-result.yml",
-	})
+	}, false)
 	assert.NoError(err)
 
 	assert.EqualValues(resultingCfg, mergedCfg)
@@ -46,7 +46,7 @@ checks:
   yaml: foo
 `
 	cfg := shipshape.Config{}
-	err := shipshape.ParseConfig([]byte(invalidData), "", &cfg)
+	err := shipshape.ParseConfig([]byte(invalidData), "", false, &cfg)
 	assert.Error(err)
 	assert.Contains(err.Error(), "yaml: unmarshal errors")
 
@@ -73,7 +73,7 @@ checks:
     - name: bar
 `
 	cfg = shipshape.Config{}
-	err = shipshape.ParseConfig([]byte(data), "", &cfg)
+	err = shipshape.ParseConfig([]byte(data), "", false, &cfg)
 	assert.NoError(err)
 	cfg.Init()
 

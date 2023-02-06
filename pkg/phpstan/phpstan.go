@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
@@ -55,8 +56,6 @@ func init() {
 }
 
 const PhpstanDefaultPath = "vendor/phpstan/phpstan/phpstan"
-
-var ExecCommand = exec.Command
 
 // Merge implementation for file check.
 func (c *PhpStanCheck) Merge(mergeCheck shipshape.Check) error {
@@ -107,7 +106,7 @@ func (c *PhpStanCheck) FetchData() {
 	}
 
 	c.DataMap = map[string][]byte{}
-	c.DataMap["phpstan"], err = ExecCommand(phpstanPath, args...).Output()
+	c.DataMap["phpstan"], err = command.ShellCommander(phpstanPath, args...).Output()
 	if err != nil {
 		if pathErr, ok := err.(*fs.PathError); ok {
 			c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
