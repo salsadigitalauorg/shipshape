@@ -11,6 +11,31 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewResultList(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("emptyInit", func(t *testing.T) {
+		rl := NewResultList(&Config{})
+		assert.Equal(rl.RemediationPerformed, false)
+		assert.Equal(rl.Results, []Result{})
+		assert.Equal(rl.CheckCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountBySeverity, map[Severity]int{})
+		assert.Equal(rl.RemediationCountByType, map[CheckType]int{})
+	})
+
+	t.Run("remediation", func(t *testing.T) {
+		rl := NewResultList(&Config{Remediate: true})
+		assert.Equal(rl.RemediationPerformed, true)
+		assert.Equal(rl.Results, []Result{})
+		assert.Equal(rl.CheckCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountBySeverity, map[Severity]int{})
+		assert.Equal(rl.RemediationCountByType, map[CheckType]int{})
+	})
+
+}
+
 func TestResultListStatus(t *testing.T) {
 	assert := assert.New(t)
 

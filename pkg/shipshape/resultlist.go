@@ -16,6 +16,7 @@ var lock = sync.RWMutex{}
 func NewResultList(cfg *Config) ResultList {
 	return ResultList{
 		config:                 cfg,
+		RemediationPerformed:   cfg.Remediate,
 		Results:                []Result{},
 		CheckCountByType:       map[CheckType]int{},
 		BreachCountByType:      map[CheckType]int{},
