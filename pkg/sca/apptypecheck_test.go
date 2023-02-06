@@ -16,7 +16,7 @@ func TestIsDrupalCheck(t *testing.T) {
 		Markers:      make(map[string][]string),
 		Dirs:         make(map[string][]string),
 		Dependencies: make(map[string][]string),
-		Paths:        []string{"./fixtures/drupal"},
+		Paths:        []string{"./testdata/drupal"},
 	}
 
 	c.Markers["drupal"] = []string{"use Drupal\\Core\\DrupalKernel;"}
@@ -26,7 +26,7 @@ func TestIsDrupalCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]string{"drupal detected at ./fixtures/drupal"},
+		[]string{"drupal detected at ./testdata/drupal"},
 		c.Result.Failures,
 	)
 }
@@ -39,7 +39,7 @@ func TestThreshold(t *testing.T) {
 		Markers:      make(map[string][]string),
 		Dirs:         make(map[string][]string),
 		Dependencies: make(map[string][]string),
-		Paths:        []string{"./fixtures/drupal"},
+		Paths:        []string{"./testdata/drupal"},
 	}
 	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
@@ -53,7 +53,7 @@ func TestIsWordpressCheck(t *testing.T) {
 		Markers:      make(map[string][]string),
 		Dirs:         make(map[string][]string),
 		Dependencies: make(map[string][]string),
-		Paths:        []string{"./fixtures/wordpress"},
+		Paths:        []string{"./testdata/wordpress"},
 	}
 
 	c.Markers["wordpress"] = []string{" * @package WordPress"}
@@ -62,7 +62,7 @@ func TestIsWordpressCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]string{"wordpress detected at ./fixtures/wordpress"},
+		[]string{"wordpress detected at ./testdata/wordpress"},
 		c.Result.Failures,
 	)
 }
@@ -75,7 +75,7 @@ func TestIsSymfonyCheck(t *testing.T) {
 		Markers:      make(map[string][]string),
 		Dirs:         make(map[string][]string),
 		Dependencies: make(map[string][]string),
-		Paths:        []string{"./fixtures/symfony"},
+		Paths:        []string{"./testdata/symfony"},
 	}
 	c.Markers["symfony"] = []string{"    return new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);"}
 	c.Dirs["symfony"] = []string{"bin", "config", "public"}
@@ -84,7 +84,7 @@ func TestIsSymfonyCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]string{"symfony detected at ./fixtures/symfony"},
+		[]string{"symfony detected at ./testdata/symfony"},
 		c.Result.Failures,
 	)
 }
@@ -97,7 +97,7 @@ func TestIsLaravelCheck(t *testing.T) {
 		Markers:      make(map[string][]string),
 		Dirs:         make(map[string][]string),
 		Dependencies: make(map[string][]string),
-		Paths:        []string{"./fixtures/laravel"},
+		Paths:        []string{"./testdata/laravel"},
 	}
 	c.Markers["laravel"] = []string{"use Illuminate\\Contracts\\Http\\Kernel;"}
 	c.Dirs["laravel"] = []string{"config", "public"}
@@ -106,7 +106,7 @@ func TestIsLaravelCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(shipshape.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]string{"laravel detected at ./fixtures/laravel"},
+		[]string{"laravel detected at ./testdata/laravel"},
 		c.Result.Failures,
 	)
 }
@@ -119,7 +119,7 @@ func TestMultipleTypes(t *testing.T) {
 		Markers:      make(map[string][]string),
 		Dirs:         make(map[string][]string),
 		Dependencies: make(map[string][]string),
-		Paths:        []string{"./fixtures/drupal"},
+		Paths:        []string{"./testdata/drupal"},
 	}
 	c.Dirs["laravel"] = []string{"config", "public"}
 	c.Dirs["symfony"] = []string{"config", "public"}
@@ -141,7 +141,7 @@ func TestOK(t *testing.T) {
 		Markers:      make(map[string][]string),
 		Dirs:         make(map[string][]string),
 		Dependencies: make(map[string][]string),
-		Paths:        []string{"./fixtures/drupal"},
+		Paths:        []string{"./testdata/drupal"},
 	}
 	c.RunCheck()
 	assert.Equal(shipshape.Pass, c.Result.Status)
