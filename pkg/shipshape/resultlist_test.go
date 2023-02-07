@@ -15,7 +15,7 @@ func TestNewResultList(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("emptyInit", func(t *testing.T) {
-		rl := NewResultList(&Config{})
+		rl := NewResultList(false)
 		assert.Equal(rl.RemediationPerformed, false)
 		assert.Equal(rl.Results, []Result{})
 		assert.Equal(rl.CheckCountByType, map[CheckType]int{})
@@ -25,7 +25,7 @@ func TestNewResultList(t *testing.T) {
 	})
 
 	t.Run("remediation", func(t *testing.T) {
-		rl := NewResultList(&Config{Remediate: true})
+		rl := NewResultList(true)
 		assert.Equal(rl.RemediationPerformed, true)
 		assert.Equal(rl.Results, []Result{})
 		assert.Equal(rl.CheckCountByType, map[CheckType]int{})
@@ -316,7 +316,7 @@ func TestResultListSimpleDisplay(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("noResult", func(t *testing.T) {
-		rl := NewResultList(&Config{})
+		rl := NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		rl.SimpleDisplay(w)
@@ -324,7 +324,7 @@ func TestResultListSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("topShape", func(t *testing.T) {
-		rl := NewResultList(&Config{})
+		rl := NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		rl.Results = append(rl.Results, Result{Name: "a", Status: Pass})
@@ -334,7 +334,7 @@ func TestResultListSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("breachesDetected", func(t *testing.T) {
-		rl := NewResultList(&Config{})
+		rl := NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		rl.Results = append(rl.Results, Result{
@@ -403,21 +403,19 @@ func TestResultListSimpleDisplay(t *testing.T) {
 func TestResultListJUnit(t *testing.T) {
 	assert := assert.New(t)
 
-	cfg := &Config{}
-	rl := NewResultList(cfg)
 	var buf bytes.Buffer
 	w := bufio.NewWriter(&buf)
-	rl.JUnit(w)
+	RunResultList.JUnit(w)
 	assert.Equal(`<?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="0" errors="0"></testsuites>
 `, buf.String())
 
-	cfg.Checks = CheckMap{File: []Check{&FileCheck{
+	RunConfig.Checks = CheckMap{File: []Check{&FileCheck{
 		CheckBase: CheckBase{Name: "a"},
 	}}}
-	rl.Results = append(rl.Results, Result{Name: "a", Status: Pass})
+	RunResultList.Results = append(RunResultList.Results, Result{Name: "a", Status: Pass})
 	buf = bytes.Buffer{}
-	rl.JUnit(w)
+	RunResultList.JUnit(w)
 	assert.Equal(`<?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="0" errors="0">
     <testsuite name="file" tests="0" errors="0">
@@ -426,15 +424,15 @@ func TestResultListJUnit(t *testing.T) {
 </testsuites>
 `, buf.String())
 
-	cfg.Checks[File] = append(cfg.Checks[File], &FileCheck{
+	RunConfig.Checks[File] = append(RunConfig.Checks[File], &FileCheck{
 		CheckBase: CheckBase{Name: "b"},
 	})
-	rl.Results = append(rl.Results, Result{
+	RunResultList.Results = append(RunResultList.Results, Result{
 		Name:     "b",
 		Status:   Fail,
 		Failures: []string{"Fail b"}})
 	buf = bytes.Buffer{}
-	rl.JUnit(w)
+	RunResultList.JUnit(w)
 	assert.Equal(`<?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="0" errors="0">
     <testsuite name="file" tests="0" errors="0">

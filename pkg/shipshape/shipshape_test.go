@@ -1,127 +1,161 @@
 package shipshape_test
 
 import (
-	"fmt"
+	"io"
 	"os"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape/testdata/testchecks"
 )
 
-func TestReadAndParseConfigFileExistence(t *testing.T) {
+func TestInit(t *testing.T) {
 	assert := assert.New(t)
 
-	_, err := shipshape.ReadAndParseConfig("", []string{"testdata/nonexistent.yml"}, false)
-	assert.Error(err)
-	assert.Equal("open testdata/nonexistent.yml: no such file or directory", err.Error())
+	t.Run("defaultValues", func(t *testing.T) {
+		currDir, _ := os.Getwd()
+		err := Init("", []string{}, []string{}, false, false, "")
+		assert.NoError(err)
+		assert.Equal(currDir, ProjectDir)
+		assert.Equal(Config{
+			ProjectDir:   currDir,
+			Checks:       CheckMap{},
+			FailSeverity: HighSeverity,
+		}, RunConfig)
+		assert.Equal(logrus.WarnLevel, logrus.GetLevel())
+	})
 
-	_, err = shipshape.ReadAndParseConfig("", []string{"testdata/shipshape.yml"}, false)
-	assert.NoError(err)
+	t.Run("projectDirIsSet", func(t *testing.T) {
+		err := Init("foo", []string{}, []string{}, false, false, "warn")
+		assert.NoError(err)
+		assert.Equal("foo", ProjectDir)
+	})
 }
 
-func TestReadAndParseConfigFileMerge(t *testing.T) {
+func TestReadAndParseConfig(t *testing.T) {
 	assert := assert.New(t)
 
-	mergedCfg, err := shipshape.ReadAndParseConfig("", []string{
-		"testdata/merge/config-a.yml",
-		"testdata/merge/config-b.yml",
-	}, false)
-	assert.NoError(err)
+	currLogOut := logrus.StandardLogger().Out
+	defer logrus.SetOutput(currLogOut)
+	logrus.SetOutput(io.Discard)
 
-	resultingCfg, err := shipshape.ReadAndParseConfig("", []string{
-		"testdata/merge/config-result.yml",
-	}, false)
-	assert.NoError(err)
+	t.Run("nonExistentFile", func(t *testing.T) {
+		err := ReadAndParseConfig("", []string{"testdata/nonexistent.yml"})
+		assert.Error(err)
+		assert.Equal("open testdata/nonexistent.yml: no such file or directory", err.Error())
+	})
 
-	assert.EqualValues(resultingCfg, mergedCfg)
+	t.Run("existingFile", func(t *testing.T) {
+		err := ReadAndParseConfig("", []string{"testdata/shipshape.yml"})
+		assert.NoError(err)
+	})
+
+	t.Run("configFileMerge", func(t *testing.T) {
+		err := ReadAndParseConfig("", []string{
+			"testdata/merge/config-a.yml",
+			"testdata/merge/config-b.yml",
+		})
+		assert.NoError(err)
+		mergedCfg := RunConfig
+
+		RunConfig = Config{}
+		err = ReadAndParseConfig("", []string{
+			"testdata/merge/config-result.yml",
+		})
+		assert.NoError(err)
+		resultingCfg := RunConfig
+
+		assert.EqualValues(resultingCfg, mergedCfg)
+	})
 }
 
-func TestParseConfig(t *testing.T) {
+func TestParseConfigData(t *testing.T) {
 	assert := assert.New(t)
 
-	invalidData := `
+	currLogOut := logrus.StandardLogger().Out
+	defer logrus.SetOutput(currLogOut)
+
+	t.Run("invalidData", func(t *testing.T) {
+		logrus.SetOutput(io.Discard)
+		invalidData := `
 checks:
   yaml: foo
 `
-	cfg := shipshape.Config{}
-	err := shipshape.ParseConfig([]byte(invalidData), "", false, &cfg)
-	assert.Error(err)
-	assert.Contains(err.Error(), "yaml: unmarshal errors")
+		err := ParseConfigData([][]byte{[]byte(invalidData)})
+		assert.Error(err)
+		assert.Contains(err.Error(), "yaml: unmarshal errors")
 
-	data := `
+	})
+
+	t.Run("validData", func(t *testing.T) {
+		testchecks.RegisterChecks()
+		data := `
 checks:
-  drush-yaml:
-    - name: My db check
-      config-name: shipshape.extension
-  yaml:
-    - name: My file check
-      file: shipshape.extension.yml
-      path: config/sync
-      values:
-        - key: profile
-          value: govcms
-    - name: File check - Ignore missing
-      file: shipshape.extension.yml
-      path: config/sync
-      ignore-missing: true
-      values:
-        - key: profile
-          value: govcms
-  foo:
-    - name: bar
+  test-check-1:
+    - name: My test check 1
+      foo: baz
+  test-check-2:
+    - name: My first test check 2
+      bar: zoom
+    - name: My second test check 2
+      bar: zap
 `
-	cfg = shipshape.Config{}
-	err = shipshape.ParseConfig([]byte(data), "", false, &cfg)
-	assert.NoError(err)
-	cfg.Init()
+		err := ParseConfigData([][]byte{[]byte(data)})
+		assert.NoError(err)
 
-	currDir, err := os.Getwd()
-	assert.NoError(err)
-	assert.Equal(currDir, cfg.ProjectDir)
-	assert.Len(cfg.Checks[drupal.DrushYaml], 1)
-	assert.Len(cfg.Checks[shipshape.Yaml], 2)
+		if !assert.Len(RunConfig.Checks[testchecks.TestCheck1], 1) {
+			t.FailNow()
+		}
+		if !assert.Len(RunConfig.Checks[testchecks.TestCheck2], 2) {
+			t.FailNow()
+		}
 
-	dyc, ok := cfg.Checks[drupal.DrushYaml][0].(*drupal.DrushYamlCheck)
-	assert.True(ok)
-	assert.Equal("shipshape.extension", dyc.ConfigName)
+		tc1, ok := RunConfig.Checks[testchecks.TestCheck1][0].(*testchecks.TestCheck1Check)
+		assert.True(ok)
+		assert.Equal("My test check 1", tc1.Name)
+		assert.Equal("baz", tc1.Foo)
 
-	yc, ok := cfg.Checks[shipshape.Yaml][0].(*shipshape.YamlCheck)
-	assert.True(ok)
-	assert.Equal("shipshape.extension.yml", yc.File)
+		tc2, ok := RunConfig.Checks[testchecks.TestCheck2][0].(*testchecks.TestCheck2Check)
+		assert.True(ok)
+		assert.Equal("My first test check 2", tc2.Name)
+		assert.Equal("zoom", tc2.Bar)
 
-	yc2, ok := cfg.Checks[shipshape.Yaml][1].(*shipshape.YamlCheck)
-	assert.True(ok)
-	assert.Equal("shipshape.extension.yml", yc2.File)
-	assert.True(*yc2.IgnoreMissing)
+		tc22, ok := RunConfig.Checks[testchecks.TestCheck2][1].(*testchecks.TestCheck2Check)
+		assert.True(ok)
+		assert.Equal("My second test check 2", tc22.Name)
+		assert.Equal("zap", tc22.Bar)
+	})
+}
 
-	rl := cfg.RunChecks()
-	expectedRl := shipshape.ResultList{Results: []shipshape.Result{
-		{
-			Name:      "File check - Ignore missing",
-			Severity:  "normal",
-			CheckType: "yaml",
-			Status:    "Pass",
-			Passes:    []string{fmt.Sprintf("File %s/config/sync/shipshape.extension.yml does not exist", shipshape.ProjectDir)},
-			Failures:  []string(nil),
+func TestRunChecks(t *testing.T) {
+	assert := assert.New(t)
+
+	test1stCheck := &testchecks.TestCheck1Check{}
+	test2ndCheck := &testchecks.TestCheck2Check{}
+	yaml.Unmarshal([]byte("name: test1stcheck"), test1stCheck)
+	test1stCheck.Init(testchecks.TestCheck1)
+	yaml.Unmarshal([]byte("name: test2ndcheck"), test2ndCheck)
+	test2ndCheck.Init(testchecks.TestCheck2)
+	RunConfig = Config{
+		Checks: CheckMap{
+			testchecks.TestCheck1: {test1stCheck},
+			testchecks.TestCheck2: {test2ndCheck},
 		},
-		{
-			Name:      "My db check",
-			Severity:  "normal",
-			CheckType: "drush-yaml",
-			Status:    "Fail",
-			Passes:    []string(nil),
-			Failures:  []string{fmt.Sprintf("%s/vendor/drush/drush/drush: no such file or directory", shipshape.ProjectDir)},
-		},
-		{
-			Name:      "My file check",
-			Severity:  "normal",
-			CheckType: "yaml",
-			Status:    "Fail",
-			Passes:    []string(nil),
-			Failures:  []string{fmt.Sprintf("open %s/config/sync/shipshape.extension.yml: no such file or directory", shipshape.ProjectDir)},
-		},
-	}}
-	assert.ElementsMatch(expectedRl.Results, rl.Results)
+	}
+
+	rl := RunChecks()
+	assert.Equal(uint32(2), rl.TotalChecks)
+	assert.Equal(uint32(2), rl.TotalBreaches)
+	assert.EqualValues(map[CheckType]int{
+		testchecks.TestCheck1: 1,
+		testchecks.TestCheck2: 1,
+	}, rl.BreachCountByType)
+	assert.ElementsMatch([]Result{
+		{Name: "test1stcheck", Severity: "normal", CheckType: "test-check-1", Status: "Fail", Passes: []string(nil), Failures: []string{"no data available"}, Warnings: []string(nil)},
+		{Name: "test2ndcheck", Severity: "normal", CheckType: "test-check-2", Status: "Fail", Passes: []string(nil), Failures: []string{"no data available"}, Warnings: []string(nil)}},
+		rl.Results)
 }

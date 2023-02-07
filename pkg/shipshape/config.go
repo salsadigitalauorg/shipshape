@@ -1,8 +1,6 @@
 package shipshape
 
 import (
-	"sync"
-
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -59,16 +57,6 @@ func (cfg *Config) Merge(mrgCfg Config) error {
 	return nil
 }
 
-func (cfg *Config) Init() {
-	ProjectDir = cfg.ProjectDir
-	for ct, checks := range cfg.Checks {
-		for _, c := range checks {
-			c.Init(ct)
-			c.SetPerformRemediation(cfg.Remediate)
-		}
-	}
-}
-
 // FilterChecksToRun iterates over all the checks and filters them based on
 // a provided list of check types to run or whether to exclude database checks.
 func (cfg *Config) FilterChecksToRun(checkTypesToRun []string, excludeDb bool) {
@@ -89,39 +77,4 @@ func (cfg *Config) FilterChecksToRun(checkTypesToRun []string, excludeDb bool) {
 		}
 	}
 	cfg.Checks = newCm
-}
-
-func (cfg *Config) RunChecks() ResultList {
-	rl := NewResultList(cfg)
-	var wg sync.WaitGroup
-	for ct, checks := range cfg.Checks {
-		checks := checks
-		rl.IncrChecks(ct, len(checks))
-		for i := range checks {
-			wg.Add(1)
-			check := checks[i]
-			go func() {
-				defer wg.Done()
-				cfg.ProcessCheck(&rl, check)
-			}()
-		}
-	}
-	wg.Wait()
-	rl.Sort()
-	return rl
-}
-
-func (cfg *Config) ProcessCheck(rl *ResultList, c Check) {
-	if c.RequiresData() {
-		c.FetchData()
-		c.HasData(true)
-		if len(c.GetResult().Failures) == 0 {
-			c.UnmarshalDataMap()
-		}
-	}
-	if len(c.GetResult().Failures) == 0 && len(c.GetResult().Passes) == 0 {
-		c.RunCheck()
-		c.GetResult().Sort()
-	}
-	rl.AddResult(*c.GetResult())
 }

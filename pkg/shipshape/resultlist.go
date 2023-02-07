@@ -13,10 +13,9 @@ import (
 // Use locks to make map mutations concurrency-safe.
 var lock = sync.RWMutex{}
 
-func NewResultList(cfg *Config) ResultList {
+func NewResultList(remediate bool) ResultList {
 	return ResultList{
-		config:                 cfg,
-		RemediationPerformed:   cfg.Remediate,
+		RemediationPerformed:   remediate,
 		Results:                []Result{},
 		CheckCountByType:       map[CheckType]int{},
 		BreachCountByType:      map[CheckType]int{},
@@ -218,7 +217,7 @@ func (rl *ResultList) JUnit(w *bufio.Writer) {
 	}
 
 	// Create a JUnitTestSuite for each CheckType.
-	for ct, checks := range rl.config.Checks {
+	for ct, checks := range RunConfig.Checks {
 		ts := JUnitTestSuite{
 			Name:      string(ct),
 			Tests:     rl.CheckCountByType[ct],

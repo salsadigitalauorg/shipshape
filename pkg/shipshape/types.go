@@ -6,8 +6,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var ProjectDir string
-
 type CheckType string
 
 // Check should be implemented by any new check that has to be run in an audit.
@@ -85,7 +83,6 @@ type Result struct {
 type ResultList struct {
 	// TODO: Remove config from here, Will help remove circular
 	// dependency on config.
-	config                       *Config
 	RemediationPerformed         bool              `json:"remediation-performed"`
 	TotalChecks                  uint32            `json:"total-checks"`
 	TotalBreaches                uint32            `json:"total-breaches"`
@@ -97,8 +94,6 @@ type ResultList struct {
 	RemediationCountByType       map[CheckType]int `json:"remediation-count-by-type"`
 	Results                      []Result          `json:"results"`
 }
-
-var OutputFormats = []string{"json", "junit", "simple", "table"}
 
 type CheckStatus string
 
@@ -161,13 +156,6 @@ type YamlCheck struct {
 // YamlLintCheck represents a Yaml lint file-based check for a number of files.
 type YamlLintCheck struct {
 	YamlCheck `yaml:",inline"`
-}
-
-var ChecksRegistry = map[CheckType]func() Check{
-	File:     func() Check { return &FileCheck{} },
-	Yaml:     func() Check { return &YamlCheck{} },
-	YamlLint: func() Check { return &YamlLintCheck{} },
-	Crawler:  func() Check { return &CrawlerCheck{} },
 }
 
 type JUnitError struct {
