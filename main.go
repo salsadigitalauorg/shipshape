@@ -39,6 +39,9 @@ var (
 	excludeDb          bool
 	outputFormat       string
 	remediate          bool
+	logLevel           string
+	verbose            bool
+	debug              bool
 )
 
 func main() {
@@ -70,6 +73,8 @@ func main() {
 		log.Fatalf("Invalid output format; needs to be one of: %s.", strings.Join(shipshape.OutputFormats, "|"))
 	}
 
+	determineLogLevel()
+
 	for _, f := range checksFiles {
 		if !utils.StringIsUrl(f) {
 			if _, err := os.Stat(f); os.IsNotExist(err) {
@@ -83,14 +88,13 @@ func main() {
 		}
 	}
 
-	cfg, err := shipshape.ReadAndParseConfig(projectDir, checksFiles, remediate)
+	err := shipshape.Init(projectDir, checksFiles, checkTypesToRun, excludeDb, remediate, logLevel)
 	if err != nil {
 		log.Fatal(err)
 	}
-	cfg.Init()
-	cfg.FilterChecksToRun(checkTypesToRun, excludeDb)
+
 	if dumpConfig {
-		out, err := yaml.Marshal(cfg)
+		out, err := yaml.Marshal(shipshape.RunConfig)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -98,28 +102,28 @@ func main() {
 		os.Exit(0)
 	}
 
-	rl := cfg.RunChecks()
+	shipshape.RunChecks()
 
 	switch outputFormat {
 	case "json":
-		data, err := json.Marshal(rl)
+		data, err := json.Marshal(shipshape.RunResultList)
 		if err != nil {
 			log.Fatalf("Unable to convert result to json: %+v\n", err)
 		}
 		fmt.Println(string(data))
 	case "junit":
 		w := bufio.NewWriter(os.Stdout)
-		rl.JUnit(w)
+		shipshape.RunResultList.JUnit(w)
 	case "table":
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		rl.TableDisplay(w)
+		shipshape.RunResultList.TableDisplay(w)
 	case "simple":
 		w := bufio.NewWriter(os.Stdout)
-		rl.SimpleDisplay(w)
+		shipshape.RunResultList.SimpleDisplay(w)
 	}
 
-	if rl.Status() == shipshape.Fail && errorCodeOnFailure &&
-		len(rl.GetBreachesBySeverity(cfg.FailSeverity)) > 0 {
+	if shipshape.RunResultList.Status() == shipshape.Fail && errorCodeOnFailure &&
+		len(shipshape.RunResultList.GetBreachesBySeverity(shipshape.RunConfig.FailSeverity)) > 0 {
 
 		os.Exit(2)
 	}
@@ -135,7 +139,7 @@ func parseFlags() {
 	}
 
 	pflag.BoolVarP(&displayUsage, "help", "h", false, "Displays usage information")
-	pflag.BoolVarP(&displayVersion, "version", "v", false, "Displays the application version")
+	pflag.BoolVarP(&displayVersion, "version", "", false, "Displays the application version")
 	pflag.BoolVar(&dumpConfig, "dump-config", false, "Dump the final config - useful to make sure multiple config files are being merged as expected")
 	pflag.BoolVar(&listChecks, "list-checks", false, "List available checks")
 	// pflag.BoolVarP(&selfUpdate, "self-update", "u", false, "Updates shipshape to the latest version")
@@ -144,7 +148,10 @@ func parseFlags() {
 	pflag.StringSliceVarP(&checksFiles, "file", "f", []string{"shipshape.yml"}, "Path to the file containing the checks. Can be specified as comma-separated single argument or using --types multiple times")
 	pflag.StringVarP(&outputFormat, "output", "o", "simple", "Output format [json|junit|simple|table] (env: SHIPSHAPE_OUTPUT_FORMAT)")
 	pflag.StringSliceVarP(&checkTypesToRun, "types", "t", []string(nil), "List of checks to run; default is empty, which will run all checks. Can be specified as comma-separated single argument or using --types multiple times")
-	pflag.BoolVarP(&excludeDb, "exclude-db", "d", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
+	pflag.StringVarP(&logLevel, "log-level", "l", "warn", "Level of logs to display")
+	pflag.BoolVarP(&verbose, "verbose", "v", false, "Display verbose output - equivalent to --log-level info")
+	pflag.BoolVarP(&debug, "debug", "d", false, "Display debug information - equivalent to --log-level debug")
+	pflag.BoolVarP(&excludeDb, "exclude-db", "x", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
 	pflag.BoolVarP(&remediate, "remediate", "r", false, "Run remediation for supported checks")
 	pflag.Parse()
 
@@ -193,4 +200,16 @@ func isValidOutputFormat(of *string) bool {
 		}
 	}
 	return valid
+}
+
+func determineLogLevel() {
+	if debug {
+		logLevel = "debug"
+		return
+	}
+
+	if verbose {
+		logLevel = "info"
+		return
+	}
 }
