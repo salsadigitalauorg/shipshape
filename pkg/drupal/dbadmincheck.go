@@ -52,11 +52,11 @@ func (c *AdminUserCheck) Merge(mergeCheck shipshape.Check) error {
 func (c *AdminUserCheck) getActiveRoles() map[string]string {
   var err error
 
-	activeRoles := map[string][]byte{}
+	activeRoles := []byte{}
 	rolesListMap := map[string]string{}
 
   cmd := []string{"role:list", "--fields=.", "--format=json"}
-  activeRoles["user-roles"], err = Drush(c.DrushPath, c.Alias, cmd).Exec()
+  activeRoles, err = Drush(c.DrushPath, c.Alias, cmd).Exec()
   var pathErr *fs.PathError
   if err != nil && errors.As(err, &pathErr) {
     c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
@@ -65,7 +65,7 @@ func (c *AdminUserCheck) getActiveRoles() map[string]string {
   		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
   } else {
     // Unmarshal roles JSON.
-    err = json.Unmarshal(activeRoles["user-roles"], &rolesListMap)
+    err = json.Unmarshal(activeRoles, &rolesListMap)
     var synErr *json.SyntaxError
     if err != nil && errors.As(err, &synErr) {
       c.AddFail(err.Error())
