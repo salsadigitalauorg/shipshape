@@ -28,7 +28,6 @@ const (
 	File     config.CheckType = "file"     // Represents a FileCheck.
 	Yaml     config.CheckType = "yaml"     // Represents a YamlCheck.
 	YamlLint config.CheckType = "yamllint" // Represents a YamlLintCheck.
-	Crawler  config.CheckType = "crawler"  // Represents a CrawlerCheck
 )
 
 // FileCheck is a simple File absence check which can be for a single
@@ -39,16 +38,6 @@ type FileCheck struct {
 	DisallowedPattern string   `yaml:"disallowed-pattern"`
 	ExcludePattern    string   `yaml:"exclude-pattern"`
 	SkipDir           []string `yaml:"skip-dir"`
-}
-
-// CrawlerCheck is a lightweight crawler that can be used to determine
-// health of the project.
-type CrawlerCheck struct {
-	config.CheckBase `yaml:",inline"`
-	Domain           string   `yaml:"domain"`
-	ExtraDomains     []string `yaml:"extra_domains"`
-	IncludeURLs      []string `yaml:"include_urls"`
-	Limit            int      `yaml:"limit"`
 }
 
 // YamlBase represents the structure for a Yaml-based check.

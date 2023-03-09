@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/crawler"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 
 	"github.com/stretchr/testify/assert"
@@ -72,7 +73,7 @@ func TestMerge(t *testing.T) {
 
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			shipshape.Crawler: {&shipshape.CrawlerCheck{CheckBase: CheckBase{Name: "crawlercheck1"}}},
+			crawler.Crawler: {&crawler.CrawlerCheck{CheckBase: CheckBase{Name: "crawlercheck1"}}},
 		},
 	})
 	assert.NoError(err)
@@ -84,7 +85,7 @@ func TestMerge(t *testing.T) {
 					CheckBase: CheckBase{Name: "yamlcheck1"},
 				},
 			}},
-			shipshape.Crawler: {&shipshape.CrawlerCheck{CheckBase: CheckBase{Name: "crawlercheck1"}}},
+			crawler.Crawler: {&crawler.CrawlerCheck{CheckBase: CheckBase{Name: "crawlercheck1"}}},
 		},
 		cfg.Checks,
 	)
