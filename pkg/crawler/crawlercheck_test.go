@@ -1,8 +1,9 @@
-package shipshape_test
+package crawler_test
 
 import (
 	"testing"
 
+	. "github.com/salsadigitalauorg/shipshape/pkg/crawler"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
 )
@@ -10,19 +11,19 @@ import (
 func TestCrawlerMerge(t *testing.T) {
 	assert := assert.New(t)
 
-	c := shipshape.CrawlerCheck{
+	c := CrawlerCheck{
 		Domain:       "foo.example",
 		ExtraDomains: []string{"dom1"},
 		IncludeURLs:  []string{"url1"},
 		Limit:        1,
 	}
-	c.Merge(&shipshape.CrawlerCheck{
+	c.Merge(&CrawlerCheck{
 		Domain:       "bar.example",
 		ExtraDomains: []string{"dom2"},
 		IncludeURLs:  []string{"url2"},
 		Limit:        2,
 	})
-	assert.EqualValues(shipshape.CrawlerCheck{
+	assert.EqualValues(CrawlerCheck{
 		Domain:       "bar.example",
 		ExtraDomains: []string{"dom2"},
 		IncludeURLs:  []string{"url2"},
@@ -33,7 +34,7 @@ func TestCrawlerMerge(t *testing.T) {
 func TestCrawlerCheck(t *testing.T) {
 	assert := assert.New(t)
 
-	c := shipshape.CrawlerCheck{
+	c := CrawlerCheck{
 		IncludeURLs: []string{
 			"/not-found",
 		},
@@ -48,7 +49,7 @@ func TestCrawlerCheck(t *testing.T) {
 		c.Result.Failures,
 	)
 
-	c = shipshape.CrawlerCheck{
+	c = CrawlerCheck{
 		IncludeURLs: []string{},
 		Domain:      "https://httpbin.org",
 		Limit:       5,

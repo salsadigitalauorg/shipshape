@@ -1,4 +1,4 @@
-package shipshape
+package crawler
 
 import (
 	"fmt"
@@ -9,6 +9,28 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
+
+//go:generate go run ../../cmd/gen.go registry --checkpackage=crawler
+
+// CrawlerCheck is a lightweight crawler that can be used to determine
+// health of the project.
+type CrawlerCheck struct {
+	config.CheckBase `yaml:",inline"`
+	Domain           string   `yaml:"domain"`
+	ExtraDomains     []string `yaml:"extra_domains"`
+	IncludeURLs      []string `yaml:"include_urls"`
+	Limit            int      `yaml:"limit"`
+}
+
+const Crawler config.CheckType = "crawler"
+
+func RegisterChecks() {
+	config.ChecksRegistry[Crawler] = func() config.Check { return &CrawlerCheck{} }
+}
+
+func init() {
+	RegisterChecks()
+}
 
 // Merge implementation for file check.
 func (c *CrawlerCheck) Merge(mergeCheck config.Check) error {

@@ -25,7 +25,6 @@ func init() {
 	config.ChecksRegistry[File] = func() config.Check { return &FileCheck{} }
 	config.ChecksRegistry[Yaml] = func() config.Check { return &YamlCheck{} }
 	config.ChecksRegistry[YamlLint] = func() config.Check { return &YamlLintCheck{} }
-	config.ChecksRegistry[Crawler] = func() config.Check { return &CrawlerCheck{} }
 }
 
 var OutputFormats = []string{"json", "junit", "simple", "table"}
