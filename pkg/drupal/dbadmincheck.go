@@ -8,17 +8,17 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
-const AdminUser shipshape.CheckType = "drupal-admin-user"
+const AdminUser config.CheckType = "drupal-admin-user"
 
 // AdminUserCheck fetches all role configurations from the database and verifies
 // they do not have is_admin set to true.
 type AdminUserCheck struct {
-	shipshape.CheckBase `yaml:",inline"`
-	DrushCommand        `yaml:",inline"`
+	config.CheckBase `yaml:",inline"`
+	DrushCommand     `yaml:",inline"`
 	// List of role names allowed to have is_admin set to true.
 	AllowedRoles []string `yaml:"allowed-roles"`
 	roleConfigs  map[string]bool
@@ -30,13 +30,13 @@ type roleConf struct {
 }
 
 // Init implementation for the drush-based user role config check.
-func (c *AdminUserCheck) Init(ct shipshape.CheckType) {
+func (c *AdminUserCheck) Init(ct config.CheckType) {
 	c.CheckBase.Init(ct)
 	c.RequiresDb = true
 }
 
 // Merge implementation for AdminUserCheck check.
-func (c *AdminUserCheck) Merge(mergeCheck shipshape.Check) error {
+func (c *AdminUserCheck) Merge(mergeCheck config.Check) error {
 	adminUserMergeCheck := mergeCheck.(*AdminUserCheck)
 	if err := c.CheckBase.Merge(&adminUserMergeCheck.CheckBase); err != nil {
 		return err
@@ -79,7 +79,7 @@ func (c *AdminUserCheck) FetchData() {
 	var err error
 
 	activeRoles := c.getActiveRoles()
-	if c.Result.Status == shipshape.Fail {
+	if c.Result.Status == config.Fail {
 		return
 	}
 
@@ -133,6 +133,6 @@ func (c *AdminUserCheck) RunCheck() {
 	}
 
 	if len(c.Result.Failures) == 0 {
-		c.Result.Status = shipshape.Pass
+		c.Result.Status = config.Pass
 	}
 }

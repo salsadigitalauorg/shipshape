@@ -5,22 +5,24 @@ import (
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
-	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	. "github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDrushYamlMerge(t *testing.T) {
 	assert := assert.New(t)
 
-	c := drupal.DrushYamlCheck{
+	c := DrushYamlCheck{
 		YamlBase: shipshape.YamlBase{
 			Values: []shipshape.KeyValue{
 				{Key: "key1", Value: "val1", Optional: false},
 			},
 		},
-		DrushCommand: drupal.DrushCommand{
+		DrushCommand: DrushCommand{
 			DrushPath: "/path/to/drush",
 			Alias:     "alias1",
 			Args:      []string{"arg1"},
@@ -28,26 +30,26 @@ func TestDrushYamlMerge(t *testing.T) {
 		Command:    "command1",
 		ConfigName: "configname1",
 	}
-	c.Merge(&drupal.DrushYamlCheck{
+	c.Merge(&DrushYamlCheck{
 		YamlBase: shipshape.YamlBase{
 			Values: []shipshape.KeyValue{
 				{Key: "key1", Value: "val1", Optional: true},
 			},
 		},
-		DrushCommand: drupal.DrushCommand{
+		DrushCommand: DrushCommand{
 			DrushPath: "/new/path/to/drush",
 			Alias:     "alias2",
 			Args:      []string{"arg2"},
 		},
 		Command: "command2",
 	})
-	assert.EqualValues(drupal.DrushYamlCheck{
+	assert.EqualValues(DrushYamlCheck{
 		YamlBase: shipshape.YamlBase{
 			Values: []shipshape.KeyValue{
 				{Key: "key1", Value: "val1", Optional: true},
 			},
 		},
-		DrushCommand: drupal.DrushCommand{
+		DrushCommand: DrushCommand{
 			DrushPath: "/new/path/to/drush",
 			Alias:     "alias2",
 			Args:      []string{"arg2"},
@@ -61,16 +63,16 @@ func TestDrushYamlCheck(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("drushNotFound", func(t *testing.T) {
-		c := drupal.DrushYamlCheck{
+		c := DrushYamlCheck{
 			Command:    "status",
 			ConfigName: "core.extension",
 		}
 
-		c.Init(drupal.DrushYaml)
+		c.Init(DrushYaml)
 		assert.True(c.RequiresDb)
 
 		c.FetchData()
-		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Equal(config.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch(
 			[]string{"vendor/drush/drush/drush: no such file or directory"},
@@ -82,7 +84,7 @@ func TestDrushYamlCheck(t *testing.T) {
 	defer func() { command.ShellCommander = curShellCommander }()
 
 	t.Run("drushError", func(t *testing.T) {
-		c := drupal.DrushYamlCheck{
+		c := DrushYamlCheck{
 			Command:    "status",
 			ConfigName: "core.extension",
 		}
@@ -94,7 +96,7 @@ func TestDrushYamlCheck(t *testing.T) {
 		)
 
 		c.FetchData()
-		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Equal(config.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch(
 			[]string{"unable to run drush command"},
@@ -116,12 +118,12 @@ module:
 			nil,
 		)
 
-		c := drupal.DrushYamlCheck{
+		c := DrushYamlCheck{
 			Command:    "status",
 			ConfigName: "core.extension",
 		}
 		c.FetchData()
-		assert.NotEqual(shipshape.Fail, c.Result.Status)
+		assert.NotEqual(config.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.Empty(c.Result.Failures)
 	})

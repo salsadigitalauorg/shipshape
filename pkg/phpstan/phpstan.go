@@ -11,20 +11,21 @@ import (
 	"path/filepath"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 //go:generate go run ../../cmd/gen.go registry --checkpackage=phpstan
 
-const PhpStan shipshape.CheckType = "phpstan"
+const PhpStan config.CheckType = "phpstan"
 
 type PhpStanCheck struct {
-	shipshape.CheckBase `yaml:",inline"`
-	Bin                 string   `yaml:"binary"`
-	Config              string   `yaml:"configuration"`
-	Paths               []string `yaml:"paths"`
-	phpstanResult       PhpStanResult
+	config.CheckBase `yaml:",inline"`
+	Bin              string   `yaml:"binary"`
+	Config           string   `yaml:"configuration"`
+	Paths            []string `yaml:"paths"`
+	phpstanResult    PhpStanResult
 }
 
 type PhpStanResult struct {
@@ -48,7 +49,7 @@ type PhpStanResult struct {
 }
 
 func RegisterChecks() {
-	shipshape.ChecksRegistry[PhpStan] = func() shipshape.Check { return &PhpStanCheck{} }
+	config.ChecksRegistry[PhpStan] = func() config.Check { return &PhpStanCheck{} }
 }
 
 func init() {
@@ -58,7 +59,7 @@ func init() {
 const PhpstanDefaultPath = "vendor/phpstan/phpstan/phpstan"
 
 // Merge implementation for file check.
-func (c *PhpStanCheck) Merge(mergeCheck shipshape.Check) error {
+func (c *PhpStanCheck) Merge(mergeCheck config.Check) error {
 	phpstanMergeCheck := mergeCheck.(*PhpStanCheck)
 	if err := c.CheckBase.Merge(&phpstanMergeCheck.CheckBase); err != nil {
 		return err
@@ -148,7 +149,7 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 func (c *PhpStanCheck) RunCheck() {
 	if c.phpstanResult.Totals.Errors == 0 && c.phpstanResult.Totals.FileErrors == 0 {
 		c.AddPass("no error found")
-		c.Result.Status = shipshape.Pass
+		c.Result.Status = config.Pass
 		return
 	}
 

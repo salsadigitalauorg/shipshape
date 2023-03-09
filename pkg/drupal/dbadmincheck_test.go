@@ -7,9 +7,10 @@ import (
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,7 +49,7 @@ func TestAdminUserFetchData(t *testing.T) {
 	t.Run("drushNotFound", func(t *testing.T) {
 		c := drupal.AdminUserCheck{}
 		c.FetchData()
-		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Equal(config.Fail, c.Result.Status)
 		assert.EqualValues([]string{"vendor/drush/drush/drush: no such file or directory"}, c.Result.Failures)
 
 	})
@@ -63,7 +64,7 @@ func TestAdminUserFetchData(t *testing.T) {
 		)
 		c := drupal.AdminUserCheck{}
 		c.FetchData()
-		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Equal(config.Fail, c.Result.Status)
 		assert.EqualValues([]string{"unable to run drush command"}, c.Result.Failures)
 	})
 
@@ -77,8 +78,8 @@ func TestAdminUserFetchData(t *testing.T) {
 
 		c := drupal.AdminUserCheck{}
 		c.FetchData()
-		assert.NotEqual(shipshape.Fail, c.Result.Status)
-		assert.NotEqual(shipshape.Pass, c.Result.Status)
+		assert.NotEqual(config.Fail, c.Result.Status)
+		assert.NotEqual(config.Pass, c.Result.Status)
 		assert.Equal([]byte(`{"anonymous":{"is_admin": false}}`), c.DataMap["anonymous"])
 	})
 }
@@ -90,35 +91,35 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 	// Empty datamap.
 	t.Run("emptyDataMap", func(t *testing.T) {
 		c.UnmarshalDataMap()
-		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Equal(config.Fail, c.Result.Status)
 		assert.EqualValues([]string{"no data provided"}, c.Result.Failures)
 	})
 
 	// Incorrect json.
 	t.Run("incorrectJSON", func(t *testing.T) {
 		c = drupal.AdminUserCheck{
-			CheckBase: shipshape.CheckBase{
+			CheckBase: config.CheckBase{
 				DataMap: map[string][]byte{
 					"anonymous": []byte(`{"is_admin":false, "id": "anonymous"]}`)},
 			},
 		}
 		c.UnmarshalDataMap()
-		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Equal(config.Fail, c.Result.Status)
 		assert.EqualValues([]string{"invalid character ']' after object key:value pair"}, c.Result.Failures)
 	})
 
 	// Correct json.
 	t.Run("correctJSON", func(t *testing.T) {
 		c = drupal.AdminUserCheck{
-			CheckBase: shipshape.CheckBase{
+			CheckBase: config.CheckBase{
 				DataMap: map[string][]byte{
 					"anonymous": []byte(`{"is_admin":false, "id": "anonymous"}`)},
 			},
 		}
 
 		c.UnmarshalDataMap()
-		assert.NotEqual(shipshape.Fail, c.Result.Status)
-		assert.NotEqual(shipshape.Pass, c.Result.Status)
+		assert.NotEqual(config.Fail, c.Result.Status)
+		assert.NotEqual(config.Pass, c.Result.Status)
 		roleConfigsVal := reflect.ValueOf(c).FieldByName("roleConfigs")
 		assert.Equal("map[string]bool{\"anonymous\":false}", fmt.Sprintf("%#v", roleConfigsVal))
 	})
@@ -131,7 +132,7 @@ func TestAdminUserRunCheck(t *testing.T) {
 	// Role does not have is_admin:true.
 	t.Run("roleNotAdmin", func(t *testing.T) {
 		c = drupal.AdminUserCheck{
-			CheckBase: shipshape.CheckBase{
+			CheckBase: config.CheckBase{
 				DataMap: map[string][]byte{
 					"anonymous": []byte(`{"is_admin":false, "id": "anonymous"}`)},
 			},
@@ -139,13 +140,13 @@ func TestAdminUserRunCheck(t *testing.T) {
 		}
 		c.UnmarshalDataMap()
 		c.RunCheck()
-		assert.Equal(shipshape.Pass, c.Result.Status)
+		assert.Equal(config.Pass, c.Result.Status)
 	})
 
 	// Role has is_admin:true.
 	t.Run("roleAdmin", func(t *testing.T) {
 		c = drupal.AdminUserCheck{
-			CheckBase: shipshape.CheckBase{
+			CheckBase: config.CheckBase{
 				DataMap: map[string][]byte{
 					"anonymous": []byte(`{"is_admin":true, "id": "anonymous"}`)},
 			},
@@ -153,14 +154,14 @@ func TestAdminUserRunCheck(t *testing.T) {
 		}
 		c.UnmarshalDataMap()
 		c.RunCheck()
-		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Equal(config.Fail, c.Result.Status)
 		assert.EqualValues([]string{"Role [anonymous] has `is_admin: true`"}, c.Result.Failures)
 	})
 
 	// Role has is_admin:true but is allowed.
 	t.Run("roleAdminAllowed", func(t *testing.T) {
 		c = drupal.AdminUserCheck{
-			CheckBase: shipshape.CheckBase{
+			CheckBase: config.CheckBase{
 				DataMap: map[string][]byte{
 					"anonymous": []byte(`{"is_admin":true, "id": "anonymous"}`)},
 			},
@@ -168,10 +169,10 @@ func TestAdminUserRunCheck(t *testing.T) {
 		}
 		c.UnmarshalDataMap()
 		c.RunCheck()
-		assert.Equal(shipshape.Pass, c.Result.Status)
+		assert.Equal(config.Pass, c.Result.Status)
 	})
 
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(shipshape.Pass, c.Result.Status)
+	assert.Equal(config.Pass, c.Result.Status)
 }

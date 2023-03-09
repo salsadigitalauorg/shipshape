@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -21,10 +22,10 @@ func TestInit(t *testing.T) {
 		err := Init("", []string{}, []string{}, false, false, "")
 		assert.NoError(err)
 		assert.Equal(currDir, ProjectDir)
-		assert.Equal(Config{
+		assert.Equal(config.Config{
 			ProjectDir:   currDir,
-			Checks:       CheckMap{},
-			FailSeverity: HighSeverity,
+			Checks:       config.CheckMap{},
+			FailSeverity: config.HighSeverity,
 		}, RunConfig)
 		assert.Equal(logrus.WarnLevel, logrus.GetLevel())
 	})
@@ -62,7 +63,7 @@ func TestReadAndParseConfig(t *testing.T) {
 		assert.NoError(err)
 		mergedCfg := RunConfig
 
-		RunConfig = Config{}
+		RunConfig = config.Config{}
 		err = ReadAndParseConfig("", []string{
 			"testdata/merge/config-result.yml",
 		})
@@ -140,8 +141,8 @@ func TestRunChecks(t *testing.T) {
 	test1stCheck.Init(testchecks.TestCheck1)
 	yaml.Unmarshal([]byte("name: test2ndcheck"), test2ndCheck)
 	test2ndCheck.Init(testchecks.TestCheck2)
-	RunConfig = Config{
-		Checks: CheckMap{
+	RunConfig = config.Config{
+		Checks: config.CheckMap{
 			testchecks.TestCheck1: {test1stCheck},
 			testchecks.TestCheck2: {test2ndCheck},
 		},
@@ -150,11 +151,11 @@ func TestRunChecks(t *testing.T) {
 	rl := RunChecks()
 	assert.Equal(uint32(2), rl.TotalChecks)
 	assert.Equal(uint32(2), rl.TotalBreaches)
-	assert.EqualValues(map[CheckType]int{
+	assert.EqualValues(map[config.CheckType]int{
 		testchecks.TestCheck1: 1,
 		testchecks.TestCheck2: 1,
 	}, rl.BreachCountByType)
-	assert.ElementsMatch([]Result{
+	assert.ElementsMatch([]config.Result{
 		{Name: "test1stcheck", Severity: "normal", CheckType: "test-check-1", Status: "Fail", Passes: []string(nil), Failures: []string{"no data available"}, Warnings: []string(nil)},
 		{Name: "test2ndcheck", Severity: "normal", CheckType: "test-check-2", Status: "Fail", Passes: []string(nil), Failures: []string{"no data available"}, Warnings: []string(nil)}},
 		rl.Results)

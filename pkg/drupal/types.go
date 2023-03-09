@@ -1,15 +1,16 @@
 package drupal
 
 import (
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
 const (
-	DrushYaml     shipshape.CheckType = "drush-yaml"
-	FileModule    shipshape.CheckType = "drupal-file-module"
-	DbModule      shipshape.CheckType = "drupal-db-module"
-	DbPermissions shipshape.CheckType = "drupal-db-permissions"
-	TrackingCode  shipshape.CheckType = "drupal-tracking-code"
+	DrushYaml     config.CheckType = "drush-yaml"
+	FileModule    config.CheckType = "drupal-file-module"
+	DbModule      config.CheckType = "drupal-db-module"
+	DbPermissions config.CheckType = "drupal-db-permissions"
+	TrackingCode  config.CheckType = "drupal-tracking-code"
 )
 
 type DrushCommand struct {

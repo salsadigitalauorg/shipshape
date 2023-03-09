@@ -4,11 +4,11 @@ package shipshape
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"sync"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	log "github.com/sirupsen/logrus"
@@ -18,14 +18,14 @@ import (
 //go:generate go run ../../cmd/gen.go registry --checkpackage=shipshape
 
 var ProjectDir string
-var RunConfig Config
+var RunConfig config.Config
 var RunResultList ResultList
 
-var ChecksRegistry = map[CheckType]func() Check{
-	File:     func() Check { return &FileCheck{} },
-	Yaml:     func() Check { return &YamlCheck{} },
-	YamlLint: func() Check { return &YamlLintCheck{} },
-	Crawler:  func() Check { return &CrawlerCheck{} },
+func init() {
+	config.ChecksRegistry[File] = func() config.Check { return &FileCheck{} }
+	config.ChecksRegistry[Yaml] = func() config.Check { return &YamlCheck{} }
+	config.ChecksRegistry[YamlLint] = func() config.Check { return &YamlLintCheck{} }
+	config.ChecksRegistry[Crawler] = func() config.Check { return &CrawlerCheck{} }
 }
 
 var OutputFormats = []string{"json", "junit", "simple", "table"}
@@ -100,7 +100,7 @@ func ReadAndParseConfig(projectDir string, files []string) error {
 	}
 
 	if RunConfig.FailSeverity == "" {
-		RunConfig.FailSeverity = HighSeverity
+		RunConfig.FailSeverity = config.HighSeverity
 	}
 
 	return nil
@@ -133,10 +133,10 @@ func FetchConfigData(files []string) ([][]byte, error) {
 }
 
 func ParseConfigData(configData [][]byte) error {
-	finalCfg := Config{}
+	finalCfg := config.Config{}
 	for i, data := range configData {
 		log.Print("parsing config")
-		cfg := Config{}
+		cfg := config.Config{}
 		if err := yaml.Unmarshal(data, &cfg); err != nil {
 			log.WithError(err).Error("could not parse config")
 			return err
@@ -161,35 +161,6 @@ func ParseConfigData(configData [][]byte) error {
 	return nil
 }
 
-func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
-	newcm := make(CheckMap)
-	for ct, cFunc := range ChecksRegistry {
-		check_values, err := utils.LookupYamlPath(value, string(ct))
-		if err != nil {
-			return err
-		}
-
-		if len(check_values) == 0 {
-			continue
-		}
-
-		if check_values[0].Kind != yaml.SequenceNode {
-			return errors.New("yaml: unmarshal errors")
-		}
-
-		for _, cv := range check_values[0].Content {
-			c := cFunc()
-			err := cv.Decode(c)
-			if err != nil {
-				return err
-			}
-			newcm[ct] = append(newcm[ct], c)
-		}
-	}
-	*cm = newcm
-	return nil
-}
-
 func RunChecks() ResultList {
 	log.Print("preparing concurrent check runs")
 	var wg sync.WaitGroup
@@ -210,7 +181,7 @@ func RunChecks() ResultList {
 	return RunResultList
 }
 
-func ProcessCheck(rl *ResultList, c Check) {
+func ProcessCheck(rl *ResultList, c config.Check) {
 	contextLogger := log.WithFields(log.Fields{
 		"check-type": c.GetType(),
 		"check-name": c.GetName(),

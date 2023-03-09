@@ -4,14 +4,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
-const AppType shipshape.CheckType = "sca:application_type"
+const AppType config.CheckType = "sca:application_type"
 
 /*
 Example:
+
 	threshold: 20
 	disallowed:
 		- symfyony
@@ -32,17 +33,17 @@ Example:
 @TODO: currently only supports composer for dependency lookups.
 */
 type AppTypeCheck struct {
-	shipshape.CheckBase `yaml:",inline"`
-	Threshold           int                 `yaml:"threshold"`
-	Disallowed          []string            `yaml:"disallowed"`
-	Entrypoint          string              `yaml:"entrypoint"`
-	Paths               []string            `yaml:"paths"`
-	Markers             map[string][]string `yaml:"markers"`
-	Dirs                map[string][]string `yaml:"dirs"`
-	Dependencies        map[string][]string `yaml:"dependencies"`
+	config.CheckBase `yaml:",inline"`
+	Threshold        int                 `yaml:"threshold"`
+	Disallowed       []string            `yaml:"disallowed"`
+	Entrypoint       string              `yaml:"entrypoint"`
+	Paths            []string            `yaml:"paths"`
+	Markers          map[string][]string `yaml:"markers"`
+	Dirs             map[string][]string `yaml:"dirs"`
+	Dependencies     map[string][]string `yaml:"dependencies"`
 }
 
-func (c *AppTypeCheck) Merge(mergeCheck shipshape.Check) error {
+func (c *AppTypeCheck) Merge(mergeCheck config.Check) error {
 	appTypeCheck := mergeCheck.(*AppTypeCheck)
 	if err := c.CheckBase.Merge(&appTypeCheck.CheckBase); err != nil {
 		return err
@@ -102,6 +103,6 @@ func (c *AppTypeCheck) RunCheck() {
 	}
 	if len(c.Result.Failures) == 0 {
 		c.AddPass("No invalid application types detected")
-		c.Result.Status = shipshape.Pass
+		c.Result.Status = config.Pass
 	}
 }

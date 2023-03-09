@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	"gopkg.in/yaml.v3"
 )
 
 // Merge implementation for YamlBase.
-func (c *YamlBase) Merge(mergeCheck Check) error {
+func (c *YamlBase) Merge(mergeCheck config.Check) error {
 	yBaseCheck := mergeCheck.(*YamlBase)
 	if err := c.CheckBase.Merge(&yBaseCheck.CheckBase); err != nil {
 		return err
@@ -68,9 +69,9 @@ func (c *YamlBase) processData(configName string) {
 		}
 	}
 	if len(c.Result.Failures) != 0 {
-		c.Result.Status = Fail
+		c.Result.Status = config.Fail
 	} else {
-		c.Result.Status = Pass
+		c.Result.Status = config.Pass
 	}
 }
 

@@ -5,17 +5,19 @@ import (
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
-	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	. "github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDbPermissionsInit(t *testing.T) {
 	assert := assert.New(t)
 
-	c := drupal.DbPermissionsCheck{}
-	c.Init(drupal.DbPermissions)
+	c := DbPermissionsCheck{}
+	c.Init(DbPermissions)
 	assert.Equal("role:list", c.Command)
 	assert.Equal("permissions", c.ConfigName)
 }
@@ -23,8 +25,8 @@ func TestDbPermissionsInit(t *testing.T) {
 func TestDbPermissionsMerge(t *testing.T) {
 	assert := assert.New(t)
 
-	c := drupal.DbPermissionsCheck{
-		DrushYamlCheck: drupal.DrushYamlCheck{
+	c := DbPermissionsCheck{
+		DrushYamlCheck: DrushYamlCheck{
 			YamlBase: shipshape.YamlBase{
 				Values: []shipshape.KeyValue{
 					{Key: "key1", Value: "val1", Optional: false},
@@ -34,8 +36,8 @@ func TestDbPermissionsMerge(t *testing.T) {
 		Disallowed:   []string{"disallowed1"},
 		ExcludeRoles: []string{"role1"},
 	}
-	c.Merge(&drupal.DbPermissionsCheck{
-		DrushYamlCheck: drupal.DrushYamlCheck{
+	c.Merge(&DbPermissionsCheck{
+		DrushYamlCheck: DrushYamlCheck{
 			YamlBase: shipshape.YamlBase{
 				Values: []shipshape.KeyValue{
 					{Key: "key1", Value: "val1", Optional: true},
@@ -45,8 +47,8 @@ func TestDbPermissionsMerge(t *testing.T) {
 		Disallowed:   []string{"disallowed2"},
 		ExcludeRoles: []string{"role2"},
 	})
-	assert.EqualValues(drupal.DbPermissionsCheck{
-		DrushYamlCheck: drupal.DrushYamlCheck{
+	assert.EqualValues(DbPermissionsCheck{
+		DrushYamlCheck: DrushYamlCheck{
 			YamlBase: shipshape.YamlBase{
 				Values: []shipshape.KeyValue{
 					{Key: "key1", Value: "val1", Optional: true},
@@ -62,16 +64,16 @@ func TestDbPermissionsUnmarshalDataMap(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("noDataProvided", func(t *testing.T) {
-		c := drupal.DbPermissionsCheck{}
+		c := DbPermissionsCheck{}
 		c.UnmarshalDataMap()
-		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Equal(config.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch([]string{"no data provided"}, c.Result.Failures)
 	})
 
 	t.Run("validData", func(t *testing.T) {
-		c := drupal.DbPermissionsCheck{}
-		c.Init(drupal.DbPermissions)
+		c := DbPermissionsCheck{}
+		c.Init(DbPermissions)
 		c.DataMap = map[string][]byte{
 			"permissions": []byte(`
 site_administrator:
@@ -93,8 +95,8 @@ site_editor:
 `),
 		}
 		c.UnmarshalDataMap()
-		assert.NotEqual(shipshape.Fail, c.Result.Status)
-		assert.EqualValues(map[string]drupal.DrushRole{
+		assert.NotEqual(config.Fail, c.Result.Status)
+		assert.EqualValues(map[string]DrushRole{
 			"anonymous": {
 				Label: "Anonymous user",
 				Perms: []string{"access content", "view media"},
@@ -119,16 +121,16 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 	tests := []internal.RunCheckTest{
 		{
 			Name:         "disallowedNotProvided",
-			Check:        &drupal.DbPermissionsCheck{},
+			Check:        &DbPermissionsCheck{},
 			Init:         true,
-			ExpectStatus: shipshape.Fail,
+			ExpectStatus: config.Fail,
 			ExpectNoPass: true,
 			ExpectFails:  []string{"list of disallowed perms not provided"},
 		},
 		{
 			Name: "noBreaches",
-			Check: &drupal.DbPermissionsCheck{
-				Permissions: map[string]drupal.DrushRole{
+			Check: &DbPermissionsCheck{
+				Permissions: map[string]DrushRole{
 					"anonymous": {
 						Label: "Anonymous user",
 						Perms: []string{"access content", "view media"},
@@ -150,7 +152,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			},
 			Init:         true,
 			Sort:         true,
-			ExpectStatus: shipshape.Pass,
+			ExpectStatus: config.Pass,
 			ExpectPasses: []string{
 				"[anonymous] no disallowed permissions",
 				"[authenticated] no disallowed permissions",
@@ -161,8 +163,8 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 		},
 		{
 			Name: "hasSomeBreaches",
-			Check: &drupal.DbPermissionsCheck{
-				Permissions: map[string]drupal.DrushRole{
+			Check: &DbPermissionsCheck{
+				Permissions: map[string]DrushRole{
 					"anonymous": {
 						Label: "Anonymous user",
 						Perms: []string{"access content", "view media"},
@@ -189,7 +191,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			},
 			Init:         true,
 			Sort:         true,
-			ExpectStatus: shipshape.Fail,
+			ExpectStatus: config.Fail,
 			ExpectPasses: []string{
 				"[anonymous] no disallowed permissions",
 				"[authenticated] no disallowed permissions",
@@ -201,15 +203,15 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 		},
 		{
 			Name: "breachRemediation",
-			Check: &drupal.DbPermissionsCheck{
-				DrushYamlCheck: drupal.DrushYamlCheck{
+			Check: &DbPermissionsCheck{
+				DrushYamlCheck: DrushYamlCheck{
 					YamlBase: shipshape.YamlBase{
-						CheckBase: shipshape.CheckBase{
+						CheckBase: config.CheckBase{
 							PerformRemediation: true,
 						},
 					},
 				},
-				Permissions: map[string]drupal.DrushRole{
+				Permissions: map[string]DrushRole{
 					"anonymous": {
 						Label: "Anonymous user",
 						Perms: []string{"access content", "view media"},
@@ -239,7 +241,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 				command.ShellCommander = internal.ShellCommanderMaker(nil, nil, nil)
 			},
 			Sort:         true,
-			ExpectStatus: shipshape.Pass,
+			ExpectStatus: config.Pass,
 			ExpectPasses: []string{
 				"[anonymous] no disallowed permissions",
 				"[authenticated] no disallowed permissions",
@@ -252,15 +254,15 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 		},
 		{
 			Name: "breachRemediationExitError",
-			Check: &drupal.DbPermissionsCheck{
-				DrushYamlCheck: drupal.DrushYamlCheck{
+			Check: &DbPermissionsCheck{
+				DrushYamlCheck: DrushYamlCheck{
 					YamlBase: shipshape.YamlBase{
-						CheckBase: shipshape.CheckBase{
+						CheckBase: config.CheckBase{
 							PerformRemediation: true,
 						},
 					},
 				},
-				Permissions: map[string]drupal.DrushRole{
+				Permissions: map[string]DrushRole{
 					"anonymous": {
 						Label: "Anonymous user",
 						Perms: []string{"access content", "view media"},
@@ -294,7 +296,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 				)
 			},
 			Sort:         true,
-			ExpectStatus: shipshape.Fail,
+			ExpectStatus: config.Fail,
 			ExpectPasses: []string{
 				"[anonymous] no disallowed permissions",
 				"[authenticated] no disallowed permissions",
@@ -329,8 +331,8 @@ func TestDbPermissionsRemediate(t *testing.T) {
 			&exec.ExitError{Stderr: []byte("unable to run drush command")},
 			nil)
 
-		c := drupal.DbPermissionsCheck{}
-		err := c.Remediate(drupal.DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
+		c := DbPermissionsCheck{}
+		err := c.Remediate(DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
 		assert.Error(err, "unable to run drush command")
 	})
 
@@ -338,8 +340,8 @@ func TestDbPermissionsRemediate(t *testing.T) {
 		var generatedCommand string
 		command.ShellCommander = internal.ShellCommanderMaker(nil, nil, &generatedCommand)
 
-		c := drupal.DbPermissionsCheck{}
-		c.Remediate(drupal.DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
+		c := DbPermissionsCheck{}
+		c.Remediate(DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
 		assert.Equal("vendor/drush/drush/drush role:perm:remove foo bar,baz", generatedCommand)
 	})
 }

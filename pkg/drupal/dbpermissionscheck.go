@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
@@ -17,7 +17,7 @@ type DbPermissionsBreach struct {
 }
 
 // Init implementation for the DB-based permissions check.
-func (c *DbPermissionsCheck) Init(ct shipshape.CheckType) {
+func (c *DbPermissionsCheck) Init(ct config.CheckType) {
 	c.CheckBase.Init(ct)
 	c.RequiresDb = true
 	c.Command = "role:list"
@@ -25,7 +25,7 @@ func (c *DbPermissionsCheck) Init(ct shipshape.CheckType) {
 }
 
 // Merge implementation for DbPermissionsCheck check.
-func (c *DbPermissionsCheck) Merge(mergeCheck shipshape.Check) error {
+func (c *DbPermissionsCheck) Merge(mergeCheck config.Check) error {
 	dbPermissionsMergeCheck := mergeCheck.(*DbPermissionsCheck)
 	if err := c.DrushYamlCheck.Merge(&dbPermissionsMergeCheck.DrushYamlCheck); err != nil {
 		return err
@@ -87,7 +87,7 @@ func (c *DbPermissionsCheck) RunCheck() {
 	}
 
 	if len(c.Result.Failures) == 0 {
-		c.Result.Status = shipshape.Pass
+		c.Result.Status = config.Pass
 	}
 }
 

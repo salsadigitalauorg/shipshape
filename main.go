@@ -12,6 +12,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
@@ -58,7 +59,7 @@ func main() {
 	if listChecks {
 		fmt.Println("Type of checks available:")
 		checks := []string{}
-		for c := range shipshape.ChecksRegistry {
+		for c := range config.ChecksRegistry {
 			checks = append(checks, string(c))
 		}
 		sort.Strings(checks)
@@ -122,7 +123,7 @@ func main() {
 		shipshape.RunResultList.SimpleDisplay(w)
 	}
 
-	if shipshape.RunResultList.Status() == shipshape.Fail && errorCodeOnFailure &&
+	if shipshape.RunResultList.Status() == config.Fail && errorCodeOnFailure &&
 		len(shipshape.RunResultList.GetBreachesBySeverity(shipshape.RunConfig.FailSeverity)) > 0 {
 
 		os.Exit(2)

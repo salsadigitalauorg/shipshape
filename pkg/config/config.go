@@ -1,8 +1,42 @@
-package shipshape
+package config
 
 import (
+	"errors"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
+	"gopkg.in/yaml.v3"
 )
+
+var ChecksRegistry = map[CheckType]func() Check{}
+
+func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
+	newcm := make(CheckMap)
+	for ct, cFunc := range ChecksRegistry {
+		check_values, err := utils.LookupYamlPath(value, string(ct))
+		if err != nil {
+			return err
+		}
+
+		if len(check_values) == 0 {
+			continue
+		}
+
+		if check_values[0].Kind != yaml.SequenceNode {
+			return errors.New("yaml: unmarshal errors")
+		}
+
+		for _, cv := range check_values[0].Content {
+			c := cFunc()
+			err := cv.Decode(c)
+			if err != nil {
+				return err
+			}
+			newcm[ct] = append(newcm[ct], c)
+		}
+	}
+	*cm = newcm
+	return nil
+}
 
 // Merge allows multiple checks configurations to be consolidated.
 func (cfg *Config) Merge(mrgCfg Config) error {

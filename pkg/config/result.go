@@ -1,4 +1,4 @@
-package shipshape
+package config
 
 import "sort"
 

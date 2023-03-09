@@ -7,37 +7,38 @@ import (
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
-	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	. "github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestInit(t *testing.T) {
-	c := drupal.UserRoleCheck{}
-	c.Init(drupal.UserRole)
+	c := UserRoleCheck{}
+	c.Init(UserRole)
 	assert.True(t, c.RequiresDb)
 }
 
 func TestUserRoleMerge(t *testing.T) {
 	assert := assert.New(t)
 
-	c := drupal.UserRoleCheck{
-		DrushCommand: drupal.DrushCommand{
+	c := UserRoleCheck{
+		DrushCommand: DrushCommand{
 			DrushPath: "/path/to/drush",
 		},
 		Roles:        []string{"role1"},
 		AllowedUsers: []int{1, 2},
 	}
-	c.Merge(&drupal.UserRoleCheck{
-		DrushCommand: drupal.DrushCommand{
+	c.Merge(&UserRoleCheck{
+		DrushCommand: DrushCommand{
 			DrushPath: "/new/path/to/drush",
 		},
 		Roles:        []string{"role2"},
 		AllowedUsers: []int{2, 3},
 	})
-	assert.EqualValues(drupal.UserRoleCheck{
-		DrushCommand: drupal.DrushCommand{
+	assert.EqualValues(UserRoleCheck{
+		DrushCommand: DrushCommand{
 			DrushPath: "/new/path/to/drush",
 		},
 		Roles:        []string{"role2"},
@@ -49,9 +50,9 @@ func TestFetchData(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("drushNotFound", func(t *testing.T) {
-		c := drupal.UserRoleCheck{}
+		c := UserRoleCheck{}
 		c.FetchData()
-		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Equal(config.Fail, c.Result.Status)
 		assert.EqualValues([]string{"vendor/drush/drush/drush: no such file or directory"}, c.Result.Failures)
 
 	})
@@ -64,9 +65,9 @@ func TestFetchData(t *testing.T) {
 			&exec.ExitError{Stderr: []byte("unable to run drush command")},
 			nil,
 		)
-		c := drupal.UserRoleCheck{}
+		c := UserRoleCheck{}
 		c.FetchData()
-		assert.Equal(shipshape.Fail, c.Result.Status)
+		assert.Equal(config.Fail, c.Result.Status)
 		assert.EqualValues([]string{"unable to run drush command"}, c.Result.Failures)
 	})
 
@@ -77,10 +78,10 @@ func TestFetchData(t *testing.T) {
 			nil,
 			nil,
 		)
-		c := drupal.UserRoleCheck{}
+		c := UserRoleCheck{}
 		c.FetchData()
-		assert.NotEqual(shipshape.Fail, c.Result.Status)
-		assert.NotEqual(shipshape.Pass, c.Result.Status)
+		assert.NotEqual(config.Fail, c.Result.Status)
+		assert.NotEqual(config.Pass, c.Result.Status)
 		assert.Equal([]byte(`{"1":{"roles":["authenticated"]}}`), c.DataMap["user-info"])
 	})
 }
@@ -89,32 +90,32 @@ func TestUnmarshalData(t *testing.T) {
 	assert := assert.New(t)
 
 	// Empty datamap.
-	c := drupal.UserRoleCheck{}
+	c := UserRoleCheck{}
 	c.UnmarshalDataMap()
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.EqualValues([]string{"no data provided"}, c.Result.Failures)
 
 	// Incorrect json.
-	c = drupal.UserRoleCheck{
-		CheckBase: shipshape.CheckBase{
+	c = UserRoleCheck{
+		CheckBase: config.CheckBase{
 			DataMap: map[string][]byte{
 				"user-info": []byte(`{"1":{"roles":"authenticated"]}}`)},
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.EqualValues([]string{"invalid character ']' after object key:value pair"}, c.Result.Failures)
 
 	// Correct json.
-	c = drupal.UserRoleCheck{
-		CheckBase: shipshape.CheckBase{
+	c = UserRoleCheck{
+		CheckBase: config.CheckBase{
 			DataMap: map[string][]byte{
 				"user-info": []byte(`{"1":{"roles":["authenticated"]}}`)},
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.NotEqual(shipshape.Fail, c.Result.Status)
-	assert.NotEqual(shipshape.Pass, c.Result.Status)
+	assert.NotEqual(config.Fail, c.Result.Status)
+	assert.NotEqual(config.Pass, c.Result.Status)
 	userRolesVal := reflect.ValueOf(c).FieldByName("userRoles")
 	assert.Equal("map[int][]string{1:[]string{\"authenticated\"}}", fmt.Sprintf("%#v", userRolesVal))
 }
@@ -123,20 +124,20 @@ func TestRunCheck(t *testing.T) {
 	assert := assert.New(t)
 
 	// No disallowed roles provided.
-	c := drupal.UserRoleCheck{
-		CheckBase: shipshape.CheckBase{
+	c := UserRoleCheck{
+		CheckBase: config.CheckBase{
 			DataMap: map[string][]byte{
 				"user-info": []byte(`{"1":{"roles":["authenticated"]}}`)},
 		},
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.EqualValues([]string{"no disallowed role provided"}, c.Result.Failures)
 
 	// User has disallowed roles.
-	c = drupal.UserRoleCheck{
-		CheckBase: shipshape.CheckBase{
+	c = UserRoleCheck{
+		CheckBase: config.CheckBase{
 			DataMap: map[string][]byte{
 				"user-info": []byte(`{"1":{"roles":["authenticated","site-admin","content-admin"]}}`)},
 		},
@@ -144,12 +145,12 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.EqualValues([]string{"User 1 has disallowed roles: [site-admin, content-admin]"}, c.Result.Failures)
 
 	// User allowed to have disallowed roles.
-	c = drupal.UserRoleCheck{
-		CheckBase: shipshape.CheckBase{
+	c = UserRoleCheck{
+		CheckBase: config.CheckBase{
 			DataMap: map[string][]byte{
 				"user-info": []byte(`
 				{
@@ -163,5 +164,5 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(shipshape.Pass, c.Result.Status)
+	assert.Equal(config.Pass, c.Result.Status)
 }

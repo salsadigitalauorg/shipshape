@@ -8,6 +8,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"text/tabwriter"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 )
 
 // Use locks to make map mutations concurrency-safe.
@@ -16,26 +18,26 @@ var lock = sync.RWMutex{}
 func NewResultList(remediate bool) ResultList {
 	return ResultList{
 		RemediationPerformed:   remediate,
-		Results:                []Result{},
-		CheckCountByType:       map[CheckType]int{},
-		BreachCountByType:      map[CheckType]int{},
-		BreachCountBySeverity:  map[Severity]int{},
-		RemediationCountByType: map[CheckType]int{},
+		Results:                []config.Result{},
+		CheckCountByType:       map[config.CheckType]int{},
+		BreachCountByType:      map[config.CheckType]int{},
+		BreachCountBySeverity:  map[config.Severity]int{},
+		RemediationCountByType: map[config.CheckType]int{},
 	}
 }
 
 // Status calculates and returns the overall result of all check results.
-func (rl *ResultList) Status() CheckStatus {
+func (rl *ResultList) Status() config.CheckStatus {
 	for _, r := range rl.Results {
-		if r.Status == Fail {
-			return Fail
+		if r.Status == config.Fail {
+			return config.Fail
 		}
 	}
-	return Pass
+	return config.Pass
 }
 
 // IncrChecks increments the total checks count & checks count by type.
-func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
+func (rl *ResultList) IncrChecks(ct config.CheckType, incr int) {
 	atomic.AddUint32(&rl.TotalChecks, uint32(incr))
 
 	lock.Lock()
@@ -44,7 +46,7 @@ func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
 }
 
 // AddResult safely appends a check's result to the list.
-func (rl *ResultList) AddResult(r Result) {
+func (rl *ResultList) AddResult(r config.Result) {
 	lock.Lock()
 	defer lock.Unlock()
 	rl.Results = append(rl.Results, r)
@@ -71,7 +73,7 @@ func (rl *ResultList) GetBreachesByCheckName(cn string) []string {
 }
 
 // GetBreachesBySeverity fetches the list of failures by severity.
-func (rl *ResultList) GetBreachesBySeverity(s Severity) []string {
+func (rl *ResultList) GetBreachesBySeverity(s config.Severity) []string {
 	var breaches []string
 
 	for _, r := range rl.Results {
@@ -171,11 +173,11 @@ func (rl *ResultList) SimpleDisplay(w *bufio.Writer) {
 		}
 	}
 
-	if rl.Status() == Pass && int(rl.TotalRemediations) == 0 {
+	if rl.Status() == config.Pass && int(rl.TotalRemediations) == 0 {
 		fmt.Fprint(w, "Ship is in top shape; no breach detected!\n")
 		w.Flush()
 		return
-	} else if rl.Status() == Pass && int(rl.TotalRemediations) > 0 {
+	} else if rl.Status() == config.Pass && int(rl.TotalRemediations) > 0 {
 		fmt.Fprintf(w, "Breaches were detected but were all fixed successfully!\n\n")
 		printRemediations()
 		w.Flush()

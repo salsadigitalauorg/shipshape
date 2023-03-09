@@ -1,19 +1,19 @@
 package drupal
 
 import (
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 // Init implementation for the DB-based module check.
-func (c *DbModuleCheck) Init(ct shipshape.CheckType) {
+func (c *DbModuleCheck) Init(ct config.CheckType) {
 	c.CheckBase.Init(ct)
 	c.RequiresDb = true
 	c.Command = "pm:list --status=enabled"
 }
 
 // Merge implementation for DbModuleCheck check.
-func (c *DbModuleCheck) Merge(mergeCheck shipshape.Check) error {
+func (c *DbModuleCheck) Merge(mergeCheck config.Check) error {
 	dbModuleMergeCheck := mergeCheck.(*DbModuleCheck)
 	if err := c.DrushYamlCheck.Merge(&dbModuleMergeCheck.DrushYamlCheck); err != nil {
 		return err

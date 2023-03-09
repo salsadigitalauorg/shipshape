@@ -3,12 +3,12 @@ package drupal
 import (
 	"path/filepath"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 // Merge implementation for file check.
-func (c *FileModuleCheck) Merge(mergeCheck shipshape.Check) error {
+func (c *FileModuleCheck) Merge(mergeCheck config.Check) error {
 	fileModuleMergeCheck := mergeCheck.(*FileModuleCheck)
 	if err := c.YamlCheck.Merge(&fileModuleMergeCheck.YamlCheck); err != nil {
 		return err
@@ -26,7 +26,7 @@ func (c *FileModuleCheck) RunCheck() {
 }
 
 // Init implementation for the File-based module check.
-func (c *FileModuleCheck) Init(ct shipshape.CheckType) {
+func (c *FileModuleCheck) Init(ct config.CheckType) {
 	c.CheckBase.Init(ct)
 	c.File = "core.extension.yml"
 	if c.IgnoreMissing == nil {

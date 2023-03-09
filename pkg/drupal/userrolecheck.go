@@ -8,17 +8,17 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
-const UserRole shipshape.CheckType = "drupal-user-role"
+const UserRole config.CheckType = "drupal-user-role"
 
 // UserRoleCheck fetches all users from the database and verifies them against
 // the list of disallowed roles and allowed users.
 type UserRoleCheck struct {
-	shipshape.CheckBase `yaml:",inline"`
-	DrushCommand        `yaml:",inline"`
+	config.CheckBase `yaml:",inline"`
+	DrushCommand     `yaml:",inline"`
 	// List of role machine names that users should not have.
 	Roles []string `yaml:"roles"`
 	// List of user ID's allowed to have the above roles.
@@ -31,13 +31,13 @@ type userInfo struct {
 }
 
 // Init implementation for the drush-based user role check.
-func (c *UserRoleCheck) Init(ct shipshape.CheckType) {
+func (c *UserRoleCheck) Init(ct config.CheckType) {
 	c.CheckBase.Init(ct)
 	c.RequiresDb = true
 }
 
 // Merge implementation for DbModuleCheck check.
-func (c *UserRoleCheck) Merge(mergeCheck shipshape.Check) error {
+func (c *UserRoleCheck) Merge(mergeCheck config.Check) error {
 	userRoleMergeCheck := mergeCheck.(*UserRoleCheck)
 	if err := c.CheckBase.Merge(&userRoleMergeCheck.CheckBase); err != nil {
 		return err
@@ -67,7 +67,7 @@ func (c *UserRoleCheck) FetchData() {
 	var err error
 
 	userIds := c.getUserIds()
-	if c.Result.Status == shipshape.Fail {
+	if c.Result.Status == config.Fail {
 		return
 	}
 
@@ -122,6 +122,6 @@ func (c *UserRoleCheck) RunCheck() {
 	}
 
 	if len(c.Result.Failures) == 0 {
-		c.Result.Status = shipshape.Pass
+		c.Result.Status = config.Pass
 	}
 }
