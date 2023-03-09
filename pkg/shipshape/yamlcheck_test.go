@@ -3,7 +3,8 @@ package shipshape_test
 import (
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,18 +14,18 @@ var cTrue = true
 func TestYamlCheckMerge(t *testing.T) {
 	assert := assert.New(t)
 
-	c := shipshape.YamlCheck{
+	c := YamlCheck{
 		Path:           "path1",
 		File:           "file1.yml",
 		Pattern:        "pattern1",
 		ExcludePattern: "excludePattern1",
 		IgnoreMissing:  &cFalse,
 	}
-	c.Merge(&shipshape.YamlCheck{
+	c.Merge(&YamlCheck{
 		Path:  "path2",
 		Files: []string{"slcFile1.yml", "slcFile2.yml"},
 	})
-	assert.EqualValues(shipshape.YamlCheck{
+	assert.EqualValues(YamlCheck{
 		Path:           "path2",
 		File:           "file1.yml",
 		Files:          []string{"slcFile1.yml", "slcFile2.yml"},
@@ -37,10 +38,10 @@ func TestYamlCheckMerge(t *testing.T) {
 func TestYamlCheck(t *testing.T) {
 	assert := assert.New(t)
 
-	mockCheck := func() shipshape.YamlCheck {
-		return shipshape.YamlCheck{
-			YamlBase: shipshape.YamlBase{
-				Values: []shipshape.KeyValue{
+	mockCheck := func() YamlCheck {
+		return YamlCheck{
+			YamlBase: YamlBase{
+				Values: []KeyValue{
 					{Key: "check.interval_days", Value: "7"},
 				},
 			},
@@ -50,17 +51,17 @@ func TestYamlCheck(t *testing.T) {
 
 	c := mockCheck()
 	c.FetchData()
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.EqualValues([]string{"no file provided"}, c.Result.Failures)
 
 	// Non-existent file.
-	shipshape.ProjectDir = "testdata"
+	ProjectDir = "testdata"
 	c = mockCheck()
-	c.Init(shipshape.Yaml)
+	c.Init(Yaml)
 	c.File = "non-existent.yml"
 	c.FetchData()
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.EqualValues([]string{"open testdata/yaml/non-existent.yml: no such file or directory"}, c.Result.Failures)
 
@@ -69,7 +70,7 @@ func TestYamlCheck(t *testing.T) {
 	c.File = "non-existent.yml"
 	c.IgnoreMissing = &cTrue
 	c.FetchData()
-	assert.Equal(shipshape.Pass, c.Result.Status)
+	assert.Equal(config.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.EqualValues([]string{"File testdata/yaml/non-existent.yml does not exist"}, c.Result.Passes)
 
@@ -78,12 +79,12 @@ func TestYamlCheck(t *testing.T) {
 	c.File = "update.settings.yml"
 	c.FetchData()
 	// Should not fail yet.
-	assert.NotEqual(shipshape.Fail, c.Result.Status)
+	assert.NotEqual(config.Fail, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.True(c.HasData(false))
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(shipshape.Pass, c.Result.Status)
+	assert.Equal(config.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.EqualValues([]string{"[yaml/update.settings.yml] 'check.interval_days' equals '7'"}, c.Result.Passes)
 
@@ -92,7 +93,7 @@ func TestYamlCheck(t *testing.T) {
 	c.Pattern = "*.bar.yml"
 	c.Path = ""
 	c.FetchData()
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.EqualValues([]string{"error parsing regexp: missing argument to repetition operator: `*`"}, c.Result.Failures)
 
@@ -100,7 +101,7 @@ func TestYamlCheck(t *testing.T) {
 	c = mockCheck()
 	c.Pattern = "bla.*.yml"
 	c.FetchData()
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.EqualValues([]string{"no matching config files found"}, c.Result.Failures)
 
@@ -109,7 +110,7 @@ func TestYamlCheck(t *testing.T) {
 	c.Pattern = "bla.*.yml"
 	c.IgnoreMissing = &cTrue
 	c.FetchData()
-	assert.Equal(shipshape.Pass, c.Result.Status)
+	assert.Equal(config.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.EqualValues([]string{"no matching config files found"}, c.Result.Passes)
 
@@ -118,7 +119,7 @@ func TestYamlCheck(t *testing.T) {
 	c.Pattern = "foo.bar.yml"
 	c.Path = "yaml/dir/subdir"
 	c.FetchData()
-	assert.NotEqual(shipshape.Fail, c.Result.Status)
+	assert.NotEqual(config.Fail, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	c.UnmarshalDataMap()
 	c.RunCheck()
@@ -129,11 +130,11 @@ func TestYamlCheck(t *testing.T) {
 	c = mockCheck()
 	c.Pattern = ".*.bar.yml"
 	c.FetchData()
-	assert.NotEqual(shipshape.Fail, c.Result.Status)
+	assert.NotEqual(config.Fail, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{
 			"[testdata/yaml/dir/foo.bar.yml] 'check.interval_days' equals '7'",

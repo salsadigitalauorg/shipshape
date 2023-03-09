@@ -3,11 +3,12 @@ package shipshape
 import (
 	"fmt"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"gopkg.in/yaml.v3"
 )
 
 // Merge implementation for Yaml check.
-func (c *YamlLintCheck) Merge(mergeCheck Check) error {
+func (c *YamlLintCheck) Merge(mergeCheck config.Check) error {
 	yamlLintMergeCheck := mergeCheck.(*YamlLintCheck)
 	if err := c.YamlCheck.Merge(&yamlLintMergeCheck.YamlCheck); err != nil {
 		return err
@@ -33,8 +34,8 @@ func (c *YamlLintCheck) UnmarshalDataMap() {
 			c.AddPass(fmt.Sprintf("%s has valid yaml.", f))
 		}
 	}
-	if c.Result.Status != Fail {
-		c.Result.Status = Pass
+	if c.Result.Status != config.Fail {
+		c.Result.Status = config.Pass
 	}
 }
 

@@ -3,16 +3,18 @@ package drupal_test
 import (
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	. "github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDbModuleMerge(t *testing.T) {
 	assert := assert.New(t)
 
-	c := drupal.DbModuleCheck{
-		DrushYamlCheck: drupal.DrushYamlCheck{
+	c := DbModuleCheck{
+		DrushYamlCheck: DrushYamlCheck{
 			YamlBase: shipshape.YamlBase{
 				Values: []shipshape.KeyValue{
 					{Key: "key1", Value: "val1", Optional: false},
@@ -22,8 +24,8 @@ func TestDbModuleMerge(t *testing.T) {
 		Required:   []string{"req1"},
 		Disallowed: []string{"disallowed1"},
 	}
-	c.Merge(&drupal.DbModuleCheck{
-		DrushYamlCheck: drupal.DrushYamlCheck{
+	c.Merge(&DbModuleCheck{
+		DrushYamlCheck: DrushYamlCheck{
 			YamlBase: shipshape.YamlBase{
 				Values: []shipshape.KeyValue{
 					{Key: "key1", Value: "val1", Optional: true},
@@ -33,8 +35,8 @@ func TestDbModuleMerge(t *testing.T) {
 		Required:   []string{"req2"},
 		Disallowed: []string{"disallowed2"},
 	})
-	assert.EqualValues(drupal.DbModuleCheck{
-		DrushYamlCheck: drupal.DrushYamlCheck{
+	assert.EqualValues(DbModuleCheck{
+		DrushYamlCheck: DrushYamlCheck{
 			YamlBase: shipshape.YamlBase{
 				Values: []shipshape.KeyValue{
 					{Key: "key1", Value: "val1", Optional: true},
@@ -49,11 +51,11 @@ func TestDbModuleMerge(t *testing.T) {
 func TestDbModuleCheck(t *testing.T) {
 	assert := assert.New(t)
 
-	c := drupal.DbModuleCheck{}
-	c.Init(drupal.DbModule)
+	c := DbModuleCheck{}
+	c.Init(DbModule)
 	assert.Equal("pm:list --status=enabled", c.Command)
 
-	mockCheck := func(dataMap map[string][]byte) drupal.DbModuleCheck {
+	mockCheck := func(dataMap map[string][]byte) DbModuleCheck {
 		if dataMap == nil {
 			dataMap = map[string][]byte{
 				"modules": []byte(`
@@ -65,24 +67,24 @@ node:
 `),
 			}
 		}
-		c := drupal.DbModuleCheck{
-			DrushYamlCheck: drupal.DrushYamlCheck{
+		c := DbModuleCheck{
+			DrushYamlCheck: DrushYamlCheck{
 				YamlBase: shipshape.YamlBase{
-					CheckBase: shipshape.CheckBase{DataMap: dataMap},
+					CheckBase: config.CheckBase{DataMap: dataMap},
 				},
 				ConfigName: "modules",
 			},
 			Required:   []string{"block", "node"},
 			Disallowed: []string{"views_ui", "field_ui"},
 		}
-		c.Init(drupal.DbModule)
+		c.Init(DbModule)
 		c.UnmarshalDataMap()
 		c.RunCheck()
 		return c
 	}
 
 	c = mockCheck(nil)
-	assert.Equal(shipshape.Pass, c.Result.Status)
+	assert.Equal(config.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"'block' is enabled",
@@ -101,7 +103,7 @@ views_ui:
 `),
 	})
 
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"'node' is enabled",
 		"'field_ui' is not enabled",

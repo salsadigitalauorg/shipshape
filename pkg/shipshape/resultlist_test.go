@@ -7,6 +7,7 @@ import (
 	"testing"
 	"text/tabwriter"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,21 +18,21 @@ func TestNewResultList(t *testing.T) {
 	t.Run("emptyInit", func(t *testing.T) {
 		rl := NewResultList(false)
 		assert.Equal(rl.RemediationPerformed, false)
-		assert.Equal(rl.Results, []Result{})
-		assert.Equal(rl.CheckCountByType, map[CheckType]int{})
-		assert.Equal(rl.BreachCountByType, map[CheckType]int{})
-		assert.Equal(rl.BreachCountBySeverity, map[Severity]int{})
-		assert.Equal(rl.RemediationCountByType, map[CheckType]int{})
+		assert.Equal(rl.Results, []config.Result{})
+		assert.Equal(rl.CheckCountByType, map[config.CheckType]int{})
+		assert.Equal(rl.BreachCountByType, map[config.CheckType]int{})
+		assert.Equal(rl.BreachCountBySeverity, map[config.Severity]int{})
+		assert.Equal(rl.RemediationCountByType, map[config.CheckType]int{})
 	})
 
 	t.Run("remediation", func(t *testing.T) {
 		rl := NewResultList(true)
 		assert.Equal(rl.RemediationPerformed, true)
-		assert.Equal(rl.Results, []Result{})
-		assert.Equal(rl.CheckCountByType, map[CheckType]int{})
-		assert.Equal(rl.BreachCountByType, map[CheckType]int{})
-		assert.Equal(rl.BreachCountBySeverity, map[Severity]int{})
-		assert.Equal(rl.RemediationCountByType, map[CheckType]int{})
+		assert.Equal(rl.Results, []config.Result{})
+		assert.Equal(rl.CheckCountByType, map[config.CheckType]int{})
+		assert.Equal(rl.BreachCountByType, map[config.CheckType]int{})
+		assert.Equal(rl.BreachCountBySeverity, map[config.Severity]int{})
+		assert.Equal(rl.RemediationCountByType, map[config.CheckType]int{})
 	})
 
 }
@@ -40,16 +41,16 @@ func TestResultListStatus(t *testing.T) {
 	assert := assert.New(t)
 
 	rl := ResultList{
-		Results: []Result{
-			{Status: Pass},
-			{Status: Pass},
-			{Status: Pass},
+		Results: []config.Result{
+			{Status: config.Pass},
+			{Status: config.Pass},
+			{Status: config.Pass},
 		},
 	}
-	assert.Equal(Pass, rl.Status())
+	assert.Equal(config.Pass, rl.Status())
 
-	rl.Results[0].Status = Fail
-	assert.Equal(Fail, rl.Status())
+	rl.Results[0].Status = config.Fail
+	assert.Equal(config.Fail, rl.Status())
 }
 
 func TestResultListIncrChecks(t *testing.T) {
@@ -57,7 +58,7 @@ func TestResultListIncrChecks(t *testing.T) {
 
 	rl := ResultList{
 		TotalChecks:      0,
-		CheckCountByType: map[CheckType]int{},
+		CheckCountByType: map[config.CheckType]int{},
 	}
 	rl.IncrChecks(File, 5)
 	assert.Equal(5, int(rl.TotalChecks))
@@ -88,34 +89,34 @@ func TestResultListAddResult(t *testing.T) {
 
 	rl := ResultList{
 		TotalBreaches:         0,
-		BreachCountByType:     map[CheckType]int{},
-		BreachCountBySeverity: map[Severity]int{},
+		BreachCountByType:     map[config.CheckType]int{},
+		BreachCountBySeverity: map[config.Severity]int{},
 
 		TotalRemediations:      0,
-		RemediationCountByType: map[CheckType]int{},
+		RemediationCountByType: map[config.CheckType]int{},
 	}
-	rl.AddResult(Result{
-		Severity:     HighSeverity,
+	rl.AddResult(config.Result{
+		Severity:     config.HighSeverity,
 		CheckType:    File,
 		Failures:     []string{"fail1", "fail2", "fail3", "fail4", "fail5"},
 		Remediations: []string{"fixed1"},
 	})
 	assert.Equal(5, int(rl.TotalBreaches))
 	assert.Equal(5, rl.BreachCountByType[File])
-	assert.Equal(5, rl.BreachCountBySeverity[HighSeverity])
+	assert.Equal(5, rl.BreachCountBySeverity[config.HighSeverity])
 	assert.Equal(1, int(rl.TotalRemediations))
 	assert.Equal(1, rl.RemediationCountByType[File])
 
-	rl.AddResult(Result{
-		Severity:  CriticalSeverity,
+	rl.AddResult(config.Result{
+		Severity:  config.CriticalSeverity,
 		CheckType: Yaml,
 		Failures:  []string{"fail1", "fail2", "fail3", "fail4", "fail5"},
 	})
 	assert.Equal(10, int(rl.TotalBreaches))
 	assert.Equal(5, rl.BreachCountByType[File])
 	assert.Equal(5, rl.BreachCountByType[Yaml])
-	assert.Equal(5, rl.BreachCountBySeverity[HighSeverity])
-	assert.Equal(5, rl.BreachCountBySeverity[CriticalSeverity])
+	assert.Equal(5, rl.BreachCountBySeverity[config.HighSeverity])
+	assert.Equal(5, rl.BreachCountBySeverity[config.CriticalSeverity])
 	assert.Equal(1, int(rl.TotalRemediations))
 	assert.Equal(1, rl.RemediationCountByType[File])
 	assert.Equal(0, rl.RemediationCountByType[Yaml])
@@ -125,13 +126,13 @@ func TestResultListAddResult(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			rl.AddResult(Result{
-				Severity:  HighSeverity,
+			rl.AddResult(config.Result{
+				Severity:  config.HighSeverity,
 				CheckType: File,
 				Failures:  []string{"fail6"},
 			})
-			rl.AddResult(Result{
-				Severity:     CriticalSeverity,
+			rl.AddResult(config.Result{
+				Severity:     config.CriticalSeverity,
 				CheckType:    Yaml,
 				Failures:     []string{"fail6"},
 				Remediations: []string{"fixed2", "fixed3"},
@@ -142,8 +143,8 @@ func TestResultListAddResult(t *testing.T) {
 	assert.Equal(210, int(rl.TotalBreaches))
 	assert.Equal(105, rl.BreachCountByType[File])
 	assert.Equal(105, rl.BreachCountByType[Yaml])
-	assert.Equal(105, rl.BreachCountBySeverity[HighSeverity])
-	assert.Equal(105, rl.BreachCountBySeverity[CriticalSeverity])
+	assert.Equal(105, rl.BreachCountBySeverity[config.HighSeverity])
+	assert.Equal(105, rl.BreachCountBySeverity[config.CriticalSeverity])
 	assert.Equal(201, int(rl.TotalRemediations))
 	assert.Equal(1, rl.RemediationCountByType[File])
 	assert.Equal(200, rl.RemediationCountByType[Yaml])
@@ -153,7 +154,7 @@ func TestResultListGetBreachesByCheckName(t *testing.T) {
 	assert := assert.New(t)
 
 	rl := ResultList{
-		Results: []Result{
+		Results: []config.Result{
 			{
 				Name:     "check1",
 				Failures: []string{"failure1", "failure 2"},
@@ -176,30 +177,30 @@ func TestResultListGetBreachesBySeverity(t *testing.T) {
 	assert := assert.New(t)
 
 	rl := ResultList{
-		Results: []Result{
+		Results: []config.Result{
 			{
-				Severity: HighSeverity,
+				Severity: config.HighSeverity,
 				Failures: []string{"failure1", "failure 2"},
 			},
 			{
-				Severity: NormalSeverity,
+				Severity: config.NormalSeverity,
 				Failures: []string{"failure3", "failure 4"},
 			},
 		},
 	}
 	assert.EqualValues(
 		[]string{"failure1", "failure 2"},
-		rl.GetBreachesBySeverity(HighSeverity))
+		rl.GetBreachesBySeverity(config.HighSeverity))
 	assert.EqualValues(
 		[]string{"failure3", "failure 4"},
-		rl.GetBreachesBySeverity(NormalSeverity))
+		rl.GetBreachesBySeverity(config.NormalSeverity))
 }
 
 func TestResultListGetRemediationsByCheckName(t *testing.T) {
 	assert := assert.New(t)
 
 	rl := ResultList{
-		Results: []Result{
+		Results: []config.Result{
 			{
 				Name:         "check1",
 				Remediations: []string{"fix1", "fix 2"},
@@ -222,7 +223,7 @@ func TestResultListSort(t *testing.T) {
 	assert := assert.New(t)
 
 	rl := ResultList{
-		Results: []Result{
+		Results: []config.Result{
 			{Name: "zcheck"},
 			{Name: "hcheck"},
 			{Name: "fcheck"},
@@ -231,7 +232,7 @@ func TestResultListSort(t *testing.T) {
 		},
 	}
 	rl.Sort()
-	assert.EqualValues([]Result{
+	assert.EqualValues([]config.Result{
 		{Name: "acheck"},
 		{Name: "ccheck"},
 		{Name: "fcheck"},
@@ -252,17 +253,17 @@ func TestResultListTableDisplay(t *testing.T) {
 		buf.String())
 
 	buf = bytes.Buffer{}
-	rl = ResultList{Results: []Result{{Name: "a", Status: Pass}}}
+	rl = ResultList{Results: []config.Result{{Name: "a", Status: config.Pass}}}
 	rl.TableDisplay(w)
 	assert.Equal("NAME   STATUS   PASSES   FAILS\n"+
 		"a      Pass              \n", buf.String())
 
 	buf = bytes.Buffer{}
 	rl = ResultList{
-		Results: []Result{
-			{Name: "a", Status: Pass},
-			{Name: "b", Status: Pass},
-			{Name: "c", Status: Pass},
+		Results: []config.Result{
+			{Name: "a", Status: config.Pass},
+			{Name: "b", Status: config.Pass},
+			{Name: "c", Status: config.Pass},
 		},
 	}
 	rl.TableDisplay(w)
@@ -274,25 +275,25 @@ func TestResultListTableDisplay(t *testing.T) {
 
 	buf = bytes.Buffer{}
 	rl = ResultList{
-		Results: []Result{
+		Results: []config.Result{
 			{
 				Name:   "a",
-				Status: Pass,
+				Status: config.Pass,
 				Passes: []string{"Pass a", "Pass ab"},
 			},
 			{
 				Name:   "b",
-				Status: Pass,
+				Status: config.Pass,
 				Passes: []string{"Pass b", "Pass bb", "Pass bc"},
 			},
 			{
 				Name:     "c",
-				Status:   Fail,
+				Status:   config.Fail,
 				Failures: []string{"Fail c", "Fail cb"},
 			},
 			{
 				Name:     "d",
-				Status:   Fail,
+				Status:   config.Fail,
 				Passes:   []string{"Pass d", "Pass db"},
 				Failures: []string{"Fail c", "Fail cb"},
 			},
@@ -327,7 +328,7 @@ func TestResultListSimpleDisplay(t *testing.T) {
 		rl := NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		rl.Results = append(rl.Results, Result{Name: "a", Status: Pass})
+		rl.Results = append(rl.Results, config.Result{Name: "a", Status: config.Pass})
 		buf = bytes.Buffer{}
 		rl.SimpleDisplay(w)
 		assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
@@ -337,9 +338,9 @@ func TestResultListSimpleDisplay(t *testing.T) {
 		rl := NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		rl.Results = append(rl.Results, Result{
+		rl.Results = append(rl.Results, config.Result{
 			Name:     "b",
-			Status:   Fail,
+			Status:   config.Fail,
 			Failures: []string{"Fail b"}})
 		buf = bytes.Buffer{}
 		rl.SimpleDisplay(w)
@@ -350,7 +351,7 @@ func TestResultListSimpleDisplay(t *testing.T) {
 		rl := ResultList{RemediationPerformed: true}
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		rl.Results = append(rl.Results, Result{Name: "a", Status: Pass})
+		rl.Results = append(rl.Results, config.Result{Name: "a", Status: config.Pass})
 		buf = bytes.Buffer{}
 		rl.SimpleDisplay(w)
 		assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
@@ -361,7 +362,7 @@ func TestResultListSimpleDisplay(t *testing.T) {
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		rl.TotalRemediations = 1
-		rl.Results = append(rl.Results, Result{Name: "a", Status: Pass, Remediations: []string{"fixed 1"}})
+		rl.Results = append(rl.Results, config.Result{Name: "a", Status: config.Pass, Remediations: []string{"fixed 1"}})
 		buf = bytes.Buffer{}
 		rl.SimpleDisplay(w)
 		assert.Equal("Breaches were detected but were all fixed successfully!\n\n"+
@@ -374,7 +375,7 @@ func TestResultListSimpleDisplay(t *testing.T) {
 		w := bufio.NewWriter(&buf)
 		rl.TotalRemediations = 1
 		rl.TotalBreaches = 1
-		rl.Results = append(rl.Results, Result{Name: "a", Status: Fail, Remediations: []string{"fixed 1"}})
+		rl.Results = append(rl.Results, config.Result{Name: "a", Status: config.Fail, Remediations: []string{"fixed 1"}})
 		buf = bytes.Buffer{}
 		rl.SimpleDisplay(w)
 		assert.Equal("Breaches were detected but not all of them could be "+
@@ -390,7 +391,7 @@ func TestResultListSimpleDisplay(t *testing.T) {
 		w := bufio.NewWriter(&buf)
 		rl.TotalBreaches = 1
 		rl.TotalRemediations = 0
-		rl.Results = append(rl.Results, Result{Name: "a", Status: Fail})
+		rl.Results = append(rl.Results, config.Result{Name: "a", Status: config.Fail})
 		buf = bytes.Buffer{}
 		rl.SimpleDisplay(w)
 		assert.Equal("Breaches were detected but not all of them could be "+
@@ -410,10 +411,10 @@ func TestResultListJUnit(t *testing.T) {
 <testsuites tests="0" errors="0"></testsuites>
 `, buf.String())
 
-	RunConfig.Checks = CheckMap{File: []Check{&FileCheck{
-		CheckBase: CheckBase{Name: "a"},
+	RunConfig.Checks = config.CheckMap{File: []config.Check{&FileCheck{
+		CheckBase: config.CheckBase{Name: "a"},
 	}}}
-	RunResultList.Results = append(RunResultList.Results, Result{Name: "a", Status: Pass})
+	RunResultList.Results = append(RunResultList.Results, config.Result{Name: "a", Status: config.Pass})
 	buf = bytes.Buffer{}
 	RunResultList.JUnit(w)
 	assert.Equal(`<?xml version="1.0" encoding="UTF-8"?>
@@ -425,11 +426,11 @@ func TestResultListJUnit(t *testing.T) {
 `, buf.String())
 
 	RunConfig.Checks[File] = append(RunConfig.Checks[File], &FileCheck{
-		CheckBase: CheckBase{Name: "b"},
+		CheckBase: config.CheckBase{Name: "b"},
 	})
-	RunResultList.Results = append(RunResultList.Results, Result{
+	RunResultList.Results = append(RunResultList.Results, config.Result{
 		Name:     "b",
-		Status:   Fail,
+		Status:   config.Fail,
 		Failures: []string{"Fail b"}})
 	buf = bytes.Buffer{}
 	RunResultList.JUnit(w)

@@ -1,11 +1,13 @@
 package docker
 
-import "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+import (
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+)
 
 //go:generate go run ../../cmd/gen.go registry --checkpackage=docker
 
 func RegisterChecks() {
-	shipshape.ChecksRegistry[BaseImage] = func() shipshape.Check { return &BaseImageCheck{} }
+	config.ChecksRegistry[BaseImage] = func() config.Check { return &BaseImageCheck{} }
 }
 
 func init() {

@@ -3,19 +3,20 @@ package drupal
 import (
 	"fmt"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
 //go:generate go run ../../cmd/gen.go registry --checkpackage=drupal
 
 func RegisterChecks() {
-	shipshape.ChecksRegistry[DrushYaml] = func() shipshape.Check { return &DrushYamlCheck{} }
-	shipshape.ChecksRegistry[FileModule] = func() shipshape.Check { return &FileModuleCheck{} }
-	shipshape.ChecksRegistry[DbModule] = func() shipshape.Check { return &DbModuleCheck{} }
-	shipshape.ChecksRegistry[DbPermissions] = func() shipshape.Check { return &DbPermissionsCheck{} }
-	shipshape.ChecksRegistry[TrackingCode] = func() shipshape.Check { return &TrackingCodeCheck{} }
-	shipshape.ChecksRegistry[UserRole] = func() shipshape.Check { return &UserRoleCheck{} }
-	shipshape.ChecksRegistry[AdminUser] = func() shipshape.Check { return &AdminUserCheck{} }
+	config.ChecksRegistry[DrushYaml] = func() config.Check { return &DrushYamlCheck{} }
+	config.ChecksRegistry[FileModule] = func() config.Check { return &FileModuleCheck{} }
+	config.ChecksRegistry[DbModule] = func() config.Check { return &DbModuleCheck{} }
+	config.ChecksRegistry[DbPermissions] = func() config.Check { return &DbPermissionsCheck{} }
+	config.ChecksRegistry[TrackingCode] = func() config.Check { return &TrackingCodeCheck{} }
+	config.ChecksRegistry[UserRole] = func() config.Check { return &UserRoleCheck{} }
+	config.ChecksRegistry[AdminUser] = func() config.Check { return &AdminUserCheck{} }
 }
 
 func init() {
@@ -25,7 +26,7 @@ func init() {
 // CheckModulesInYaml applies the Check logic for Drupal Modules in yaml content.
 // It uses YamlBase to verify that the list of provided Required or
 // Disallowed modules are installed or not.
-var CheckModulesInYaml = func(c *shipshape.YamlBase, ct shipshape.CheckType, configName string, required []string, disallowed []string) {
+var CheckModulesInYaml = func(c *shipshape.YamlBase, ct config.CheckType, configName string, required []string, disallowed []string) {
 	moduleKey := func(m string) shipshape.KeyValue {
 		if ct == FileModule {
 			return shipshape.KeyValue{
@@ -63,6 +64,6 @@ var CheckModulesInYaml = func(c *shipshape.YamlBase, ct shipshape.CheckType, con
 	}
 
 	if len(c.Result.Failures) == 0 {
-		c.Result.Status = shipshape.Pass
+		c.Result.Status = config.Pass
 	}
 }

@@ -6,11 +6,12 @@ import (
 	"net/url"
 
 	"github.com/gocolly/colly"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 // Merge implementation for file check.
-func (c *CrawlerCheck) Merge(mergeCheck Check) error {
+func (c *CrawlerCheck) Merge(mergeCheck config.Check) error {
 	crawlerMergeCheck := mergeCheck.(*CrawlerCheck)
 	if err := c.CheckBase.Merge(&crawlerMergeCheck.CheckBase); err != nil {
 		return err
@@ -54,7 +55,7 @@ func (c *CrawlerCheck) RunCheck() {
 	})
 
 	crawler.OnError(func(r *colly.Response, err error) {
-		c.Result.Status = Fail
+		c.Result.Status = config.Fail
 		c.AddFail(fmt.Sprintf("Invalid response for: %s got %d", r.Request.URL, r.StatusCode))
 	})
 
@@ -72,8 +73,8 @@ func (c *CrawlerCheck) RunCheck() {
 		}
 	}
 
-	if c.Result.Status != Fail {
-		c.Result.Status = Pass
+	if c.Result.Status != config.Fail {
+		c.Result.Status = config.Pass
 		c.AddPass("All requests completed successfully")
 	}
 }

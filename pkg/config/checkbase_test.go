@@ -1,50 +1,52 @@
-package shipshape_test
+package config_test
 
 import (
 	"errors"
 	"fmt"
 	"testing"
 
+	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckBaseInit(t *testing.T) {
 	assert := assert.New(t)
 
-	c := shipshape.CheckBase{Name: "foo"}
+	c := CheckBase{Name: "foo"}
 	assert.Equal("foo", c.GetName())
 
 	c.Init(shipshape.File)
-	assert.Equal(shipshape.NormalSeverity, c.Severity)
+	assert.Equal(NormalSeverity, c.Severity)
 	assert.Equal("foo", c.Result.Name)
-	assert.Equal(shipshape.NormalSeverity, c.Result.Severity)
+	assert.Equal(NormalSeverity, c.Result.Severity)
 	assert.Equal(shipshape.File, c.GetType())
 }
 
 func TestCheckBaseMerge(t *testing.T) {
 	assert := assert.New(t)
 
-	c := shipshape.CheckBase{Name: "foo"}
-	err := c.Merge(&shipshape.CheckBase{Name: "bar"})
+	c := CheckBase{Name: "foo"}
+	err := c.Merge(&CheckBase{Name: "bar"})
 	assert.Equal(fmt.Errorf("can only merge checks with the same name"), err)
 
-	c = shipshape.CheckBase{Name: "foo", Severity: shipshape.HighSeverity}
-	c.Merge(&shipshape.CheckBase{Name: "foo"})
-	assert.Equal(shipshape.HighSeverity, c.Severity)
+	c = CheckBase{Name: "foo", Severity: HighSeverity}
+	c.Merge(&CheckBase{Name: "foo"})
+	assert.Equal(HighSeverity, c.Severity)
 
-	c = shipshape.CheckBase{Severity: shipshape.LowSeverity}
-	c.Merge(&shipshape.CheckBase{Name: "foo"})
-	assert.Equal(shipshape.LowSeverity, c.Severity)
+	c = CheckBase{Severity: LowSeverity}
+	c.Merge(&CheckBase{Name: "foo"})
+	assert.Equal(LowSeverity, c.Severity)
 }
 
 func TestCheckBaseRunCheck(t *testing.T) {
 	assert := assert.New(t)
 
-	c := shipshape.CheckBase{}
+	c := CheckBase{}
 	c.FetchData()
 	c.RunCheck()
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	assert.Equal(Fail, c.Result.Status)
 	assert.EqualValues([]string{"not implemented"}, c.Result.Failures)
 }
 

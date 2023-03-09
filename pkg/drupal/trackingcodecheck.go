@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
-func (c *TrackingCodeCheck) Init(ct shipshape.CheckType) {
+func (c *TrackingCodeCheck) Init(ct config.CheckType) {
 	c.CheckBase.Init(ct)
 	c.RequiresDb = true
 	c.Command = "status"
@@ -19,7 +19,7 @@ func (c *TrackingCodeCheck) Init(ct shipshape.CheckType) {
 }
 
 // Merge implementation for DbModuleCheck check.
-func (c *TrackingCodeCheck) Merge(mergeCheck shipshape.Check) error {
+func (c *TrackingCodeCheck) Merge(mergeCheck config.Check) error {
 	trackingCodeMergeCheck := mergeCheck.(*TrackingCodeCheck)
 	if err := c.DrushYamlCheck.Merge(&trackingCodeMergeCheck.DrushYamlCheck); err != nil {
 		return err
@@ -62,7 +62,7 @@ func (c *TrackingCodeCheck) RunCheck() {
 
 	if r.Match(body) {
 		c.AddPass(fmt.Sprintf("tracking code [%s] present", c.Code))
-		c.Result.Status = shipshape.Pass
+		c.Result.Status = config.Pass
 	} else {
 		c.AddFail(fmt.Sprintf("tracking code [%s] not present", c.Code))
 	}

@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 // Merge implementation for file check.
-func (c *FileCheck) Merge(mergeCheck Check) error {
+func (c *FileCheck) Merge(mergeCheck config.Check) error {
 	fileMergeCheck := mergeCheck.(*FileCheck)
 	if err := c.CheckBase.Merge(&fileMergeCheck.CheckBase); err != nil {
 		return err
@@ -34,7 +35,7 @@ func (c *FileCheck) RunCheck() {
 		return
 	}
 	if len(files) == 0 {
-		c.Result.Status = Pass
+		c.Result.Status = config.Pass
 		c.AddPass("No illegal files")
 		return
 	}

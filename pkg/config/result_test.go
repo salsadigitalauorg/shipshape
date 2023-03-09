@@ -1,9 +1,10 @@
-package shipshape_test
+package config_test
 
 import (
 	"testing"
 
-	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	. "github.com/salsadigitalauorg/shipshape/pkg/config"
+
 	"github.com/stretchr/testify/assert"
 )
 

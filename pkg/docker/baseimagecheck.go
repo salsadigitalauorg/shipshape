@@ -5,20 +5,20 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
 
-const BaseImage shipshape.CheckType = "docker:base_image"
+const BaseImage config.CheckType = "docker:base_image"
 
 type BaseImageCheck struct {
-	shipshape.CheckBase `yaml:",inline"`
-	Allowed             []string `yaml:"allowed"`
-	Exclude             []string `yaml:"exclude"`
-	Deprecated          []string `yaml:"deprecated"`
-	Pattern             []string `yaml:"pattern"`
-	Paths               []string `yaml:"paths"`
+	config.CheckBase `yaml:",inline"`
+	Allowed          []string `yaml:"allowed"`
+	Exclude          []string `yaml:"exclude"`
+	Deprecated       []string `yaml:"deprecated"`
+	Pattern          []string `yaml:"pattern"`
+	Paths            []string `yaml:"paths"`
 }
 
 type Compose struct {
@@ -34,7 +34,7 @@ type ComposeService struct {
 }
 
 // Merge implementation for DbModuleCheck check.
-func (c *BaseImageCheck) Merge(mergeCheck shipshape.Check) error {
+func (c *BaseImageCheck) Merge(mergeCheck config.Check) error {
 	baseImageMergeCheck := mergeCheck.(*BaseImageCheck)
 	if err := c.CheckBase.Merge(&baseImageMergeCheck.CheckBase); err != nil {
 		return err
@@ -104,7 +104,7 @@ func (c *BaseImageCheck) RunCheck() {
 		}
 
 		if len(c.Result.Failures) == 0 {
-			c.Result.Status = shipshape.Pass
+			c.Result.Status = config.Pass
 		}
 	}
 

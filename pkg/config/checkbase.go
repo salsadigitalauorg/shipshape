@@ -1,6 +1,8 @@
-package shipshape
+package config
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Init acts as the constructor of a check and sets some initial values.
 func (c *CheckBase) Init(ct CheckType) {

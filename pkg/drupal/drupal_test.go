@@ -4,22 +4,24 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/drupal"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	. "github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRegisterChecks(t *testing.T) {
-	checksMap := map[shipshape.CheckType]string{
-		drupal.DrushYaml:     "*drupal.DrushYamlCheck",
-		drupal.FileModule:    "*drupal.FileModuleCheck",
-		drupal.DbModule:      "*drupal.DbModuleCheck",
-		drupal.DbPermissions: "*drupal.DbPermissionsCheck",
-		drupal.TrackingCode:  "*drupal.TrackingCodeCheck",
-		drupal.UserRole:      "*drupal.UserRoleCheck",
+	checksMap := map[config.CheckType]string{
+		DrushYaml:     "*drupal.DrushYamlCheck",
+		FileModule:    "*drupal.FileModuleCheck",
+		DbModule:      "*drupal.DbModuleCheck",
+		DbPermissions: "*drupal.DbPermissionsCheck",
+		TrackingCode:  "*drupal.TrackingCodeCheck",
+		UserRole:      "*drupal.UserRoleCheck",
 	}
 	for ct, ts := range checksMap {
-		c := shipshape.ChecksRegistry[ct]()
+		c := config.ChecksRegistry[ct]()
 		ctype := reflect.TypeOf(c).String()
 		assert.Equal(t, ts, ctype)
 	}
@@ -27,7 +29,7 @@ func TestRegisterChecks(t *testing.T) {
 
 func mockCheck(configName string) shipshape.YamlBase {
 	return shipshape.YamlBase{
-		CheckBase: shipshape.CheckBase{
+		CheckBase: config.CheckBase{
 			DataMap: map[string][]byte{
 				configName: []byte(`
 module:
@@ -65,7 +67,7 @@ module:
 		"update",
 	}
 
-	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
+	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"'clamav' is enabled",
 		"'tfa' is enabled",
@@ -89,8 +91,8 @@ func TestCheckModulesInYaml(t *testing.T) {
 		"field_ui&bar",
 	}
 	c.UnmarshalDataMap()
-	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"'block' is enabled",
 		"'views_ui' is not enabled",
@@ -119,8 +121,8 @@ module:
 		"field_ui",
 	}
 	c.UnmarshalDataMap()
-	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
-	assert.Equal(shipshape.Fail, c.Result.Status)
+	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
+	assert.Equal(config.Fail, c.Result.Status)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"'block' is enabled",
 		"'field_ui' is not enabled",
@@ -140,8 +142,8 @@ module:
 		"field_ui",
 	}
 	c.UnmarshalDataMap()
-	drupal.CheckModulesInYaml(&c, drupal.FileModule, "shipshape.extension.yml", required, disallowed)
-	assert.Equal(shipshape.Pass, c.Result.Status)
+	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
+	assert.Equal(config.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"'node' is enabled",
