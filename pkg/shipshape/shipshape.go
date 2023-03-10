@@ -17,12 +17,10 @@ import (
 
 //go:generate go run ../../cmd/gen.go registry --checkpackage=shipshape
 
-var ProjectDir string
 var RunConfig config.Config
 var RunResultList ResultList
 
 func init() {
-	config.ChecksRegistry[File] = func() config.Check { return &FileCheck{} }
 	config.ChecksRegistry[Yaml] = func() config.Check { return &YamlCheck{} }
 	config.ChecksRegistry[YamlLint] = func() config.Check { return &YamlLintCheck{} }
 }
@@ -45,7 +43,7 @@ func Init(projectDir string, configFiles []string, checkTypesToRun []string, exc
 		return err
 	}
 
-	ProjectDir = RunConfig.ProjectDir
+	config.ProjectDir = RunConfig.ProjectDir
 	RunResultList = NewResultList(remediate)
 
 	// Remediate is a command-level flag, so we set the value outside of

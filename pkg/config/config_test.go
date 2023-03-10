@@ -5,6 +5,7 @@ import (
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/crawler"
+	"github.com/salsadigitalauorg/shipshape/pkg/file"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 
 	"github.com/stretchr/testify/assert"
@@ -36,7 +37,7 @@ func TestMerge(t *testing.T) {
 	// Ensure checks are merged properly.
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			shipshape.File: {&shipshape.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
+			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
 		},
 	})
 	assert.NoError(err)
@@ -44,7 +45,7 @@ func TestMerge(t *testing.T) {
 	assert.Equal(HighSeverity, cfg.FailSeverity)
 	assert.EqualValues(
 		CheckMap{
-			shipshape.File: {&shipshape.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
+			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
 		},
 		cfg.Checks,
 	)
@@ -61,7 +62,7 @@ func TestMerge(t *testing.T) {
 	assert.NoError(err)
 	assert.EqualValues(
 		CheckMap{
-			shipshape.File: {&shipshape.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
+			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
 			shipshape.Yaml: {&shipshape.YamlCheck{
 				YamlBase: shipshape.YamlBase{
 					CheckBase: CheckBase{Name: "yamlcheck1"},
@@ -79,7 +80,7 @@ func TestMerge(t *testing.T) {
 	assert.NoError(err)
 	assert.EqualValues(
 		CheckMap{
-			shipshape.File: {&shipshape.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
+			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
 			shipshape.Yaml: {&shipshape.YamlCheck{
 				YamlBase: shipshape.YamlBase{
 					CheckBase: CheckBase{Name: "yamlcheck1"},
@@ -94,14 +95,14 @@ func TestMerge(t *testing.T) {
 		ProjectDir:   "foo",
 		FailSeverity: NormalSeverity,
 		Checks: CheckMap{
-			shipshape.File: {&shipshape.FileCheck{
+			file.File: {&file.FileCheck{
 				CheckBase: CheckBase{Name: "filecheck1", Severity: NormalSeverity},
 			}},
 		},
 	}
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			shipshape.File: {&shipshape.FileCheck{
+			file.File: {&file.FileCheck{
 				CheckBase: CheckBase{Name: "filecheck2", Severity: NormalSeverity},
 				Path:      "path1"},
 			},
@@ -110,9 +111,9 @@ func TestMerge(t *testing.T) {
 	assert.NoError(err)
 	assert.EqualValues(
 		CheckMap{
-			shipshape.File: {
-				&shipshape.FileCheck{CheckBase: CheckBase{Name: "filecheck1", Severity: NormalSeverity}},
-				&shipshape.FileCheck{
+			file.File: {
+				&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1", Severity: NormalSeverity}},
+				&file.FileCheck{
 					CheckBase: CheckBase{Name: "filecheck2", Severity: NormalSeverity},
 					Path:      "path1"},
 			},
@@ -123,8 +124,8 @@ func TestMerge(t *testing.T) {
 	// Test changing values for same check name.
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			shipshape.File: {
-				&shipshape.FileCheck{
+			file.File: {
+				&file.FileCheck{
 					CheckBase: CheckBase{
 						Name:     "filecheck2",
 						Severity: HighSeverity},
@@ -136,14 +137,14 @@ func TestMerge(t *testing.T) {
 	assert.NoError(err)
 	assert.EqualValues(
 		CheckMap{
-			shipshape.File: {
-				&shipshape.FileCheck{
+			file.File: {
+				&file.FileCheck{
 					CheckBase: CheckBase{
 						Name:     "filecheck1",
 						Severity: NormalSeverity,
 					},
 				},
-				&shipshape.FileCheck{
+				&file.FileCheck{
 					CheckBase: CheckBase{
 						Name:     "filecheck2",
 						Severity: HighSeverity,
@@ -158,21 +159,21 @@ func TestMerge(t *testing.T) {
 	// Test changing values for all checks of a type.
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			shipshape.File: {
-				&shipshape.FileCheck{
+			file.File: {
+				&file.FileCheck{
 					CheckBase: CheckBase{
 						Severity: CriticalSeverity}}}}})
 	assert.NoError(err)
 	assert.EqualValues(
 		CheckMap{
-			shipshape.File: {
-				&shipshape.FileCheck{
+			file.File: {
+				&file.FileCheck{
 					CheckBase: CheckBase{
 						Name:     "filecheck1",
 						Severity: CriticalSeverity,
 					},
 				},
-				&shipshape.FileCheck{
+				&file.FileCheck{
 					CheckBase: CheckBase{
 						Name:     "filecheck2",
 						Severity: CriticalSeverity,

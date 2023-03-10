@@ -8,6 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/file"
 	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/stretchr/testify/assert"
 )
@@ -60,13 +61,13 @@ func TestResultListIncrChecks(t *testing.T) {
 		TotalChecks:      0,
 		CheckCountByType: map[config.CheckType]int{},
 	}
-	rl.IncrChecks(File, 5)
+	rl.IncrChecks(file.File, 5)
 	assert.Equal(5, int(rl.TotalChecks))
-	assert.Equal(5, rl.CheckCountByType[File])
+	assert.Equal(5, rl.CheckCountByType[file.File])
 
 	rl.IncrChecks(Yaml, 5)
 	assert.Equal(10, int(rl.TotalChecks))
-	assert.Equal(5, rl.CheckCountByType[File])
+	assert.Equal(5, rl.CheckCountByType[file.File])
 	assert.Equal(5, rl.CheckCountByType[Yaml])
 
 	var wg sync.WaitGroup
@@ -74,13 +75,13 @@ func TestResultListIncrChecks(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			rl.IncrChecks(File, 1)
+			rl.IncrChecks(file.File, 1)
 			rl.IncrChecks(Yaml, 1)
 		}()
 	}
 	wg.Wait()
 	assert.Equal(210, int(rl.TotalChecks))
-	assert.Equal(105, rl.CheckCountByType[File])
+	assert.Equal(105, rl.CheckCountByType[file.File])
 	assert.Equal(105, rl.CheckCountByType[Yaml])
 }
 
@@ -97,15 +98,15 @@ func TestResultListAddResult(t *testing.T) {
 	}
 	rl.AddResult(config.Result{
 		Severity:     config.HighSeverity,
-		CheckType:    File,
+		CheckType:    file.File,
 		Failures:     []string{"fail1", "fail2", "fail3", "fail4", "fail5"},
 		Remediations: []string{"fixed1"},
 	})
 	assert.Equal(5, int(rl.TotalBreaches))
-	assert.Equal(5, rl.BreachCountByType[File])
+	assert.Equal(5, rl.BreachCountByType[file.File])
 	assert.Equal(5, rl.BreachCountBySeverity[config.HighSeverity])
 	assert.Equal(1, int(rl.TotalRemediations))
-	assert.Equal(1, rl.RemediationCountByType[File])
+	assert.Equal(1, rl.RemediationCountByType[file.File])
 
 	rl.AddResult(config.Result{
 		Severity:  config.CriticalSeverity,
@@ -113,12 +114,12 @@ func TestResultListAddResult(t *testing.T) {
 		Failures:  []string{"fail1", "fail2", "fail3", "fail4", "fail5"},
 	})
 	assert.Equal(10, int(rl.TotalBreaches))
-	assert.Equal(5, rl.BreachCountByType[File])
+	assert.Equal(5, rl.BreachCountByType[file.File])
 	assert.Equal(5, rl.BreachCountByType[Yaml])
 	assert.Equal(5, rl.BreachCountBySeverity[config.HighSeverity])
 	assert.Equal(5, rl.BreachCountBySeverity[config.CriticalSeverity])
 	assert.Equal(1, int(rl.TotalRemediations))
-	assert.Equal(1, rl.RemediationCountByType[File])
+	assert.Equal(1, rl.RemediationCountByType[file.File])
 	assert.Equal(0, rl.RemediationCountByType[Yaml])
 
 	var wg sync.WaitGroup
@@ -128,7 +129,7 @@ func TestResultListAddResult(t *testing.T) {
 			defer wg.Done()
 			rl.AddResult(config.Result{
 				Severity:  config.HighSeverity,
-				CheckType: File,
+				CheckType: file.File,
 				Failures:  []string{"fail6"},
 			})
 			rl.AddResult(config.Result{
@@ -141,12 +142,12 @@ func TestResultListAddResult(t *testing.T) {
 	}
 	wg.Wait()
 	assert.Equal(210, int(rl.TotalBreaches))
-	assert.Equal(105, rl.BreachCountByType[File])
+	assert.Equal(105, rl.BreachCountByType[file.File])
 	assert.Equal(105, rl.BreachCountByType[Yaml])
 	assert.Equal(105, rl.BreachCountBySeverity[config.HighSeverity])
 	assert.Equal(105, rl.BreachCountBySeverity[config.CriticalSeverity])
 	assert.Equal(201, int(rl.TotalRemediations))
-	assert.Equal(1, rl.RemediationCountByType[File])
+	assert.Equal(1, rl.RemediationCountByType[file.File])
 	assert.Equal(200, rl.RemediationCountByType[Yaml])
 }
 
@@ -411,7 +412,7 @@ func TestResultListJUnit(t *testing.T) {
 <testsuites tests="0" errors="0"></testsuites>
 `, buf.String())
 
-	RunConfig.Checks = config.CheckMap{File: []config.Check{&FileCheck{
+	RunConfig.Checks = config.CheckMap{file.File: []config.Check{&file.FileCheck{
 		CheckBase: config.CheckBase{Name: "a"},
 	}}}
 	RunResultList.Results = append(RunResultList.Results, config.Result{Name: "a", Status: config.Pass})
@@ -425,7 +426,7 @@ func TestResultListJUnit(t *testing.T) {
 </testsuites>
 `, buf.String())
 
-	RunConfig.Checks[File] = append(RunConfig.Checks[File], &FileCheck{
+	RunConfig.Checks[file.File] = append(RunConfig.Checks[file.File], &file.FileCheck{
 		CheckBase: config.CheckBase{Name: "b"},
 	})
 	RunResultList.Results = append(RunResultList.Results, config.Result{

@@ -12,7 +12,6 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -73,7 +72,7 @@ func (c *PhpStanCheck) Merge(mergeCheck config.Check) error {
 
 func (c *PhpStanCheck) GetBinary() (path string) {
 	if len(c.Bin) == 0 {
-		path = filepath.Join(shipshape.ProjectDir, PhpstanDefaultPath)
+		path = filepath.Join(config.ProjectDir, PhpstanDefaultPath)
 	} else {
 		path = c.Bin
 	}
@@ -87,7 +86,7 @@ func (c *PhpStanCheck) FetchData() {
 
 	configPath := c.Config
 	if !filepath.IsAbs(c.Config) {
-		configPath = filepath.Join(shipshape.ProjectDir, configPath)
+		configPath = filepath.Join(config.ProjectDir, configPath)
 	}
 
 	args := []string{
@@ -99,7 +98,7 @@ func (c *PhpStanCheck) FetchData() {
 	for _, p := range c.Paths {
 		path := p
 		if !filepath.IsAbs(path) {
-			path = filepath.Join(shipshape.ProjectDir, p)
+			path = filepath.Join(config.ProjectDir, p)
 		}
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
 			args = append(args, path)

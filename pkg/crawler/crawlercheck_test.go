@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/crawler"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/file"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,7 +42,7 @@ func TestCrawlerCheck(t *testing.T) {
 		Limit:  5,
 	}
 
-	c.Init(shipshape.File)
+	c.Init(file.File)
 	c.RunCheck()
 	assert.ElementsMatch(
 		[]string{"Invalid response for: https://httpbin.org/not-found got 404"},
@@ -55,7 +55,7 @@ func TestCrawlerCheck(t *testing.T) {
 		Limit:       5,
 	}
 
-	c.Init(shipshape.File)
+	c.Init(file.File)
 	c.RunCheck()
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(

@@ -25,20 +25,9 @@ type ResultList struct {
 }
 
 const (
-	File     config.CheckType = "file"     // Represents a FileCheck.
 	Yaml     config.CheckType = "yaml"     // Represents a YamlCheck.
 	YamlLint config.CheckType = "yamllint" // Represents a YamlLintCheck.
 )
-
-// FileCheck is a simple File absence check which can be for a single
-// file or a pattern.
-type FileCheck struct {
-	config.CheckBase  `yaml:",inline"`
-	Path              string   `yaml:"path"`
-	DisallowedPattern string   `yaml:"disallowed-pattern"`
-	ExcludePattern    string   `yaml:"exclude-pattern"`
-	SkipDir           []string `yaml:"skip-dir"`
-}
 
 // YamlBase represents the structure for a Yaml-based check.
 type YamlBase struct {
