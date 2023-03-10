@@ -12,6 +12,8 @@ type TestCheck1Check struct {
 	Foo              string `yaml:"foo"`
 }
 
+func (*TestCheck1Check) RequiresData() bool { return false }
+
 type TestCheck2Check struct {
 	config.CheckBase `yaml:",inline"`
 	Bar              string `yaml:"bar"`
