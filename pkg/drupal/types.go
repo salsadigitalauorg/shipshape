@@ -2,7 +2,7 @@ package drupal
 
 import (
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 )
 
 const (
@@ -20,16 +20,16 @@ type DrushCommand struct {
 }
 
 type DrushYamlCheck struct {
-	shipshape.YamlBase `yaml:",inline"`
-	DrushCommand       `yaml:",inline"`
-	Command            string `yaml:"command"`
-	ConfigName         string `yaml:"config-name"`
+	yaml.YamlBase `yaml:",inline"`
+	DrushCommand  `yaml:",inline"`
+	Command       string `yaml:"command"`
+	ConfigName    string `yaml:"config-name"`
 }
 
 type FileModuleCheck struct {
-	shipshape.YamlCheck `yaml:",inline"`
-	Required            []string `yaml:"required"`
-	Disallowed          []string `yaml:"disallowed"`
+	yaml.YamlCheck `yaml:",inline"`
+	Required       []string `yaml:"required"`
+	Disallowed     []string `yaml:"disallowed"`
 }
 
 type DbModuleCheck struct {

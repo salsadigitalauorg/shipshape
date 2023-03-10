@@ -5,7 +5,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	. "github.com/salsadigitalauorg/shipshape/pkg/drupal"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,7 +13,7 @@ func TestFileModuleMerge(t *testing.T) {
 	assert := assert.New(t)
 
 	c := FileModuleCheck{
-		YamlCheck: shipshape.YamlCheck{
+		YamlCheck: yaml.YamlCheck{
 			Path:           "path1",
 			File:           "file1.yml",
 			Pattern:        "pattern1",
@@ -23,7 +23,7 @@ func TestFileModuleMerge(t *testing.T) {
 		Disallowed: []string{"disallowed1"},
 	}
 	c.Merge(&FileModuleCheck{
-		YamlCheck: shipshape.YamlCheck{
+		YamlCheck: yaml.YamlCheck{
 			Path:  "path2",
 			Files: []string{"slcFile1.yml", "slcFile2.yml"},
 		},
@@ -31,7 +31,7 @@ func TestFileModuleMerge(t *testing.T) {
 		Disallowed: []string{"disallowed2"},
 	})
 	assert.EqualValues(FileModuleCheck{
-		YamlCheck: shipshape.YamlCheck{
+		YamlCheck: yaml.YamlCheck{
 			Path:           "path2",
 			File:           "file1.yml",
 			Files:          []string{"slcFile1.yml", "slcFile2.yml"},
@@ -48,12 +48,12 @@ func TestFileModuleConfigName(t *testing.T) {
 
 	configNameVal := ""
 	origCheckModulesInYaml := CheckModulesInYaml
-	mockCheckModulesInYaml := func(c *shipshape.YamlBase, ct config.CheckType, configName string, required, disallowed []string) {
+	mockCheckModulesInYaml := func(c *yaml.YamlBase, ct config.CheckType, configName string, required, disallowed []string) {
 		configNameVal = configName
 	}
 
 	t.Run("noPath", func(t *testing.T) {
-		c := FileModuleCheck{YamlCheck: shipshape.YamlCheck{File: "foo.bar"}}
+		c := FileModuleCheck{YamlCheck: yaml.YamlCheck{File: "foo.bar"}}
 		CheckModulesInYaml = mockCheckModulesInYaml
 		defer func() {
 			CheckModulesInYaml = origCheckModulesInYaml
@@ -63,7 +63,7 @@ func TestFileModuleConfigName(t *testing.T) {
 	})
 
 	t.Run("pathWithoutSlash", func(t *testing.T) {
-		c := FileModuleCheck{YamlCheck: shipshape.YamlCheck{
+		c := FileModuleCheck{YamlCheck: yaml.YamlCheck{
 			File: "foo.bar",
 			Path: "/some/path",
 		}}
@@ -76,7 +76,7 @@ func TestFileModuleConfigName(t *testing.T) {
 	})
 
 	t.Run("pathWithSlash", func(t *testing.T) {
-		c := FileModuleCheck{YamlCheck: shipshape.YamlCheck{
+		c := FileModuleCheck{YamlCheck: yaml.YamlCheck{
 			File: "foo.bar",
 			Path: "/some/path/",
 		}}
@@ -93,7 +93,7 @@ func TestFileModuleCheck(t *testing.T) {
 	assert := assert.New(t)
 
 	c := FileModuleCheck{
-		YamlCheck: shipshape.YamlCheck{
+		YamlCheck: yaml.YamlCheck{
 			YamlBase: mockCheck("core.extension.yml"),
 		},
 		Required:   []string{"node", "block"},

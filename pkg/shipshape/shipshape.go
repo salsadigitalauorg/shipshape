@@ -20,11 +20,6 @@ import (
 var RunConfig config.Config
 var RunResultList ResultList
 
-func init() {
-	config.ChecksRegistry[Yaml] = func() config.Check { return &YamlCheck{} }
-	config.ChecksRegistry[YamlLint] = func() config.Check { return &YamlLintCheck{} }
-}
-
 var OutputFormats = []string{"json", "junit", "simple", "table"}
 
 func Init(projectDir string, configFiles []string, checkTypesToRun []string, excludeDb bool, remediate bool, logLevel string) error {

@@ -10,6 +10,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/file"
 	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -65,10 +66,10 @@ func TestResultListIncrChecks(t *testing.T) {
 	assert.Equal(5, int(rl.TotalChecks))
 	assert.Equal(5, rl.CheckCountByType[file.File])
 
-	rl.IncrChecks(Yaml, 5)
+	rl.IncrChecks(yaml.Yaml, 5)
 	assert.Equal(10, int(rl.TotalChecks))
 	assert.Equal(5, rl.CheckCountByType[file.File])
-	assert.Equal(5, rl.CheckCountByType[Yaml])
+	assert.Equal(5, rl.CheckCountByType[yaml.Yaml])
 
 	var wg sync.WaitGroup
 	for i := 0; i < 100; i++ {
@@ -76,13 +77,13 @@ func TestResultListIncrChecks(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			rl.IncrChecks(file.File, 1)
-			rl.IncrChecks(Yaml, 1)
+			rl.IncrChecks(yaml.Yaml, 1)
 		}()
 	}
 	wg.Wait()
 	assert.Equal(210, int(rl.TotalChecks))
 	assert.Equal(105, rl.CheckCountByType[file.File])
-	assert.Equal(105, rl.CheckCountByType[Yaml])
+	assert.Equal(105, rl.CheckCountByType[yaml.Yaml])
 }
 
 func TestResultListAddResult(t *testing.T) {
@@ -110,17 +111,17 @@ func TestResultListAddResult(t *testing.T) {
 
 	rl.AddResult(config.Result{
 		Severity:  config.CriticalSeverity,
-		CheckType: Yaml,
+		CheckType: yaml.Yaml,
 		Failures:  []string{"fail1", "fail2", "fail3", "fail4", "fail5"},
 	})
 	assert.Equal(10, int(rl.TotalBreaches))
 	assert.Equal(5, rl.BreachCountByType[file.File])
-	assert.Equal(5, rl.BreachCountByType[Yaml])
+	assert.Equal(5, rl.BreachCountByType[yaml.Yaml])
 	assert.Equal(5, rl.BreachCountBySeverity[config.HighSeverity])
 	assert.Equal(5, rl.BreachCountBySeverity[config.CriticalSeverity])
 	assert.Equal(1, int(rl.TotalRemediations))
 	assert.Equal(1, rl.RemediationCountByType[file.File])
-	assert.Equal(0, rl.RemediationCountByType[Yaml])
+	assert.Equal(0, rl.RemediationCountByType[yaml.Yaml])
 
 	var wg sync.WaitGroup
 	for i := 0; i < 100; i++ {
@@ -134,7 +135,7 @@ func TestResultListAddResult(t *testing.T) {
 			})
 			rl.AddResult(config.Result{
 				Severity:     config.CriticalSeverity,
-				CheckType:    Yaml,
+				CheckType:    yaml.Yaml,
 				Failures:     []string{"fail6"},
 				Remediations: []string{"fixed2", "fixed3"},
 			})
@@ -143,12 +144,12 @@ func TestResultListAddResult(t *testing.T) {
 	wg.Wait()
 	assert.Equal(210, int(rl.TotalBreaches))
 	assert.Equal(105, rl.BreachCountByType[file.File])
-	assert.Equal(105, rl.BreachCountByType[Yaml])
+	assert.Equal(105, rl.BreachCountByType[yaml.Yaml])
 	assert.Equal(105, rl.BreachCountBySeverity[config.HighSeverity])
 	assert.Equal(105, rl.BreachCountBySeverity[config.CriticalSeverity])
 	assert.Equal(201, int(rl.TotalRemediations))
 	assert.Equal(1, rl.RemediationCountByType[file.File])
-	assert.Equal(200, rl.RemediationCountByType[Yaml])
+	assert.Equal(200, rl.RemediationCountByType[yaml.Yaml])
 }
 
 func TestResultListGetBreachesByCheckName(t *testing.T) {

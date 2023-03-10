@@ -1,9 +1,9 @@
-package shipshape_test
+package yaml_test
 
 import (
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	. "github.com/salsadigitalauorg/shipshape/pkg/yaml"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,36 +11,36 @@ func TestMergeKeyValueSlice(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("emptyBothSlices", func(t *testing.T) {
-		slcA := []shipshape.KeyValue(nil)
-		shipshape.MergeKeyValueSlice(&slcA, []shipshape.KeyValue(nil))
-		assert.Equal([]shipshape.KeyValue(nil), slcA)
+		slcA := []KeyValue(nil)
+		MergeKeyValueSlice(&slcA, []KeyValue(nil))
+		assert.Equal([]KeyValue(nil), slcA)
 	})
 
 	t.Run("emptyFirstSlice", func(t *testing.T) {
-		slcA := []shipshape.KeyValue(nil)
-		shipshape.MergeKeyValueSlice(&slcA, []shipshape.KeyValue{
+		slcA := []KeyValue(nil)
+		MergeKeyValueSlice(&slcA, []KeyValue{
 			{Key: "k", Value: "v"},
 		})
-		assert.Equal([]shipshape.KeyValue{{Key: "k", Value: "v"}}, slcA)
+		assert.Equal([]KeyValue{{Key: "k", Value: "v"}}, slcA)
 	})
 
 	t.Run("emptySecondSlice", func(t *testing.T) {
-		slcA := []shipshape.KeyValue{{Key: "k", Value: "v"}}
-		shipshape.MergeKeyValueSlice(&slcA, []shipshape.KeyValue(nil))
-		assert.Equal([]shipshape.KeyValue{{Key: "k", Value: "v"}}, slcA)
+		slcA := []KeyValue{{Key: "k", Value: "v"}}
+		MergeKeyValueSlice(&slcA, []KeyValue(nil))
+		assert.Equal([]KeyValue{{Key: "k", Value: "v"}}, slcA)
 
-		shipshape.MergeKeyValueSlice(&slcA, []shipshape.KeyValue{})
-		assert.Equal([]shipshape.KeyValue{{Key: "k", Value: "v"}}, slcA)
+		MergeKeyValueSlice(&slcA, []KeyValue{})
+		assert.Equal([]KeyValue{{Key: "k", Value: "v"}}, slcA)
 	})
 
 	t.Run("valuesInBoth", func(t *testing.T) {
-		slcA := []shipshape.KeyValue{
+		slcA := []KeyValue{
 			{Key: "k1", Value: "v1"},
 		}
-		shipshape.MergeKeyValueSlice(&slcA, []shipshape.KeyValue{
+		MergeKeyValueSlice(&slcA, []KeyValue{
 			{Key: "k2", Value: "v2"},
 		})
-		assert.Equal([]shipshape.KeyValue{{Key: "k2", Value: "v2"}}, slcA)
+		assert.Equal([]KeyValue{{Key: "k2", Value: "v2"}}, slcA)
 	})
 }
 
@@ -48,13 +48,13 @@ func TestEquals(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("stringEquals", func(t *testing.T) {
-		kv := shipshape.KeyValue{Key: "k", Value: "foo"}
+		kv := KeyValue{Key: "k", Value: "foo"}
 		assert.True(kv.Equals("foo"))
 		assert.False(kv.Equals("bar"))
 	})
 
 	t.Run("stringEqualsTruthyTrue", func(t *testing.T) {
-		kv := shipshape.KeyValue{Key: "k", Value: "true", Truthy: true}
+		kv := KeyValue{Key: "k", Value: "true", Truthy: true}
 		assert.False(kv.Equals("foo"))
 		assert.False(kv.Equals("false"))
 		assert.False(kv.Equals("0"))
@@ -64,7 +64,7 @@ func TestEquals(t *testing.T) {
 	})
 
 	t.Run("stringEqualsTruthyOne", func(t *testing.T) {
-		kv := shipshape.KeyValue{Key: "k", Value: "1", Truthy: true}
+		kv := KeyValue{Key: "k", Value: "1", Truthy: true}
 		assert.False(kv.Equals("foo"))
 		assert.False(kv.Equals("false"))
 		assert.False(kv.Equals("0"))
@@ -74,7 +74,7 @@ func TestEquals(t *testing.T) {
 	})
 
 	t.Run("stringEqualsTruthyFalse", func(t *testing.T) {
-		kv := shipshape.KeyValue{Key: "k", Value: "false", Truthy: true}
+		kv := KeyValue{Key: "k", Value: "false", Truthy: true}
 		assert.False(kv.Equals("foo"))
 		assert.False(kv.Equals("true"))
 		assert.False(kv.Equals("1"))
@@ -84,7 +84,7 @@ func TestEquals(t *testing.T) {
 	})
 
 	t.Run("stringEqualsTruthyZero", func(t *testing.T) {
-		kv := shipshape.KeyValue{Key: "k", Value: "0", Truthy: true}
+		kv := KeyValue{Key: "k", Value: "0", Truthy: true}
 		assert.False(kv.Equals("foo"))
 		assert.False(kv.Equals("true"))
 		assert.False(kv.Equals("1"))
@@ -94,7 +94,7 @@ func TestEquals(t *testing.T) {
 	})
 
 	t.Run("stringEqualsTruthyNull", func(t *testing.T) {
-		kv := shipshape.KeyValue{Key: "k", Value: "null", Truthy: true}
+		kv := KeyValue{Key: "k", Value: "null", Truthy: true}
 		assert.False(kv.Equals("foo"))
 		assert.False(kv.Equals("true"))
 		assert.False(kv.Equals("1"))

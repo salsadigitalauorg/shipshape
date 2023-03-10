@@ -6,7 +6,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	. "github.com/salsadigitalauorg/shipshape/pkg/drupal"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -27,8 +27,8 @@ func TestRegisterChecks(t *testing.T) {
 	}
 }
 
-func mockCheck(configName string) shipshape.YamlBase {
-	return shipshape.YamlBase{
+func mockCheck(configName string) yaml.YamlBase {
+	return yaml.YamlBase{
 		CheckBase: config.CheckBase{
 			DataMap: map[string][]byte{
 				configName: []byte(`

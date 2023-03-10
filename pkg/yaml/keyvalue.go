@@ -1,4 +1,4 @@
-package shipshape
+package yaml
 
 import (
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
