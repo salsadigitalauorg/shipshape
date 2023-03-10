@@ -7,11 +7,11 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape/testdata/testchecks"
+
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
-
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape/testdata/testchecks"
 )
 
 func TestInit(t *testing.T) {
@@ -81,10 +81,11 @@ func TestParseConfigData(t *testing.T) {
 	defer logrus.SetOutput(currLogOut)
 
 	t.Run("invalidData", func(t *testing.T) {
+		testchecks.RegisterChecks()
 		logrus.SetOutput(io.Discard)
 		invalidData := `
 checks:
-  yaml: foo
+  test-check-1: foo
 `
 		err := ParseConfigData([][]byte{[]byte(invalidData)})
 		assert.Error(err)

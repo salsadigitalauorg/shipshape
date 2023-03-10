@@ -1,12 +1,11 @@
-package shipshape_test
+package config_test
 
 import (
 	"sync"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/file"
-	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 	"github.com/stretchr/testify/assert"
 )
@@ -17,21 +16,21 @@ func TestNewResultList(t *testing.T) {
 	t.Run("emptyInit", func(t *testing.T) {
 		rl := NewResultList(false)
 		assert.Equal(rl.RemediationPerformed, false)
-		assert.Equal(rl.Results, []config.Result{})
-		assert.Equal(rl.CheckCountByType, map[config.CheckType]int{})
-		assert.Equal(rl.BreachCountByType, map[config.CheckType]int{})
-		assert.Equal(rl.BreachCountBySeverity, map[config.Severity]int{})
-		assert.Equal(rl.RemediationCountByType, map[config.CheckType]int{})
+		assert.Equal(rl.Results, []Result{})
+		assert.Equal(rl.CheckCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountBySeverity, map[Severity]int{})
+		assert.Equal(rl.RemediationCountByType, map[CheckType]int{})
 	})
 
 	t.Run("remediation", func(t *testing.T) {
 		rl := NewResultList(true)
 		assert.Equal(rl.RemediationPerformed, true)
-		assert.Equal(rl.Results, []config.Result{})
-		assert.Equal(rl.CheckCountByType, map[config.CheckType]int{})
-		assert.Equal(rl.BreachCountByType, map[config.CheckType]int{})
-		assert.Equal(rl.BreachCountBySeverity, map[config.Severity]int{})
-		assert.Equal(rl.RemediationCountByType, map[config.CheckType]int{})
+		assert.Equal(rl.Results, []Result{})
+		assert.Equal(rl.CheckCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountByType, map[CheckType]int{})
+		assert.Equal(rl.BreachCountBySeverity, map[Severity]int{})
+		assert.Equal(rl.RemediationCountByType, map[CheckType]int{})
 	})
 
 }
@@ -40,16 +39,16 @@ func TestResultListStatus(t *testing.T) {
 	assert := assert.New(t)
 
 	rl := ResultList{
-		Results: []config.Result{
-			{Status: config.Pass},
-			{Status: config.Pass},
-			{Status: config.Pass},
+		Results: []Result{
+			{Status: Pass},
+			{Status: Pass},
+			{Status: Pass},
 		},
 	}
-	assert.Equal(config.Pass, rl.Status())
+	assert.Equal(Pass, rl.Status())
 
-	rl.Results[0].Status = config.Fail
-	assert.Equal(config.Fail, rl.Status())
+	rl.Results[0].Status = Fail
+	assert.Equal(Fail, rl.Status())
 }
 
 func TestResultListIncrChecks(t *testing.T) {
@@ -57,7 +56,7 @@ func TestResultListIncrChecks(t *testing.T) {
 
 	rl := ResultList{
 		TotalChecks:      0,
-		CheckCountByType: map[config.CheckType]int{},
+		CheckCountByType: map[CheckType]int{},
 	}
 	rl.IncrChecks(file.File, 5)
 	assert.Equal(5, int(rl.TotalChecks))
@@ -88,34 +87,34 @@ func TestResultListAddResult(t *testing.T) {
 
 	rl := ResultList{
 		TotalBreaches:         0,
-		BreachCountByType:     map[config.CheckType]int{},
-		BreachCountBySeverity: map[config.Severity]int{},
+		BreachCountByType:     map[CheckType]int{},
+		BreachCountBySeverity: map[Severity]int{},
 
 		TotalRemediations:      0,
-		RemediationCountByType: map[config.CheckType]int{},
+		RemediationCountByType: map[CheckType]int{},
 	}
-	rl.AddResult(config.Result{
-		Severity:     config.HighSeverity,
+	rl.AddResult(Result{
+		Severity:     HighSeverity,
 		CheckType:    file.File,
 		Failures:     []string{"fail1", "fail2", "fail3", "fail4", "fail5"},
 		Remediations: []string{"fixed1"},
 	})
 	assert.Equal(5, int(rl.TotalBreaches))
 	assert.Equal(5, rl.BreachCountByType[file.File])
-	assert.Equal(5, rl.BreachCountBySeverity[config.HighSeverity])
+	assert.Equal(5, rl.BreachCountBySeverity[HighSeverity])
 	assert.Equal(1, int(rl.TotalRemediations))
 	assert.Equal(1, rl.RemediationCountByType[file.File])
 
-	rl.AddResult(config.Result{
-		Severity:  config.CriticalSeverity,
+	rl.AddResult(Result{
+		Severity:  CriticalSeverity,
 		CheckType: yaml.Yaml,
 		Failures:  []string{"fail1", "fail2", "fail3", "fail4", "fail5"},
 	})
 	assert.Equal(10, int(rl.TotalBreaches))
 	assert.Equal(5, rl.BreachCountByType[file.File])
 	assert.Equal(5, rl.BreachCountByType[yaml.Yaml])
-	assert.Equal(5, rl.BreachCountBySeverity[config.HighSeverity])
-	assert.Equal(5, rl.BreachCountBySeverity[config.CriticalSeverity])
+	assert.Equal(5, rl.BreachCountBySeverity[HighSeverity])
+	assert.Equal(5, rl.BreachCountBySeverity[CriticalSeverity])
 	assert.Equal(1, int(rl.TotalRemediations))
 	assert.Equal(1, rl.RemediationCountByType[file.File])
 	assert.Equal(0, rl.RemediationCountByType[yaml.Yaml])
@@ -125,13 +124,13 @@ func TestResultListAddResult(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			rl.AddResult(config.Result{
-				Severity:  config.HighSeverity,
+			rl.AddResult(Result{
+				Severity:  HighSeverity,
 				CheckType: file.File,
 				Failures:  []string{"fail6"},
 			})
-			rl.AddResult(config.Result{
-				Severity:     config.CriticalSeverity,
+			rl.AddResult(Result{
+				Severity:     CriticalSeverity,
 				CheckType:    yaml.Yaml,
 				Failures:     []string{"fail6"},
 				Remediations: []string{"fixed2", "fixed3"},
@@ -142,8 +141,8 @@ func TestResultListAddResult(t *testing.T) {
 	assert.Equal(210, int(rl.TotalBreaches))
 	assert.Equal(105, rl.BreachCountByType[file.File])
 	assert.Equal(105, rl.BreachCountByType[yaml.Yaml])
-	assert.Equal(105, rl.BreachCountBySeverity[config.HighSeverity])
-	assert.Equal(105, rl.BreachCountBySeverity[config.CriticalSeverity])
+	assert.Equal(105, rl.BreachCountBySeverity[HighSeverity])
+	assert.Equal(105, rl.BreachCountBySeverity[CriticalSeverity])
 	assert.Equal(201, int(rl.TotalRemediations))
 	assert.Equal(1, rl.RemediationCountByType[file.File])
 	assert.Equal(200, rl.RemediationCountByType[yaml.Yaml])
@@ -153,7 +152,7 @@ func TestResultListGetBreachesByCheckName(t *testing.T) {
 	assert := assert.New(t)
 
 	rl := ResultList{
-		Results: []config.Result{
+		Results: []Result{
 			{
 				Name:     "check1",
 				Failures: []string{"failure1", "failure 2"},
@@ -176,30 +175,30 @@ func TestResultListGetBreachesBySeverity(t *testing.T) {
 	assert := assert.New(t)
 
 	rl := ResultList{
-		Results: []config.Result{
+		Results: []Result{
 			{
-				Severity: config.HighSeverity,
+				Severity: HighSeverity,
 				Failures: []string{"failure1", "failure 2"},
 			},
 			{
-				Severity: config.NormalSeverity,
+				Severity: NormalSeverity,
 				Failures: []string{"failure3", "failure 4"},
 			},
 		},
 	}
 	assert.EqualValues(
 		[]string{"failure1", "failure 2"},
-		rl.GetBreachesBySeverity(config.HighSeverity))
+		rl.GetBreachesBySeverity(HighSeverity))
 	assert.EqualValues(
 		[]string{"failure3", "failure 4"},
-		rl.GetBreachesBySeverity(config.NormalSeverity))
+		rl.GetBreachesBySeverity(NormalSeverity))
 }
 
 func TestResultListGetRemediationsByCheckName(t *testing.T) {
 	assert := assert.New(t)
 
 	rl := ResultList{
-		Results: []config.Result{
+		Results: []Result{
 			{
 				Name:         "check1",
 				Remediations: []string{"fix1", "fix 2"},
@@ -222,7 +221,7 @@ func TestResultListSort(t *testing.T) {
 	assert := assert.New(t)
 
 	rl := ResultList{
-		Results: []config.Result{
+		Results: []Result{
 			{Name: "zcheck"},
 			{Name: "hcheck"},
 			{Name: "fcheck"},
@@ -231,7 +230,7 @@ func TestResultListSort(t *testing.T) {
 		},
 	}
 	rl.Sort()
-	assert.EqualValues([]config.Result{
+	assert.EqualValues([]Result{
 		{Name: "acheck"},
 		{Name: "ccheck"},
 		{Name: "fcheck"},

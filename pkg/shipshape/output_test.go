@@ -17,20 +17,20 @@ func TestTableDisplay(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := tabwriter.NewWriter(&buf, 0, 0, 3, ' ', 0)
-	RunResultList = ResultList{}
+	RunResultList = config.ResultList{}
 	TableDisplay(w)
 	assert.Equal(
 		"No result available; ensure your shipshape.yml is configured correctly.\n",
 		buf.String())
 
 	buf = bytes.Buffer{}
-	RunResultList = ResultList{Results: []config.Result{{Name: "a", Status: config.Pass}}}
+	RunResultList = config.ResultList{Results: []config.Result{{Name: "a", Status: config.Pass}}}
 	TableDisplay(w)
 	assert.Equal("NAME   STATUS   PASSES   FAILS\n"+
 		"a      Pass              \n", buf.String())
 
 	buf = bytes.Buffer{}
-	RunResultList = ResultList{
+	RunResultList = config.ResultList{
 		Results: []config.Result{
 			{Name: "a", Status: config.Pass},
 			{Name: "b", Status: config.Pass},
@@ -45,7 +45,7 @@ func TestTableDisplay(t *testing.T) {
 		buf.String())
 
 	buf = bytes.Buffer{}
-	RunResultList = ResultList{
+	RunResultList = config.ResultList{
 		Results: []config.Result{
 			{
 				Name:   "a",
@@ -88,7 +88,7 @@ func TestSimpleDisplay(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("noResult", func(t *testing.T) {
-		RunResultList = NewResultList(false)
+		RunResultList = config.NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		SimpleDisplay(w)
@@ -96,7 +96,7 @@ func TestSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("topShape", func(t *testing.T) {
-		RunResultList = NewResultList(false)
+		RunResultList = config.NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		RunResultList.Results = append(RunResultList.Results, config.Result{Name: "a", Status: config.Pass})
@@ -106,7 +106,7 @@ func TestSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("breachesDetected", func(t *testing.T) {
-		RunResultList = NewResultList(false)
+		RunResultList = config.NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		RunResultList.Results = append(RunResultList.Results, config.Result{
@@ -119,7 +119,7 @@ func TestSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("topShapeRemediating", func(t *testing.T) {
-		RunResultList = ResultList{RemediationPerformed: true}
+		RunResultList = config.ResultList{RemediationPerformed: true}
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		RunResultList.Results = append(RunResultList.Results, config.Result{Name: "a", Status: config.Pass})
@@ -129,7 +129,7 @@ func TestSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("allBreachesRemediated", func(t *testing.T) {
-		RunResultList = ResultList{RemediationPerformed: true}
+		RunResultList = config.ResultList{RemediationPerformed: true}
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		RunResultList.TotalRemediations = 1
@@ -141,7 +141,7 @@ func TestSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("someBreachesRemediated", func(t *testing.T) {
-		RunResultList = ResultList{RemediationPerformed: true}
+		RunResultList = config.ResultList{RemediationPerformed: true}
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		RunResultList.TotalRemediations = 1
@@ -157,7 +157,7 @@ func TestSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("noBreachRemediated", func(t *testing.T) {
-		RunResultList = ResultList{RemediationPerformed: true}
+		RunResultList = config.ResultList{RemediationPerformed: true}
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		RunResultList.TotalBreaches = 1
@@ -175,7 +175,7 @@ func TestSimpleDisplay(t *testing.T) {
 func TestJUnit(t *testing.T) {
 	assert := assert.New(t)
 
-	RunResultList = NewResultList(false)
+	RunResultList = config.NewResultList(false)
 	var buf bytes.Buffer
 	w := bufio.NewWriter(&buf)
 	JUnit(w)

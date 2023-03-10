@@ -1,12 +1,25 @@
-package shipshape
+package config
 
 import (
 	"sort"
 	"sync"
 	"sync/atomic"
-
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
 )
+
+// ResultList is a wrapper around a list of results, providing some useful
+// methods to manipulate and use it.
+type ResultList struct {
+	RemediationPerformed         bool              `json:"remediation-performed"`
+	TotalChecks                  uint32            `json:"total-checks"`
+	TotalBreaches                uint32            `json:"total-breaches"`
+	TotalRemediations            uint32            `json:"total-remediations"`
+	TotalUnsupportedRemediations uint32            `json:"total-unsupported-remediations"`
+	CheckCountByType             map[CheckType]int `json:"check-count-by-type"`
+	BreachCountByType            map[CheckType]int `json:"breach-count-by-type"`
+	BreachCountBySeverity        map[Severity]int  `json:"breach-count-by-severity"`
+	RemediationCountByType       map[CheckType]int `json:"remediation-count-by-type"`
+	Results                      []Result          `json:"results"`
+}
 
 // Use locks to make map mutations concurrency-safe.
 var lock = sync.RWMutex{}
@@ -14,26 +27,26 @@ var lock = sync.RWMutex{}
 func NewResultList(remediate bool) ResultList {
 	return ResultList{
 		RemediationPerformed:   remediate,
-		Results:                []config.Result{},
-		CheckCountByType:       map[config.CheckType]int{},
-		BreachCountByType:      map[config.CheckType]int{},
-		BreachCountBySeverity:  map[config.Severity]int{},
-		RemediationCountByType: map[config.CheckType]int{},
+		Results:                []Result{},
+		CheckCountByType:       map[CheckType]int{},
+		BreachCountByType:      map[CheckType]int{},
+		BreachCountBySeverity:  map[Severity]int{},
+		RemediationCountByType: map[CheckType]int{},
 	}
 }
 
 // Status calculates and returns the overall result of all check results.
-func (rl *ResultList) Status() config.CheckStatus {
+func (rl *ResultList) Status() CheckStatus {
 	for _, r := range rl.Results {
-		if r.Status == config.Fail {
-			return config.Fail
+		if r.Status == Fail {
+			return Fail
 		}
 	}
-	return config.Pass
+	return Pass
 }
 
 // IncrChecks increments the total checks count & checks count by type.
-func (rl *ResultList) IncrChecks(ct config.CheckType, incr int) {
+func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
 	atomic.AddUint32(&rl.TotalChecks, uint32(incr))
 
 	lock.Lock()
@@ -42,7 +55,7 @@ func (rl *ResultList) IncrChecks(ct config.CheckType, incr int) {
 }
 
 // AddResult safely appends a check's result to the list.
-func (rl *ResultList) AddResult(r config.Result) {
+func (rl *ResultList) AddResult(r Result) {
 	lock.Lock()
 	defer lock.Unlock()
 	rl.Results = append(rl.Results, r)
@@ -69,7 +82,7 @@ func (rl *ResultList) GetBreachesByCheckName(cn string) []string {
 }
 
 // GetBreachesBySeverity fetches the list of failures by severity.
-func (rl *ResultList) GetBreachesBySeverity(s config.Severity) []string {
+func (rl *ResultList) GetBreachesBySeverity(s Severity) []string {
 	var breaches []string
 
 	for _, r := range rl.Results {

@@ -16,7 +16,7 @@ import (
 )
 
 var RunConfig config.Config
-var RunResultList ResultList
+var RunResultList config.ResultList
 
 var OutputFormats = []string{"json", "junit", "simple", "table"}
 
@@ -37,7 +37,7 @@ func Init(projectDir string, configFiles []string, checkTypesToRun []string, exc
 	}
 
 	config.ProjectDir = RunConfig.ProjectDir
-	RunResultList = NewResultList(remediate)
+	RunResultList = config.NewResultList(remediate)
 
 	// Remediate is a command-level flag, so we set the value outside of
 	// config parsing.
@@ -151,7 +151,7 @@ func ParseConfigData(configData [][]byte) error {
 	return nil
 }
 
-func RunChecks() ResultList {
+func RunChecks() config.ResultList {
 	log.Print("preparing concurrent check runs")
 	var wg sync.WaitGroup
 	for ct, checks := range RunConfig.Checks {
@@ -171,7 +171,7 @@ func RunChecks() ResultList {
 	return RunResultList
 }
 
-func ProcessCheck(rl *ResultList, c config.Check) {
+func ProcessCheck(rl *config.ResultList, c config.Check) {
 	contextLogger := log.WithFields(log.Fields{
 		"check-type": c.GetType(),
 		"check-name": c.GetName(),
