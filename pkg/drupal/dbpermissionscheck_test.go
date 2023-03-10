@@ -8,7 +8,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	. "github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -27,8 +27,8 @@ func TestDbPermissionsMerge(t *testing.T) {
 
 	c := DbPermissionsCheck{
 		DrushYamlCheck: DrushYamlCheck{
-			YamlBase: shipshape.YamlBase{
-				Values: []shipshape.KeyValue{
+			YamlBase: yaml.YamlBase{
+				Values: []yaml.KeyValue{
 					{Key: "key1", Value: "val1", Optional: false},
 				},
 			},
@@ -38,8 +38,8 @@ func TestDbPermissionsMerge(t *testing.T) {
 	}
 	c.Merge(&DbPermissionsCheck{
 		DrushYamlCheck: DrushYamlCheck{
-			YamlBase: shipshape.YamlBase{
-				Values: []shipshape.KeyValue{
+			YamlBase: yaml.YamlBase{
+				Values: []yaml.KeyValue{
 					{Key: "key1", Value: "val1", Optional: true},
 				},
 			},
@@ -49,8 +49,8 @@ func TestDbPermissionsMerge(t *testing.T) {
 	})
 	assert.EqualValues(DbPermissionsCheck{
 		DrushYamlCheck: DrushYamlCheck{
-			YamlBase: shipshape.YamlBase{
-				Values: []shipshape.KeyValue{
+			YamlBase: yaml.YamlBase{
+				Values: []yaml.KeyValue{
 					{Key: "key1", Value: "val1", Optional: true},
 				},
 			},
@@ -205,7 +205,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			Name: "breachRemediation",
 			Check: &DbPermissionsCheck{
 				DrushYamlCheck: DrushYamlCheck{
-					YamlBase: shipshape.YamlBase{
+					YamlBase: yaml.YamlBase{
 						CheckBase: config.CheckBase{
 							PerformRemediation: true,
 						},
@@ -256,7 +256,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			Name: "breachRemediationExitError",
 			Check: &DbPermissionsCheck{
 				DrushYamlCheck: DrushYamlCheck{
-					YamlBase: shipshape.YamlBase{
+					YamlBase: yaml.YamlBase{
 						CheckBase: config.CheckBase{
 							PerformRemediation: true,
 						},

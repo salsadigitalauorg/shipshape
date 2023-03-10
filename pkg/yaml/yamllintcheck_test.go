@@ -1,10 +1,10 @@
-package shipshape_test
+package yaml_test
 
 import (
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	. "github.com/salsadigitalauorg/shipshape/pkg/yaml"
 	"github.com/stretchr/testify/assert"
 )
 

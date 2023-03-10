@@ -5,7 +5,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	. "github.com/salsadigitalauorg/shipshape/pkg/drupal"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,8 +14,8 @@ func TestTrackingCodeMerge(t *testing.T) {
 
 	c := TrackingCodeCheck{
 		DrushYamlCheck: DrushYamlCheck{
-			YamlBase: shipshape.YamlBase{
-				Values: []shipshape.KeyValue{
+			YamlBase: yaml.YamlBase{
+				Values: []yaml.KeyValue{
 					{Key: "key1", Value: "val1", Optional: false},
 				},
 			},
@@ -25,8 +25,8 @@ func TestTrackingCodeMerge(t *testing.T) {
 	}
 	c.Merge(&TrackingCodeCheck{
 		DrushYamlCheck: DrushYamlCheck{
-			YamlBase: shipshape.YamlBase{
-				Values: []shipshape.KeyValue{
+			YamlBase: yaml.YamlBase{
+				Values: []yaml.KeyValue{
 					{Key: "key1", Value: "val1", Optional: true},
 				},
 			},
@@ -36,8 +36,8 @@ func TestTrackingCodeMerge(t *testing.T) {
 	})
 	assert.EqualValues(TrackingCodeCheck{
 		DrushYamlCheck: DrushYamlCheck{
-			YamlBase: shipshape.YamlBase{
-				Values: []shipshape.KeyValue{
+			YamlBase: yaml.YamlBase{
+				Values: []yaml.KeyValue{
 					{Key: "key1", Value: "val1", Optional: true},
 				},
 			},

@@ -1,10 +1,10 @@
-package shipshape_test
+package yaml_test
 
 import (
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	. "github.com/salsadigitalauorg/shipshape/pkg/yaml"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -45,7 +45,6 @@ func TestYamlCheck(t *testing.T) {
 					{Key: "check.interval_days", Value: "7"},
 				},
 			},
-			Path: "yaml",
 		}
 	}
 
@@ -63,7 +62,7 @@ func TestYamlCheck(t *testing.T) {
 	c.FetchData()
 	assert.Equal(config.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
-	assert.EqualValues([]string{"open testdata/yaml/non-existent.yml: no such file or directory"}, c.Result.Failures)
+	assert.EqualValues([]string{"open testdata/non-existent.yml: no such file or directory"}, c.Result.Failures)
 
 	// Non-existent file with ignore missing.
 	c = mockCheck()
@@ -72,7 +71,7 @@ func TestYamlCheck(t *testing.T) {
 	c.FetchData()
 	assert.Equal(config.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
-	assert.EqualValues([]string{"File testdata/yaml/non-existent.yml does not exist"}, c.Result.Passes)
+	assert.EqualValues([]string{"File testdata/non-existent.yml does not exist"}, c.Result.Passes)
 
 	// Single file.
 	c = mockCheck()
@@ -86,7 +85,7 @@ func TestYamlCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(config.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
-	assert.EqualValues([]string{"[yaml/update.settings.yml] 'check.interval_days' equals '7'"}, c.Result.Passes)
+	assert.EqualValues([]string{"[update.settings.yml] 'check.interval_days' equals '7'"}, c.Result.Passes)
 
 	// Bad File pattern.
 	c = mockCheck()
@@ -117,13 +116,13 @@ func TestYamlCheck(t *testing.T) {
 	// Correct single file pattern & value.
 	c = mockCheck()
 	c.Pattern = "foo.bar.yml"
-	c.Path = "yaml/dir/subdir"
+	c.Path = "dir/subdir"
 	c.FetchData()
 	assert.NotEqual(config.Fail, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.EqualValues([]string{"[testdata/yaml/dir/subdir/foo.bar.yml] 'check.interval_days' equals '7'"}, c.Result.Passes)
+	assert.EqualValues([]string{"[testdata/dir/subdir/foo.bar.yml] 'check.interval_days' equals '7'"}, c.Result.Passes)
 	assert.Empty(c.Result.Failures)
 
 	// Recursive file lookup.
@@ -137,14 +136,14 @@ func TestYamlCheck(t *testing.T) {
 	assert.Equal(config.Fail, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{
-			"[testdata/yaml/dir/foo.bar.yml] 'check.interval_days' equals '7'",
-			"[testdata/yaml/dir/subdir/foo.bar.yml] 'check.interval_days' equals '7'",
-			"[testdata/yaml/foo.bar.yml] 'check.interval_days' equals '7'"},
+			"[testdata/dir/foo.bar.yml] 'check.interval_days' equals '7'",
+			"[testdata/dir/subdir/foo.bar.yml] 'check.interval_days' equals '7'",
+			"[testdata/foo.bar.yml] 'check.interval_days' equals '7'"},
 		c.Result.Passes)
 	assert.ElementsMatch(
 		[]string{
-			"[testdata/yaml/dir/subdir/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'",
-			"[testdata/yaml/dir/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'",
-			"[testdata/yaml/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'"},
+			"[testdata/dir/subdir/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'",
+			"[testdata/dir/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'",
+			"[testdata/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'"},
 		c.Result.Failures)
 }

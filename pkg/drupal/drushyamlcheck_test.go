@@ -8,7 +8,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	. "github.com/salsadigitalauorg/shipshape/pkg/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -17,8 +17,8 @@ func TestDrushYamlMerge(t *testing.T) {
 	assert := assert.New(t)
 
 	c := DrushYamlCheck{
-		YamlBase: shipshape.YamlBase{
-			Values: []shipshape.KeyValue{
+		YamlBase: yaml.YamlBase{
+			Values: []yaml.KeyValue{
 				{Key: "key1", Value: "val1", Optional: false},
 			},
 		},
@@ -31,8 +31,8 @@ func TestDrushYamlMerge(t *testing.T) {
 		ConfigName: "configname1",
 	}
 	c.Merge(&DrushYamlCheck{
-		YamlBase: shipshape.YamlBase{
-			Values: []shipshape.KeyValue{
+		YamlBase: yaml.YamlBase{
+			Values: []yaml.KeyValue{
 				{Key: "key1", Value: "val1", Optional: true},
 			},
 		},
@@ -44,8 +44,8 @@ func TestDrushYamlMerge(t *testing.T) {
 		Command: "command2",
 	})
 	assert.EqualValues(DrushYamlCheck{
-		YamlBase: shipshape.YamlBase{
-			Values: []shipshape.KeyValue{
+		YamlBase: yaml.YamlBase{
+			Values: []yaml.KeyValue{
 				{Key: "key1", Value: "val1", Optional: true},
 			},
 		},

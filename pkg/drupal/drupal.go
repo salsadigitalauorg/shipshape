@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 )
 
 //go:generate go run ../../cmd/gen.go registry --checkpackage=drupal
@@ -26,15 +26,15 @@ func init() {
 // CheckModulesInYaml applies the Check logic for Drupal Modules in yaml content.
 // It uses YamlBase to verify that the list of provided Required or
 // Disallowed modules are installed or not.
-var CheckModulesInYaml = func(c *shipshape.YamlBase, ct config.CheckType, configName string, required []string, disallowed []string) {
-	moduleKey := func(m string) shipshape.KeyValue {
+var CheckModulesInYaml = func(c *yaml.YamlBase, ct config.CheckType, configName string, required []string, disallowed []string) {
+	moduleKey := func(m string) yaml.KeyValue {
 		if ct == FileModule {
-			return shipshape.KeyValue{
+			return yaml.KeyValue{
 				Key:   "module." + m,
 				Value: "0",
 			}
 		}
-		return shipshape.KeyValue{
+		return yaml.KeyValue{
 			Key:   m + ".status",
 			Value: "Enabled",
 		}
@@ -43,9 +43,9 @@ var CheckModulesInYaml = func(c *shipshape.YamlBase, ct config.CheckType, config
 	for _, m := range required {
 		kvr, _, err := c.CheckKeyValue(moduleKey(m), configName)
 		// It could be a value different from 0, which still means it's enabled.
-		if kvr == shipshape.KeyValueEqual || kvr == shipshape.KeyValueNotEqual {
+		if kvr == yaml.KeyValueEqual || kvr == yaml.KeyValueNotEqual {
 			c.AddPass(fmt.Sprintf("'%s' is enabled", m))
-		} else if kvr == shipshape.KeyValueError {
+		} else if kvr == yaml.KeyValueError {
 			c.AddFail(err.Error())
 		} else {
 			c.AddFail(fmt.Sprintf("'%s' is not enabled", m))
@@ -54,9 +54,9 @@ var CheckModulesInYaml = func(c *shipshape.YamlBase, ct config.CheckType, config
 	for _, m := range disallowed {
 		kvr, _, err := c.CheckKeyValue(moduleKey(m), configName)
 		// It could be a value different from 0, which still means it's enabled.
-		if kvr == shipshape.KeyValueEqual || kvr == shipshape.KeyValueNotEqual {
+		if kvr == yaml.KeyValueEqual || kvr == yaml.KeyValueNotEqual {
 			c.AddFail(fmt.Sprintf("'%s' is enabled", m))
-		} else if kvr == shipshape.KeyValueError {
+		} else if kvr == yaml.KeyValueError {
 			c.AddFail(err.Error())
 		} else {
 			c.AddPass(fmt.Sprintf("'%s' is not enabled", m))

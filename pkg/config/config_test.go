@@ -6,7 +6,7 @@ import (
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/crawler"
 	"github.com/salsadigitalauorg/shipshape/pkg/file"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -52,8 +52,8 @@ func TestMerge(t *testing.T) {
 
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			shipshape.Yaml: {&shipshape.YamlCheck{
-				YamlBase: shipshape.YamlBase{
+			yaml.Yaml: {&yaml.YamlCheck{
+				YamlBase: yaml.YamlBase{
 					CheckBase: CheckBase{Name: "yamlcheck1"},
 				},
 			}},
@@ -63,8 +63,8 @@ func TestMerge(t *testing.T) {
 	assert.EqualValues(
 		CheckMap{
 			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
-			shipshape.Yaml: {&shipshape.YamlCheck{
-				YamlBase: shipshape.YamlBase{
+			yaml.Yaml: {&yaml.YamlCheck{
+				YamlBase: yaml.YamlBase{
 					CheckBase: CheckBase{Name: "yamlcheck1"},
 				},
 			}},
@@ -81,8 +81,8 @@ func TestMerge(t *testing.T) {
 	assert.EqualValues(
 		CheckMap{
 			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
-			shipshape.Yaml: {&shipshape.YamlCheck{
-				YamlBase: shipshape.YamlBase{
+			yaml.Yaml: {&yaml.YamlCheck{
+				YamlBase: yaml.YamlBase{
 					CheckBase: CheckBase{Name: "yamlcheck1"},
 				},
 			}},

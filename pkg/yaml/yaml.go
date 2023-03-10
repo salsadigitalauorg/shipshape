@@ -1,4 +1,4 @@
-package shipshape
+package yaml
 
 import (
 	"errors"
@@ -10,6 +10,17 @@ import (
 
 	"gopkg.in/yaml.v3"
 )
+
+//go:generate go run ../../cmd/gen.go registry --checkpackage=yaml
+
+func RegisterChecks() {
+	config.ChecksRegistry[Yaml] = func() config.Check { return &YamlCheck{} }
+	config.ChecksRegistry[YamlLint] = func() config.Check { return &YamlLintCheck{} }
+}
+
+func init() {
+	RegisterChecks()
+}
 
 // Merge implementation for YamlBase.
 func (c *YamlBase) Merge(mergeCheck config.Check) error {

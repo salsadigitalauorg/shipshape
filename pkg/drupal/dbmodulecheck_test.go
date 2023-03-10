@@ -5,7 +5,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	. "github.com/salsadigitalauorg/shipshape/pkg/drupal"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -15,8 +15,8 @@ func TestDbModuleMerge(t *testing.T) {
 
 	c := DbModuleCheck{
 		DrushYamlCheck: DrushYamlCheck{
-			YamlBase: shipshape.YamlBase{
-				Values: []shipshape.KeyValue{
+			YamlBase: yaml.YamlBase{
+				Values: []yaml.KeyValue{
 					{Key: "key1", Value: "val1", Optional: false},
 				},
 			},
@@ -26,8 +26,8 @@ func TestDbModuleMerge(t *testing.T) {
 	}
 	c.Merge(&DbModuleCheck{
 		DrushYamlCheck: DrushYamlCheck{
-			YamlBase: shipshape.YamlBase{
-				Values: []shipshape.KeyValue{
+			YamlBase: yaml.YamlBase{
+				Values: []yaml.KeyValue{
 					{Key: "key1", Value: "val1", Optional: true},
 				},
 			},
@@ -37,8 +37,8 @@ func TestDbModuleMerge(t *testing.T) {
 	})
 	assert.EqualValues(DbModuleCheck{
 		DrushYamlCheck: DrushYamlCheck{
-			YamlBase: shipshape.YamlBase{
-				Values: []shipshape.KeyValue{
+			YamlBase: yaml.YamlBase{
+				Values: []yaml.KeyValue{
 					{Key: "key1", Value: "val1", Optional: true},
 				},
 			},
@@ -69,7 +69,7 @@ node:
 		}
 		c := DbModuleCheck{
 			DrushYamlCheck: DrushYamlCheck{
-				YamlBase: shipshape.YamlBase{
+				YamlBase: yaml.YamlBase{
 					CheckBase: config.CheckBase{DataMap: dataMap},
 				},
 				ConfigName: "modules",

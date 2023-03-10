@@ -7,7 +7,7 @@ import (
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/file"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -52,11 +52,11 @@ func TestCheckBaseRunCheck(t *testing.T) {
 }
 
 type testCheckRemediationNotSupported struct {
-	shipshape.YamlBase `yaml:",inline"`
+	yaml.YamlBase `yaml:",inline"`
 }
 
 type testCheckRemediationSupported struct {
-	shipshape.YamlBase `yaml:",inline"`
+	yaml.YamlBase `yaml:",inline"`
 }
 
 func (c *testCheckRemediationSupported) Remediate(interface{}) error {
