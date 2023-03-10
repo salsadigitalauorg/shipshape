@@ -114,13 +114,13 @@ func main() {
 		fmt.Println(string(data))
 	case "junit":
 		w := bufio.NewWriter(os.Stdout)
-		shipshape.RunResultList.JUnit(w)
+		shipshape.JUnit(w)
 	case "table":
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		shipshape.RunResultList.TableDisplay(w)
+		shipshape.TableDisplay(w)
 	case "simple":
 		w := bufio.NewWriter(os.Stdout)
-		shipshape.RunResultList.SimpleDisplay(w)
+		shipshape.SimpleDisplay(w)
 	}
 
 	if shipshape.RunResultList.Status() == config.Fail && errorCodeOnFailure &&
