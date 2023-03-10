@@ -111,7 +111,7 @@ func (c *CheckBase) RunCheck() {
 	c.AddFail("not implemented")
 }
 
-// GetResult returns the value of c.Result.
+// GetResult returns a ref of the result.
 func (c *CheckBase) GetResult() *Result {
 	return &c.Result
 }
