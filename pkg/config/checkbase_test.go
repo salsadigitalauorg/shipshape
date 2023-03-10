@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks"
 	"github.com/salsadigitalauorg/shipshape/pkg/file"
 	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 
@@ -39,6 +40,49 @@ func TestCheckBaseMerge(t *testing.T) {
 	c = CheckBase{Severity: LowSeverity}
 	c.Merge(&CheckBase{Name: "foo"})
 	assert.Equal(LowSeverity, c.Severity)
+}
+
+func TestRequiresData(t *testing.T) {
+	assert := assert.New(t)
+
+	var c Check
+	c = &CheckBase{Name: "foo"}
+	assert.True(c.RequiresData())
+
+	c = &testchecks.TestCheck1Check{}
+	c.Init(testchecks.TestCheck1)
+	assert.False(c.RequiresData())
+}
+
+func TestHasData(t *testing.T) {
+	assert := assert.New(t)
+
+	c := CheckBase{Name: "foo"}
+	assert.False(c.HasData(false))
+	assert.NotEqual(Fail, c.Result.Status)
+
+	assert.False(c.HasData(true))
+	assert.Equal(Fail, c.Result.Status)
+
+	c = CheckBase{Name: "foo", DataMap: map[string][]byte{"foo": []byte(`bar`)}}
+	assert.True(c.HasData(true))
+	assert.NotEqual(Fail, c.Result.Status)
+}
+
+func TestAddPass(t *testing.T) {
+	assert := assert.New(t)
+
+	c := CheckBase{Name: "foo"}
+	c.AddPass("with flying colours!")
+	assert.EqualValues(Result{Passes: []string{"with flying colours!"}}, c.Result)
+}
+
+func TestAddWarning(t *testing.T) {
+	assert := assert.New(t)
+
+	c := CheckBase{Name: "foo"}
+	c.AddWarning("not feeling great")
+	assert.EqualValues(Result{Warnings: []string{"not feeling great"}}, c.Result)
 }
 
 func TestCheckBaseRunCheck(t *testing.T) {
