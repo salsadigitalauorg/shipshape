@@ -17,7 +17,6 @@ import (
 
 var RunConfig config.Config
 var RunResultList config.ResultList
-
 var OutputFormats = []string{"json", "junit", "simple", "table"}
 
 func Init(projectDir string, configFiles []string, checkTypesToRun []string, excludeDb bool, remediate bool, logLevel string) error {

@@ -4,12 +4,79 @@ import (
 	"testing"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks"
+	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks_invalid"
 	"github.com/salsadigitalauorg/shipshape/pkg/crawler"
 	"github.com/salsadigitalauorg/shipshape/pkg/file"
-	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
+	shipshape_yaml "github.com/salsadigitalauorg/shipshape/pkg/yaml"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
+
+func TestCheckMapUnmarshalYaml(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("valid", func(t *testing.T) {
+		var cm CheckMap
+		testchecks.RegisterChecks()
+
+		configBytes := []byte(`
+test-check-1:
+  - name: My test check 1
+    foo: baz
+test-check-2:
+  - name: My first test check 2
+    bar: zoom
+  - name: My second test check 2
+    bar: zap
+`)
+		err := yaml.Unmarshal(configBytes, &cm)
+		assert.NoError(err)
+		assert.Equal(CheckMap{
+			testchecks.TestCheck1: {
+				&testchecks.TestCheck1Check{
+					CheckBase: CheckBase{Name: "My test check 1"},
+					Foo:       "baz",
+				},
+			},
+			testchecks.TestCheck2: {
+				&testchecks.TestCheck2Check{
+					CheckBase: CheckBase{Name: "My first test check 2"},
+					Bar:       "zoom",
+				},
+				&testchecks.TestCheck2Check{
+					CheckBase: CheckBase{Name: "My second test check 2"},
+					Bar:       "zap",
+				},
+			},
+		}, cm)
+	})
+
+	t.Run("nonSequenceNode", func(t *testing.T) {
+		var cm CheckMap
+		testchecks.RegisterChecks()
+
+		configBytes := []byte(`
+test-check-1:
+  name: My test check 1
+  foo: baz
+`)
+		err := yaml.Unmarshal(configBytes, &cm)
+		assert.EqualError(err, "list required under check type 'test-check-1', got !!map instead")
+	})
+
+	t.Run("invalidYamlLookup", func(t *testing.T) {
+		var cm CheckMap
+		testchecks_invalid.RegisterChecks()
+		configBytes := []byte(`
+foo:
+  - bar: baz
+`)
+		err := yaml.Unmarshal(configBytes, &cm)
+		assert.EqualError(err, "invalid character ' ' at position 10, following \"test-check\"")
+	})
+}
 
 func TestMerge(t *testing.T) {
 	assert := assert.New(t)
@@ -52,8 +119,8 @@ func TestMerge(t *testing.T) {
 
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			yaml.Yaml: {&yaml.YamlCheck{
-				YamlBase: yaml.YamlBase{
+			shipshape_yaml.Yaml: {&shipshape_yaml.YamlCheck{
+				YamlBase: shipshape_yaml.YamlBase{
 					CheckBase: CheckBase{Name: "yamlcheck1"},
 				},
 			}},
@@ -63,8 +130,8 @@ func TestMerge(t *testing.T) {
 	assert.EqualValues(
 		CheckMap{
 			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
-			yaml.Yaml: {&yaml.YamlCheck{
-				YamlBase: yaml.YamlBase{
+			shipshape_yaml.Yaml: {&shipshape_yaml.YamlCheck{
+				YamlBase: shipshape_yaml.YamlBase{
 					CheckBase: CheckBase{Name: "yamlcheck1"},
 				},
 			}},
@@ -81,8 +148,8 @@ func TestMerge(t *testing.T) {
 	assert.EqualValues(
 		CheckMap{
 			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
-			yaml.Yaml: {&yaml.YamlCheck{
-				YamlBase: yaml.YamlBase{
+			shipshape_yaml.Yaml: {&shipshape_yaml.YamlCheck{
+				YamlBase: shipshape_yaml.YamlBase{
 					CheckBase: CheckBase{Name: "yamlcheck1"},
 				},
 			}},

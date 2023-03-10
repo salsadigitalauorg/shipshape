@@ -88,8 +88,7 @@ checks:
   test-check-1: foo
 `
 		err := ParseConfigData([][]byte{[]byte(invalidData)})
-		assert.Error(err)
-		assert.Contains(err.Error(), "yaml: unmarshal errors")
+		assert.EqualError(err, "list required under check type 'test-check-1', got !!str instead")
 
 	})
 

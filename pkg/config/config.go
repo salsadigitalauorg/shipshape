@@ -1,7 +1,7 @@
 package config
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
@@ -23,7 +23,9 @@ func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
 		}
 
 		if check_values[0].Kind != yaml.SequenceNode {
-			return errors.New("yaml: unmarshal errors")
+			return fmt.Errorf(
+				"list required under check type '%s', got %s instead",
+				ct, check_values[0].ShortTag())
 		}
 
 		for _, cv := range check_values[0].Content {
