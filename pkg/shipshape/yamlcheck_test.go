@@ -56,7 +56,7 @@ func TestYamlCheck(t *testing.T) {
 	assert.EqualValues([]string{"no file provided"}, c.Result.Failures)
 
 	// Non-existent file.
-	ProjectDir = "testdata"
+	config.ProjectDir = "testdata"
 	c = mockCheck()
 	c.Init(Yaml)
 	c.File = "non-existent.yml"

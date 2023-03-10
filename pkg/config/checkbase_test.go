@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/file"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 
 	"github.com/stretchr/testify/assert"
@@ -17,11 +18,11 @@ func TestCheckBaseInit(t *testing.T) {
 	c := CheckBase{Name: "foo"}
 	assert.Equal("foo", c.GetName())
 
-	c.Init(shipshape.File)
+	c.Init(file.File)
 	assert.Equal(NormalSeverity, c.Severity)
 	assert.Equal("foo", c.Result.Name)
 	assert.Equal(NormalSeverity, c.Result.Severity)
-	assert.Equal(shipshape.File, c.GetType())
+	assert.Equal(file.File, c.GetType())
 }
 
 func TestCheckBaseMerge(t *testing.T) {

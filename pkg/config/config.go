@@ -7,6 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var ProjectDir string
 var ChecksRegistry = map[CheckType]func() Check{}
 
 func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {

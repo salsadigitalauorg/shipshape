@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -17,7 +17,7 @@ func Drush(drushPath string, alias string, command []string) *DrushCommand {
 		drushPath = DrushDefaultPath
 	}
 	if !filepath.IsAbs(drushPath) {
-		drushPath = filepath.Join(shipshape.ProjectDir, drushPath)
+		drushPath = filepath.Join(config.ProjectDir, drushPath)
 	}
 	return &DrushCommand{DrushPath: drushPath, Alias: alias, Args: command}
 }

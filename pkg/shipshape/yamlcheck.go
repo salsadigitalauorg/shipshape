@@ -48,13 +48,13 @@ func (c *YamlCheck) readFile(fkey string, fname string) {
 func (c *YamlCheck) FetchData() {
 	c.DataMap = map[string][]byte{}
 	if c.File != "" {
-		c.readFile(filepath.Join(c.Path, c.File), filepath.Join(ProjectDir, c.Path, c.File))
+		c.readFile(filepath.Join(c.Path, c.File), filepath.Join(config.ProjectDir, c.Path, c.File))
 	} else if len(c.Files) > 0 {
 		for _, f := range c.Files {
-			c.readFile(filepath.Join(c.Path, f), filepath.Join(ProjectDir, c.Path, f))
+			c.readFile(filepath.Join(c.Path, f), filepath.Join(config.ProjectDir, c.Path, f))
 		}
 	} else if c.Pattern != "" {
-		configPath := filepath.Join(ProjectDir, c.Path)
+		configPath := filepath.Join(config.ProjectDir, c.Path)
 		files, err := utils.FindFiles(configPath, c.Pattern, c.ExcludePattern, nil)
 		if err != nil {
 			// No failure if missing path and ignoring missing.

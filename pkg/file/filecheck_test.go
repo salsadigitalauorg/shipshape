@@ -1,10 +1,10 @@
-package shipshape_test
+package file_test
 
 import (
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	. "github.com/salsadigitalauorg/shipshape/pkg/file"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,7 +46,7 @@ func TestFileCheckMerge(t *testing.T) {
 func TestFileCheckRunCheck(t *testing.T) {
 	assert := assert.New(t)
 
-	ProjectDir = "testdata"
+	config.ProjectDir = "testdata"
 	c := FileCheck{
 		Path:              "file-non-existent",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
@@ -61,7 +61,6 @@ func TestFileCheckRunCheck(t *testing.T) {
 	)
 
 	c = FileCheck{
-		Path:              "file",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
 	c.Init(File)
@@ -70,14 +69,14 @@ func TestFileCheckRunCheck(t *testing.T) {
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(
 		[]string{
-			"Illegal file found: testdata/file/adminer.php",
-			"Illegal file found: testdata/file/sub/phpmyadmin.php",
+			"Illegal file found: testdata/adminer.php",
+			"Illegal file found: testdata/sub/phpmyadmin.php",
 		},
 		c.Result.Failures,
 	)
 
 	c = FileCheck{
-		Path:              "file/correct",
+		Path:              "correct",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
 	c.Init(File)
