@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/filterchecks"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks_invalid"
 	"github.com/salsadigitalauorg/shipshape/pkg/crawler"
@@ -251,4 +252,70 @@ func TestMerge(t *testing.T) {
 		},
 		cfg.Checks,
 	)
+}
+
+func TestFilterChecksToRun(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("filterByCheckTypes", func(t *testing.T) {
+		cfg := Config{
+			Checks: CheckMap{
+				filterchecks.FilterCheck1: {
+					&filterchecks.FilterCheck1Check{
+						CheckBase: CheckBase{Name: "filter check 1"},
+					},
+				},
+				filterchecks.FilterCheck2: {
+					&filterchecks.FilterCheck2Check{
+						CheckBase: CheckBase{Name: "filter check 2"},
+					},
+				},
+			},
+		}
+		for ct, checks := range cfg.Checks {
+			for _, c := range checks {
+				c.Init(ct)
+			}
+		}
+		cfg.FilterChecksToRun([]string{"filter-check-1"}, false)
+
+		expectedCheck := &filterchecks.FilterCheck1Check{
+			CheckBase: CheckBase{Name: "filter check 1"},
+		}
+		expectedCheck.Init(filterchecks.FilterCheck1)
+		assert.EqualValues(Config{
+			Checks: CheckMap{filterchecks.FilterCheck1: {expectedCheck}},
+		}, cfg)
+	})
+
+	t.Run("filterOutDb", func(t *testing.T) {
+		cfg := Config{
+			Checks: CheckMap{
+				filterchecks.FilterCheck1: {
+					&filterchecks.FilterCheck1Check{
+						CheckBase: CheckBase{Name: "filter check 1"},
+					},
+				},
+				filterchecks.FilterCheck2: {
+					&filterchecks.FilterCheck2Check{
+						CheckBase: CheckBase{Name: "filter check 2"},
+					},
+				},
+			},
+		}
+		for ct, checks := range cfg.Checks {
+			for _, c := range checks {
+				c.Init(ct)
+			}
+		}
+		cfg.FilterChecksToRun([]string(nil), true)
+
+		expectedCheck := &filterchecks.FilterCheck2Check{
+			CheckBase: CheckBase{Name: "filter check 2"},
+		}
+		expectedCheck.Init(filterchecks.FilterCheck2)
+		assert.EqualValues(Config{
+			Checks: CheckMap{filterchecks.FilterCheck2: {expectedCheck}},
+		}, cfg)
+	})
 }
