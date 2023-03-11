@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/checks/file"
+	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks"
-	"github.com/salsadigitalauorg/shipshape/pkg/file"
-	"github.com/salsadigitalauorg/shipshape/pkg/yaml"
 
 	"github.com/stretchr/testify/assert"
 )
