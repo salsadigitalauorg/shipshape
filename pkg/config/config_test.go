@@ -3,13 +3,13 @@ package config_test
 import (
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/checks/crawler"
+	"github.com/salsadigitalauorg/shipshape/pkg/checks/file"
+	shipshape_yaml "github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/filterchecks"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks_invalid"
-	"github.com/salsadigitalauorg/shipshape/pkg/crawler"
-	"github.com/salsadigitalauorg/shipshape/pkg/file"
-	shipshape_yaml "github.com/salsadigitalauorg/shipshape/pkg/yaml"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
