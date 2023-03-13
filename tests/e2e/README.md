@@ -6,4 +6,5 @@ See https://github.com/ovh/venom
 
 ```sh
 docker-compose up --detach --build
+docker-compose exec drupal venom run
 ```

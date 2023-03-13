@@ -1,0 +1,6 @@
+checks:
+  file:
+    - name: 'Illegal files'
+      severity: high
+      path: web
+      disallowed-pattern: '^(adminer|phpmyadmin|bigdump)?\.php$'

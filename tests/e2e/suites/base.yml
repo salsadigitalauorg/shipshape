@@ -1,0 +1,15 @@
+name: Base
+testcases:
+- name: No checks defined
+  steps:
+  - script: cd /app && shipshape -f /suites/shipshape/checks-empty.yml
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldEqual No result available; ensure your shipshape.yml is configured correctly.
+- name: No breaches
+  steps:
+  - script: cd /app && shipshape -f /suites/shipshape/files-illegal.yml
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldEqual Ship is in top shape; no breach detected!
+

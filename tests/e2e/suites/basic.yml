@@ -1,9 +1,0 @@
-name: Basic tests
-testcases:
-- name: Install drupal
-  steps:
-  - script: cd /app && drush si --db-url=mysql://drupal:drupal@mariadb:3306/drupal --yes
-  - script: cd /app && shipshape -f /suites/shipshape/basic.yml
-    assertions:
-    - result.code ShouldEqual 0
-    - result.systemout ShouldEqual No result available; ensure your shipshape.yml is configured correctly.
