@@ -2,11 +2,14 @@ package shipshape
 
 import (
 	"bufio"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"text/tabwriter"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
+	log "github.com/sirupsen/logrus"
 )
 
 // TableDisplay generates the tabular output for the ResultList.
@@ -155,5 +158,46 @@ func JUnit(w *bufio.Writer) {
 	fmt.Fprint(w, xml.Header)
 	fmt.Fprint(w, string(xmlBytes))
 	fmt.Fprintln(w)
+	w.Flush()
+}
+
+// LagoonFacts outputs breaches in a format compatible with the
+// lagoon-facts-app to be consumed.
+// see https://github.com/uselagoon/lagoon-facts-app#arbitrary-facts
+func LagoonFacts(w *bufio.Writer) {
+	facts := []lagoon.Fact{}
+
+	if RunResultList.TotalBreaches == 0 {
+		fmt.Fprint(w, "[]")
+		w.Flush()
+		return
+	}
+
+	lagoon.InitClient()
+	envId, err := lagoon.GetEnvironmentIdFromEnvVars()
+	if err != nil {
+		log.WithError(err).Fatal("error fetching lagoon environment id")
+	}
+
+	for ct, checks := range RunConfig.Checks {
+		for _, c := range checks {
+			for _, b := range RunResultList.GetBreachesByCheckName(c.GetName()) {
+				facts = append(facts, lagoon.Fact{
+					Name:        c.GetName(),
+					Value:       b,
+					Source:      "shipshape:" + string(ct),
+					Environment: envId,
+					Description: "List of breaches identified by the check",
+					Category:    "Shipshape audit",
+				})
+			}
+		}
+	}
+	factsBytes, err := json.Marshal(facts)
+	if err != nil {
+		log.Errorf("error occurred while converting to json: %s\n", err.Error())
+		return
+	}
+	fmt.Fprint(w, string(factsBytes))
 	w.Flush()
 }

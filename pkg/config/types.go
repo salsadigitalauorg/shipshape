@@ -8,6 +8,9 @@ type Config struct {
 	FailSeverity Severity `yaml:"fail-severity"`
 	Checks       CheckMap `yaml:"checks"`
 	Remediate    bool     `yaml:"-"`
+	// If requesting LagoonFact output, the base url and token for the Lagoon
+	// api are required to infer environment IDs and the like.
+	LagoonApiBaseUrl string `yaml:"lagoon-api-base-url"`
 }
 
 type Severity string

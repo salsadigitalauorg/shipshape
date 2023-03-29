@@ -43,6 +43,8 @@ var (
 	logLevel           string
 	verbose            bool
 	debug              bool
+	lagoonApiBaseUrl   string
+	lagoonApiToken     string
 )
 
 func main() {
@@ -76,6 +78,15 @@ func main() {
 
 	determineLogLevel()
 
+	if outputFormat == "lagoon-facts" {
+		if lagoonApiBaseUrl == "" {
+			log.Fatal("lagoon api base url not provided")
+		}
+		if lagoonApiToken == "" {
+			log.Fatal("lagoon api token not provided")
+		}
+	}
+
 	for _, f := range checksFiles {
 		if !utils.StringIsUrl(f) {
 			if _, err := os.Stat(f); os.IsNotExist(err) {
@@ -89,7 +100,15 @@ func main() {
 		}
 	}
 
-	err := shipshape.Init(projectDir, checksFiles, checkTypesToRun, excludeDb, remediate, logLevel)
+	err := shipshape.Init(
+		projectDir,
+		checksFiles,
+		checkTypesToRun,
+		excludeDb,
+		remediate,
+		logLevel,
+		lagoonApiBaseUrl,
+		lagoonApiToken)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -121,6 +140,9 @@ func main() {
 	case "simple":
 		w := bufio.NewWriter(os.Stdout)
 		shipshape.SimpleDisplay(w)
+	case "lagoon-facts":
+		w := bufio.NewWriter(os.Stdout)
+		shipshape.LagoonFacts(w)
 	}
 
 	if shipshape.RunResultList.Status() == config.Fail && errorCodeOnFailure &&
@@ -154,6 +176,8 @@ func parseFlags() {
 	pflag.BoolVarP(&debug, "debug", "d", false, "Display debug information - equivalent to --log-level debug")
 	pflag.BoolVarP(&excludeDb, "exclude-db", "x", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
 	pflag.BoolVarP(&remediate, "remediate", "r", false, "Run remediation for supported checks")
+	pflag.StringVar(&lagoonApiBaseUrl, "lagoon-api-base-url", "", "Base url for the Lagoon API when requesting 'lagoon-facts' output (env: LAGOON_API_BASE_URL)")
+	pflag.StringVar(&lagoonApiToken, "lagoon-api-token", "", "Lagoon API token when requesting 'lagoon-facts' output (env: LAGOON_API_TOKEN)")
 	pflag.Parse()
 
 	if displayUsage {
@@ -180,6 +204,16 @@ func parseEnvVars() {
 	outputFormatEnv := os.Getenv("SHIPSHAPE_OUTPUT_FORMAT")
 	if outputFormatEnv != "" {
 		outputFormat = outputFormatEnv
+	}
+
+	lagoonApiBaseUrlEnv := os.Getenv("LAGOON_API_BASE_URL")
+	if outputFormatEnv != "" {
+		lagoonApiBaseUrl = lagoonApiBaseUrlEnv
+	}
+
+	lagoonApiTokenEnv := os.Getenv("LAGOON_API_TOKEN")
+	if outputFormatEnv != "" {
+		lagoonApiToken = lagoonApiTokenEnv
 	}
 }
 
