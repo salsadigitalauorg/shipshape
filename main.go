@@ -13,6 +13,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
@@ -176,8 +177,11 @@ func parseFlags() {
 	pflag.BoolVarP(&debug, "debug", "d", false, "Display debug information - equivalent to --log-level debug")
 	pflag.BoolVarP(&excludeDb, "exclude-db", "x", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
 	pflag.BoolVarP(&remediate, "remediate", "r", false, "Run remediation for supported checks")
+
 	pflag.StringVar(&lagoonApiBaseUrl, "lagoon-api-base-url", "", "Base url for the Lagoon API when requesting 'lagoon-facts' output (env: LAGOON_API_BASE_URL)")
 	pflag.StringVar(&lagoonApiToken, "lagoon-api-token", "", "Lagoon API token when requesting 'lagoon-facts' output (env: LAGOON_API_TOKEN)")
+	pflag.BoolVar(&lagoon.LagoonPushFacts, "lagoon-push-facts", false, "Push audit facts to the Lagoon API")
+
 	pflag.Parse()
 
 	if displayUsage {

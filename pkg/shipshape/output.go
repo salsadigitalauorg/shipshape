@@ -165,8 +165,6 @@ func JUnit(w *bufio.Writer) {
 // lagoon-facts-app to be consumed.
 // see https://github.com/uselagoon/lagoon-facts-app#arbitrary-facts
 func LagoonFacts(w *bufio.Writer) {
-	facts := []lagoon.Fact{}
-
 	if RunResultList.TotalBreaches == 0 {
 		fmt.Fprint(w, "[]")
 		w.Flush()
@@ -174,29 +172,33 @@ func LagoonFacts(w *bufio.Writer) {
 	}
 
 	lagoon.InitClient()
-	envId, err := lagoon.GetEnvironmentIdFromEnvVars()
-	if err != nil {
-		log.WithError(err).Fatal("error fetching lagoon environment id")
-	}
-
+	facts := []lagoon.Fact{}
 	for ct, checks := range RunConfig.Checks {
 		for _, c := range checks {
 			for _, b := range RunResultList.GetBreachesByCheckName(c.GetName()) {
 				facts = append(facts, lagoon.Fact{
-					Name:        c.GetName(),
-					Value:       b,
-					Source:      "shipshape:" + string(ct),
-					Environment: envId,
-					Description: "List of breaches identified by the check",
-					Category:    "Shipshape audit",
+					Name:     c.GetName(),
+					Value:    b,
+					Source:   lagoon.SourceName,
+					Category: string(ct),
 				})
 			}
 		}
 	}
+
+	if lagoon.LagoonPushFacts {
+		err := lagoon.ReplaceFacts(facts)
+		if err != nil {
+			log.WithError(err).Fatal("failed to add facts")
+		}
+		fmt.Fprint(w, "successfully pushed facts to the Lagoon api")
+		w.Flush()
+		return
+	}
+
 	factsBytes, err := json.Marshal(facts)
 	if err != nil {
-		log.Errorf("error occurred while converting to json: %s\n", err.Error())
-		return
+		log.WithError(err).Fatalf("error occurred while converting to json")
 	}
 	fmt.Fprint(w, string(factsBytes))
 	w.Flush()
