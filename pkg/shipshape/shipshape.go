@@ -46,11 +46,11 @@ func Init(projectDir string, configFiles []string, checkTypesToRun []string, exc
 	// Base url can either be provided in the config file or in env var, the
 	// latter being final.
 	if lagoonApiBaseUrl != "" {
-		lagoon.LagoonApiBaseUrl = lagoonApiBaseUrl
+		lagoon.ApiBaseUrl = lagoonApiBaseUrl
 	} else {
-		lagoon.LagoonApiBaseUrl = RunConfig.LagoonApiBaseUrl
+		lagoon.ApiBaseUrl = RunConfig.LagoonApiBaseUrl
 	}
-	lagoon.LagoonApiToken = lagoonApiToken
+	lagoon.ApiToken = lagoonApiToken
 
 	log.WithFields(log.Fields{
 		"ProjectDir":    RunConfig.ProjectDir,

@@ -19,9 +19,9 @@ type Fact struct {
 
 const SourceName string = "Shipshape"
 
-var LagoonApiBaseUrl string
-var LagoonApiToken string
-var LagoonPushFacts bool
+var ApiBaseUrl string
+var ApiToken string
+var PushFacts bool
 
 var project string
 var environment string
@@ -29,11 +29,14 @@ var environment string
 var Client *graphql.Client
 
 func InitClient() {
+	if Client != nil {
+		return
+	}
 	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: LagoonApiToken},
+		&oauth2.Token{AccessToken: ApiToken},
 	)
 	httpClient := oauth2.NewClient(context.Background(), src)
-	Client = graphql.NewClient(LagoonApiBaseUrl+"/graphql", httpClient)
+	Client = graphql.NewClient(ApiBaseUrl+"/graphql", httpClient)
 }
 
 func MustHaveEnvVars() {

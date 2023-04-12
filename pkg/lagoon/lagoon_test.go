@@ -9,8 +9,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hasura/go-graphql-client"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
+
+	"github.com/hasura/go-graphql-client"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )

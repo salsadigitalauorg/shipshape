@@ -9,6 +9,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -171,7 +172,6 @@ func LagoonFacts(w *bufio.Writer) {
 		return
 	}
 
-	lagoon.InitClient()
 	facts := []lagoon.Fact{}
 	for ct, checks := range RunConfig.Checks {
 		for _, c := range checks {
@@ -186,7 +186,8 @@ func LagoonFacts(w *bufio.Writer) {
 		}
 	}
 
-	if lagoon.LagoonPushFacts {
+	if lagoon.PushFacts {
+		lagoon.InitClient()
 		err := lagoon.ReplaceFacts(facts)
 		if err != nil {
 			log.WithError(err).Fatal("failed to add facts")
