@@ -3,12 +3,21 @@ package shipshape_test
 import (
 	"bufio"
 	"bytes"
+	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
 	"text/tabwriter"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/file"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+
+	"github.com/hasura/go-graphql-client"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -99,7 +108,8 @@ func TestSimpleDisplay(t *testing.T) {
 		RunResultList = config.NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		RunResultList.Results = append(RunResultList.Results, config.Result{Name: "a", Status: config.Pass})
+		RunResultList.Results = append(RunResultList.Results, config.Result{
+			Name: "a", Status: config.Pass})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
@@ -122,7 +132,8 @@ func TestSimpleDisplay(t *testing.T) {
 		RunResultList = config.ResultList{RemediationPerformed: true}
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		RunResultList.Results = append(RunResultList.Results, config.Result{Name: "a", Status: config.Pass})
+		RunResultList.Results = append(RunResultList.Results, config.Result{
+			Name: "a", Status: config.Pass})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
@@ -133,7 +144,8 @@ func TestSimpleDisplay(t *testing.T) {
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		RunResultList.TotalRemediations = 1
-		RunResultList.Results = append(RunResultList.Results, config.Result{Name: "a", Status: config.Pass, Remediations: []string{"fixed 1"}})
+		RunResultList.Results = append(RunResultList.Results, config.Result{
+			Name: "a", Status: config.Pass, Remediations: []string{"fixed 1"}})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Breaches were detected but were all fixed successfully!\n\n"+
@@ -146,7 +158,8 @@ func TestSimpleDisplay(t *testing.T) {
 		w := bufio.NewWriter(&buf)
 		RunResultList.TotalRemediations = 1
 		RunResultList.TotalBreaches = 1
-		RunResultList.Results = append(RunResultList.Results, config.Result{Name: "a", Status: config.Fail, Remediations: []string{"fixed 1"}})
+		RunResultList.Results = append(RunResultList.Results, config.Result{
+			Name: "a", Status: config.Fail, Remediations: []string{"fixed 1"}})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Breaches were detected but not all of them could be "+
@@ -162,7 +175,8 @@ func TestSimpleDisplay(t *testing.T) {
 		w := bufio.NewWriter(&buf)
 		RunResultList.TotalBreaches = 1
 		RunResultList.TotalRemediations = 0
-		RunResultList.Results = append(RunResultList.Results, config.Result{Name: "a", Status: config.Fail})
+		RunResultList.Results = append(RunResultList.Results, config.Result{
+			Name: "a", Status: config.Fail})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Breaches were detected but not all of them could be "+
@@ -186,7 +200,8 @@ func TestJUnit(t *testing.T) {
 	RunConfig.Checks = config.CheckMap{file.File: []config.Check{&file.FileCheck{
 		CheckBase: config.CheckBase{Name: "a"},
 	}}}
-	RunResultList.Results = append(RunResultList.Results, config.Result{Name: "a", Status: config.Pass})
+	RunResultList.Results = append(RunResultList.Results, config.Result{
+		Name: "a", Status: config.Pass})
 	buf = bytes.Buffer{}
 	JUnit(w)
 	assert.Equal(`<?xml version="1.0" encoding="UTF-8"?>
@@ -216,4 +231,87 @@ func TestJUnit(t *testing.T) {
     </testsuite>
 </testsuites>
 `, buf.String())
+}
+
+func TestLagoonFacts(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("noResult", func(t *testing.T) {
+		RunResultList = config.NewResultList(false)
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		LagoonFacts(w)
+		assert.Equal("[]", buf.String())
+	})
+
+	t.Run("breachesDetected", func(t *testing.T) {
+		RunConfig.Checks = config.CheckMap{file.File: []config.Check{
+			&file.FileCheck{CheckBase: config.CheckBase{Name: "a"}}}}
+		RunResultList = config.NewResultList(false)
+		RunResultList.Results = append(RunResultList.Results, config.Result{
+			Name:     "a",
+			Status:   config.Fail,
+			Failures: []string{"Fail a"}})
+		RunResultList.TotalBreaches = 1
+
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		LagoonFacts(w)
+		assert.Equal("[{\"name\":\"a\",\"value\":\"Fail a\",\"source\":"+
+			"\"Shipshape\",\"description\":\"\",\"category\":\"file\"}]",
+			buf.String())
+	})
+
+	t.Run("pushToLagoon", func(t *testing.T) {
+		RunConfig.Checks = config.CheckMap{file.File: []config.Check{
+			&file.FileCheck{CheckBase: config.CheckBase{Name: "a"}}}}
+		RunResultList = config.NewResultList(false)
+		RunResultList.Results = append(RunResultList.Results, config.Result{
+			Name:     "a",
+			Status:   config.Fail,
+			Failures: []string{"Fail a"}})
+		RunResultList.TotalBreaches = 1
+
+		lagoon.PushFacts = true
+
+		var svr *httptest.Server
+		var reqBodies [][]byte
+
+		svr = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			reqBody, _ := io.ReadAll(r.Body)
+			reqBodies = append(reqBodies, reqBody)
+			// Response for the first request, environment id.
+			if len(reqBodies) == 1 {
+				fmt.Fprintf(w, "{\"id\": 50}")
+			} else if len(reqBodies) == 2 { // Response for the deletion.
+				fmt.Fprintf(w, "{\"data\":{\"deleteFactsFromSource\":\"success\"}}")
+			} else if len(reqBodies) == 3 { // Response for the add.
+				fmt.Fprintf(w, "{}")
+			}
+		}))
+
+		httpClient := http.DefaultClient
+		lagoon.Client = graphql.NewClient(svr.URL, httpClient)
+		origOutput := logrus.StandardLogger().Out
+		defer func() {
+			svr.Close()
+			lagoon.Client = nil
+			os.Unsetenv("LAGOON_PROJECT")
+			os.Unsetenv("LAGOON_ENVIRONMENT")
+			logrus.SetOutput(origOutput)
+		}()
+
+		var logbuf bytes.Buffer
+		logrus.SetOutput(&logbuf)
+
+		os.Setenv("LAGOON_PROJECT", "foo")
+		os.Setenv("LAGOON_ENVIRONMENT", "bar")
+
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		LagoonFacts(w)
+		assert.Contains(logbuf.String(),
+			"level=info msg=\"fetching environment id\" namespace=foo-bar\n")
+		assert.Equal("successfully pushed facts to the Lagoon api", buf.String())
+	})
 }

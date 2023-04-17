@@ -2,11 +2,15 @@ package shipshape
 
 import (
 	"bufio"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"text/tabwriter"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // TableDisplay generates the tabular output for the ResultList.
@@ -155,5 +159,48 @@ func JUnit(w *bufio.Writer) {
 	fmt.Fprint(w, xml.Header)
 	fmt.Fprint(w, string(xmlBytes))
 	fmt.Fprintln(w)
+	w.Flush()
+}
+
+// LagoonFacts outputs breaches in a format compatible with the
+// lagoon-facts-app to be consumed.
+// see https://github.com/uselagoon/lagoon-facts-app#arbitrary-facts
+func LagoonFacts(w *bufio.Writer) {
+	if RunResultList.TotalBreaches == 0 {
+		fmt.Fprint(w, "[]")
+		w.Flush()
+		return
+	}
+
+	facts := []lagoon.Fact{}
+	for ct, checks := range RunConfig.Checks {
+		for _, c := range checks {
+			for _, b := range RunResultList.GetBreachesByCheckName(c.GetName()) {
+				facts = append(facts, lagoon.Fact{
+					Name:     c.GetName(),
+					Value:    b,
+					Source:   lagoon.SourceName,
+					Category: string(ct),
+				})
+			}
+		}
+	}
+
+	if lagoon.PushFacts {
+		lagoon.InitClient()
+		err := lagoon.ReplaceFacts(facts)
+		if err != nil {
+			log.WithError(err).Fatal("failed to add facts")
+		}
+		fmt.Fprint(w, "successfully pushed facts to the Lagoon api")
+		w.Flush()
+		return
+	}
+
+	factsBytes, err := json.Marshal(facts)
+	if err != nil {
+		log.WithError(err).Fatalf("error occurred while converting to json")
+	}
+	fmt.Fprint(w, string(factsBytes))
 	w.Flush()
 }
