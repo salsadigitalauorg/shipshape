@@ -2,13 +2,11 @@ package lagoon_test
 
 import (
 	"bytes"
-	"fmt"
-	"io"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 
 	"github.com/hasura/go-graphql-client"
@@ -63,65 +61,48 @@ func TestMustHaveEnvVars(t *testing.T) {
 func TestGetEnvironmentIdFromEnvVars(t *testing.T) {
 	assert := assert.New(t)
 
-	var svr *httptest.Server
-	var reqBody []byte
-
-	svr = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reqBody, _ = io.ReadAll(r.Body)
-		fmt.Fprintf(w, "{}")
-	}))
-
-	httpClient := http.DefaultClient
-	lagoon.Client = graphql.NewClient(svr.URL, httpClient)
+	svr := internal.MockLagoonServer()
+	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
 	origOutput := logrus.StandardLogger().Out
+	os.Setenv("LAGOON_PROJECT", "foo")
+	os.Setenv("LAGOON_ENVIRONMENT", "bar")
+	var buf bytes.Buffer
+	logrus.SetOutput(&buf)
 	defer func() {
 		svr.Close()
+		internal.MockLagoonReset()
 		lagoon.Client = nil
 		os.Unsetenv("LAGOON_PROJECT")
 		os.Unsetenv("LAGOON_ENVIRONMENT")
 		logrus.SetOutput(origOutput)
 	}()
 
-	os.Setenv("LAGOON_PROJECT", "foo")
-	os.Setenv("LAGOON_ENVIRONMENT", "bar")
-
-	var buf bytes.Buffer
-	logrus.SetOutput(&buf)
-
 	_, err := lagoon.GetEnvironmentIdFromEnvVars()
 	assert.NoError(err)
+	assert.Equal(1, internal.MockLagoonNumCalls)
 	assert.Equal("{\"query\":\"query ($ns:String!){"+
 		"environmentByKubernetesNamespaceName(kubernetesNamespaceName: $ns)"+
-		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", string(reqBody))
+		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
 }
 
 func TestAddFacts(t *testing.T) {
 	assert := assert.New(t)
 
-	var svr *httptest.Server
-	var reqBody []byte
-
-	svr = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reqBody, _ = io.ReadAll(r.Body)
-		fmt.Fprintf(w, "{}")
-	}))
-
-	httpClient := http.DefaultClient
-	lagoon.Client = graphql.NewClient(svr.URL, httpClient)
+	svr := internal.MockLagoonServer()
+	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
 	origOutput := logrus.StandardLogger().Out
+	os.Setenv("LAGOON_PROJECT", "foo")
+	os.Setenv("LAGOON_ENVIRONMENT", "bar")
+	var buf bytes.Buffer
+	logrus.SetOutput(&buf)
 	defer func() {
 		svr.Close()
+		internal.MockLagoonReset()
 		lagoon.Client = nil
 		os.Unsetenv("LAGOON_PROJECT")
 		os.Unsetenv("LAGOON_ENVIRONMENT")
 		logrus.SetOutput(origOutput)
 	}()
-
-	os.Setenv("LAGOON_PROJECT", "foo")
-	os.Setenv("LAGOON_ENVIRONMENT", "bar")
-
-	var buf bytes.Buffer
-	logrus.SetOutput(&buf)
 
 	facts := []lagoon.Fact{
 		{
@@ -140,50 +121,65 @@ func TestAddFacts(t *testing.T) {
 
 	err := lagoon.AddFacts(facts)
 	assert.NoError(err)
+	assert.Equal(1, internal.MockLagoonNumCalls)
 	assert.Equal("{\"query\":\"mutation ($input:AddFactsByNameInput!){"+
 		"addFactsByName(input: $input){id}}\",\"variables\":{\"input\":{"+
 		"\"environment\":\"bar\",\"facts\":[{\"name\":\"fact1\",\"value\":"+
 		"\"value1\",\"source\":\"source1\",\"description\":\"\",\"category\":"+
 		"\"cat1\"},{\"name\":\"fact2\",\"value\":\"value2\",\"source\":"+
 		"\"source1\",\"description\":\"\",\"category\":\"cat2\"}],\"project\""+
-		":\"foo\"}}}\n", string(reqBody))
+		":\"foo\"}}}\n", internal.MockLagoonRequestBodies[0])
 }
 
-func TestReplaceFacts(t *testing.T) {
+func TestDeleteFacts(t *testing.T) {
 	assert := assert.New(t)
 
-	var svr *httptest.Server
-	var reqBodies [][]byte
-
-	svr = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reqBody, _ := io.ReadAll(r.Body)
-		reqBodies = append(reqBodies, reqBody)
-		// Response for the first request, environment id.
-		if len(reqBodies) == 1 {
-			fmt.Fprintf(w, "{\"id\": 50}")
-		} else if len(reqBodies) == 2 { // Response for the deletion.
-			fmt.Fprintf(w, "{\"data\":{\"deleteFactsFromSource\":\"success\"}}")
-		} else if len(reqBodies) == 3 { // Response for the add.
-			fmt.Fprintf(w, "{}")
-		}
-	}))
-
-	httpClient := http.DefaultClient
-	lagoon.Client = graphql.NewClient(svr.URL, httpClient)
+	svr := internal.MockLagoonServer()
+	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
 	origOutput := logrus.StandardLogger().Out
+	os.Setenv("LAGOON_PROJECT", "foo")
+	os.Setenv("LAGOON_ENVIRONMENT", "bar")
+	var buf bytes.Buffer
+	logrus.SetOutput(&buf)
 	defer func() {
 		svr.Close()
+		internal.MockLagoonReset()
 		lagoon.Client = nil
 		os.Unsetenv("LAGOON_PROJECT")
 		os.Unsetenv("LAGOON_ENVIRONMENT")
 		logrus.SetOutput(origOutput)
 	}()
 
+	err := lagoon.DeleteFacts()
+	assert.NoError(err)
+	assert.Equal(2, internal.MockLagoonNumCalls)
+	assert.Equal("{\"query\":\"query ($ns:String!){"+
+		"environmentByKubernetesNamespaceName(kubernetesNamespaceName: $ns)"+
+		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
+	assert.Equal("{\"query\":\"mutation ($envId:Int!$sourceName:String!){"+
+		"deleteFactsFromSource(input: {environment: $envId, source: "+
+		"$sourceName})}\",\"variables\":{\"envId\":50,\"sourceName\":"+
+		"\"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
+}
+
+func TestReplaceFacts(t *testing.T) {
+	assert := assert.New(t)
+
+	svr := internal.MockLagoonServer()
+	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
+	origOutput := logrus.StandardLogger().Out
 	os.Setenv("LAGOON_PROJECT", "foo")
 	os.Setenv("LAGOON_ENVIRONMENT", "bar")
-
 	var buf bytes.Buffer
 	logrus.SetOutput(&buf)
+	defer func() {
+		svr.Close()
+		internal.MockLagoonReset()
+		lagoon.Client = nil
+		os.Unsetenv("LAGOON_PROJECT")
+		os.Unsetenv("LAGOON_ENVIRONMENT")
+		logrus.SetOutput(origOutput)
+	}()
 
 	facts := []lagoon.Fact{
 		{
@@ -202,19 +198,19 @@ func TestReplaceFacts(t *testing.T) {
 
 	err := lagoon.ReplaceFacts(facts)
 	assert.NoError(err)
-	assert.Len(reqBodies, 3)
+	assert.Equal(3, internal.MockLagoonNumCalls)
 	assert.Equal("{\"query\":\"query ($ns:String!){"+
 		"environmentByKubernetesNamespaceName(kubernetesNamespaceName: $ns)"+
-		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", string(reqBodies[0]))
+		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
 	assert.Equal("{\"query\":\"mutation ($envId:Int!$sourceName:String!){"+
 		"deleteFactsFromSource(input: {environment: $envId, source: "+
-		"$sourceName})}\",\"variables\":{\"envId\":0,\"sourceName\":\""+
-		"Shipshape\"}}\n", string(reqBodies[1]))
+		"$sourceName})}\",\"variables\":{\"envId\":50,\"sourceName\":\""+
+		"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
 	assert.Equal("{\"query\":\"mutation ($input:AddFactsByNameInput!){"+
 		"addFactsByName(input: $input){id}}\",\"variables\":{\"input\":{"+
 		"\"environment\":\"bar\",\"facts\":[{\"name\":\"fact1\",\"value\":"+
 		"\"value1\",\"source\":\"source1\",\"description\":\"\",\"category\":"+
 		"\"cat1\"},{\"name\":\"fact2\",\"value\":\"value2\",\"source\":"+
 		"\"source1\",\"description\":\"\",\"category\":\"cat2\"}],\"project\""+
-		":\"foo\"}}}\n", string(reqBodies[2]))
+		":\"foo\"}}}\n", internal.MockLagoonRequestBodies[2])
 }
