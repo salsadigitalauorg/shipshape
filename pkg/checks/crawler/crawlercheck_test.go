@@ -1,10 +1,12 @@
 package crawler_test
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/crawler"
-	"github.com/salsadigitalauorg/shipshape/pkg/checks/file"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,28 +36,39 @@ func TestCrawlerMerge(t *testing.T) {
 func TestCrawlerCheck(t *testing.T) {
 	assert := assert.New(t)
 
+	server := httptest.NewServer(
+		http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			if req.URL.String() == "/not-found" {
+				rw.WriteHeader(http.StatusNotFound)
+				rw.Write([]byte(`Not found`))
+			} else {
+				rw.Write([]byte(`OK`))
+			}
+		}))
+	defer server.Close()
+
 	c := CrawlerCheck{
 		IncludeURLs: []string{
 			"/not-found",
 		},
-		Domain: "https://httpbin.org",
+		Domain: server.URL,
 		Limit:  5,
 	}
 
-	c.Init(file.File)
+	c.Init(Crawler)
 	c.RunCheck()
 	assert.ElementsMatch(
-		[]string{"Invalid response for: https://httpbin.org/not-found got 404"},
+		[]string{fmt.Sprintf("Invalid response for: %s/not-found got 404", server.URL)},
 		c.Result.Failures,
 	)
 
 	c = CrawlerCheck{
 		IncludeURLs: []string{},
-		Domain:      "https://httpbin.org",
+		Domain:      server.URL,
 		Limit:       5,
 	}
 
-	c.Init(file.File)
+	c.Init(Crawler)
 	c.RunCheck()
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(
