@@ -3,16 +3,14 @@ package shipshape_test
 import (
 	"bufio"
 	"bytes"
-	"fmt"
-	"io"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"testing"
 	"text/tabwriter"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/file"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 
@@ -238,9 +236,45 @@ func TestLagoonFacts(t *testing.T) {
 
 	t.Run("noResult", func(t *testing.T) {
 		RunResultList = config.NewResultList(false)
+
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		LagoonFacts(w)
+		assert.Equal("[]", buf.String())
+	})
+
+	t.Run("noResultPushFacts", func(t *testing.T) {
+		RunResultList = config.NewResultList(false)
+
+		svr := internal.MockLagoonServer()
+		lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
+		lagoon.PushFacts = true
+		origOutput := logrus.StandardLogger().Out
+		var logbuf bytes.Buffer
+		logrus.SetOutput(&logbuf)
+		os.Setenv("LAGOON_PROJECT", "foo")
+		os.Setenv("LAGOON_ENVIRONMENT", "bar")
+		defer func() {
+			svr.Close()
+			internal.MockLagoonReset()
+			lagoon.Client = nil
+			os.Unsetenv("LAGOON_PROJECT")
+			os.Unsetenv("LAGOON_ENVIRONMENT")
+			logrus.SetOutput(origOutput)
+			lagoon.PushFacts = false
+		}()
+
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		LagoonFacts(w)
+		assert.Equal(2, internal.MockLagoonNumCalls)
+		assert.Equal("{\"query\":\"query ($ns:String!){"+
+			"environmentByKubernetesNamespaceName(kubernetesNamespaceName: "+
+			"$ns){id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
+		assert.Equal("{\"query\":\"mutation ($envId:Int!$sourceName:String!)"+
+			"{deleteFactsFromSource(input: {environment: $envId, source: "+
+			"$sourceName})}\",\"variables\":{\"envId\":50,\"sourceName\":\""+
+			"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
 		assert.Equal("[]", buf.String())
 	})
 
@@ -274,31 +308,17 @@ func TestLagoonFacts(t *testing.T) {
 
 		lagoon.PushFacts = true
 
-		var svr *httptest.Server
-		var reqBodies [][]byte
-
-		svr = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			reqBody, _ := io.ReadAll(r.Body)
-			reqBodies = append(reqBodies, reqBody)
-			// Response for the first request, environment id.
-			if len(reqBodies) == 1 {
-				fmt.Fprintf(w, "{\"id\": 50}")
-			} else if len(reqBodies) == 2 { // Response for the deletion.
-				fmt.Fprintf(w, "{\"data\":{\"deleteFactsFromSource\":\"success\"}}")
-			} else if len(reqBodies) == 3 { // Response for the add.
-				fmt.Fprintf(w, "{}")
-			}
-		}))
-
-		httpClient := http.DefaultClient
-		lagoon.Client = graphql.NewClient(svr.URL, httpClient)
+		svr := internal.MockLagoonServer()
+		lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
 		origOutput := logrus.StandardLogger().Out
 		defer func() {
 			svr.Close()
+			internal.MockLagoonReset()
 			lagoon.Client = nil
 			os.Unsetenv("LAGOON_PROJECT")
 			os.Unsetenv("LAGOON_ENVIRONMENT")
 			logrus.SetOutput(origOutput)
+			lagoon.PushFacts = false
 		}()
 
 		var logbuf bytes.Buffer
@@ -310,6 +330,20 @@ func TestLagoonFacts(t *testing.T) {
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		LagoonFacts(w)
+		assert.Equal(3, internal.MockLagoonNumCalls)
+		assert.Equal("{\"query\":\"query ($ns:String!){"+
+			"environmentByKubernetesNamespaceName(kubernetesNamespaceName: "+
+			"$ns){id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
+		assert.Equal("{\"query\":\"mutation ($envId:Int!$sourceName:String!)"+
+			"{deleteFactsFromSource(input: {environment: $envId, source: "+
+			"$sourceName})}\",\"variables\":{\"envId\":50,\"sourceName\":\""+
+			"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
+		assert.Equal("{\"query\":\"mutation ($input:AddFactsByNameInput!){"+
+			"addFactsByName(input: $input){id}}\",\"variables\":{\"input\":{"+
+			"\"environment\":\"bar\",\"facts\":[{\"name\":\"a\",\"value\":"+
+			"\"Fail a\",\"source\":\"Shipshape\",\"description\":\"\",\""+
+			"category\":\"file\"}],\"project\":\"foo\"}}}\n",
+			internal.MockLagoonRequestBodies[2])
 		assert.Contains(logbuf.String(),
 			"level=info msg=\"fetching environment id\" namespace=foo-bar\n")
 		assert.Equal("successfully pushed facts to the Lagoon api", buf.String())

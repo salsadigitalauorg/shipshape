@@ -94,13 +94,11 @@ func AddFacts(facts []Fact) error {
 	return nil
 }
 
-// ReplaceFacts deletes all the Shipshape facts and then adds the new ones.
-func ReplaceFacts(facts []Fact) error {
+func DeleteFacts() error {
 	envId, err := GetEnvironmentIdFromEnvVars()
 	if err != nil {
 		return err
 	}
-
 	var m struct {
 		DeleteFactsFromSource string `graphql:"deleteFactsFromSource(input: {environment: $envId, source: $sourceName})"`
 	}
@@ -108,7 +106,12 @@ func ReplaceFacts(facts []Fact) error {
 		"envId":      envId,
 		"sourceName": SourceName,
 	}
-	err = Client.Mutate(context.Background(), &m, variables)
+	return Client.Mutate(context.Background(), &m, variables)
+}
+
+// ReplaceFacts deletes all the Shipshape facts and then adds the new ones.
+func ReplaceFacts(facts []Fact) error {
+	err := DeleteFacts()
 	if err != nil {
 		return err
 	}

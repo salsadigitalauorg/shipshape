@@ -167,6 +167,10 @@ func JUnit(w *bufio.Writer) {
 // see https://github.com/uselagoon/lagoon-facts-app#arbitrary-facts
 func LagoonFacts(w *bufio.Writer) {
 	if RunResultList.TotalBreaches == 0 {
+		if lagoon.PushFacts {
+			lagoon.InitClient()
+			lagoon.DeleteFacts()
+		}
 		fmt.Fprint(w, "[]")
 		w.Flush()
 		return
