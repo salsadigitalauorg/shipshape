@@ -111,8 +111,12 @@ func (c *PhpStanCheck) FetchData() {
 	if err != nil {
 		if pathErr, ok := err.(*fs.PathError); ok {
 			c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
+			c.AddBreach(result.ValueBreach{
+				Value: pathErr.Path + ": " + pathErr.Err.Error()})
 		} else if len(c.DataMap["phpstan"]) == 0 { // If errors were found, exit code will be 1.
 			c.AddFail("Phpstan failed to run: " + string(err.(*exec.ExitError).Stderr))
+			c.AddBreach(result.ValueBreach{
+				Value: "Phpstan failed to run: " + string(err.(*exec.ExitError).Stderr)})
 		}
 	}
 }
@@ -122,6 +126,7 @@ func (c *PhpStanCheck) FetchData() {
 func (c *PhpStanCheck) UnmarshalDataMap() {
 	if len(c.DataMap["phpstan"]) == 0 {
 		c.AddFail("no data provided")
+		c.AddBreach(result.ValueBreach{Value: "no data provided"})
 		return
 	}
 
@@ -129,6 +134,7 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 	err := json.Unmarshal(c.DataMap["phpstan"], &c.phpstanResult)
 	if err != nil {
 		c.AddFail(err.Error())
+		c.AddBreach(result.ValueBreach{Value: err.Error()})
 		return
 	}
 
@@ -141,6 +147,7 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 	err = json.Unmarshal(c.phpstanResult.FilesRaw, &c.phpstanResult.Files)
 	if err != nil {
 		c.AddFail(err.Error())
+		c.AddBreach(result.ValueBreach{Value: err.Error()})
 		return
 	}
 }
@@ -156,10 +163,15 @@ func (c *PhpStanCheck) RunCheck() {
 	for file, errors := range c.phpstanResult.Files {
 		for _, er := range errors.Messages {
 			c.AddFail(fmt.Sprintf("[%s] Line %d: %s", file, er.Line, er.Message))
+			c.AddBreach(result.KeyValueBreach{
+				Key:   fmt.Sprintf("%s:%d", file, er.Line),
+				Value: er.Message,
+			})
 		}
 	}
 
 	for _, er := range c.phpstanResult.Errors {
 		c.AddFail(er)
+		c.AddBreach(result.ValueBreach{Value: er})
 	}
 }

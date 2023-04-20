@@ -55,6 +55,7 @@ func (c *FileCheck) RunCheck() {
 	files, err := utils.FindFiles(filepath.Join(config.ProjectDir, c.Path), c.DisallowedPattern, c.ExcludePattern, c.SkipDir)
 	if err != nil {
 		c.AddFail(err.Error())
+		c.AddBreach(result.ValueBreach{Value: err.Error()})
 		return
 	}
 	if len(files) == 0 {
@@ -64,5 +65,9 @@ func (c *FileCheck) RunCheck() {
 	}
 	for _, f := range files {
 		c.AddFail(fmt.Sprintf("Illegal file found: %s", f))
+		c.AddBreach(result.ValueBreach{
+			ValueLabel: "illegal file",
+			Value:      f,
+		})
 	}
 }

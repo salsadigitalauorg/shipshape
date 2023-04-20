@@ -39,6 +39,7 @@ func (c *YamlCheck) readFile(fkey string, fname string) {
 			c.Result.Status = result.Pass
 		} else {
 			c.AddFail(err.Error())
+			c.AddBreach(result.ValueBreach{Value: err.Error()})
 		}
 	}
 }
@@ -64,6 +65,7 @@ func (c *YamlCheck) FetchData() {
 				c.Result.Status = result.Pass
 			} else {
 				c.AddFail(err.Error())
+				c.AddBreach(result.ValueBreach{Value: err.Error()})
 			}
 			return
 		}
@@ -74,6 +76,7 @@ func (c *YamlCheck) FetchData() {
 			return
 		} else if len(files) == 0 {
 			c.AddFail("no matching config files found")
+			c.AddBreach(result.ValueBreach{Value: "no matching config files found"})
 			return
 		}
 
@@ -83,5 +86,6 @@ func (c *YamlCheck) FetchData() {
 		}
 	} else {
 		c.AddFail("no file provided")
+		c.AddBreach(result.ValueBreach{Value: "no file provided"})
 	}
 }

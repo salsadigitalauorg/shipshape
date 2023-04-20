@@ -8,11 +8,12 @@ type Breach interface{}
 //
 //	"file foo.ext not found": file is the ValueLabel, foo.ext is the Value
 type ValueBreach struct {
-	CheckType  string
-	CheckName  string
-	Severity   string
-	ValueLabel string
-	Value      string
+	CheckType     string
+	CheckName     string
+	Severity      string
+	ValueLabel    string
+	Value         string
+	ExpectedValue string
 }
 
 // Breach with key and value.
@@ -24,13 +25,14 @@ type ValueBreach struct {
 //	  - app could be the ValueLabel
 //	  - wordpress is the Value
 type KeyValueBreach struct {
-	CheckType  string
-	CheckName  string
-	Severity   string
-	KeyLabel   string
-	Key        string
-	ValueLabel string
-	Value      string
+	CheckType     string
+	CheckName     string
+	Severity      string
+	KeyLabel      string
+	Key           string
+	ValueLabel    string
+	Value         string
+	ExpectedValue string
 }
 
 // Breach with key and list of values.

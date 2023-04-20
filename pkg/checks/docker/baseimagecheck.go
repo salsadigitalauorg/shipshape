@@ -87,6 +87,11 @@ func (c *BaseImageCheck) RunCheck() {
 
 					if len(c.Allowed) > 0 && !utils.StringSliceContains(c.Allowed, match[1]) {
 						c.AddFail(name + " is using invalid base image " + match[1])
+						c.AddBreach(result.KeyValueBreach{
+							Key:        name,
+							ValueLabel: "invalid base image",
+							Value:      match[1],
+						})
 					} else if len(c.Deprecated) > 0 && utils.StringSliceMatch(c.Deprecated, match[1]) {
 						c.AddWarning(name + " is using deprecated image " + match[1])
 					} else {
@@ -96,6 +101,11 @@ func (c *BaseImageCheck) RunCheck() {
 			} else {
 				if !utils.StringSliceMatch(c.Allowed, def.Image) {
 					c.AddFail(name + " is using invalid base image " + def.Image)
+					c.AddBreach(result.KeyValueBreach{
+						Key:        name,
+						ValueLabel: "invalid base image",
+						Value:      def.Image,
+					})
 				} else if utils.StringSliceMatch(c.Deprecated, def.Image) {
 					c.AddWarning(name + " is using deprecated image " + def.Image)
 				} else {
