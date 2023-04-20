@@ -147,5 +147,5 @@ func BreachGetValues(bIfc Breach) []string {
 	if b, ok := bIfc.(KeyValuesBreach); ok {
 		return b.Values
 	}
-	return []string{}
+	return []string(nil)
 }
