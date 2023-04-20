@@ -83,6 +83,16 @@ func (c *CheckBase) AddFail(msg string) {
 	)
 }
 
+// AddBreach appends a Breach to the Result and sets the Check as Fail.
+func (c *CheckBase) AddBreach(b result.Breach) {
+	c.Result.Status = result.Fail
+	result.BreachSetCommonValues(&b, string(c.cType), c.Name, string(c.Severity))
+	c.Result.Breaches = append(
+		c.Result.Breaches,
+		b,
+	)
+}
+
 // AddPass appends a Pass to the Result.
 func (c *CheckBase) AddPass(msg string) {
 	c.Result.Passes = append(

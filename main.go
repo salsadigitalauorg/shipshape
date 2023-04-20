@@ -80,7 +80,7 @@ func main() {
 
 	determineLogLevel()
 
-	if outputFormat == "lagoon-facts" {
+	if outputFormat == "lagoon-facts" && lagoon.PushFacts {
 		if lagoonApiBaseUrl == "" {
 			log.Fatal("lagoon api base url not provided")
 		}
