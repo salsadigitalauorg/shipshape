@@ -5,20 +5,20 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"text/tabwriter"
 
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"gopkg.in/yaml.v3"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
-	"gopkg.in/yaml.v3"
-
-	"github.com/spf13/pflag"
 )
 
 // Version information.

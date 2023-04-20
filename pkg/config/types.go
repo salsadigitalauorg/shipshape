@@ -58,6 +58,7 @@ type Result struct {
 	Status       CheckStatus `json:"status"`
 	Passes       []string    `json:"passes"`
 	Failures     []string    `json:"failures"`
+	Breaches     []Breach    `json:"breaches"`
 	Warnings     []string    `json:"warnings"`
 	Remediations []string    `json:"remediations"`
 }
@@ -78,6 +79,6 @@ type CheckBase struct {
 	DataMap    map[string][]byte `yaml:"-"`
 	Result     Result            `yaml:"-"`
 	// Default severity is normal.
-	Severity           Severity `yaml:"severity"`
-	PerformRemediation bool     `yaml:"-"`
+	Severity           `yaml:"severity"`
+	PerformRemediation bool `yaml:"-"`
 }

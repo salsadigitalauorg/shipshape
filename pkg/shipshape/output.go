@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
@@ -176,17 +177,44 @@ func LagoonFacts(w *bufio.Writer) {
 		return
 	}
 
+	factName := func(b config.Breach) string {
+		var name string
+		if config.BreachGetKeyLabel(b) == "" {
+			name = config.BreachGetCheckName(b) + " - " +
+				string(config.BreachGetCheckType(b))
+		} else {
+			name = fmt.Sprintf("%s: %s", config.BreachGetKeyLabel(b),
+				config.BreachGetKey(b))
+		}
+		return name
+	}
+
+	factValue := func(b config.Breach) string {
+		value := config.BreachGetValue(b)
+		if value == "" {
+			value = strings.Join(config.BreachGetValues(b), ", ")
+		}
+
+		var withLabel string
+		label := config.BreachGetValueLabel(b)
+		if label == "" {
+			withLabel = value
+		} else {
+			withLabel = fmt.Sprintf("%s: %s", label, value)
+		}
+		return withLabel
+	}
+
 	facts := []lagoon.Fact{}
-	for ct, checks := range RunConfig.Checks {
-		for _, c := range checks {
-			for _, b := range RunResultList.GetBreachesByCheckName(c.GetName()) {
-				facts = append(facts, lagoon.Fact{
-					Name:     c.GetName(),
-					Value:    b,
-					Source:   lagoon.SourceName,
-					Category: string(ct),
-				})
-			}
+	for _, r := range RunResultList.Results {
+		for _, b := range r.Breaches {
+			facts = append(facts, lagoon.Fact{
+				Name:        factName(b),
+				Description: config.BreachGetCheckName(b),
+				Value:       factValue(b),
+				Source:      lagoon.SourceName,
+				Category:    string(config.BreachGetCheckType(b)),
+			})
 		}
 	}
 
