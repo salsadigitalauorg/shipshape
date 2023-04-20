@@ -284,16 +284,21 @@ func TestLagoonFacts(t *testing.T) {
 			&file.FileCheck{CheckBase: config.CheckBase{Name: "a"}}}}
 		RunResultList = result.NewResultList(false)
 		RunResultList.Results = append(RunResultList.Results, result.Result{
-			Name:     "a",
-			Status:   result.Fail,
-			Failures: []string{"Fail a"}})
+			Name:   "a",
+			Status: result.Fail,
+			Breaches: []result.Breach{result.ValueBreach{
+				CheckName: "a",
+				Value:     "Fail a",
+				CheckType: "file",
+			}},
+		})
 		RunResultList.TotalBreaches = 1
 
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		LagoonFacts(w)
-		assert.Equal("[{\"name\":\"a\",\"value\":\"Fail a\",\"source\":"+
-			"\"Shipshape\",\"description\":\"\",\"category\":\"file\"}]",
+		assert.Equal("[{\"name\":\"a - file\",\"value\":\"Fail a\",\"source\":"+
+			"\"Shipshape\",\"description\":\"a\",\"category\":\"file\"}]",
 			buf.String())
 	})
 
@@ -302,9 +307,14 @@ func TestLagoonFacts(t *testing.T) {
 			&file.FileCheck{CheckBase: config.CheckBase{Name: "a"}}}}
 		RunResultList = result.NewResultList(false)
 		RunResultList.Results = append(RunResultList.Results, result.Result{
-			Name:     "a",
-			Status:   result.Fail,
-			Failures: []string{"Fail a"}})
+			Name:   "a",
+			Status: result.Fail,
+			Breaches: []result.Breach{result.ValueBreach{
+				CheckName: "a",
+				Value:     "Fail a",
+				CheckType: "file",
+			}},
+		})
 		RunResultList.TotalBreaches = 1
 
 		lagoon.PushFacts = true
@@ -341,8 +351,8 @@ func TestLagoonFacts(t *testing.T) {
 			"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
 		assert.Equal("{\"query\":\"mutation ($input:AddFactsByNameInput!){"+
 			"addFactsByName(input: $input){id}}\",\"variables\":{\"input\":{"+
-			"\"environment\":\"bar\",\"facts\":[{\"name\":\"a\",\"value\":"+
-			"\"Fail a\",\"source\":\"Shipshape\",\"description\":\"\",\""+
+			"\"environment\":\"bar\",\"facts\":[{\"name\":\"a - file\",\"value\":"+
+			"\"Fail a\",\"source\":\"Shipshape\",\"description\":\"a\",\""+
 			"category\":\"file\"}],\"project\":\"foo\"}}}\n",
 			internal.MockLagoonRequestBodies[2])
 		assert.Contains(logbuf.String(),

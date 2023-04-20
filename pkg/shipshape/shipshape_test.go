@@ -152,9 +152,9 @@ func TestRunChecks(t *testing.T) {
 	rl := RunChecks()
 	assert.Equal(uint32(2), rl.TotalChecks)
 	assert.Equal(uint32(2), rl.TotalBreaches)
-	assert.EqualValues(map[config.CheckType]int{
-		testchecks.TestCheck1: 1,
-		testchecks.TestCheck2: 1,
+	assert.EqualValues(map[string]int{
+		string(testchecks.TestCheck1): 1,
+		string(testchecks.TestCheck2): 1,
 	}, rl.BreachCountByType)
 	assert.ElementsMatch([]result.Result{
 		{Name: "test1stcheck", Severity: "normal", CheckType: "test-check-1", Status: "Fail", Passes: []string(nil), Failures: []string{"no data available"}, Warnings: []string(nil)},
