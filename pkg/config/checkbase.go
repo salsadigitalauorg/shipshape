@@ -2,6 +2,8 @@ package config
 
 import (
 	"fmt"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
 // Init acts as the constructor of a check and sets some initial values.
@@ -11,10 +13,10 @@ func (c *CheckBase) Init(ct CheckType) {
 		c.Severity = NormalSeverity
 	}
 	if c.Result.CheckType == "" {
-		c.Result = Result{Name: c.Name, CheckType: ct}
+		c.Result = result.Result{Name: c.Name, CheckType: string(ct)}
 	}
 	if c.Result.Severity == "" {
-		c.Result.Severity = c.Severity
+		c.Result.Severity = string(c.Severity)
 	}
 
 	if c.cType == "" {
@@ -74,7 +76,7 @@ func (c *CheckBase) UnmarshalDataMap() {}
 
 // AddFail appends a Fail to the Result and sets the Check as Fail.
 func (c *CheckBase) AddFail(msg string) {
-	c.Result.Status = Fail
+	c.Result.Status = result.Fail
 	c.Result.Failures = append(
 		c.Result.Failures,
 		msg,
@@ -112,7 +114,7 @@ func (c *CheckBase) RunCheck() {
 }
 
 // GetResult returns a ref of the result.
-func (c *CheckBase) GetResult() *Result {
+func (c *CheckBase) GetResult() *result.Result {
 	return &c.Result
 }
 

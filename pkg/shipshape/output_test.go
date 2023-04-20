@@ -12,6 +12,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 
 	"github.com/hasura/go-graphql-client"
@@ -24,24 +25,24 @@ func TestTableDisplay(t *testing.T) {
 
 	var buf bytes.Buffer
 	w := tabwriter.NewWriter(&buf, 0, 0, 3, ' ', 0)
-	RunResultList = config.ResultList{}
+	RunResultList = result.ResultList{}
 	TableDisplay(w)
 	assert.Equal(
 		"No result available; ensure your shipshape.yml is configured correctly.\n",
 		buf.String())
 
 	buf = bytes.Buffer{}
-	RunResultList = config.ResultList{Results: []config.Result{{Name: "a", Status: config.Pass}}}
+	RunResultList = result.ResultList{Results: []result.Result{{Name: "a", Status: result.Pass}}}
 	TableDisplay(w)
 	assert.Equal("NAME   STATUS   PASSES   FAILS\n"+
 		"a      Pass              \n", buf.String())
 
 	buf = bytes.Buffer{}
-	RunResultList = config.ResultList{
-		Results: []config.Result{
-			{Name: "a", Status: config.Pass},
-			{Name: "b", Status: config.Pass},
-			{Name: "c", Status: config.Pass},
+	RunResultList = result.ResultList{
+		Results: []result.Result{
+			{Name: "a", Status: result.Pass},
+			{Name: "b", Status: result.Pass},
+			{Name: "c", Status: result.Pass},
 		},
 	}
 	TableDisplay(w)
@@ -52,26 +53,26 @@ func TestTableDisplay(t *testing.T) {
 		buf.String())
 
 	buf = bytes.Buffer{}
-	RunResultList = config.ResultList{
-		Results: []config.Result{
+	RunResultList = result.ResultList{
+		Results: []result.Result{
 			{
 				Name:   "a",
-				Status: config.Pass,
+				Status: result.Pass,
 				Passes: []string{"Pass a", "Pass ab"},
 			},
 			{
 				Name:   "b",
-				Status: config.Pass,
+				Status: result.Pass,
 				Passes: []string{"Pass b", "Pass bb", "Pass bc"},
 			},
 			{
 				Name:     "c",
-				Status:   config.Fail,
+				Status:   result.Fail,
 				Failures: []string{"Fail c", "Fail cb"},
 			},
 			{
 				Name:     "d",
-				Status:   config.Fail,
+				Status:   result.Fail,
 				Passes:   []string{"Pass d", "Pass db"},
 				Failures: []string{"Fail c", "Fail cb"},
 			},
@@ -95,7 +96,7 @@ func TestSimpleDisplay(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("noResult", func(t *testing.T) {
-		RunResultList = config.NewResultList(false)
+		RunResultList = result.NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		SimpleDisplay(w)
@@ -103,23 +104,23 @@ func TestSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("topShape", func(t *testing.T) {
-		RunResultList = config.NewResultList(false)
+		RunResultList = result.NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		RunResultList.Results = append(RunResultList.Results, config.Result{
-			Name: "a", Status: config.Pass})
+		RunResultList.Results = append(RunResultList.Results, result.Result{
+			Name: "a", Status: result.Pass})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
 	})
 
 	t.Run("breachesDetected", func(t *testing.T) {
-		RunResultList = config.NewResultList(false)
+		RunResultList = result.NewResultList(false)
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		RunResultList.Results = append(RunResultList.Results, config.Result{
+		RunResultList.Results = append(RunResultList.Results, result.Result{
 			Name:     "b",
-			Status:   config.Fail,
+			Status:   result.Fail,
 			Failures: []string{"Fail b"}})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
@@ -127,23 +128,23 @@ func TestSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("topShapeRemediating", func(t *testing.T) {
-		RunResultList = config.ResultList{RemediationPerformed: true}
+		RunResultList = result.ResultList{RemediationPerformed: true}
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		RunResultList.Results = append(RunResultList.Results, config.Result{
-			Name: "a", Status: config.Pass})
+		RunResultList.Results = append(RunResultList.Results, result.Result{
+			Name: "a", Status: result.Pass})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
 	})
 
 	t.Run("allBreachesRemediated", func(t *testing.T) {
-		RunResultList = config.ResultList{RemediationPerformed: true}
+		RunResultList = result.ResultList{RemediationPerformed: true}
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		RunResultList.TotalRemediations = 1
-		RunResultList.Results = append(RunResultList.Results, config.Result{
-			Name: "a", Status: config.Pass, Remediations: []string{"fixed 1"}})
+		RunResultList.Results = append(RunResultList.Results, result.Result{
+			Name: "a", Status: result.Pass, Remediations: []string{"fixed 1"}})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Breaches were detected but were all fixed successfully!\n\n"+
@@ -151,13 +152,13 @@ func TestSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("someBreachesRemediated", func(t *testing.T) {
-		RunResultList = config.ResultList{RemediationPerformed: true}
+		RunResultList = result.ResultList{RemediationPerformed: true}
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		RunResultList.TotalRemediations = 1
 		RunResultList.TotalBreaches = 1
-		RunResultList.Results = append(RunResultList.Results, config.Result{
-			Name: "a", Status: config.Fail, Remediations: []string{"fixed 1"}})
+		RunResultList.Results = append(RunResultList.Results, result.Result{
+			Name: "a", Status: result.Fail, Remediations: []string{"fixed 1"}})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Breaches were detected but not all of them could be "+
@@ -168,13 +169,13 @@ func TestSimpleDisplay(t *testing.T) {
 	})
 
 	t.Run("noBreachRemediated", func(t *testing.T) {
-		RunResultList = config.ResultList{RemediationPerformed: true}
+		RunResultList = result.ResultList{RemediationPerformed: true}
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		RunResultList.TotalBreaches = 1
 		RunResultList.TotalRemediations = 0
-		RunResultList.Results = append(RunResultList.Results, config.Result{
-			Name: "a", Status: config.Fail})
+		RunResultList.Results = append(RunResultList.Results, result.Result{
+			Name: "a", Status: result.Fail})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Breaches were detected but not all of them could be "+
@@ -187,7 +188,7 @@ func TestSimpleDisplay(t *testing.T) {
 func TestJUnit(t *testing.T) {
 	assert := assert.New(t)
 
-	RunResultList = config.NewResultList(false)
+	RunResultList = result.NewResultList(false)
 	var buf bytes.Buffer
 	w := bufio.NewWriter(&buf)
 	JUnit(w)
@@ -198,8 +199,8 @@ func TestJUnit(t *testing.T) {
 	RunConfig.Checks = config.CheckMap{file.File: []config.Check{&file.FileCheck{
 		CheckBase: config.CheckBase{Name: "a"},
 	}}}
-	RunResultList.Results = append(RunResultList.Results, config.Result{
-		Name: "a", Status: config.Pass})
+	RunResultList.Results = append(RunResultList.Results, result.Result{
+		Name: "a", Status: result.Pass})
 	buf = bytes.Buffer{}
 	JUnit(w)
 	assert.Equal(`<?xml version="1.0" encoding="UTF-8"?>
@@ -213,9 +214,9 @@ func TestJUnit(t *testing.T) {
 	RunConfig.Checks[file.File] = append(RunConfig.Checks[file.File], &file.FileCheck{
 		CheckBase: config.CheckBase{Name: "b"},
 	})
-	RunResultList.Results = append(RunResultList.Results, config.Result{
+	RunResultList.Results = append(RunResultList.Results, result.Result{
 		Name:     "b",
-		Status:   config.Fail,
+		Status:   result.Fail,
 		Failures: []string{"Fail b"}})
 	buf = bytes.Buffer{}
 	JUnit(w)
@@ -235,7 +236,7 @@ func TestLagoonFacts(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("noResult", func(t *testing.T) {
-		RunResultList = config.NewResultList(false)
+		RunResultList = result.NewResultList(false)
 
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
@@ -244,7 +245,7 @@ func TestLagoonFacts(t *testing.T) {
 	})
 
 	t.Run("noResultPushFacts", func(t *testing.T) {
-		RunResultList = config.NewResultList(false)
+		RunResultList = result.NewResultList(false)
 
 		svr := internal.MockLagoonServer()
 		lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
@@ -281,10 +282,10 @@ func TestLagoonFacts(t *testing.T) {
 	t.Run("breachesDetected", func(t *testing.T) {
 		RunConfig.Checks = config.CheckMap{file.File: []config.Check{
 			&file.FileCheck{CheckBase: config.CheckBase{Name: "a"}}}}
-		RunResultList = config.NewResultList(false)
-		RunResultList.Results = append(RunResultList.Results, config.Result{
+		RunResultList = result.NewResultList(false)
+		RunResultList.Results = append(RunResultList.Results, result.Result{
 			Name:     "a",
-			Status:   config.Fail,
+			Status:   result.Fail,
 			Failures: []string{"Fail a"}})
 		RunResultList.TotalBreaches = 1
 
@@ -299,10 +300,10 @@ func TestLagoonFacts(t *testing.T) {
 	t.Run("pushToLagoon", func(t *testing.T) {
 		RunConfig.Checks = config.CheckMap{file.File: []config.Check{
 			&file.FileCheck{CheckBase: config.CheckBase{Name: "a"}}}}
-		RunResultList = config.NewResultList(false)
-		RunResultList.Results = append(RunResultList.Results, config.Result{
+		RunResultList = result.NewResultList(false)
+		RunResultList.Results = append(RunResultList.Results, result.Result{
 			Name:     "a",
-			Status:   config.Fail,
+			Status:   result.Fail,
 			Failures: []string{"Fail a"}})
 		RunResultList.TotalBreaches = 1
 

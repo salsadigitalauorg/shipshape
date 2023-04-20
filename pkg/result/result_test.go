@@ -1,9 +1,9 @@
-package config_test
+package result_test
 
 import (
 	"testing"
 
-	. "github.com/salsadigitalauorg/shipshape/pkg/config"
+	. "github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	"github.com/stretchr/testify/assert"
 )

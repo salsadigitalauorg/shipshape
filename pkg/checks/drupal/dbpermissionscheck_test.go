@@ -9,6 +9,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -66,7 +67,7 @@ func TestDbPermissionsUnmarshalDataMap(t *testing.T) {
 	t.Run("noDataProvided", func(t *testing.T) {
 		c := DbPermissionsCheck{}
 		c.UnmarshalDataMap()
-		assert.Equal(config.Fail, c.Result.Status)
+		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch([]string{"no data provided"}, c.Result.Failures)
 	})
@@ -95,7 +96,7 @@ site_editor:
 `),
 		}
 		c.UnmarshalDataMap()
-		assert.NotEqual(config.Fail, c.Result.Status)
+		assert.NotEqual(result.Fail, c.Result.Status)
 		assert.EqualValues(map[string]DrushRole{
 			"anonymous": {
 				Label: "Anonymous user",
@@ -123,7 +124,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			Name:         "disallowedNotProvided",
 			Check:        &DbPermissionsCheck{},
 			Init:         true,
-			ExpectStatus: config.Fail,
+			ExpectStatus: result.Fail,
 			ExpectNoPass: true,
 			ExpectFails:  []string{"list of disallowed perms not provided"},
 		},
@@ -152,7 +153,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			},
 			Init:         true,
 			Sort:         true,
-			ExpectStatus: config.Pass,
+			ExpectStatus: result.Pass,
 			ExpectPasses: []string{
 				"[anonymous] no disallowed permissions",
 				"[authenticated] no disallowed permissions",
@@ -191,7 +192,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			},
 			Init:         true,
 			Sort:         true,
-			ExpectStatus: config.Fail,
+			ExpectStatus: result.Fail,
 			ExpectPasses: []string{
 				"[anonymous] no disallowed permissions",
 				"[authenticated] no disallowed permissions",
@@ -241,7 +242,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 				command.ShellCommander = internal.ShellCommanderMaker(nil, nil, nil)
 			},
 			Sort:         true,
-			ExpectStatus: config.Pass,
+			ExpectStatus: result.Pass,
 			ExpectPasses: []string{
 				"[anonymous] no disallowed permissions",
 				"[authenticated] no disallowed permissions",
@@ -296,7 +297,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 				)
 			},
 			Sort:         true,
-			ExpectStatus: config.Fail,
+			ExpectStatus: result.Fail,
 			ExpectPasses: []string{
 				"[anonymous] no disallowed permissions",
 				"[authenticated] no disallowed permissions",

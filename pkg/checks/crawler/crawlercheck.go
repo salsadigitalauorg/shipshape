@@ -7,6 +7,7 @@ import (
 
 	"github.com/gocolly/colly"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -77,7 +78,7 @@ func (c *CrawlerCheck) RunCheck() {
 	})
 
 	crawler.OnError(func(r *colly.Response, err error) {
-		c.Result.Status = config.Fail
+		c.Result.Status = result.Fail
 		c.AddFail(fmt.Sprintf("Invalid response for: %s got %d", r.Request.URL, r.StatusCode))
 	})
 
@@ -95,8 +96,8 @@ func (c *CrawlerCheck) RunCheck() {
 		}
 	}
 
-	if c.Result.Status != config.Fail {
-		c.Result.Status = config.Pass
+	if c.Result.Status != result.Fail {
+		c.Result.Status = result.Pass
 		c.AddPass("All requests completed successfully")
 	}
 }

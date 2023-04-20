@@ -1,6 +1,6 @@
 package config
 
-import "github.com/salsadigitalauorg/shipshape/pkg/breach"
+import "github.com/salsadigitalauorg/shipshape/pkg/result"
 
 type Config struct {
 	// The directory to audit.
@@ -48,29 +48,9 @@ type Check interface {
 	SetPerformRemediation(flag bool)
 	AddRemediation(msg string)
 	RunCheck()
-	GetResult() *Result
+	GetResult() *result.Result
 	Remediate(breachIfc interface{}) error
 }
-
-// Result provides the structure for a Check's outcome.
-type Result struct {
-	Name         string `json:"name"`
-	Severity     `json:"severity"`
-	CheckType    `json:"check-type"`
-	Status       CheckStatus     `json:"status"`
-	Passes       []string        `json:"passes"`
-	Failures     []string        `json:"failures"`
-	Breaches     []breach.Breach `json:"breaches"`
-	Warnings     []string        `json:"warnings"`
-	Remediations []string        `json:"remediations"`
-}
-
-type CheckStatus string
-
-const (
-	Pass CheckStatus = "Pass"
-	Fail CheckStatus = "Fail"
-)
 
 // CheckBase provides the basic structure for all Checks.
 type CheckBase struct {
@@ -79,7 +59,7 @@ type CheckBase struct {
 	// Flag indicating if the check requires a database connection to run.
 	RequiresDb bool              `yaml:"-"`
 	DataMap    map[string][]byte `yaml:"-"`
-	Result     Result            `yaml:"-"`
+	Result     result.Result     `yaml:"-"`
 	// Default severity is normal.
 	Severity           `yaml:"severity"`
 	PerformRemediation bool `yaml:"-"`

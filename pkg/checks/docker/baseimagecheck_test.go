@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/docker"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,7 +39,7 @@ func TestDockerfileCheck(t *testing.T) {
 		Paths:   []string{"./fixtures/compose-dockerfile"},
 	}
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues(
 		[]string{"service1 is using valid base images"},
 		c.Result.Passes,
@@ -53,7 +53,7 @@ func TestInvalidDockerfileCheck(t *testing.T) {
 		Paths:   []string{"./fixtures/compose-dockerfile"},
 	}
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]string{"service1 is using invalid base image bitnami/kubectl"},
 		c.Result.Failures,
@@ -72,7 +72,7 @@ func TestValidImage(t *testing.T) {
 		Paths: []string{"./fixtures/compose-image"},
 	}
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{
 			"service1 is using valid base images",
@@ -95,7 +95,7 @@ func TestInvalidImageCheck(t *testing.T) {
 		Paths: []string{"./fixtures/compose-image"},
 	}
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]string{"service4 is using invalid base image bitnami/mongodb"},
 		c.Result.Failures,
@@ -109,7 +109,7 @@ func TestDockerfileWarning(t *testing.T) {
 		Paths:   []string{"./fixtures/compose-dockerfile-missing"},
 	}
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues(
 		[]string{"Unable to find Dockerfile"},
 		c.Result.Warnings,
@@ -124,7 +124,7 @@ func TestExcludeServiceSingle(t *testing.T) {
 		Paths:   []string{"./fixtures/compose-dockerfile"},
 	}
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues(
 		[]string(nil),
 		c.Result.Passes,
@@ -143,7 +143,7 @@ func TestExcludeServiceMany(t *testing.T) {
 		Paths:   []string{"./fixtures/compose-image"},
 	}
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{
 			"service1 is using valid base images",
@@ -161,7 +161,7 @@ func TestDeprecatedImage(t *testing.T) {
 		Paths:      []string{"./fixtures/compose-dockerfile"},
 	}
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues(
 		[]string{"service1 is using deprecated image bitnami/kubectl"},
 		c.Result.Warnings,

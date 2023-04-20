@@ -5,6 +5,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
 //go:generate go run ../../../cmd/gen.go registry --checkpackage=drupal
@@ -65,6 +66,6 @@ var CheckModulesInYaml = func(c *yaml.YamlBase, ct config.CheckType, configName 
 	}
 
 	if len(c.Result.Failures) == 0 {
-		c.Result.Status = config.Pass
+		c.Result.Status = result.Pass
 	}
 }

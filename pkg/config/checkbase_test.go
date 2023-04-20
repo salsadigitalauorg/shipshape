@@ -9,6 +9,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +23,7 @@ func TestCheckBaseInit(t *testing.T) {
 	c.Init(file.File)
 	assert.Equal(NormalSeverity, c.Severity)
 	assert.Equal("foo", c.Result.Name)
-	assert.Equal(NormalSeverity, c.Result.Severity)
+	assert.Equal(string(NormalSeverity), c.Result.Severity)
 	assert.Equal(file.File, c.GetType())
 }
 
@@ -59,14 +60,14 @@ func TestHasData(t *testing.T) {
 
 	c := CheckBase{Name: "foo"}
 	assert.False(c.HasData(false))
-	assert.NotEqual(Fail, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 
 	assert.False(c.HasData(true))
-	assert.Equal(Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 
 	c = CheckBase{Name: "foo", DataMap: map[string][]byte{"foo": []byte(`bar`)}}
 	assert.True(c.HasData(true))
-	assert.NotEqual(Fail, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 }
 
 func TestAddPass(t *testing.T) {
@@ -74,7 +75,7 @@ func TestAddPass(t *testing.T) {
 
 	c := CheckBase{Name: "foo"}
 	c.AddPass("with flying colours!")
-	assert.EqualValues(Result{Passes: []string{"with flying colours!"}}, c.Result)
+	assert.EqualValues(result.Result{Passes: []string{"with flying colours!"}}, c.Result)
 }
 
 func TestAddWarning(t *testing.T) {
@@ -82,7 +83,7 @@ func TestAddWarning(t *testing.T) {
 
 	c := CheckBase{Name: "foo"}
 	c.AddWarning("not feeling great")
-	assert.EqualValues(Result{Warnings: []string{"not feeling great"}}, c.Result)
+	assert.EqualValues(result.Result{Warnings: []string{"not feeling great"}}, c.Result)
 }
 
 func TestCheckBaseRunCheck(t *testing.T) {
@@ -91,7 +92,7 @@ func TestCheckBaseRunCheck(t *testing.T) {
 	c := CheckBase{}
 	c.FetchData()
 	c.RunCheck()
-	assert.Equal(Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"not implemented"}, c.Result.Failures)
 }
 

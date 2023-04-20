@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape/testdata/testchecks"
 
@@ -155,7 +156,7 @@ func TestRunChecks(t *testing.T) {
 		testchecks.TestCheck1: 1,
 		testchecks.TestCheck2: 1,
 	}, rl.BreachCountByType)
-	assert.ElementsMatch([]config.Result{
+	assert.ElementsMatch([]result.Result{
 		{Name: "test1stcheck", Severity: "normal", CheckType: "test-check-1", Status: "Fail", Passes: []string(nil), Failures: []string{"no data available"}, Warnings: []string(nil)},
 		{Name: "test2ndcheck", Severity: "normal", CheckType: "test-check-2", Status: "Fail", Passes: []string(nil), Failures: []string{"no data available"}, Warnings: []string(nil)}},
 		rl.Results)

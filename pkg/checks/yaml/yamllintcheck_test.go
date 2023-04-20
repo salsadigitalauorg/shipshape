@@ -5,6 +5,7 @@ import (
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,14 +51,14 @@ func TestYamlLintCheck(t *testing.T) {
 	c := mockCheck("", []string{}, false)
 	c.Init(YamlLint)
 	c.FetchData()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch([]string{"no file provided"}, c.Result.Failures)
 
 	c = mockCheck("non-existent-file.yml", []string{}, true)
 	c.Init(YamlLint)
 	c.FetchData()
-	assert.NotEqual(config.Fail, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(
 		[]string{"File testdata/non-existent-file.yml does not exist"},
@@ -67,7 +68,7 @@ func TestYamlLintCheck(t *testing.T) {
 	c = mockCheck("", []string{"non-existent-file.yml", "yaml-invalid.yml"}, true)
 	c.Init(YamlLint)
 	c.FetchData()
-	assert.NotEqual(config.Fail, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch([]string{
 		"File testdata/non-existent-file.yml does not exist",
@@ -77,7 +78,7 @@ func TestYamlLintCheck(t *testing.T) {
 	c = mockCheck("non-existent-file.yml", []string{}, false)
 	c.Init(YamlLint)
 	c.FetchData()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
 		[]string{"open testdata/non-existent-file.yml: no such file or directory"},
@@ -87,7 +88,7 @@ func TestYamlLintCheck(t *testing.T) {
 	c = mockCheck("", []string{"non-existent-file.yml", "yamllint-invalid.yml"}, false)
 	c.Init(YamlLint)
 	c.FetchData()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
 		[]string{"open testdata/non-existent-file.yml: no such file or directory"},
@@ -101,7 +102,7 @@ this: is invalid
 this: yaml
 `)
 	c.UnmarshalDataMap()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
 		[]string{"[yaml-invalid.yml] line 3: mapping key \"this\" already defined at line 2"},
@@ -115,7 +116,7 @@ this: is
 valid: yaml
 `)
 	c.UnmarshalDataMap()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(
 		[]string{"yaml-valid.yml has valid yaml."},
@@ -130,7 +131,7 @@ foo: bar
 - item 1
 `)}
 		c.UnmarshalDataMap()
-		assert.Equal(config.Fail, c.Result.Status)
+		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch(
 			[]string{"[yaml-invalid-root.yml] yaml: line 1: did not find expected key"},
@@ -147,7 +148,7 @@ foo: bar
     foo: bar
 `)}
 		c.UnmarshalDataMap()
-		assert.Equal(config.Pass, c.Result.Status)
+		assert.Equal(result.Pass, c.Result.Status)
 		assert.Empty(c.Result.Failures)
 		assert.ElementsMatch(
 			[]string{"yaml-valid-list.yml has valid yaml."},

@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
@@ -104,7 +105,7 @@ func (c *BaseImageCheck) RunCheck() {
 		}
 
 		if len(c.Result.Failures) == 0 {
-			c.Result.Status = config.Pass
+			c.Result.Status = result.Pass
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -57,7 +58,7 @@ func (c *FileCheck) RunCheck() {
 		return
 	}
 	if len(files) == 0 {
-		c.Result.Status = config.Pass
+		c.Result.Status = result.Pass
 		c.AddPass("No illegal files")
 		return
 	}

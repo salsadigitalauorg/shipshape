@@ -12,6 +12,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -148,7 +149,7 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 func (c *PhpStanCheck) RunCheck() {
 	if c.phpstanResult.Totals.Errors == 0 && c.phpstanResult.Totals.FileErrors == 0 {
 		c.AddPass("no error found")
-		c.Result.Status = config.Pass
+		c.Result.Status = result.Pass
 		return
 	}
 

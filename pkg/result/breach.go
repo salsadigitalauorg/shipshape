@@ -1,4 +1,4 @@
-package breach
+package result
 
 // Breach provides a representation for different breach types.
 type Breach interface{}

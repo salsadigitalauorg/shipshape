@@ -8,9 +8,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/breach"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -84,11 +83,11 @@ func SimpleDisplay(w *bufio.Writer) {
 		}
 	}
 
-	if RunResultList.Status() == config.Pass && int(RunResultList.TotalRemediations) == 0 {
+	if RunResultList.Status() == result.Pass && int(RunResultList.TotalRemediations) == 0 {
 		fmt.Fprint(w, "Ship is in top shape; no breach detected!\n")
 		w.Flush()
 		return
-	} else if RunResultList.Status() == config.Pass && int(RunResultList.TotalRemediations) > 0 {
+	} else if RunResultList.Status() == result.Pass && int(RunResultList.TotalRemediations) > 0 {
 		fmt.Fprintf(w, "Breaches were detected but were all fixed successfully!\n\n")
 		printRemediations()
 		w.Flush()
@@ -131,8 +130,8 @@ func JUnit(w *bufio.Writer) {
 	for ct, checks := range RunConfig.Checks {
 		ts := JUnitTestSuite{
 			Name:      string(ct),
-			Tests:     RunResultList.CheckCountByType[ct],
-			Errors:    RunResultList.BreachCountByType[ct],
+			Tests:     RunResultList.CheckCountByType[string(ct)],
+			Errors:    RunResultList.BreachCountByType[string(ct)],
 			TestCases: []JUnitTestCase{},
 		}
 
@@ -178,26 +177,26 @@ func LagoonFacts(w *bufio.Writer) {
 		return
 	}
 
-	factName := func(b breach.Breach) string {
+	factName := func(b result.Breach) string {
 		var name string
-		if breach.BreachGetKeyLabel(b) == "" {
-			name = breach.BreachGetCheckName(b) + " - " +
-				string(breach.BreachGetCheckType(b))
+		if result.BreachGetKeyLabel(b) == "" {
+			name = result.BreachGetCheckName(b) + " - " +
+				string(result.BreachGetCheckType(b))
 		} else {
-			name = fmt.Sprintf("%s: %s", breach.BreachGetKeyLabel(b),
-				breach.BreachGetKey(b))
+			name = fmt.Sprintf("%s: %s", result.BreachGetKeyLabel(b),
+				result.BreachGetKey(b))
 		}
 		return name
 	}
 
-	factValue := func(b breach.Breach) string {
-		value := breach.BreachGetValue(b)
+	factValue := func(b result.Breach) string {
+		value := result.BreachGetValue(b)
 		if value == "" {
-			value = strings.Join(breach.BreachGetValues(b), ", ")
+			value = strings.Join(result.BreachGetValues(b), ", ")
 		}
 
 		var withLabel string
-		label := breach.BreachGetValueLabel(b)
+		label := result.BreachGetValueLabel(b)
 		if label == "" {
 			withLabel = value
 		} else {
@@ -211,10 +210,10 @@ func LagoonFacts(w *bufio.Writer) {
 		for _, b := range r.Breaches {
 			facts = append(facts, lagoon.Fact{
 				Name:        factName(b),
-				Description: breach.BreachGetCheckName(b),
+				Description: result.BreachGetCheckName(b),
 				Value:       factValue(b),
 				Source:      lagoon.SourceName,
-				Category:    string(breach.BreachGetCheckType(b)),
+				Category:    string(result.BreachGetCheckType(b)),
 			})
 		}
 	}

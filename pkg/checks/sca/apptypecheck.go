@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -103,6 +104,6 @@ func (c *AppTypeCheck) RunCheck() {
 	}
 	if len(c.Result.Failures) == 0 {
 		c.AddPass("No invalid application types detected")
-		c.Result.Status = config.Pass
+		c.Result.Status = result.Pass
 	}
 }

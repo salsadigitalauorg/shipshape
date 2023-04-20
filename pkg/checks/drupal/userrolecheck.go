@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -67,7 +68,7 @@ func (c *UserRoleCheck) FetchData() {
 	var err error
 
 	userIds := c.getUserIds()
-	if c.Result.Status == config.Fail {
+	if c.Result.Status == result.Fail {
 		return
 	}
 
@@ -122,6 +123,6 @@ func (c *UserRoleCheck) RunCheck() {
 	}
 
 	if len(c.Result.Failures) == 0 {
-		c.Result.Status = config.Pass
+		c.Result.Status = result.Pass
 	}
 }

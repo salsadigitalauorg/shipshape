@@ -7,6 +7,7 @@ import (
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -92,7 +93,7 @@ func TestCheckModulesInYaml(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"'block' is enabled",
 		"'views_ui' is not enabled",
@@ -122,7 +123,7 @@ module:
 	}
 	c.UnmarshalDataMap()
 	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"'block' is enabled",
 		"'field_ui' is not enabled",
@@ -143,7 +144,7 @@ module:
 	}
 	c.UnmarshalDataMap()
 	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"'node' is enabled",

@@ -17,6 +17,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
@@ -146,8 +147,8 @@ func main() {
 		shipshape.LagoonFacts(w)
 	}
 
-	if shipshape.RunResultList.Status() == config.Fail && errorCodeOnFailure &&
-		len(shipshape.RunResultList.GetBreachesBySeverity(shipshape.RunConfig.FailSeverity)) > 0 {
+	if shipshape.RunResultList.Status() == result.Fail && errorCodeOnFailure &&
+		len(shipshape.RunResultList.GetBreachesBySeverity(string(shipshape.RunConfig.FailSeverity))) > 0 {
 
 		os.Exit(2)
 	}
