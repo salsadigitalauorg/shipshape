@@ -42,6 +42,7 @@ func (c *DbPermissionsCheck) Merge(mergeCheck config.Check) error {
 func (c *DbPermissionsCheck) UnmarshalDataMap() {
 	if len(c.DataMap[c.ConfigName]) == 0 {
 		c.AddFail("no data provided")
+		c.AddBreach(result.ValueBreach{Value: "no data provided"})
 	}
 
 	c.Permissions = map[string]DrushRole{}
@@ -52,6 +53,7 @@ func (c *DbPermissionsCheck) UnmarshalDataMap() {
 func (c *DbPermissionsCheck) RunCheck() {
 	if len(c.Disallowed) == 0 {
 		c.AddFail("list of disallowed perms not provided")
+		c.AddBreach(result.ValueBreach{Value: "list of disallowed perms not provided"})
 	}
 
 	for r, perms := range c.Permissions {
@@ -84,6 +86,12 @@ func (c *DbPermissionsCheck) RunCheck() {
 			c.AddFail(fmt.Sprintf(
 				"[%s] disallowed permissions: [%s]",
 				r, strings.Join(fails, ", ")))
+			c.AddBreach(result.KeyValuesBreach{
+				KeyLabel:   "role",
+				Key:        r,
+				ValueLabel: "permissions",
+				Values:     fails,
+			})
 		}
 	}
 

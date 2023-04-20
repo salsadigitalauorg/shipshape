@@ -126,6 +126,8 @@ func BreachGetValueLabel(bIfc Breach) string {
 		return b.ValueLabel
 	} else if b, ok := bIfc.(KeyValueBreach); ok {
 		return b.ValueLabel
+	} else if b, ok := bIfc.(KeyValuesBreach); ok {
+		return b.ValueLabel
 	}
 	return ""
 }

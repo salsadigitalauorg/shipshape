@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -39,9 +40,13 @@ func (c *DrushYamlCheck) FetchData() {
 	if err != nil {
 		if pathErr, ok := err.(*fs.PathError); ok {
 			c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
+			c.AddBreach(result.ValueBreach{
+				Value: pathErr.Path + ": " + pathErr.Err.Error()})
 		} else {
 			msg := string(err.(*exec.ExitError).Stderr)
 			c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
+			c.AddBreach(result.ValueBreach{
+				Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 		}
 	}
 }

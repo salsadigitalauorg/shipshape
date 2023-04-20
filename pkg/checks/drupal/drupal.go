@@ -49,8 +49,13 @@ var CheckModulesInYaml = func(c *yaml.YamlBase, ct config.CheckType, configName 
 			c.AddPass(fmt.Sprintf("'%s' is enabled", m))
 		} else if kvr == yaml.KeyValueError {
 			c.AddFail(err.Error())
+			c.AddBreach(result.ValueBreach{Value: err.Error()})
 		} else {
 			c.AddFail(fmt.Sprintf("'%s' is not enabled", m))
+			c.AddBreach(result.KeyValueBreach{
+				Key:   "required module is disabled",
+				Value: m,
+			})
 		}
 	}
 	for _, m := range disallowed {
@@ -58,8 +63,13 @@ var CheckModulesInYaml = func(c *yaml.YamlBase, ct config.CheckType, configName 
 		// It could be a value different from 0, which still means it's enabled.
 		if kvr == yaml.KeyValueEqual || kvr == yaml.KeyValueNotEqual {
 			c.AddFail(fmt.Sprintf("'%s' is enabled", m))
+			c.AddBreach(result.KeyValueBreach{
+				Key:   "disallowed module is enabled",
+				Value: m,
+			})
 		} else if kvr == yaml.KeyValueError {
 			c.AddFail(err.Error())
+			c.AddBreach(result.ValueBreach{Value: err.Error()})
 		} else {
 			c.AddPass(fmt.Sprintf("'%s' is not enabled", m))
 		}
