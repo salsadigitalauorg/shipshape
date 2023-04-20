@@ -1,5 +1,7 @@
 package config
 
+import "github.com/salsadigitalauorg/shipshape/pkg/breach"
+
 type Config struct {
 	// The directory to audit.
 	ProjectDir string `yaml:"project-dir"`
@@ -55,12 +57,12 @@ type Result struct {
 	Name         string `json:"name"`
 	Severity     `json:"severity"`
 	CheckType    `json:"check-type"`
-	Status       CheckStatus `json:"status"`
-	Passes       []string    `json:"passes"`
-	Failures     []string    `json:"failures"`
-	Breaches     []Breach    `json:"breaches"`
-	Warnings     []string    `json:"warnings"`
-	Remediations []string    `json:"remediations"`
+	Status       CheckStatus     `json:"status"`
+	Passes       []string        `json:"passes"`
+	Failures     []string        `json:"failures"`
+	Breaches     []breach.Breach `json:"breaches"`
+	Warnings     []string        `json:"warnings"`
+	Remediations []string        `json:"remediations"`
 }
 
 type CheckStatus string

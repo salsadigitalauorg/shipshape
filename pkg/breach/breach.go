@@ -1,4 +1,4 @@
-package config
+package breach
 
 // Breach provides a representation for different breach types.
 type Breach interface{}
@@ -8,9 +8,9 @@ type Breach interface{}
 //
 //	"file foo.ext not found": file is the ValueLabel, foo.ext is the Value
 type ValueBreach struct {
-	CheckType
-	CheckName string
-	Severity
+	CheckType  string
+	CheckName  string
+	Severity   string
 	ValueLabel string
 	Value      string
 }
@@ -24,9 +24,9 @@ type ValueBreach struct {
 //	  - app could be the ValueLabel
 //	  - wordpress is the Value
 type KeyValueBreach struct {
-	CheckType
-	CheckName string
-	Severity
+	CheckType  string
+	CheckName  string
+	Severity   string
 	KeyLabel   string
 	Key        string
 	ValueLabel string
@@ -42,9 +42,9 @@ type KeyValueBreach struct {
 //	  - permissions could be the ValueLabel
 //	  - [administer site configuration, import configuration] are the Values
 type KeyValuesBreach struct {
-	CheckType
-	CheckName string
-	Severity
+	CheckType  string
+	CheckName  string
+	Severity   string
 	KeyLabel   string
 	Key        string
 	ValueLabel string
@@ -62,7 +62,7 @@ func BreachGetCheckName(bIfc Breach) string {
 	return ""
 }
 
-func BreachGetCheckType(bIfc Breach) CheckType {
+func BreachGetCheckType(bIfc Breach) string {
 	if b, ok := bIfc.(*ValueBreach); ok {
 		return b.CheckType
 	} else if b, ok := bIfc.(*KeyValueBreach); ok {
@@ -73,7 +73,7 @@ func BreachGetCheckType(bIfc Breach) CheckType {
 	return ""
 }
 
-func BreachGetSeverity(bIfc Breach) Severity {
+func BreachGetSeverity(bIfc Breach) string {
 	if b, ok := bIfc.(*ValueBreach); ok {
 		return b.Severity
 	} else if b, ok := bIfc.(*KeyValueBreach); ok {

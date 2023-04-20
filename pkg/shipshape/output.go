@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 
@@ -177,26 +178,26 @@ func LagoonFacts(w *bufio.Writer) {
 		return
 	}
 
-	factName := func(b config.Breach) string {
+	factName := func(b breach.Breach) string {
 		var name string
-		if config.BreachGetKeyLabel(b) == "" {
-			name = config.BreachGetCheckName(b) + " - " +
-				string(config.BreachGetCheckType(b))
+		if breach.BreachGetKeyLabel(b) == "" {
+			name = breach.BreachGetCheckName(b) + " - " +
+				string(breach.BreachGetCheckType(b))
 		} else {
-			name = fmt.Sprintf("%s: %s", config.BreachGetKeyLabel(b),
-				config.BreachGetKey(b))
+			name = fmt.Sprintf("%s: %s", breach.BreachGetKeyLabel(b),
+				breach.BreachGetKey(b))
 		}
 		return name
 	}
 
-	factValue := func(b config.Breach) string {
-		value := config.BreachGetValue(b)
+	factValue := func(b breach.Breach) string {
+		value := breach.BreachGetValue(b)
 		if value == "" {
-			value = strings.Join(config.BreachGetValues(b), ", ")
+			value = strings.Join(breach.BreachGetValues(b), ", ")
 		}
 
 		var withLabel string
-		label := config.BreachGetValueLabel(b)
+		label := breach.BreachGetValueLabel(b)
 		if label == "" {
 			withLabel = value
 		} else {
@@ -210,10 +211,10 @@ func LagoonFacts(w *bufio.Writer) {
 		for _, b := range r.Breaches {
 			facts = append(facts, lagoon.Fact{
 				Name:        factName(b),
-				Description: config.BreachGetCheckName(b),
+				Description: breach.BreachGetCheckName(b),
 				Value:       factValue(b),
 				Source:      lagoon.SourceName,
-				Category:    string(config.BreachGetCheckType(b)),
+				Category:    string(breach.BreachGetCheckType(b)),
 			})
 		}
 	}
