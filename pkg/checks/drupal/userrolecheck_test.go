@@ -61,12 +61,28 @@ func TestFetchData(t *testing.T) {
 	curShellCommander := command.ShellCommander
 	defer func() { command.ShellCommander = curShellCommander }()
 	t.Run("drushError", func(t *testing.T) {
-		command.ShellCommander = internal.ShellCommanderMaker(
-			nil,
-			&exec.ExitError{Stderr: []byte("unable to run drush command")},
-			nil,
-		)
+		sqlQueryFail := true
+		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
+			var stdout []byte
+			return internal.TestShellCommand{
+				OutputterFunc: func() ([]byte, error) {
+					if arg[0] == "sql:query" {
+						if sqlQueryFail {
+							return nil, &exec.ExitError{Stderr: []byte("unable to run drush sql query")}
+						}
+						return []byte(`1,0`), nil
+					}
+					return stdout, &exec.ExitError{Stderr: []byte("unable to run drush command")}
+				},
+			}
+		}
 		c := UserRoleCheck{}
+		c.FetchData()
+		assert.Equal(result.Fail, c.Result.Status)
+		assert.EqualValues([]string{"unable to run drush sql query"}, c.Result.Failures)
+
+		sqlQueryFail = false
+		c = UserRoleCheck{}
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues([]string{"unable to run drush command"}, c.Result.Failures)
