@@ -70,6 +70,55 @@ func TestHasData(t *testing.T) {
 	assert.NotEqual(result.Fail, c.Result.Status)
 }
 
+func TestAddBreach(t *testing.T) {
+	assert := assert.New(t)
+
+	const vbCheckType CheckType = "vbCheckType"
+	const kvbCheckType CheckType = "kvbCheckType"
+	const kvsbCheckType CheckType = "kvsbCheckType"
+
+	tests := []struct {
+		name      string
+		checkName string
+		checkType CheckType
+		severity  Severity
+		breach    result.Breach
+	}{
+		{
+			name:      "ValueBreach",
+			checkType: vbCheckType,
+			checkName: "vbCheck",
+			severity:  "high",
+			breach:    result.ValueBreach{},
+		},
+		{
+			name:      "KeyValueBreach",
+			checkType: kvbCheckType,
+			checkName: "kvbCheck",
+			severity:  "low",
+			breach:    result.KeyValueBreach{},
+		},
+		{
+			name:      "KeyValuesBreach",
+			checkType: kvsbCheckType,
+			checkName: "kvsbCheck",
+			severity:  "normal",
+			breach:    result.KeyValuesBreach{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			c := CheckBase{Name: test.checkName, Severity: test.severity}
+			c.Init(test.checkType)
+			c.AddBreach(test.breach)
+			assert.Equal(string(test.checkType), result.BreachGetCheckType(c.Result.Breaches[0]))
+			assert.Equal(test.checkName, result.BreachGetCheckName(c.Result.Breaches[0]))
+			assert.Equal(string(test.severity), result.BreachGetSeverity(c.Result.Breaches[0]))
+		})
+	}
+}
+
 func TestAddPass(t *testing.T) {
 	assert := assert.New(t)
 
