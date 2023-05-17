@@ -10,7 +10,9 @@ const (
 	FileModule    config.CheckType = "drupal-file-module"
 	DbModule      config.CheckType = "drupal-db-module"
 	DbPermissions config.CheckType = "drupal-db-permissions"
-	TrackingCode  config.CheckType = "drupal-tracking-code"
+
+	DbUserTfa    config.CheckType = "drupal-db-user-tfa"
+	TrackingCode config.CheckType = "drupal-tracking-code"
 )
 
 type DrushCommand struct {
