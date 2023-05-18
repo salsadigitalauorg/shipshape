@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-//	"github.com/salsadigitalauorg/shipshape/pkg/utils"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 // DbUserTfaCheck fetches a list of users and checks that they
@@ -55,6 +55,7 @@ func (c *DbUserTfaCheck) RunCheck() {
 
 
 func (c *DbUserTfaCheck) Merge(mergeCheck config.Check) error {
-	// not implemented yet
+	DbUserTfaMergeCheck := mergeCheck.(*DbUserTfaCheck)
+	utils.MergeString(&c.CheckBase.Name, DbUserTfaMergeCheck.CheckBase.Name)
 	return nil
 }
