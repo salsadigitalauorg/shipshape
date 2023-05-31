@@ -17,6 +17,7 @@ func RegisterChecks() {
 	config.ChecksRegistry[TrackingCode] = func() config.Check { return &TrackingCodeCheck{} }
 	config.ChecksRegistry[UserRole] = func() config.Check { return &UserRoleCheck{} }
 	config.ChecksRegistry[AdminUser] = func() config.Check { return &AdminUserCheck{} }
+	config.ChecksRegistry[DbUserTfa] = func() config.Check { return &DbUserTfaCheck{} }
 }
 
 func init() {
