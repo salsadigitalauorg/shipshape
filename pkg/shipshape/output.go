@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -167,10 +168,24 @@ func JUnit(w *bufio.Writer) {
 // lagoon-facts-app to be consumed.
 // see https://github.com/uselagoon/lagoon-facts-app#arbitrary-facts
 func LagoonFacts(w *bufio.Writer) {
+	facts := []lagoon.Fact{{
+		Name:        "Last run",
+		Description: "The last time the audit was run",
+		Value:       time.Now().Format(time.RFC3339),
+		Source:      lagoon.SourceName,
+		Category:    "last-run",
+	}}
+
 	if RunResultList.TotalBreaches == 0 {
 		if lagoon.PushFacts {
 			lagoon.InitClient()
-			lagoon.DeleteFacts()
+			err := lagoon.ReplaceFacts(facts)
+			if err != nil {
+				log.WithError(err).Fatal("failed to replace facts")
+			}
+			fmt.Fprint(w, "no breach to push to Lagoon; only updated last run")
+			w.Flush()
+			return
 		}
 		fmt.Fprint(w, "[]")
 		w.Flush()
@@ -205,7 +220,6 @@ func LagoonFacts(w *bufio.Writer) {
 		return withLabel
 	}
 
-	facts := []lagoon.Fact{}
 	for _, r := range RunResultList.Results {
 		for _, b := range r.Breaches {
 			facts = append(facts, lagoon.Fact{
@@ -222,7 +236,7 @@ func LagoonFacts(w *bufio.Writer) {
 		lagoon.InitClient()
 		err := lagoon.ReplaceFacts(facts)
 		if err != nil {
-			log.WithError(err).Fatal("failed to add facts")
+			log.WithError(err).Fatal("failed to replace facts")
 		}
 		fmt.Fprint(w, "successfully pushed facts to the Lagoon api")
 		w.Flush()
