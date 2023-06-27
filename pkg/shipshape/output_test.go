@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 	"text/tabwriter"
+	"time"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/file"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
@@ -268,7 +269,7 @@ func TestLagoonFacts(t *testing.T) {
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		LagoonFacts(w)
-		assert.Equal(2, internal.MockLagoonNumCalls)
+		assert.Equal(3, internal.MockLagoonNumCalls)
 		assert.Equal("{\"query\":\"query ($ns:String!){"+
 			"environmentByKubernetesNamespaceName(kubernetesNamespaceName: "+
 			"$ns){id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
@@ -276,7 +277,9 @@ func TestLagoonFacts(t *testing.T) {
 			"{deleteFactsFromSource(input: {environment: $envId, source: "+
 			"$sourceName})}\",\"variables\":{\"envId\":50,\"sourceName\":\""+
 			"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
-		assert.Equal("[]", buf.String())
+		assert.Contains(internal.MockLagoonRequestBodies[2],
+			"The last time the audit was run")
+		assert.Equal("no breach to push to Lagoon; only updated last run", buf.String())
 	})
 
 	t.Run("breachesDetected", func(t *testing.T) {
@@ -297,8 +300,12 @@ func TestLagoonFacts(t *testing.T) {
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		LagoonFacts(w)
-		assert.Equal("[{\"name\":\"a - file\",\"value\":\"Fail a\",\"source\":"+
-			"\"Shipshape\",\"description\":\"a\",\"category\":\"file\"}]",
+		lastRun := time.Now().Format(time.RFC3339)
+		assert.Equal("[{\"name\":\"Last run\",\"value\":\""+lastRun+"\","+
+			"\"source\":\"Shipshape\",\"description\":\"The last time the "+
+			"audit was run\",\"category\":\"last-run\"},{\"name\":\"a - file"+
+			"\",\"value\":\"Fail a\",\"source\":\"Shipshape\",\"description\":"+
+			"\"a\",\"category\":\"file\"}]",
 			buf.String())
 	})
 
@@ -341,6 +348,7 @@ func TestLagoonFacts(t *testing.T) {
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		LagoonFacts(w)
+		lastRun := time.Now().Format(time.RFC3339)
 		assert.Equal(3, internal.MockLagoonNumCalls)
 		assert.Equal("{\"query\":\"query ($ns:String!){"+
 			"environmentByKubernetesNamespaceName(kubernetesNamespaceName: "+
@@ -351,10 +359,12 @@ func TestLagoonFacts(t *testing.T) {
 			"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
 		assert.Equal("{\"query\":\"mutation ($input:AddFactsByNameInput!){"+
 			"addFactsByName(input: $input){id}}\",\"variables\":{\"input\":{"+
-			"\"environment\":\"bar\",\"facts\":[{\"name\":\"a - file\",\"value\":"+
-			"\"Fail a\",\"source\":\"Shipshape\",\"description\":\"a\",\""+
-			"category\":\"file\"}],\"project\":\"foo\"}}}\n",
-			internal.MockLagoonRequestBodies[2])
+			"\"environment\":\"bar\",\"facts\":[{\"name\":\"Last run\",\"value"+
+			"\":\""+lastRun+"\",\"source\":\"Shipshape\",\"description\":\"The"+
+			" last time the audit was run\",\"category\":\"last-run\"},{\""+
+			"name\":\"a - file\",\"value\":\"Fail a\",\"source\":\"Shipshape"+
+			"\",\"description\":\"a\",\"category\":\"file\"}],\"project\":\""+
+			"foo\"}}}\n", internal.MockLagoonRequestBodies[2])
 		assert.Contains(logbuf.String(),
 			"level=info msg=\"fetching environment id\" namespace=foo-bar\n")
 		assert.Equal("successfully pushed facts to the Lagoon api", buf.String())
