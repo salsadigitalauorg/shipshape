@@ -5,6 +5,7 @@ import (
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -48,7 +49,7 @@ foo:
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.EqualValues(
 		[]string{"yaml: line 4: found character that cannot start any token"},
@@ -87,7 +88,7 @@ foo:
 	}
 	c.RunCheck()
 
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]string{"invalid character '&' at position 3, following \"baz\""},
 		c.Result.Failures)
@@ -223,7 +224,7 @@ func TestYamlBase(t *testing.T) {
 
 	c := YamlBase{}
 	c.HasData(true)
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"no data available"}, c.Result.Failures)
 
 	mockCheck := func() YamlBase {
@@ -251,7 +252,7 @@ notification:
 	c = mockCheck()
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Failures))
 	assert.EqualValues([]string{"[data] 'check.interval_days' equals '7'"}, c.Result.Passes)
 
@@ -264,7 +265,7 @@ notification:
 		},
 	}
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.EqualValues([]string{"[data] 'check.interval' not found"}, c.Result.Failures)
 
@@ -278,7 +279,7 @@ notification:
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.EqualValues([]string{"[data] 'check.interval_days' equals '7', expected '8'"}, c.Result.Failures)
 
@@ -296,7 +297,7 @@ notification:
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Failures))
 	assert.EqualValues(
 		[]string{
@@ -330,7 +331,7 @@ efgh:
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.EqualValues([]string{"[data] disallowed *.some: [thing 2]"}, c.Result.Failures)
 }
@@ -363,7 +364,7 @@ foo:
 	c := mockCheck()
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.EqualValues([]string{"[data] disallowed foo: [b, c]"}, c.Result.Failures)
 
@@ -371,7 +372,7 @@ foo:
 	c.Values[0].Disallowed = []string{"e"}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Failures))
 	assert.EqualValues([]string{"[data] no disallowed 'foo'"}, c.Result.Passes)
 }

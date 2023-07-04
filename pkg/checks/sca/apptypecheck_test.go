@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/sca"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +24,7 @@ func TestIsDrupalCheck(t *testing.T) {
 	c.Dependencies["drupal"] = []string{"drupal/core-recommended"}
 
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]string{"drupal detected at ./testdata/drupal"},
 		c.Result.Failures,
@@ -42,7 +42,7 @@ func TestThreshold(t *testing.T) {
 		Paths:        []string{"./testdata/drupal"},
 	}
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 }
 
 func TestIsWordpressCheck(t *testing.T) {
@@ -60,7 +60,7 @@ func TestIsWordpressCheck(t *testing.T) {
 	c.Dirs["wordpress"] = []string{"wp-admin", "wp-content", "wp-includes"}
 
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]string{"wordpress detected at ./testdata/wordpress"},
 		c.Result.Failures,
@@ -82,7 +82,7 @@ func TestIsSymfonyCheck(t *testing.T) {
 	c.Dependencies["symfony"] = []string{"symfony/runtime", "symfony/symfony", "symfony/framework"}
 
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]string{"symfony detected at ./testdata/symfony"},
 		c.Result.Failures,
@@ -104,7 +104,7 @@ func TestIsLaravelCheck(t *testing.T) {
 	c.Dependencies["laravel"] = []string{"laravel/framework", "laravel/tinker"}
 
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]string{"laravel detected at ./testdata/laravel"},
 		c.Result.Failures,
@@ -126,7 +126,7 @@ func TestMultipleTypes(t *testing.T) {
 	c.Dirs["wordpress"] = []string{"wp-admin"}
 
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues(
 		[]string{"No invalid application types detected"},
 		c.Result.Passes,
@@ -144,7 +144,7 @@ func TestOK(t *testing.T) {
 		Paths:        []string{"./testdata/drupal"},
 	}
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues(
 		[]string{"No invalid application types detected"},
 		c.Result.Passes,

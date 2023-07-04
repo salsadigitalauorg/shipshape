@@ -5,6 +5,7 @@ import (
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/file"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -53,7 +54,7 @@ func TestFileCheckRunCheck(t *testing.T) {
 	}
 	c.Init(File)
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(
 		[]string{"lstat testdata/file-non-existent: no such file or directory"},
@@ -65,7 +66,7 @@ func TestFileCheckRunCheck(t *testing.T) {
 	}
 	c.Init(File)
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(
 		[]string{
@@ -82,7 +83,7 @@ func TestFileCheckRunCheck(t *testing.T) {
 	c.Init(File)
 	c.RunCheck()
 
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.Equal(0, len(c.Result.Failures))
 	assert.EqualValues([]string{"No illegal files"}, c.Result.Passes)
 }

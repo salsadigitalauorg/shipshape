@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	"gopkg.in/yaml.v3"
@@ -50,6 +51,7 @@ func (c *YamlBase) UnmarshalDataMap() {
 		err := yaml.Unmarshal([]byte(data), &n)
 		if err != nil {
 			c.AddFail(err.Error())
+			c.AddBreach(result.ValueBreach{Value: err.Error()})
 			return
 		}
 		c.NodeMap[configName] = n
@@ -65,12 +67,34 @@ func (c *YamlBase) processData(configName string) {
 		switch kvr {
 		case KeyValueError:
 			c.AddFail(err.Error())
+			c.AddBreach(result.ValueBreach{Value: err.Error()})
 		case KeyValueNotFound:
 			c.AddFail(fmt.Sprintf("[%s] '%s' not found", configName, kv.Key))
+			c.AddBreach(result.KeyValueBreach{
+				KeyLabel:   "config",
+				Key:        configName,
+				ValueLabel: "key not found",
+				Value:      kv.Key,
+			})
 		case KeyValueNotEqual:
-			c.AddFail(fmt.Sprintf("[%s] '%s' equals '%s', expected '%s'", configName, kv.Key, fails[0], kv.Value))
+			c.AddFail(fmt.Sprintf("[%s] '%s' equals '%s', expected '%s'",
+				configName, kv.Key, fails[0], kv.Value))
+			c.AddBreach(result.KeyValueBreach{
+				KeyLabel:      "config:" + configName,
+				Key:           kv.Key,
+				ValueLabel:    "actual",
+				ExpectedValue: kv.Value,
+				Value:         fails[0],
+			})
 		case KeyValueDisallowedFound:
-			c.AddFail(fmt.Sprintf("[%s] disallowed %s: [%s]", configName, kv.Key, strings.Join(fails, ", ")))
+			c.AddFail(fmt.Sprintf("[%s] disallowed %s: [%s]", configName,
+				kv.Key, strings.Join(fails, ", ")))
+			c.AddBreach(result.KeyValuesBreach{
+				KeyLabel:   "config",
+				Key:        configName,
+				ValueLabel: fmt.Sprintf("disallowed %s", kv.Key),
+				Values:     fails,
+			})
 		case KeyValueEqual:
 			if kv.IsList {
 				c.AddPass(fmt.Sprintf("[%s] no disallowed '%s'", configName, kv.Key))
@@ -80,9 +104,9 @@ func (c *YamlBase) processData(configName string) {
 		}
 	}
 	if len(c.Result.Failures) != 0 {
-		c.Result.Status = config.Fail
+		c.Result.Status = result.Fail
 	} else {
-		c.Result.Status = config.Pass
+		c.Result.Status = result.Pass
 	}
 }
 

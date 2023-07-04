@@ -9,6 +9,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +23,7 @@ func TestCheckBaseInit(t *testing.T) {
 	c.Init(file.File)
 	assert.Equal(NormalSeverity, c.Severity)
 	assert.Equal("foo", c.Result.Name)
-	assert.Equal(NormalSeverity, c.Result.Severity)
+	assert.Equal(string(NormalSeverity), c.Result.Severity)
 	assert.Equal(file.File, c.GetType())
 }
 
@@ -59,14 +60,63 @@ func TestHasData(t *testing.T) {
 
 	c := CheckBase{Name: "foo"}
 	assert.False(c.HasData(false))
-	assert.NotEqual(Fail, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 
 	assert.False(c.HasData(true))
-	assert.Equal(Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 
 	c = CheckBase{Name: "foo", DataMap: map[string][]byte{"foo": []byte(`bar`)}}
 	assert.True(c.HasData(true))
-	assert.NotEqual(Fail, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
+}
+
+func TestAddBreach(t *testing.T) {
+	assert := assert.New(t)
+
+	const vbCheckType CheckType = "vbCheckType"
+	const kvbCheckType CheckType = "kvbCheckType"
+	const kvsbCheckType CheckType = "kvsbCheckType"
+
+	tests := []struct {
+		name      string
+		checkName string
+		checkType CheckType
+		severity  Severity
+		breach    result.Breach
+	}{
+		{
+			name:      "ValueBreach",
+			checkType: vbCheckType,
+			checkName: "vbCheck",
+			severity:  "high",
+			breach:    result.ValueBreach{},
+		},
+		{
+			name:      "KeyValueBreach",
+			checkType: kvbCheckType,
+			checkName: "kvbCheck",
+			severity:  "low",
+			breach:    result.KeyValueBreach{},
+		},
+		{
+			name:      "KeyValuesBreach",
+			checkType: kvsbCheckType,
+			checkName: "kvsbCheck",
+			severity:  "normal",
+			breach:    result.KeyValuesBreach{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			c := CheckBase{Name: test.checkName, Severity: test.severity}
+			c.Init(test.checkType)
+			c.AddBreach(test.breach)
+			assert.Equal(string(test.checkType), result.BreachGetCheckType(c.Result.Breaches[0]))
+			assert.Equal(test.checkName, result.BreachGetCheckName(c.Result.Breaches[0]))
+			assert.Equal(string(test.severity), result.BreachGetSeverity(c.Result.Breaches[0]))
+		})
+	}
 }
 
 func TestAddPass(t *testing.T) {
@@ -74,7 +124,7 @@ func TestAddPass(t *testing.T) {
 
 	c := CheckBase{Name: "foo"}
 	c.AddPass("with flying colours!")
-	assert.EqualValues(Result{Passes: []string{"with flying colours!"}}, c.Result)
+	assert.EqualValues(result.Result{Passes: []string{"with flying colours!"}}, c.Result)
 }
 
 func TestAddWarning(t *testing.T) {
@@ -82,7 +132,7 @@ func TestAddWarning(t *testing.T) {
 
 	c := CheckBase{Name: "foo"}
 	c.AddWarning("not feeling great")
-	assert.EqualValues(Result{Warnings: []string{"not feeling great"}}, c.Result)
+	assert.EqualValues(result.Result{Warnings: []string{"not feeling great"}}, c.Result)
 }
 
 func TestCheckBaseRunCheck(t *testing.T) {
@@ -91,7 +141,7 @@ func TestCheckBaseRunCheck(t *testing.T) {
 	c := CheckBase{}
 	c.FetchData()
 	c.RunCheck()
-	assert.Equal(Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"not implemented"}, c.Result.Failures)
 }
 

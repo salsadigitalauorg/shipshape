@@ -6,6 +6,7 @@ import (
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -105,7 +106,7 @@ func TestFileModuleCheck(t *testing.T) {
 
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"'node' is enabled",

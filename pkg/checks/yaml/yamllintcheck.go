@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"gopkg.in/yaml.v3"
 )
 
@@ -34,8 +35,8 @@ func (c *YamlLintCheck) UnmarshalDataMap() {
 			c.AddPass(fmt.Sprintf("%s has valid yaml.", f))
 		}
 	}
-	if c.Result.Status != config.Fail {
-		c.Result.Status = config.Pass
+	if c.Result.Status != result.Fail {
+		c.Result.Status = result.Pass
 	}
 }
 

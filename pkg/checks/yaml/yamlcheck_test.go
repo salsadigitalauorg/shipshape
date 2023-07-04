@@ -5,6 +5,7 @@ import (
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -50,7 +51,7 @@ func TestYamlCheck(t *testing.T) {
 
 	c := mockCheck()
 	c.FetchData()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.EqualValues([]string{"no file provided"}, c.Result.Failures)
 
@@ -60,7 +61,7 @@ func TestYamlCheck(t *testing.T) {
 	c.Init(Yaml)
 	c.File = "non-existent.yml"
 	c.FetchData()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.EqualValues([]string{"open testdata/non-existent.yml: no such file or directory"}, c.Result.Failures)
 
@@ -69,7 +70,7 @@ func TestYamlCheck(t *testing.T) {
 	c.File = "non-existent.yml"
 	c.IgnoreMissing = &cTrue
 	c.FetchData()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.EqualValues([]string{"File testdata/non-existent.yml does not exist"}, c.Result.Passes)
 
@@ -78,12 +79,12 @@ func TestYamlCheck(t *testing.T) {
 	c.File = "update.settings.yml"
 	c.FetchData()
 	// Should not fail yet.
-	assert.NotEqual(config.Fail, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.True(c.HasData(false))
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.EqualValues([]string{"[update.settings.yml] 'check.interval_days' equals '7'"}, c.Result.Passes)
 
@@ -92,7 +93,7 @@ func TestYamlCheck(t *testing.T) {
 	c.Pattern = "*.bar.yml"
 	c.Path = ""
 	c.FetchData()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.EqualValues([]string{"error parsing regexp: missing argument to repetition operator: `*`"}, c.Result.Failures)
 
@@ -100,7 +101,7 @@ func TestYamlCheck(t *testing.T) {
 	c = mockCheck()
 	c.Pattern = "bla.*.yml"
 	c.FetchData()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.EqualValues([]string{"no matching config files found"}, c.Result.Failures)
 
@@ -109,7 +110,7 @@ func TestYamlCheck(t *testing.T) {
 	c.Pattern = "bla.*.yml"
 	c.IgnoreMissing = &cTrue
 	c.FetchData()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.EqualValues([]string{"no matching config files found"}, c.Result.Passes)
 
@@ -118,7 +119,7 @@ func TestYamlCheck(t *testing.T) {
 	c.Pattern = "foo.bar.yml"
 	c.Path = "dir/subdir"
 	c.FetchData()
-	assert.NotEqual(config.Fail, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	c.UnmarshalDataMap()
 	c.RunCheck()
@@ -129,11 +130,11 @@ func TestYamlCheck(t *testing.T) {
 	c = mockCheck()
 	c.Pattern = ".*.bar.yml"
 	c.FetchData()
-	assert.NotEqual(config.Fail, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{
 			"[testdata/dir/foo.bar.yml] 'check.interval_days' equals '7'",

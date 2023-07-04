@@ -7,8 +7,8 @@ import (
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -72,7 +72,7 @@ func TestDrushYamlCheck(t *testing.T) {
 		assert.True(c.RequiresDb)
 
 		c.FetchData()
-		assert.Equal(config.Fail, c.Result.Status)
+		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch(
 			[]string{"vendor/drush/drush/drush: no such file or directory"},
@@ -96,7 +96,7 @@ func TestDrushYamlCheck(t *testing.T) {
 		)
 
 		c.FetchData()
-		assert.Equal(config.Fail, c.Result.Status)
+		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch(
 			[]string{"unable to run drush command"},
@@ -123,7 +123,7 @@ module:
 			ConfigName: "core.extension",
 		}
 		c.FetchData()
-		assert.NotEqual(config.Fail, c.Result.Status)
+		assert.NotEqual(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.Empty(c.Result.Failures)
 	})

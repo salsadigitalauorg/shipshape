@@ -1,4 +1,4 @@
-package config
+package result
 
 import (
 	"sort"
@@ -9,16 +9,16 @@ import (
 // ResultList is a wrapper around a list of results, providing some useful
 // methods to manipulate and use it.
 type ResultList struct {
-	RemediationPerformed         bool              `json:"remediation-performed"`
-	TotalChecks                  uint32            `json:"total-checks"`
-	TotalBreaches                uint32            `json:"total-breaches"`
-	TotalRemediations            uint32            `json:"total-remediations"`
-	TotalUnsupportedRemediations uint32            `json:"total-unsupported-remediations"`
-	CheckCountByType             map[CheckType]int `json:"check-count-by-type"`
-	BreachCountByType            map[CheckType]int `json:"breach-count-by-type"`
-	BreachCountBySeverity        map[Severity]int  `json:"breach-count-by-severity"`
-	RemediationCountByType       map[CheckType]int `json:"remediation-count-by-type"`
-	Results                      []Result          `json:"results"`
+	RemediationPerformed         bool           `json:"remediation-performed"`
+	TotalChecks                  uint32         `json:"total-checks"`
+	TotalBreaches                uint32         `json:"total-breaches"`
+	TotalRemediations            uint32         `json:"total-remediations"`
+	TotalUnsupportedRemediations uint32         `json:"total-unsupported-remediations"`
+	CheckCountByType             map[string]int `json:"check-count-by-type"`
+	BreachCountByType            map[string]int `json:"breach-count-by-type"`
+	BreachCountBySeverity        map[string]int `json:"breach-count-by-severity"`
+	RemediationCountByType       map[string]int `json:"remediation-count-by-type"`
+	Results                      []Result       `json:"results"`
 }
 
 // Use locks to make map mutations concurrency-safe.
@@ -28,15 +28,15 @@ func NewResultList(remediate bool) ResultList {
 	return ResultList{
 		RemediationPerformed:   remediate,
 		Results:                []Result{},
-		CheckCountByType:       map[CheckType]int{},
-		BreachCountByType:      map[CheckType]int{},
-		BreachCountBySeverity:  map[Severity]int{},
-		RemediationCountByType: map[CheckType]int{},
+		CheckCountByType:       map[string]int{},
+		BreachCountByType:      map[string]int{},
+		BreachCountBySeverity:  map[string]int{},
+		RemediationCountByType: map[string]int{},
 	}
 }
 
 // Status calculates and returns the overall result of all check results.
-func (rl *ResultList) Status() CheckStatus {
+func (rl *ResultList) Status() Status {
 	for _, r := range rl.Results {
 		if r.Status == Fail {
 			return Fail
@@ -46,7 +46,7 @@ func (rl *ResultList) Status() CheckStatus {
 }
 
 // IncrChecks increments the total checks count & checks count by type.
-func (rl *ResultList) IncrChecks(ct CheckType, incr int) {
+func (rl *ResultList) IncrChecks(ct string, incr int) {
 	atomic.AddUint32(&rl.TotalChecks, uint32(incr))
 
 	lock.Lock()
@@ -82,7 +82,7 @@ func (rl *ResultList) GetBreachesByCheckName(cn string) []string {
 }
 
 // GetBreachesBySeverity fetches the list of failures by severity.
-func (rl *ResultList) GetBreachesBySeverity(s Severity) []string {
+func (rl *ResultList) GetBreachesBySeverity(s string) []string {
 	var breaches []string
 
 	for _, r := range rl.Results {

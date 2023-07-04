@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
@@ -35,6 +36,7 @@ func (c *TrackingCodeCheck) Merge(mergeCheck config.Check) error {
 func (c *TrackingCodeCheck) UnmarshalDataMap() {
 	if len(c.DataMap[c.ConfigName]) == 0 {
 		c.AddFail("no data provided")
+		c.AddBreach(result.ValueBreach{Value: "no data provided"})
 	}
 
 	c.DrushStatus = DrushStatus{}
@@ -42,6 +44,7 @@ func (c *TrackingCodeCheck) UnmarshalDataMap() {
 	if err != nil {
 		if _, ok := err.(*yaml.TypeError); !ok {
 			c.AddFail(err.Error())
+			c.AddBreach(result.ValueBreach{Value: err.Error()})
 			return
 		}
 	}
@@ -52,6 +55,7 @@ func (c *TrackingCodeCheck) RunCheck() {
 
 	if err != nil {
 		c.AddFail("could not determine site uri")
+		c.AddBreach(result.ValueBreach{Value: "could not determine site uri"})
 		return
 	}
 
@@ -62,9 +66,13 @@ func (c *TrackingCodeCheck) RunCheck() {
 
 	if r.Match(body) {
 		c.AddPass(fmt.Sprintf("tracking code [%s] present", c.Code))
-		c.Result.Status = config.Pass
+		c.Result.Status = result.Pass
 	} else {
 		c.AddFail(fmt.Sprintf("tracking code [%s] not present", c.Code))
+		c.AddBreach(result.KeyValueBreach{
+			Key:   "required tracking code not present",
+			Value: c.Code,
+		})
 	}
 
 }

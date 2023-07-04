@@ -5,7 +5,7 @@ import (
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,7 +59,7 @@ foo: bar
 `),
 	}
 	c.UnmarshalDataMap()
-	assert.NotEqual(config.Fail, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Equal("", c.DrushStatus.Uri)
 
 	c.DataMap = map[string][]byte{
@@ -69,7 +69,7 @@ uri: https://foo.example
 `),
 	}
 	c.UnmarshalDataMap()
-	assert.NotEqual(config.Fail, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Equal("https://foo.example", c.DrushStatus.Uri)
 }
 
@@ -86,7 +86,7 @@ func TestTrackingCodeCheckFails(t *testing.T) {
 		Uri: "https://google.com",
 	}
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{"tracking code [UA-xxxxxx-1] not present"},
 		c.Result.Failures,
@@ -106,7 +106,7 @@ func TestTrackingCodeCheckPass(t *testing.T) {
 		Uri: "https://gist.github.com/Pominova/cf7884e7418f6ebfa412d2d3dc472a97",
 	}
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{"tracking code [UA-xxxxxx-1] present"},
 		c.Result.Passes,

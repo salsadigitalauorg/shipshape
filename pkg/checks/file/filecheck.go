@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -54,14 +55,19 @@ func (c *FileCheck) RunCheck() {
 	files, err := utils.FindFiles(filepath.Join(config.ProjectDir, c.Path), c.DisallowedPattern, c.ExcludePattern, c.SkipDir)
 	if err != nil {
 		c.AddFail(err.Error())
+		c.AddBreach(result.ValueBreach{Value: err.Error()})
 		return
 	}
 	if len(files) == 0 {
-		c.Result.Status = config.Pass
+		c.Result.Status = result.Pass
 		c.AddPass("No illegal files")
 		return
 	}
 	for _, f := range files {
 		c.AddFail(fmt.Sprintf("Illegal file found: %s", f))
+		c.AddBreach(result.ValueBreach{
+			ValueLabel: "illegal file",
+			Value:      f,
+		})
 	}
 }

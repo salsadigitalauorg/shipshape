@@ -10,6 +10,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -52,7 +53,7 @@ func TestFetchData(t *testing.T) {
 	t.Run("drushNotFound", func(t *testing.T) {
 		c := UserRoleCheck{}
 		c.FetchData()
-		assert.Equal(config.Fail, c.Result.Status)
+		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues([]string{"vendor/drush/drush/drush: no such file or directory"}, c.Result.Failures)
 
 	})
@@ -60,14 +61,30 @@ func TestFetchData(t *testing.T) {
 	curShellCommander := command.ShellCommander
 	defer func() { command.ShellCommander = curShellCommander }()
 	t.Run("drushError", func(t *testing.T) {
-		command.ShellCommander = internal.ShellCommanderMaker(
-			nil,
-			&exec.ExitError{Stderr: []byte("unable to run drush command")},
-			nil,
-		)
+		sqlQueryFail := true
+		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
+			var stdout []byte
+			return internal.TestShellCommand{
+				OutputterFunc: func() ([]byte, error) {
+					if arg[0] == "sql:query" {
+						if sqlQueryFail {
+							return nil, &exec.ExitError{Stderr: []byte("unable to run drush sql query")}
+						}
+						return []byte(`1,0`), nil
+					}
+					return stdout, &exec.ExitError{Stderr: []byte("unable to run drush command")}
+				},
+			}
+		}
 		c := UserRoleCheck{}
 		c.FetchData()
-		assert.Equal(config.Fail, c.Result.Status)
+		assert.Equal(result.Fail, c.Result.Status)
+		assert.EqualValues([]string{"unable to run drush sql query"}, c.Result.Failures)
+
+		sqlQueryFail = false
+		c = UserRoleCheck{}
+		c.FetchData()
+		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues([]string{"unable to run drush command"}, c.Result.Failures)
 	})
 
@@ -80,8 +97,8 @@ func TestFetchData(t *testing.T) {
 		)
 		c := UserRoleCheck{}
 		c.FetchData()
-		assert.NotEqual(config.Fail, c.Result.Status)
-		assert.NotEqual(config.Pass, c.Result.Status)
+		assert.NotEqual(result.Fail, c.Result.Status)
+		assert.NotEqual(result.Pass, c.Result.Status)
 		assert.Equal([]byte(`{"1":{"roles":["authenticated"]}}`), c.DataMap["user-info"])
 	})
 }
@@ -92,7 +109,7 @@ func TestUnmarshalData(t *testing.T) {
 	// Empty datamap.
 	c := UserRoleCheck{}
 	c.UnmarshalDataMap()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"no data provided"}, c.Result.Failures)
 
 	// Incorrect json.
@@ -103,7 +120,7 @@ func TestUnmarshalData(t *testing.T) {
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"invalid character ']' after object key:value pair"}, c.Result.Failures)
 
 	// Correct json.
@@ -114,8 +131,8 @@ func TestUnmarshalData(t *testing.T) {
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.NotEqual(config.Fail, c.Result.Status)
-	assert.NotEqual(config.Pass, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
+	assert.NotEqual(result.Pass, c.Result.Status)
 	userRolesVal := reflect.ValueOf(c).FieldByName("userRoles")
 	assert.Equal("map[int][]string{1:[]string{\"authenticated\"}}", fmt.Sprintf("%#v", userRolesVal))
 }
@@ -132,7 +149,7 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"no disallowed role provided"}, c.Result.Failures)
 
 	// User has disallowed roles.
@@ -145,7 +162,7 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"User 1 has disallowed roles: [site-admin, content-admin]"}, c.Result.Failures)
 
 	// User allowed to have disallowed roles.
@@ -164,5 +181,5 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 }

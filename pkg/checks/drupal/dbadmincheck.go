@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -49,25 +50,28 @@ func (c *AdminUserCheck) Merge(mergeCheck config.Check) error {
 
 // getActiveRoles runs the drush command to populate data for the roles config check.
 func (c *AdminUserCheck) getActiveRoles() map[string]string {
-	var err error
-
-	activeRoles := []byte{}
 	rolesListMap := map[string]string{}
 
 	cmd := []string{"role:list", "--fields=.", "--format=json"}
-	activeRoles, err = Drush(c.DrushPath, c.Alias, cmd).Exec()
+
+	activeRoles, err := Drush(c.DrushPath, c.Alias, cmd).Exec()
 	var pathErr *fs.PathError
 	if err != nil && errors.As(err, &pathErr) {
 		c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
+		c.AddBreach(result.ValueBreach{
+			Value: pathErr.Path + ": " + pathErr.Err.Error()})
 	} else if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
 		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
+		c.AddBreach(result.ValueBreach{
+			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	} else {
 		// Unmarshal roles JSON.
 		err = json.Unmarshal(activeRoles, &rolesListMap)
 		var synErr *json.SyntaxError
 		if err != nil && errors.As(err, &synErr) {
 			c.AddFail(err.Error())
+			c.AddBreach(result.ValueBreach{Value: err.Error()})
 		}
 	}
 
@@ -79,7 +83,7 @@ func (c *AdminUserCheck) FetchData() {
 	var err error
 
 	activeRoles := c.getActiveRoles()
-	if c.Result.Status == config.Fail {
+	if c.Result.Status == result.Fail {
 		return
 	}
 
@@ -94,6 +98,8 @@ func (c *AdminUserCheck) FetchData() {
 	if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
 		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
+		c.AddBreach(result.ValueBreach{
+			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	}
 }
 
@@ -102,6 +108,7 @@ func (c *AdminUserCheck) FetchData() {
 func (c *AdminUserCheck) UnmarshalDataMap() {
 	if len(c.DataMap) == 0 {
 		c.AddFail("no data provided")
+		c.AddBreach(result.ValueBreach{Value: "no data provided"})
 		return
 	}
 
@@ -112,6 +119,7 @@ func (c *AdminUserCheck) UnmarshalDataMap() {
 		var synErr *json.SyntaxError
 		if err != nil && errors.As(err, &synErr) {
 			c.AddFail(err.Error())
+			c.AddBreach(result.ValueBreach{Value: err.Error()})
 			return
 		}
 		// Collect role config.
@@ -129,10 +137,15 @@ func (c *AdminUserCheck) RunCheck() {
 
 		if isAdmin {
 			c.AddFail(fmt.Sprintf("Role [%s] has `is_admin: true`", roleName))
+			c.AddBreach(result.KeyValueBreach{
+				Key:        "is_admin: true",
+				ValueLabel: "role",
+				Value:      roleName,
+			})
 		}
 	}
 
 	if len(c.Result.Failures) == 0 {
-		c.Result.Status = config.Pass
+		c.Result.Status = result.Pass
 	}
 }

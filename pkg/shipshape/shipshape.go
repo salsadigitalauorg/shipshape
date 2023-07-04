@@ -10,6 +10,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	log "github.com/sirupsen/logrus"
@@ -17,7 +18,7 @@ import (
 )
 
 var RunConfig config.Config
-var RunResultList config.ResultList
+var RunResultList result.ResultList
 var OutputFormats = []string{"json", "junit", "simple", "table", "lagoon-facts"}
 
 func Init(projectDir string, configFiles []string, checkTypesToRun []string, excludeDb bool, remediate bool, logLevel string, lagoonApiBaseUrl string, lagoonApiToken string) error {
@@ -37,7 +38,7 @@ func Init(projectDir string, configFiles []string, checkTypesToRun []string, exc
 	}
 
 	config.ProjectDir = RunConfig.ProjectDir
-	RunResultList = config.NewResultList(remediate)
+	RunResultList = result.NewResultList(remediate)
 
 	// Remediate is a command-level flag, so we set the value outside of
 	// config parsing.
@@ -160,12 +161,12 @@ func ParseConfigData(configData [][]byte) error {
 	return nil
 }
 
-func RunChecks() config.ResultList {
+func RunChecks() result.ResultList {
 	log.Print("preparing concurrent check runs")
 	var wg sync.WaitGroup
 	for ct, checks := range RunConfig.Checks {
 		checks := checks
-		RunResultList.IncrChecks(ct, len(checks))
+		RunResultList.IncrChecks(string(ct), len(checks))
 		for i := range checks {
 			wg.Add(1)
 			check := checks[i]
@@ -180,7 +181,7 @@ func RunChecks() config.ResultList {
 	return RunResultList
 }
 
-func ProcessCheck(rl *config.ResultList, c config.Check) {
+func ProcessCheck(rl *result.ResultList, c config.Check) {
 	contextLogger := log.WithFields(log.Fields{
 		"check-type": c.GetType(),
 		"check-name": c.GetName(),

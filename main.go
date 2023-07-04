@@ -5,20 +5,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"text/tabwriter"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
-	"github.com/salsadigitalauorg/shipshape/pkg/utils"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
 
-	"github.com/spf13/pflag"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
+	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 // Version information.
@@ -79,7 +80,7 @@ func main() {
 
 	determineLogLevel()
 
-	if outputFormat == "lagoon-facts" {
+	if outputFormat == "lagoon-facts" && lagoon.PushFacts {
 		if lagoonApiBaseUrl == "" {
 			log.Fatal("lagoon api base url not provided")
 		}
@@ -146,8 +147,8 @@ func main() {
 		shipshape.LagoonFacts(w)
 	}
 
-	if shipshape.RunResultList.Status() == config.Fail && errorCodeOnFailure &&
-		len(shipshape.RunResultList.GetBreachesBySeverity(shipshape.RunConfig.FailSeverity)) > 0 {
+	if shipshape.RunResultList.Status() == result.Fail && errorCodeOnFailure &&
+		len(shipshape.RunResultList.GetBreachesBySeverity(string(shipshape.RunConfig.FailSeverity))) > 0 {
 
 		os.Exit(2)
 	}

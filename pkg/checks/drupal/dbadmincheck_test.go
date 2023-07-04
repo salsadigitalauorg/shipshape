@@ -10,6 +10,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -49,7 +50,7 @@ func TestAdminUserFetchData(t *testing.T) {
 	t.Run("drushNotFound", func(t *testing.T) {
 		c := drupal.AdminUserCheck{}
 		c.FetchData()
-		assert.Equal(config.Fail, c.Result.Status)
+		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues([]string{"vendor/drush/drush/drush: no such file or directory"}, c.Result.Failures)
 
 	})
@@ -64,7 +65,7 @@ func TestAdminUserFetchData(t *testing.T) {
 		)
 		c := drupal.AdminUserCheck{}
 		c.FetchData()
-		assert.Equal(config.Fail, c.Result.Status)
+		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues([]string{"unable to run drush command"}, c.Result.Failures)
 	})
 
@@ -78,8 +79,8 @@ func TestAdminUserFetchData(t *testing.T) {
 
 		c := drupal.AdminUserCheck{}
 		c.FetchData()
-		assert.NotEqual(config.Fail, c.Result.Status)
-		assert.NotEqual(config.Pass, c.Result.Status)
+		assert.NotEqual(result.Fail, c.Result.Status)
+		assert.NotEqual(result.Pass, c.Result.Status)
 		assert.Equal([]byte(`{"anonymous":{"is_admin": false}}`), c.DataMap["anonymous"])
 	})
 }
@@ -91,7 +92,7 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 	// Empty datamap.
 	t.Run("emptyDataMap", func(t *testing.T) {
 		c.UnmarshalDataMap()
-		assert.Equal(config.Fail, c.Result.Status)
+		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues([]string{"no data provided"}, c.Result.Failures)
 	})
 
@@ -104,7 +105,7 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 			},
 		}
 		c.UnmarshalDataMap()
-		assert.Equal(config.Fail, c.Result.Status)
+		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues([]string{"invalid character ']' after object key:value pair"}, c.Result.Failures)
 	})
 
@@ -118,8 +119,8 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 		}
 
 		c.UnmarshalDataMap()
-		assert.NotEqual(config.Fail, c.Result.Status)
-		assert.NotEqual(config.Pass, c.Result.Status)
+		assert.NotEqual(result.Fail, c.Result.Status)
+		assert.NotEqual(result.Pass, c.Result.Status)
 		roleConfigsVal := reflect.ValueOf(c).FieldByName("roleConfigs")
 		assert.Equal("map[string]bool{\"anonymous\":false}", fmt.Sprintf("%#v", roleConfigsVal))
 	})
@@ -140,7 +141,7 @@ func TestAdminUserRunCheck(t *testing.T) {
 		}
 		c.UnmarshalDataMap()
 		c.RunCheck()
-		assert.Equal(config.Pass, c.Result.Status)
+		assert.Equal(result.Pass, c.Result.Status)
 	})
 
 	// Role has is_admin:true.
@@ -154,7 +155,7 @@ func TestAdminUserRunCheck(t *testing.T) {
 		}
 		c.UnmarshalDataMap()
 		c.RunCheck()
-		assert.Equal(config.Fail, c.Result.Status)
+		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues([]string{"Role [anonymous] has `is_admin: true`"}, c.Result.Failures)
 	})
 
@@ -169,10 +170,10 @@ func TestAdminUserRunCheck(t *testing.T) {
 		}
 		c.UnmarshalDataMap()
 		c.RunCheck()
-		assert.Equal(config.Pass, c.Result.Status)
+		assert.Equal(result.Pass, c.Result.Status)
 	})
 
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 }

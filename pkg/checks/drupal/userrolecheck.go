@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -55,9 +56,13 @@ func (c *UserRoleCheck) getUserIds() string {
 	var pathErr *fs.PathError
 	if err != nil && errors.As(err, &pathErr) {
 		c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
+		c.AddBreach(result.ValueBreach{
+			Value: pathErr.Path + ": " + pathErr.Err.Error()})
 	} else if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
 		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
+		c.AddBreach(result.ValueBreach{
+			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	}
 	return string(userIds)
 }
@@ -67,7 +72,7 @@ func (c *UserRoleCheck) FetchData() {
 	var err error
 
 	userIds := c.getUserIds()
-	if c.Result.Status == config.Fail {
+	if c.Result.Status == result.Fail {
 		return
 	}
 
@@ -77,6 +82,8 @@ func (c *UserRoleCheck) FetchData() {
 	if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
 		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
+		c.AddBreach(result.ValueBreach{
+			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	}
 }
 
@@ -85,6 +92,7 @@ func (c *UserRoleCheck) FetchData() {
 func (c *UserRoleCheck) UnmarshalDataMap() {
 	if len(c.DataMap["user-info"]) == 0 {
 		c.AddFail("no data provided")
+		c.AddBreach(result.ValueBreach{Value: "no data provided"})
 		return
 	}
 
@@ -93,6 +101,7 @@ func (c *UserRoleCheck) UnmarshalDataMap() {
 	var synErr *json.SyntaxError
 	if err != nil && errors.As(err, &synErr) {
 		c.AddFail(err.Error())
+		c.AddBreach(result.ValueBreach{Value: err.Error()})
 		return
 	}
 
@@ -106,6 +115,7 @@ func (c *UserRoleCheck) UnmarshalDataMap() {
 func (c *UserRoleCheck) RunCheck() {
 	if len(c.Roles) == 0 {
 		c.AddFail("no disallowed role provided")
+		c.AddBreach(result.ValueBreach{Value: "no disallowed role provided"})
 		return
 	}
 
@@ -118,10 +128,16 @@ func (c *UserRoleCheck) RunCheck() {
 		disallowed := utils.StringSlicesIntersect(roles, c.Roles)
 		if len(disallowed) > 0 {
 			c.AddFail(fmt.Sprintf("User %d has disallowed roles: [%s]", uid, strings.Join(disallowed, ", ")))
+			c.AddBreach(result.KeyValuesBreach{
+				KeyLabel:   "user",
+				Key:        fmt.Sprintf("%d", uid),
+				ValueLabel: "roles",
+				Values:     disallowed,
+			})
 		}
 	}
 
 	if len(c.Result.Failures) == 0 {
-		c.Result.Status = config.Pass
+		c.Result.Status = result.Pass
 	}
 }

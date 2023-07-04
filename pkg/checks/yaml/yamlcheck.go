@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -35,9 +36,10 @@ func (c *YamlCheck) readFile(fkey string, fname string) {
 		// No failure if missing file and ignoring missing.
 		if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing != nil && *c.IgnoreMissing {
 			c.AddPass(fmt.Sprintf("File %s does not exist", fname))
-			c.Result.Status = config.Pass
+			c.Result.Status = result.Pass
 		} else {
 			c.AddFail(err.Error())
+			c.AddBreach(result.ValueBreach{Value: err.Error()})
 		}
 	}
 }
@@ -60,19 +62,21 @@ func (c *YamlCheck) FetchData() {
 			// No failure if missing path and ignoring missing.
 			if _, ok := err.(*fs.PathError); ok && c.IgnoreMissing != nil && *c.IgnoreMissing {
 				c.AddPass(fmt.Sprintf("Path %s does not exist", configPath))
-				c.Result.Status = config.Pass
+				c.Result.Status = result.Pass
 			} else {
 				c.AddFail(err.Error())
+				c.AddBreach(result.ValueBreach{Value: err.Error()})
 			}
 			return
 		}
 
 		if len(files) == 0 && c.IgnoreMissing != nil && *c.IgnoreMissing {
 			c.AddPass("no matching config files found")
-			c.Result.Status = config.Pass
+			c.Result.Status = result.Pass
 			return
 		} else if len(files) == 0 {
 			c.AddFail("no matching config files found")
+			c.AddBreach(result.ValueBreach{Value: "no matching config files found"})
 			return
 		}
 
@@ -82,5 +86,6 @@ func (c *YamlCheck) FetchData() {
 		}
 	} else {
 		c.AddFail("no file provided")
+		c.AddBreach(result.ValueBreach{Value: "no file provided"})
 	}
 }

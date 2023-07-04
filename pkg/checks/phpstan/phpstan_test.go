@@ -9,6 +9,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -111,7 +112,7 @@ func TestFetchDataBinNotExists(t *testing.T) {
 	}
 	c.FetchData()
 
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"Phpstan failed to run: /my/custom/path/phpstan: no such file or directory"}, c.Result.Failures)
 }
 
@@ -131,8 +132,8 @@ func TestFetchDataBinExists(t *testing.T) {
 	}
 	c.FetchData()
 
-	assert.NotEqual(config.Pass, c.Result.Status)
-	assert.NotEqual(config.Fail, c.Result.Status)
+	assert.NotEqual(result.Pass, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Equal([]byte(expectedStdout), c.DataMap["phpstan"])
 }
 
@@ -141,7 +142,7 @@ func TestUnmarshalDataMap(t *testing.T) {
 	// No DataMap.
 	c := PhpStanCheck{}
 	c.UnmarshalDataMap()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"no data provided"}, c.Result.Failures)
 
 	// Empty data.
@@ -153,8 +154,8 @@ func TestUnmarshalDataMap(t *testing.T) {
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.NotEqual(config.Pass, c.Result.Status)
-	assert.NotEqual(config.Fail, c.Result.Status)
+	assert.NotEqual(result.Pass, c.Result.Status)
+	assert.NotEqual(result.Fail, c.Result.Status)
 	filesRaw := reflect.ValueOf(c).FieldByName("phpstanResult").FieldByName("FilesRaw")
 	assert.Equal("[]", string(filesRaw.Bytes()))
 
@@ -167,7 +168,7 @@ func TestUnmarshalDataMap(t *testing.T) {
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.Contains(c.Result.Failures[0], "json: cannot unmarshal array into Go value of type map[string]struct")
 }
 
@@ -184,7 +185,7 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Pass, c.Result.Status)
+	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues([]string{"no error found"}, c.Result.Passes)
 
 	// PHP errors detected.
@@ -197,7 +198,7 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"[/app/web/themes/custom/custom/test-theme/info.php] Line 3: Calling curl_exec() is forbidden, please change the code"}, c.Result.Failures)
 
 	// Other errors found in files.
@@ -210,6 +211,6 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
-	assert.Equal(config.Fail, c.Result.Status)
+	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"Error found in file foo"}, c.Result.Failures)
 }
