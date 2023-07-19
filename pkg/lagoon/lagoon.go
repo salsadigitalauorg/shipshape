@@ -2,6 +2,7 @@ package lagoon
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/hasura/go-graphql-client"
@@ -87,7 +88,12 @@ func AddFacts(facts []Fact) error {
 		"environment": os.Getenv("LAGOON_ENVIRONMENT"),
 		"facts":       factsInput,
 	}}
-	log.Debug("executing API mutation")
+
+	qryStr, _ := graphql.ConstructMutation(&m, variables)
+	log.WithFields(log.Fields{
+		"query":     qryStr,
+		"variables": fmt.Sprintf("%+v", variables),
+	}).Debug("executing API mutation")
 	err := Client.Mutate(context.Background(), &m, variables)
 	if err != nil {
 		return err
