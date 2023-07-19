@@ -87,6 +87,7 @@ func AddFacts(facts []Fact) error {
 		"environment": os.Getenv("LAGOON_ENVIRONMENT"),
 		"facts":       factsInput,
 	}}
+	log.Debug("executing API mutation")
 	err := Client.Mutate(context.Background(), &m, variables)
 	if err != nil {
 		return err
@@ -111,9 +112,11 @@ func DeleteFacts() error {
 
 // ReplaceFacts deletes all the Shipshape facts and then adds the new ones.
 func ReplaceFacts(facts []Fact) error {
+	log.Debug("deleting facts before adding new")
 	err := DeleteFacts()
 	if err != nil {
 		return err
 	}
+	log.Debug("adding new facts")
 	return AddFacts(facts)
 }
