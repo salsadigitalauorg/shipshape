@@ -48,7 +48,7 @@ jobs:
       with:
         name: build
         path: build
-      # if: github.ref_name == 'main'
+      if: github.ref_name == 'main'
 
   publish-binary:
     needs: test-build
