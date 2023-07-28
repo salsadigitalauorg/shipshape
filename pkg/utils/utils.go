@@ -237,10 +237,10 @@ func SliceCheckString(slice []string, item string, item_version string) bool {
           return true
         } else if len(item_version) > 0 {
           // Ensure that item version is not less than slice version.
-          v1, err := version.NewVersion(service_match[2])
-          v2, err := version.NewVersion(item_version)
+          allowedVersion, err := version.NewVersion(service_match[2])
+          imageVersion, err := version.NewVersion(item_version)
           // Run version comparison.
-          if err == nil && v1.GreaterThanOrEqual(v2) {
+          if err == nil && allowedVersion.LessThanOrEqual(imageVersion) {
             return true
           }
         }
