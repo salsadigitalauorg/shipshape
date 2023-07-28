@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
+	"github.com/hashicorp/go-version"
 	"gopkg.in/yaml.v3"
 )
 
@@ -213,6 +214,38 @@ func StringSliceMatch(slice []string, item string) bool {
 		if strings.Contains(item, s) {
 			return true
 		}
+	}
+	return false
+}
+
+// Sift through a slice to determine if it contains eligible package
+// with optional version constrains.
+func SliceCheckString(slice []string, item string, item_version string) bool {
+  for _, s := range slice {
+    // Parse slice with regex to:
+    // 1 - package name (e.g. "bitnami/kubectl")
+    // 2 - version (e.g. "8.0")
+    service_regex := regexp.MustCompile("^(.[^:@]*)?[:@]?([^ latest$]*)")
+    service_match := service_regex.FindStringSubmatch(s)
+    // Only proceed if package names were parsed successfully.
+    if len(service_match[1]) > 0 && len(item) > 0 {
+      // Check if package name matches.
+      if service_match[1] == item {
+        // Package name matched.
+        // If service does not dictate version than assume any version is allowed.
+        if len(service_match[2]) < 1 {
+          return true
+        } else if len(item_version) > 0 {
+          // Ensure that item version is not less than slice version.
+          v1, err := version.NewVersion(service_match[2])
+          v2, err := version.NewVersion(item_version)
+          // Run version comparison.
+          if err == nil && v1.GreaterThanOrEqual(v2) {
+            return true
+          }
+        }
+      }
+    }
 	}
 	return false
 }

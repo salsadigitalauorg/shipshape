@@ -3,13 +3,13 @@ version: "3.8"
 services:
 
   service1:
-    image: bitnami/kubectl
+    image: bitnami/kubectl:1.25.12-debian-11-r5
 
   service2:
-    image: bitnami/postgresql
+    image: bitnami/postgresql@16
 
   service3:
-    image: bitnami/redis
+    image: bitnami/redis:{MY_VERSION}
 
   service4:
-    image: bitnami/mongodb
+    image: bitnami/mongodb:5.0.19-debian-11-r11

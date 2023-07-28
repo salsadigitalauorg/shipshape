@@ -8,6 +8,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -78,14 +79,14 @@ func (c *BaseImageCheck) RunCheck() {
 				defer df.Close()
 				scanner := bufio.NewScanner(df)
 				for scanner.Scan() {
-					from_regex := regexp.MustCompile("^FROM (.*)")
+					from_regex := regexp.MustCompile("^FROM (.[^:@]*)?[:@]?([^ latest$]*)")
 					match := from_regex.FindStringSubmatch(scanner.Text())
 
 					if len(match) < 1 {
 						continue
 					}
 
-					if len(c.Allowed) > 0 && !utils.StringSliceContains(c.Allowed, match[1]) {
+					if len(c.Allowed) > 0 && !utils.SliceCheckString(c.Allowed, match[1], match[2]) {
 						c.AddFail(name + " is using invalid base image " + match[1])
 						c.AddBreach(result.KeyValueBreach{
 							Key:        name,
@@ -99,15 +100,23 @@ func (c *BaseImageCheck) RunCheck() {
 					}
 				}
 			} else {
-				if !utils.StringSliceMatch(c.Allowed, def.Image) {
-					c.AddFail(name + " is using invalid base image " + def.Image)
+				// Extract image package name and optional version from definition.
+				image_regex := regexp.MustCompile("^(.[^:@]*)?[:@]?([^ latest$]*)")
+				match := image_regex.FindStringSubmatch(def.Image)
+
+				if len(match) < 1 {
+					continue
+				}
+
+				if !utils.SliceCheckString(c.Allowed, match[1], match[2]) {
+					c.AddFail(name + " is using invalid base image " + match[1])
 					c.AddBreach(result.KeyValueBreach{
 						Key:        name,
 						ValueLabel: "invalid base image",
 						Value:      def.Image,
 					})
-				} else if utils.StringSliceMatch(c.Deprecated, def.Image) {
-					c.AddWarning(name + " is using deprecated image " + def.Image)
+				} else if utils.StringSliceMatch(c.Deprecated, match[1]) {
+					c.AddWarning(name + " is using deprecated image " + match[1])
 				} else {
 					c.AddPass(name + " is using valid base images")
 				}
