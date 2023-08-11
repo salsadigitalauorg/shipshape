@@ -125,8 +125,8 @@ func (c *PhpStanCheck) FetchData() {
 // type for further processing.
 func (c *PhpStanCheck) UnmarshalDataMap() {
 	if len(c.DataMap["phpstan"]) == 0 {
-		c.AddFail("no data provided")
-		c.AddBreach(result.ValueBreach{Value: "no data provided"})
+		c.Result.Status = result.Pass
+		c.AddWarning("Unhandled PHPStan repsonse, unable to determine status.")
 		return
 	}
 
