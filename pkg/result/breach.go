@@ -3,11 +3,23 @@ package result
 // Breach provides a representation for different breach types.
 type Breach interface{}
 
+type BreachType string
+
+const (
+	// BreachTypeValue is a breach with a value.
+	BreachTypeValue BreachType = "value"
+	// BreachTypeKeyValue is a breach with a key and a value.
+	BreachTypeKeyValue BreachType = "key-value"
+	// BreachTypeKeyValues is a breach with a key and a list of values.
+	BreachTypeKeyValues BreachType = "key-values"
+)
+
 // Simple breach with no key.
 // Example:
 //
 //	"file foo.ext not found": file is the ValueLabel, foo.ext is the Value
 type ValueBreach struct {
+	BreachType
 	CheckType     string
 	CheckName     string
 	Severity      string
@@ -25,6 +37,7 @@ type ValueBreach struct {
 //	  - app could be the ValueLabel
 //	  - wordpress is the Value
 type KeyValueBreach struct {
+	BreachType
 	CheckType     string
 	CheckName     string
 	Severity      string
@@ -44,6 +57,7 @@ type KeyValueBreach struct {
 //	  - permissions could be the ValueLabel
 //	  - [administer site configuration, import configuration] are the Values
 type KeyValuesBreach struct {
+	BreachType
 	CheckType  string
 	CheckName  string
 	Severity   string
@@ -70,6 +84,17 @@ func BreachSetCommonValues(bIfc *Breach, checkType string, checkName string, sev
 		b.Severity = severity
 		*bIfc = b
 	}
+}
+
+func BreachGetBreachType(bIfc Breach) BreachType {
+	if _, ok := bIfc.(ValueBreach); ok {
+		return BreachTypeValue
+	} else if _, ok := bIfc.(KeyValueBreach); ok {
+		return BreachTypeKeyValue
+	} else if _, ok := bIfc.(KeyValuesBreach); ok {
+		return BreachTypeKeyValues
+	}
+	return ""
 }
 
 func BreachGetCheckType(bIfc Breach) string {
