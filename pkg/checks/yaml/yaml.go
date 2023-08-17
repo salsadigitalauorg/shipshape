@@ -80,7 +80,7 @@ func (c *YamlBase) processData(configName string) {
 			c.AddFail(fmt.Sprintf("[%s] '%s' equals '%s', expected '%s'",
 				configName, kv.Key, fails[0], kv.Value))
 			c.AddBreach(result.KeyValueBreach{
-				KeyLabel:      "config:" + configName,
+				KeyLabel:      configName,
 				Key:           kv.Key,
 				ValueLabel:    "actual",
 				ExpectedValue: kv.Value,
