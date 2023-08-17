@@ -70,12 +70,10 @@ module:
 
 	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
 	assert.ElementsMatch(c.Result.Passes, []string{
-		"'clamav' is enabled",
-		"'tfa' is enabled",
-		"'module_permissions_ui' is not enabled",
-		"'update' is not enabled",
+		"all required modules are enabled",
+		"all disallowed modules are disabled",
 	})
-	assert.ElementsMatch(c.Result.Failures, []string{"'dblog' is enabled"})
+	assert.ElementsMatch(c.Result.Failures, []string{"disallowed modules are enabled: dblog"})
 }
 
 func TestCheckModulesInYaml(t *testing.T) {
@@ -95,12 +93,12 @@ func TestCheckModulesInYaml(t *testing.T) {
 	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(c.Result.Passes, []string{
-		"'block' is enabled",
-		"'views_ui' is not enabled",
+		"some required modules are enabled: block",
+		"some disallowed modules are disabled: views_ui",
 	})
 	assert.ElementsMatch(c.Result.Failures, []string{
-		"invalid character '&' at position 11, following \".node\"",
-		"invalid character '&' at position 15, following \".field_ui\"",
+		"error verifying status for required modules: invalid character '&' at position 11, following \".node\"",
+		"error verifying status for disallowed modules: invalid character '&' at position 15, following \".field_ui\"",
 	})
 
 	// Required is not enabled & disallowed is enabled.
@@ -125,12 +123,12 @@ module:
 	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(c.Result.Passes, []string{
-		"'block' is enabled",
-		"'field_ui' is not enabled",
+		"some required modules are enabled: block",
+		"some disallowed modules are disabled: field_ui",
 	})
 	assert.ElementsMatch(c.Result.Failures, []string{
-		"'node' is not enabled",
-		"'views_ui' is enabled",
+		"required modules are not enabled: node",
+		"disallowed modules are enabled: views_ui",
 	})
 
 	c = mockCheck("shipshape.extension.yml")
@@ -147,9 +145,7 @@ module:
 	assert.Equal(result.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(c.Result.Passes, []string{
-		"'node' is enabled",
-		"'block' is enabled",
-		"'views_ui' is not enabled",
-		"'field_ui' is not enabled",
+		"all required modules are enabled",
+		"all disallowed modules are disabled",
 	})
 }

@@ -82,6 +82,10 @@ var CheckModulesInYaml = func(c *yaml.YamlBase, ct config.CheckType, configName 
 	}
 	if len(required_enabled) == len(required) {
 		c.AddPass("all required modules are enabled")
+	} else if len(required_enabled) > 0 {
+		c.AddPass(fmt.Sprint(
+			"some required modules are enabled: ",
+			strings.Join(required_enabled, ",")))
 	}
 
 	disallowed_enabled, disallowed_errored, disallowed_disabled := determineModuleStatus(disallowed)
@@ -103,6 +107,10 @@ var CheckModulesInYaml = func(c *yaml.YamlBase, ct config.CheckType, configName 
 	}
 	if len(disallowed_disabled) == len(required) {
 		c.AddPass("all disallowed modules are disabled")
+	} else if len(disallowed_disabled) > 0 {
+		c.AddPass(fmt.Sprint(
+			"some disallowed modules are disabled: ",
+			strings.Join(disallowed_disabled, ",")))
 	}
 
 	if len(c.Result.Failures) == 0 {

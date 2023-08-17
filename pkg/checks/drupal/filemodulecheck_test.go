@@ -109,9 +109,7 @@ func TestFileModuleCheck(t *testing.T) {
 	assert.Equal(result.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(c.Result.Passes, []string{
-		"'node' is enabled",
-		"'block' is enabled",
-		"'views_ui' is not enabled",
-		"'field_ui' is not enabled",
+		"all required modules are enabled",
+		"all disallowed modules are disabled",
 	})
 }
