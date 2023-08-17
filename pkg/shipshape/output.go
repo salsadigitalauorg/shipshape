@@ -194,12 +194,16 @@ func LagoonFacts(w *bufio.Writer) {
 
 	factName := func(b result.Breach) string {
 		var name string
-		if result.BreachGetKeyLabel(b) == "" {
-			name = result.BreachGetCheckName(b) + " - " +
-				string(result.BreachGetCheckType(b))
-		} else {
+		if result.BreachGetKeyLabel(b) != "" {
 			name = fmt.Sprintf("%s: %s", result.BreachGetKeyLabel(b),
 				result.BreachGetKey(b))
+		} else if result.BreachGetKey(b) != "" {
+			name = result.BreachGetKey(b)
+		} else if result.BreachGetValueLabel(b) != "" {
+			name = result.BreachGetValueLabel(b)
+		} else {
+			name = result.BreachGetCheckName(b) + " - " +
+				string(result.BreachGetCheckType(b))
 		}
 		return name
 	}
@@ -212,7 +216,7 @@ func LagoonFacts(w *bufio.Writer) {
 
 		var withLabel string
 		label := result.BreachGetValueLabel(b)
-		if label == "" {
+		if label == "" || factName(b) == label {
 			withLabel = value
 		} else {
 			withLabel = fmt.Sprintf("%s: %s", label, value)
