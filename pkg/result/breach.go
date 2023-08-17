@@ -174,3 +174,12 @@ func BreachGetValues(bIfc Breach) []string {
 	}
 	return []string(nil)
 }
+
+func BreachGetExpectedValue(bIfc Breach) string {
+	if b, ok := bIfc.(ValueBreach); ok {
+		return b.ExpectedValue
+	} else if b, ok := bIfc.(KeyValueBreach); ok {
+		return b.ExpectedValue
+	}
+	return ""
+}

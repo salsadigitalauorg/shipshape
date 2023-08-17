@@ -214,14 +214,20 @@ func LagoonFacts(w *bufio.Writer) {
 			value = strings.Join(result.BreachGetValues(b), ", ")
 		}
 
-		var withLabel string
 		label := result.BreachGetValueLabel(b)
 		if label == "" || factName(b) == label {
-			withLabel = value
+			return value
 		} else {
-			withLabel = fmt.Sprintf("%s: %s", label, value)
+			value = fmt.Sprintf("%s: %s", label, value)
 		}
-		return withLabel
+
+		expected := result.BreachGetExpectedValue(b)
+		if expected == "" {
+			return value
+		} else {
+			value = fmt.Sprintf("expected: %s, %s", expected, value)
+		}
+		return value
 	}
 
 	for _, r := range RunResultList.Results {
