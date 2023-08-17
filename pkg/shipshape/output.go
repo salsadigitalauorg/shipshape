@@ -232,6 +232,20 @@ func LagoonFacts(w *bufio.Writer) {
 		}
 	}
 
+	if lagoon.PushFactsToInsightRemote {
+		// first, let's try doing this via in-cluster functionality
+		bearerToken, err := lagoon.GetBearerTokenFromDisk(lagoon.DefaultLagoonInsightsTokenLocation)
+		if err == nil { // we have a token, and so we can proceed via the internal service call
+			err = lagoon.FactsToInsightsRemote(facts, lagoon.LagoonInsightsRemoteEndpoint, bearerToken)
+			if err != nil {
+				log.WithError(err).Fatal("Unable to write facts to Insights Remote")
+			}
+		}
+		fmt.Fprint(w, "successfully pushed facts to the Lagoon api")
+		w.Flush()
+		return
+	}
+
 	if lagoon.PushFacts {
 		lagoon.InitClient()
 		err := lagoon.ReplaceFacts(facts)

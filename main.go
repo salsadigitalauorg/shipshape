@@ -181,8 +181,9 @@ func parseFlags() {
 
 	pflag.StringVar(&lagoonApiBaseUrl, "lagoon-api-base-url", "", "Base url for the Lagoon API when requesting 'lagoon-facts' output (env: LAGOON_API_BASE_URL)")
 	pflag.StringVar(&lagoonApiToken, "lagoon-api-token", "", "Lagoon API token when requesting 'lagoon-facts' output (env: LAGOON_API_TOKEN)")
+	pflag.BoolVar(&lagoon.PushFactsToInsightRemote, "lagoon-push-facts-to-insights", false, "Push audit facts to Lagoon via Insights Remote")
 	pflag.BoolVar(&lagoon.PushFacts, "lagoon-push-facts", false, "Push audit facts to the Lagoon API")
-
+	pflag.StringVar(&lagoon.LagoonInsightsRemoteEndpoint, "lagoon-insights-remote-endpoint", "http://lagoon-remote-insights-remote.lagoon.svc/facts", "Insights Remote Facts endpoint")
 	pflag.Parse()
 
 	if displayUsage {

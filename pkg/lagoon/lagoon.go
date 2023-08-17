@@ -1,8 +1,11 @@
 package lagoon
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/hasura/go-graphql-client"
@@ -23,6 +26,8 @@ const SourceName string = "Shipshape"
 var ApiBaseUrl string
 var ApiToken string
 var PushFacts bool
+var PushFactsToInsightRemote bool
+var LagoonInsightsRemoteEndpoint string
 
 var project string
 var environment string
@@ -67,6 +72,45 @@ func GetEnvironmentIdFromEnvVars() (int, error) {
 		return 0, err
 	}
 	return q.EnvironmentByKubernetesNamespaceName.Id, nil
+}
+
+const DefaultLagoonInsightsTokenLocation = "/var/run/secrets/lagoon/dynamic/insights-token/INSIGHTS_TOKEN"
+
+func GetBearerTokenFromDisk(tokenLocation string) (string, error) {
+	//first, we check that the token exists on disk
+	_, err := os.Stat(tokenLocation)
+	if err != nil {
+		return "", fmt.Errorf("Unable to load insights token from disk")
+	}
+
+	b, err := os.ReadFile(tokenLocation)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
+func FactsToInsightsRemote(facts []Fact, serviceEndpoint string, bearerToken string) error {
+
+	bodyString, err := json.Marshal(facts)
+	if err != nil {
+		return err
+	}
+
+	req, _ := http.NewRequest(http.MethodPost, serviceEndpoint, bytes.NewBuffer(bodyString))
+	req.Header.Set("Authorization", bearerToken)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	response, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode != 200 {
+		return fmt.Errorf("There was an error sending the facts to '%s' : %s\n", serviceEndpoint, response.Body)
+	}
+	return nil
 }
 
 // AddFacts pushes the given facts to the Lagoon API.
@@ -118,6 +162,7 @@ func DeleteFacts() error {
 
 // ReplaceFacts deletes all the Shipshape facts and then adds the new ones.
 func ReplaceFacts(facts []Fact) error {
+
 	log.Debug("deleting facts before adding new")
 	err := DeleteFacts()
 	if err != nil {

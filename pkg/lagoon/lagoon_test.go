@@ -2,6 +2,8 @@ package lagoon_test
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -213,4 +215,82 @@ func TestReplaceFacts(t *testing.T) {
 		"\"cat1\"},{\"name\":\"fact2\",\"value\":\"value2\",\"source\":"+
 		"\"source1\",\"description\":\"\",\"category\":\"cat2\"}],\"project\""+
 		":\"foo\"}}}\n", internal.MockLagoonRequestBodies[2])
+}
+
+func Test_GetBearerTokenFromDisk(t *testing.T) {
+	type args struct {
+		tokenLocation string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "Successfully loads token from disk",
+			args: args{
+				tokenLocation: "./testdata/insightsbearertoken",
+			},
+			want:    "bearertokentext",
+			wantErr: assert.NoError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := lagoon.GetBearerTokenFromDisk(tt.args.tokenLocation)
+			if !tt.wantErr(t, err, fmt.Sprintf("getBearerTokenFromDisk(%v)", tt.args.tokenLocation)) {
+				return
+			}
+			assert.Equalf(t, tt.want, got, "getBearerTokenFromDisk(%v)", tt.args.tokenLocation)
+		})
+	}
+}
+
+func Test_FactsToInsightsRemote(t *testing.T) {
+	type args struct {
+		facts       []lagoon.Fact
+		bearerToken string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantErr       assert.ErrorAssertionFunc
+		testBodyEqual bool
+	}{
+		{
+			name: "Successful post",
+			args: args{
+				facts: []lagoon.Fact{
+					{
+						Name:        "fact1",
+						Value:       "fact1",
+						Source:      "testing",
+						Description: "a testing fact",
+						Category:    "fact",
+					},
+				},
+				bearerToken: "bearertoken",
+			},
+			wantErr:       assert.NoError,
+			testBodyEqual: true,
+		},
+	}
+	for _, tt := range tests {
+
+		mockServerData := internal.MockInsightsRemoteTestState{}
+
+		serv := internal.MockRemoteInsightsServer(&mockServerData)
+
+		t.Run(tt.name, func(t *testing.T) {
+			tt.wantErr(t, lagoon.FactsToInsightsRemote(tt.args.facts, serv.URL, tt.args.bearerToken), fmt.Sprintf("factsToInsightsRemote(%v, %v)", tt.args.facts, tt.args.bearerToken))
+			if tt.testBodyEqual == true { //let's check the data we sent through seems correct
+				bodyString := mockServerData.LastCallBody
+				var facts []lagoon.Fact
+				err := json.Unmarshal([]byte(bodyString), &facts)
+				assert.NoError(t, err)
+				assert.Equalf(t, tt.args.facts, facts, fmt.Sprintf("Unmarshalled Body not Equal"))
+			}
+		})
+	}
 }

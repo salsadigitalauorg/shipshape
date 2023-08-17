@@ -33,3 +33,23 @@ func MockLagoonReset() {
 	MockLagoonNumCalls = 0
 	MockLagoonRequestBodies = []string{}
 }
+
+type MockInsightsRemoteTestState struct {
+	LastCallBody     string
+	LastCallHeaders  map[string]string
+	LastCallEndpoint string
+	LastCallStatus   string
+}
+
+func MockRemoteInsightsServer(state *MockInsightsRemoteTestState) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		state.LastCallEndpoint = r.RequestURI
+		requestBody, err := io.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+		}
+		state.LastCallBody = string(requestBody)
+		fmt.Fprintf(w, "okay")
+	}))
+}
