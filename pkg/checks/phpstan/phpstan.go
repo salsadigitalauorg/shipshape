@@ -126,7 +126,7 @@ func (c *PhpStanCheck) FetchData() {
 func (c *PhpStanCheck) UnmarshalDataMap() {
 	if len(c.DataMap["phpstan"]) == 0 {
 		c.Result.Status = result.Pass
-		c.AddWarning("Unhandled PHPStan repsonse, unable to determine status.")
+		c.AddWarning("Unhandled PHPStan response, unable to determine status.")
 		return
 	}
 

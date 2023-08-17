@@ -145,7 +145,7 @@ func TestUnmarshalDataMap(t *testing.T) {
 	c := PhpStanCheck{}
 	c.UnmarshalDataMap()
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.EqualValues([]string{"Unhandled PHPStan repsonse, unable to determine status."}, c.Result.Warnings)
+	assert.EqualValues([]string{"Unhandled PHPStan response, unable to determine status."}, c.Result.Warnings)
 
 	// Empty data.
 	c = PhpStanCheck{
@@ -248,6 +248,6 @@ func TestInvalidOutput(t *testing.T) {
 
 	assert.Equal(c.Result.Status, result.Pass)
 	assert.Equal(c.GetResult().Warnings, []string{
-		"Unhandled PHPStan repsonse, unable to determine status.",
+		"Unhandled PHPStan response, unable to determine status.",
 	})
 }
