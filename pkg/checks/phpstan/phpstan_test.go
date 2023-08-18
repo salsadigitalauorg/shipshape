@@ -1,6 +1,8 @@
 package phpstan_test
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
 	"reflect"
 	"testing"
@@ -142,8 +144,8 @@ func TestUnmarshalDataMap(t *testing.T) {
 	// No DataMap.
 	c := PhpStanCheck{}
 	c.UnmarshalDataMap()
-	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues([]string{"no data provided"}, c.Result.Failures)
+	assert.Equal(result.Pass, c.Result.Status)
+	assert.EqualValues([]string{"Unhandled PHPStan response, unable to determine status."}, c.Result.Warnings)
 
 	// Empty data.
 	c = PhpStanCheck{
@@ -213,4 +215,39 @@ func TestRunCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues([]string{"Error found in file foo"}, c.Result.Failures)
+}
+
+func TestInvalidOutput(t *testing.T) {
+	dir, _ := os.Getwd()
+	assert := assert.New(t)
+
+	cmd := exec.Command("composer", "install")
+	cmd.Dir = dir + "/fixtures"
+
+	e := cmd.Run()
+	if e != nil {
+		panic(e)
+	}
+
+	phpstan := dir + "/fixtures/vendor/bin/phpstan"
+	args := []string{
+		"analyse",
+		"--no-progress",
+		"--error-format=json",
+		fmt.Sprintf("%s/fixtures/no_files", dir),
+	}
+
+	c := PhpStanCheck{
+		CheckBase: config.CheckBase{
+			DataMap: map[string][]byte{},
+		},
+	}
+
+	c.CheckBase.DataMap["phpstan"], _ = command.ShellCommander(phpstan, args...).Output()
+	c.UnmarshalDataMap()
+
+	assert.Equal(c.Result.Status, result.Pass)
+	assert.Equal(c.GetResult().Warnings, []string{
+		"Unhandled PHPStan response, unable to determine status.",
+	})
 }
