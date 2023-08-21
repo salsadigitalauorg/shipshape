@@ -6,13 +6,23 @@ FROM uselagoon/php-8.1-cli-drupal
 
 ARG DRUPAL_VERSION=^9.5.4
 ARG DRUSH_VERSION=^10.0
+ARG PHPSTAN_EXTENSION_INSTALLER_VERSION=^1.3
+ARG PHPSTAN_DISALLOWED_CALLS_VERSION=^2.3.0
 
 COPY --from=shipshape /usr/local/bin/shipshape /usr/local/bin/shipshape
 
 RUN set -ex; \
+    # Add golang for when we want to compile shipshape.
+    apk add --no-cache go; \
+    \
+    # Install drupal & related dependencies.
     rm -rf ~/.drush; \
     composer create-project drupal/recommended-project:${DRUPAL_VERSION} /app; \
-    cd /app && composer require drush/drush:${DRUSH_VERSION}; \
+    cd /app && composer config allow-plugins.phpstan/extension-installer true; \
+    composer require \
+        drush/drush:${DRUSH_VERSION} \
+        phpstan/extension-installer:${PHPSTAN_EXTENSION_INSTALLER_VERSION} \
+        spaze/phpstan-disallowed-calls:${PHPSTAN_DISALLOWED_CALLS_VERSION}; \
     \
     # Install venom.
     VENOM_LATEST=$(curl -Ls -o /dev/null \
@@ -22,3 +32,5 @@ RUN set -ex; \
     curl -LO https://github.com/ovh/venom/releases/download/${VENOM_LATEST_VERSION}/venom.linux-${ARCH}; \
     chmod +x venom.linux-${ARCH}; \
     mv venom.linux-${ARCH} /usr/local/bin/venom;
+
+COPY .docker/phpstan.neon /app/phpstan.neon

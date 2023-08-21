@@ -1,7 +1,6 @@
 package phpstan_test
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"reflect"
@@ -107,10 +106,11 @@ func TestFetchDataBinNotExists(t *testing.T) {
 		nil)
 
 	// Command not found.
+	dir, _ := os.Getwd()
 	c := PhpStanCheck{
 		Bin:    "/my/custom/path/phpstan",
 		Config: "/path/to/config",
-		Paths:  []string{"/some/path/to/analyse"},
+		Paths:  []string{dir},
 	}
 	c.FetchData()
 
@@ -127,10 +127,11 @@ func TestFetchDataBinExists(t *testing.T) {
 	defer func() { command.ShellCommander = curShellCommander }()
 	command.ShellCommander = internal.ShellCommanderMaker(&expectedStdout, nil, nil)
 
+	dir, _ := os.Getwd()
 	c := PhpStanCheck{
 		Bin:    "/my/custom/path/phpstan",
 		Config: "path/to/config",
-		Paths:  []string{"relative/path/to/analyse"},
+		Paths:  []string{dir},
 	}
 	c.FetchData()
 
@@ -218,32 +219,16 @@ func TestRunCheck(t *testing.T) {
 }
 
 func TestInvalidOutput(t *testing.T) {
-	dir, _ := os.Getwd()
 	assert := assert.New(t)
-
-	cmd := exec.Command("composer", "install")
-	cmd.Dir = dir + "/fixtures"
-
-	e := cmd.Run()
-	if e != nil {
-		panic(e)
-	}
-
-	phpstan := dir + "/fixtures/vendor/bin/phpstan"
-	args := []string{
-		"analyse",
-		"--no-progress",
-		"--error-format=json",
-		fmt.Sprintf("%s/fixtures/no_files", dir),
-	}
 
 	c := PhpStanCheck{
 		CheckBase: config.CheckBase{
-			DataMap: map[string][]byte{},
+			DataMap: map[string][]byte{
+				"phpstan": []byte(""),
+			},
 		},
 	}
 
-	c.CheckBase.DataMap["phpstan"], _ = command.ShellCommander(phpstan, args...).Output()
 	c.UnmarshalDataMap()
 
 	assert.Equal(c.Result.Status, result.Pass)
