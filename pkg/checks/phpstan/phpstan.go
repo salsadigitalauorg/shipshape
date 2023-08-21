@@ -110,7 +110,8 @@ func (c *PhpStanCheck) FetchData() {
 	}
 
 	if !foundPath {
-		c.AddPass("no paths found to run phpstan on.")
+		c.Result.Status = result.Pass
+		c.AddPass("no paths found to run phpstan on")
 		return
 	}
 
@@ -146,8 +147,7 @@ func (c *PhpStanCheck) HasData(failCheck bool) bool {
 // UnmarshalDataMap parses the phpstan json into the PhpStan
 // type for further processing.
 func (c *PhpStanCheck) UnmarshalDataMap() {
-	// Success if there's a pass at this point as it means no directory was found.
-	if len(c.Result.Passes) > 0 {
+	if c.Result.Status == result.Pass {
 		return
 	}
 

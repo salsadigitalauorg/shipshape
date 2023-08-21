@@ -95,6 +95,21 @@ func TestBinPathDefault(t *testing.T) {
 	assert.Equal("vendor/phpstan/phpstan/phpstan", c.GetBinary())
 }
 
+func TestFetchDataPathNotExists(t *testing.T) {
+	assert := assert.New(t)
+	// No files found to analyse.
+	c := PhpStanCheck{
+		Paths: []string{
+			"/path/to/non/existing",
+			"other/non/existing",
+		},
+	}
+	c.FetchData()
+
+	assert.Equal(result.Pass, c.Result.Status)
+	assert.EqualValues([]string{"no paths found to run phpstan on"}, c.Result.Passes)
+}
+
 func TestFetchDataBinNotExists(t *testing.T) {
 	assert := assert.New(t)
 
@@ -138,6 +153,34 @@ func TestFetchDataBinExists(t *testing.T) {
 	assert.NotEqual(result.Pass, c.Result.Status)
 	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Equal([]byte(expectedStdout), c.DataMap["phpstan"])
+}
+
+func TestHasData(t *testing.T) {
+	t.Run("no data, ignore failures", func(t *testing.T) {
+		assert := assert.New(t)
+		c := PhpStanCheck{}
+		assert.False(c.HasData(false))
+		assert.NotEqual(result.Pass, c.Result.Status)
+		assert.NotEqual(result.Fail, c.Result.Status)
+	})
+
+	t.Run("no data, with fail", func(t *testing.T) {
+		assert := assert.New(t)
+		c := PhpStanCheck{}
+		assert.False(c.HasData(true))
+		assert.Equal(result.Fail, c.Result.Status)
+		assert.EqualValues([]string{"no data available"}, c.Result.Failures)
+	})
+
+	t.Run("no data, but passed", func(t *testing.T) {
+		assert := assert.New(t)
+		c := PhpStanCheck{}
+		c.AddPass("passed")
+		assert.True(c.HasData(true))
+		assert.NotEqual(result.Pass, c.Result.Status)
+		assert.NotEqual(result.Fail, c.Result.Status)
+		assert.EqualValues([]string{"passed"}, c.Result.Passes)
+	})
 }
 
 func TestUnmarshalDataMap(t *testing.T) {
