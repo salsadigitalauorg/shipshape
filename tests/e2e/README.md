@@ -5,6 +5,6 @@ See https://github.com/ovh/venom
 ## Running the tests
 
 ```sh
-docker-compose up --detach --build
-docker-compose exec drupal venom run
+docker compose up --detach --build
+docker compose exec drupal venom run
 ```
