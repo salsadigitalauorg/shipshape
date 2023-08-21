@@ -3,102 +3,202 @@
 package shipshape
 
 import (
-	"errors"
+	"encoding/json"
+	"fmt"
 	"os"
+	"sync"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
-//go:generate go run ../../cmd/gen.go registry --checkpackage=shipshape
+var RunConfig config.Config
+var RunResultList result.ResultList
+var OutputFormats = []string{"json", "junit", "simple", "table", "lagoon-facts"}
 
-func ReadAndParseConfig(projectDir string, files []string, remediate bool) (Config, error) {
-	finalCfg := Config{}
-	for i, f := range files {
-		var data []byte
-		var err error
-		cfg := Config{}
-		if utils.StringIsUrl(f) {
-			data, err = utils.FetchContentFromUrl(f)
-			if err != nil {
-				return cfg, err
-			}
-		} else {
-			data, err = os.ReadFile(f)
-			if err != nil {
-				return cfg, err
-			}
-		}
-
-		if err := ParseConfig(data, projectDir, remediate, &cfg); err != nil {
-			return cfg, err
-		}
-
-		if i == 0 {
-			finalCfg = cfg
-			if len(files) == 1 {
-				return finalCfg, nil
-			}
-			continue
-		}
-
-		if err := finalCfg.Merge(cfg); err != nil {
-			panic(err)
-		}
+func Init(projectDir string, configFiles []string, checkTypesToRun []string, excludeDb bool, remediate bool, logLevel string, lagoonApiBaseUrl string, lagoonApiToken string) error {
+	if logLevel == "" {
+		logLevel = "warn"
+	}
+	if logrusLevel, err := log.ParseLevel(logLevel); err != nil {
+		panic(err)
+	} else {
+		log.SetLevel(logrusLevel)
 	}
 
-	return finalCfg, nil
-}
-
-func ParseConfig(data []byte, projectDir string, remediate bool, cfg *Config) error {
-	err := yaml.Unmarshal(data, &cfg)
+	log.Print("initialising shipshape")
+	err := ReadAndParseConfig(projectDir, configFiles)
 	if err != nil {
 		return err
 	}
 
-	if cfg.ProjectDir == "" && projectDir != "" {
-		cfg.ProjectDir = projectDir
+	config.ProjectDir = RunConfig.ProjectDir
+	RunResultList = result.NewResultList(remediate)
+
+	// Remediate is a command-level flag, so we set the value outside of
+	// config parsing.
+	RunConfig.Remediate = remediate
+
+	// Base url can either be provided in the config file or in env var, the
+	// latter being final.
+	if lagoonApiBaseUrl != "" {
+		lagoon.ApiBaseUrl = lagoonApiBaseUrl
 	} else {
-		// Default project directory is current directory.
-		projectDir, _ = os.Getwd()
-		cfg.ProjectDir = projectDir
+		lagoon.ApiBaseUrl = RunConfig.LagoonApiBaseUrl
+	}
+	lagoon.ApiToken = lagoonApiToken
+
+	log.WithFields(log.Fields{
+		"ProjectDir":    RunConfig.ProjectDir,
+		"FailSeverity":  RunConfig.FailSeverity,
+		"Remediate":     RunConfig.Remediate,
+		"RunResultList": fmt.Sprintf("%+v", RunResultList),
+	}).Debug("basic config")
+
+	log.Print("initialising checks")
+	var checksCount int
+	for ct, checks := range RunConfig.Checks {
+		for _, c := range checks {
+			c.Init(ct)
+			c.SetPerformRemediation(remediate)
+			checksCount++
+		}
 	}
 
-	if cfg.FailSeverity == "" {
-		cfg.FailSeverity = HighSeverity
-	}
-
-	cfg.Remediate = remediate
+	log.Print("filtering checks")
+	RunConfig.FilterChecksToRun(checkTypesToRun, excludeDb)
+	log.WithField("checksCount", checksCount).Print("checks filtered")
+	jsonChecks, _ := json.Marshal(RunConfig.Checks)
+	log.WithFields(log.Fields{
+		"Checks": string(jsonChecks),
+	}).Debug("checks initialised and filtered")
 
 	return nil
 }
 
-func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {
-	newcm := make(CheckMap)
-	for ct, cFunc := range ChecksRegistry {
-		check_values, err := utils.LookupYamlPath(value, string(ct))
-		if err != nil {
+func ReadAndParseConfig(projectDir string, files []string) error {
+	configData, err := FetchConfigData(files)
+	if err != nil {
+		return err
+	}
+	err = ParseConfigData(configData)
+	if err != nil {
+		return err
+	}
+
+	if RunConfig.ProjectDir == "" && projectDir != "" {
+		RunConfig.ProjectDir = projectDir
+	} else {
+		// Default project directory is current directory.
+		projectDir, _ = os.Getwd()
+		RunConfig.ProjectDir = projectDir
+	}
+
+	if RunConfig.FailSeverity == "" {
+		RunConfig.FailSeverity = config.HighSeverity
+	}
+
+	return nil
+}
+
+func FetchConfigData(files []string) ([][]byte, error) {
+	var err error
+	configData := [][]byte{}
+	for _, f := range files {
+		var data []byte
+		log.WithField("source", f).Info("fetching config")
+		if utils.StringIsUrl(f) {
+			data, err = utils.FetchContentFromUrl(f)
+			if err != nil {
+				log.WithField("url", f).WithError(
+					err).Error("could not fetch config from url")
+				return nil, err
+			}
+		} else {
+			data, err = os.ReadFile(f)
+			if err != nil {
+				log.WithField("file", f).WithError(
+					err).Error("could not fetch config from file")
+				return nil, err
+			}
+		}
+		configData = append(configData, data)
+	}
+	return configData, nil
+}
+
+func ParseConfigData(configData [][]byte) error {
+	finalCfg := config.Config{}
+	for i, data := range configData {
+		log.Print("parsing config")
+		cfg := config.Config{}
+		if err := yaml.Unmarshal(data, &cfg); err != nil {
+			log.WithError(err).Error("could not parse config")
 			return err
 		}
 
-		if len(check_values) == 0 {
+		if i == 0 {
+			finalCfg = cfg
+			if len(configData) == 1 {
+				RunConfig = finalCfg
+				return nil
+			}
 			continue
 		}
 
-		if check_values[0].Kind != yaml.SequenceNode {
-			return errors.New("yaml: unmarshal errors")
-		}
-
-		for _, cv := range check_values[0].Content {
-			c := cFunc()
-			err := cv.Decode(c)
-			if err != nil {
-				return err
-			}
-			newcm[ct] = append(newcm[ct], c)
+		log.Print("merging into final config")
+		if err := finalCfg.Merge(cfg); err != nil {
+			log.WithError(err).Error("could not merge config")
+			panic(err)
 		}
 	}
-	*cm = newcm
+	RunConfig = finalCfg
 	return nil
+}
+
+func RunChecks() result.ResultList {
+	log.Print("preparing concurrent check runs")
+	var wg sync.WaitGroup
+	for ct, checks := range RunConfig.Checks {
+		checks := checks
+		RunResultList.IncrChecks(string(ct), len(checks))
+		for i := range checks {
+			wg.Add(1)
+			check := checks[i]
+			go func() {
+				defer wg.Done()
+				ProcessCheck(&RunResultList, check)
+			}()
+		}
+	}
+	wg.Wait()
+	RunResultList.Sort()
+	return RunResultList
+}
+
+func ProcessCheck(rl *result.ResultList, c config.Check) {
+	contextLogger := log.WithFields(log.Fields{
+		"check-type": c.GetType(),
+		"check-name": c.GetName(),
+	})
+	contextLogger.Print("processing check")
+	if c.RequiresData() {
+		contextLogger.Print("fetching data")
+		c.FetchData()
+		c.HasData(true)
+		if len(c.GetResult().Failures) == 0 {
+			c.UnmarshalDataMap()
+		}
+	}
+	if len(c.GetResult().Failures) == 0 && len(c.GetResult().Passes) == 0 {
+		contextLogger.Print("running check")
+		c.RunCheck()
+		c.GetResult().Sort()
+	}
+	rl.AddResult(*c.GetResult())
 }

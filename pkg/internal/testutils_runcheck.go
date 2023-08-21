@@ -3,7 +3,8 @@ package internal
 import (
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -12,7 +13,7 @@ import (
 type RunCheckTest struct {
 	// Name of the test.
 	Name  string
-	Check shipshape.Check
+	Check config.Check
 	// Initialise the check before testing.
 	Init bool
 	// Sort the results after running the check.
@@ -20,7 +21,7 @@ type RunCheckTest struct {
 	// Func to run before running the check
 	PreRun func(t *testing.T)
 	// Expected values after running the check.
-	ExpectStatus         shipshape.CheckStatus
+	ExpectStatus         result.Status
 	ExpectNoPass         bool
 	ExpectPasses         []string
 	ExpectNoFail         bool

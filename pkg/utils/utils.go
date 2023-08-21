@@ -90,10 +90,7 @@ func LookupYamlPath(n *yaml.Node, path string) ([]*yaml.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	q, err := p.Find(n)
-	if err != nil {
-		return nil, err
-	}
+	q, _ := p.Find(n)
 	return q, nil
 }
 

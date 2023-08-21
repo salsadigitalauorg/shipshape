@@ -1,4 +1,4 @@
-FROM golang:1.17 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.20 AS builder
 
 ARG VERSION
 ARG COMMIT
@@ -9,7 +9,12 @@ WORKDIR $GOPATH/src/github.com/salsadigitalauorg/shipshape
 
 ENV CGO_ENABLED 0
 
-RUN go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" -o build/shipshape
+ARG TARGETOS TARGETARCH
+
+RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} && \
+    go mod tidy && \
+    go generate ./... && \
+    go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" -o build/shipshape
 
 FROM scratch
 

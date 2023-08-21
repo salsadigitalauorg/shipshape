@@ -62,7 +62,7 @@ func writeFileLines(lines []string) {
 }
 
 func addImportLine(chkPkg string) {
-	pkgFullName := fmt.Sprintf("github.com/salsadigitalauorg/shipshape/pkg/%s", chkPkg)
+	pkgFullName := fmt.Sprintf("github.com/salsadigitalauorg/shipshape/pkg/checks/%s", chkPkg)
 
 	fileLines := getFileLines()
 	if stringSliceMatch(fileLines, pkgFullName) {

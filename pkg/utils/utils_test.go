@@ -10,6 +10,7 @@ import (
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
 func TestIsFileInDirs(t *testing.T) {
@@ -60,6 +61,33 @@ func TestIsFileInDirs(t *testing.T) {
 				"dir5/dir6",
 				"dir7",
 			}))
+	})
+}
+
+func TestLookupYamlPath(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("newPathErr", func(t *testing.T) {
+		n := yaml.Node{}
+		yamlData := []byte(`
+foo:
+  bar: baz
+`)
+		yaml.Unmarshal(yamlData, &n)
+		_, err := LookupYamlPath(&n, ")")
+		assert.Error(err, "syntax error at position 0, following \"\"")
+	})
+
+	t.Run("valid", func(t *testing.T) {
+		n := yaml.Node{}
+		yamlData := []byte(`
+foo:
+  bar: baz
+`)
+		yaml.Unmarshal(yamlData, &n)
+		ns, err := LookupYamlPath(&n, "foo.bar")
+		assert.NoError(err)
+		assert.Equal("baz", ns[0].Value)
 	})
 }
 
