@@ -1,0 +1,14 @@
+checks:
+  drupal-db-permissions:
+    - name: 'Disallowed permissions'
+      severity: high
+      disallowed:
+        - administer config permissions
+        - administer modules
+        - administer permissions
+        - administer seckit
+        - administer site configuration
+        - administer software updates
+        - import configuration
+        - synchronize configuration
+        - use PHP for google analytics tracking visibility
