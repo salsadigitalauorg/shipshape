@@ -40,4 +40,6 @@ COPY . /shipshape
 RUN set -ex; \
     # Install shipshape.
     [ ! -z "$SHIPSHAPE_VERSION" ] && exit 0; \
-    cd /shipshape; go build -o /usr/local/bin/shipshape;
+    cd /shipshape; \
+    go generate ./...; \
+    go build -o /usr/local/bin/shipshape;
