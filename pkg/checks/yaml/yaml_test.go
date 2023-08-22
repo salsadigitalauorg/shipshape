@@ -103,6 +103,7 @@ func TestYamlCheckKeyValue(t *testing.T) {
 foo:
   bar:
     - baz: zoo
+    - zap: Bam
 `), &singleValueNode)
 
 	multiValueNode := yamlv3.Node{}
@@ -161,6 +162,17 @@ foo:
 			keyValue: KeyValue{
 				Key:   "foo.bar[0].baz",
 				Value: "zoo",
+			},
+			expectedResult: KeyValueEqual,
+			expectedValues: nil,
+			expectedError:  nil,
+		},
+		{
+			name: "correct value - case sensitivity",
+			node: singleValueNode,
+			keyValue: KeyValue{
+				Key:   "foo.bar[1].zap",
+				Value: "bam",
 			},
 			expectedResult: KeyValueEqual,
 			expectedValues: nil,
@@ -244,9 +256,9 @@ foo:
 
 			assert := assert.New(t)
 			kvr, values, err := CheckKeyValue(tt.node, tt.keyValue)
-			assert.Equal(tt.expectedResult, kvr)
-			assert.EqualValues(tt.expectedValues, values)
-			assert.Equal(err, tt.expectedError)
+			assert.Equal(tt.expectedResult, kvr, "expected result to match")
+			assert.EqualValues(tt.expectedValues, values, "expected values to match")
+			assert.Equal(err, tt.expectedError, "expected error to match")
 		})
 	}
 }

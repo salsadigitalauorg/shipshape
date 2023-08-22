@@ -81,6 +81,20 @@ tfa:
 			expectedDisabled: []string{},
 		},
 		{
+			name: "all enabled - db - lowercase",
+			yaml: `
+clamav:
+  status: enabled
+tfa:
+  status: enabled
+`,
+			modules:          []string{"clamav", "tfa"},
+			ct:               DbModule,
+			expectedEnabled:  []string{"clamav", "tfa"},
+			expectedErrored:  []string{},
+			expectedDisabled: []string{},
+		},
+		{
 			name: "all disabled - file",
 			yaml: `
 module:
