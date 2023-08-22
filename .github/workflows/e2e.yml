@@ -22,3 +22,10 @@ jobs:
       env:
         # Allow proper output.
         IS_TTY: true
+
+    - name: Upload venom log
+      uses: actions/upload-artifact@main
+      with:
+        name: venom-log
+        path: tests/e2e/suites/venom.log
+      if: always()
