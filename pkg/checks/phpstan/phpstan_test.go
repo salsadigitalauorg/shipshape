@@ -1,7 +1,6 @@
 package phpstan_test
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"reflect"
@@ -96,6 +95,21 @@ func TestBinPathDefault(t *testing.T) {
 	assert.Equal("vendor/phpstan/phpstan/phpstan", c.GetBinary())
 }
 
+func TestFetchDataPathNotExists(t *testing.T) {
+	assert := assert.New(t)
+	// No files found to analyse.
+	c := PhpStanCheck{
+		Paths: []string{
+			"/path/to/non/existing",
+			"other/non/existing",
+		},
+	}
+	c.FetchData()
+
+	assert.Equal(result.Pass, c.Result.Status)
+	assert.EqualValues([]string{"no paths found to run phpstan on"}, c.Result.Passes)
+}
+
 func TestFetchDataBinNotExists(t *testing.T) {
 	assert := assert.New(t)
 
@@ -107,10 +121,11 @@ func TestFetchDataBinNotExists(t *testing.T) {
 		nil)
 
 	// Command not found.
+	dir, _ := os.Getwd()
 	c := PhpStanCheck{
 		Bin:    "/my/custom/path/phpstan",
 		Config: "/path/to/config",
-		Paths:  []string{"/some/path/to/analyse"},
+		Paths:  []string{dir},
 	}
 	c.FetchData()
 
@@ -127,16 +142,45 @@ func TestFetchDataBinExists(t *testing.T) {
 	defer func() { command.ShellCommander = curShellCommander }()
 	command.ShellCommander = internal.ShellCommanderMaker(&expectedStdout, nil, nil)
 
+	dir, _ := os.Getwd()
 	c := PhpStanCheck{
 		Bin:    "/my/custom/path/phpstan",
 		Config: "path/to/config",
-		Paths:  []string{"relative/path/to/analyse"},
+		Paths:  []string{dir},
 	}
 	c.FetchData()
 
 	assert.NotEqual(result.Pass, c.Result.Status)
 	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Equal([]byte(expectedStdout), c.DataMap["phpstan"])
+}
+
+func TestHasData(t *testing.T) {
+	t.Run("no data, ignore failures", func(t *testing.T) {
+		assert := assert.New(t)
+		c := PhpStanCheck{}
+		assert.False(c.HasData(false))
+		assert.NotEqual(result.Pass, c.Result.Status)
+		assert.NotEqual(result.Fail, c.Result.Status)
+	})
+
+	t.Run("no data, with fail", func(t *testing.T) {
+		assert := assert.New(t)
+		c := PhpStanCheck{}
+		assert.False(c.HasData(true))
+		assert.Equal(result.Fail, c.Result.Status)
+		assert.EqualValues([]string{"no data available"}, c.Result.Failures)
+	})
+
+	t.Run("no data, but passed", func(t *testing.T) {
+		assert := assert.New(t)
+		c := PhpStanCheck{}
+		c.AddPass("passed")
+		assert.True(c.HasData(true))
+		assert.NotEqual(result.Pass, c.Result.Status)
+		assert.NotEqual(result.Fail, c.Result.Status)
+		assert.EqualValues([]string{"passed"}, c.Result.Passes)
+	})
 }
 
 func TestUnmarshalDataMap(t *testing.T) {
@@ -218,32 +262,16 @@ func TestRunCheck(t *testing.T) {
 }
 
 func TestInvalidOutput(t *testing.T) {
-	dir, _ := os.Getwd()
 	assert := assert.New(t)
-
-	cmd := exec.Command("composer", "install")
-	cmd.Dir = dir + "/fixtures"
-
-	e := cmd.Run()
-	if e != nil {
-		panic(e)
-	}
-
-	phpstan := dir + "/fixtures/vendor/bin/phpstan"
-	args := []string{
-		"analyse",
-		"--no-progress",
-		"--error-format=json",
-		fmt.Sprintf("%s/fixtures/no_files", dir),
-	}
 
 	c := PhpStanCheck{
 		CheckBase: config.CheckBase{
-			DataMap: map[string][]byte{},
+			DataMap: map[string][]byte{
+				"phpstan": []byte(""),
+			},
 		},
 	}
 
-	c.CheckBase.DataMap["phpstan"], _ = command.ShellCommander(phpstan, args...).Output()
 	c.UnmarshalDataMap()
 
 	assert.Equal(c.Result.Status, result.Pass)

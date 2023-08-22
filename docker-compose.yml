@@ -11,7 +11,7 @@ services:
     image: shipshape-e2e-drupal
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: tests/e2e/Dockerfile
     volumes:
-      - ./suites:/suites
+      - ./tests/e2e/suites:/suites
     working_dir: /suites

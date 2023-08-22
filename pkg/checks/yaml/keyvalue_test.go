@@ -50,6 +50,7 @@ func TestEquals(t *testing.T) {
 	t.Run("stringEquals", func(t *testing.T) {
 		kv := KeyValue{Key: "k", Value: "foo"}
 		assert.True(kv.Equals("foo"))
+		assert.True(kv.Equals("FoO"))
 		assert.False(kv.Equals("bar"))
 	})
 

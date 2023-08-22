@@ -63,7 +63,7 @@ func (c *YamlBase) UnmarshalDataMap() {
 // Fail messages of the Check Result.
 func (c *YamlBase) processData(configName string) {
 	for _, kv := range c.Values {
-		kvr, fails, err := c.CheckKeyValue(kv, configName)
+		kvr, fails, err := CheckKeyValue(c.NodeMap[configName], kv)
 		switch kvr {
 		case KeyValueError:
 			c.AddFail(err.Error())
@@ -80,7 +80,7 @@ func (c *YamlBase) processData(configName string) {
 			c.AddFail(fmt.Sprintf("[%s] '%s' equals '%s', expected '%s'",
 				configName, kv.Key, fails[0], kv.Value))
 			c.AddBreach(result.KeyValueBreach{
-				KeyLabel:      "config:" + configName,
+				KeyLabel:      configName,
 				Key:           kv.Key,
 				ValueLabel:    "actual",
 				ExpectedValue: kv.Value,
@@ -112,8 +112,7 @@ func (c *YamlBase) processData(configName string) {
 
 // CheckKeyValue lookups the Yaml data for a specific KeyValue and returns the
 // result, actual values and errors.
-func (c *YamlBase) CheckKeyValue(kv KeyValue, mapKey string) (KeyValueResult, []string, error) {
-	node := c.NodeMap[mapKey]
+func CheckKeyValue(node yaml.Node, kv KeyValue) (KeyValueResult, []string, error) {
 	foundNodes, err := utils.LookupYamlPath(&node, kv.Key)
 	if err != nil {
 		return KeyValueError, nil, err

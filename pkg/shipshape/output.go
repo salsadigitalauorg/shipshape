@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"strings"
 	"text/tabwriter"
 	"time"
 
@@ -192,40 +191,12 @@ func LagoonFacts(w *bufio.Writer) {
 		return
 	}
 
-	factName := func(b result.Breach) string {
-		var name string
-		if result.BreachGetKeyLabel(b) == "" {
-			name = result.BreachGetCheckName(b) + " - " +
-				string(result.BreachGetCheckType(b))
-		} else {
-			name = fmt.Sprintf("%s: %s", result.BreachGetKeyLabel(b),
-				result.BreachGetKey(b))
-		}
-		return name
-	}
-
-	factValue := func(b result.Breach) string {
-		value := result.BreachGetValue(b)
-		if value == "" {
-			value = strings.Join(result.BreachGetValues(b), ", ")
-		}
-
-		var withLabel string
-		label := result.BreachGetValueLabel(b)
-		if label == "" {
-			withLabel = value
-		} else {
-			withLabel = fmt.Sprintf("%s: %s", label, value)
-		}
-		return withLabel
-	}
-
 	for _, r := range RunResultList.Results {
 		for _, b := range r.Breaches {
 			facts = append(facts, lagoon.Fact{
-				Name:        factName(b),
+				Name:        lagoon.BreachFactName(b),
 				Description: result.BreachGetCheckName(b),
-				Value:       factValue(b),
+				Value:       lagoon.BreachFactValue(b),
 				Source:      lagoon.SourceName,
 				Category:    string(result.BreachGetCheckType(b)),
 			})

@@ -14,53 +14,60 @@ func TestBreachSetCommonValues(t *testing.T) {
 	type bogusBreach struct{}
 
 	tests := []struct {
-		name      string
-		breach    Breach
-		checkType string
-		checkName string
-		severity  string
-		empty     bool
+		name               string
+		breach             Breach
+		expectedBreachType BreachType
+		expectedCheckType  string
+		expectedCheckName  string
+		expectedSeverity   string
+		empty              bool
 	}{
 		{
-			name:      "ValueBreach",
-			breach:    ValueBreach{},
-			checkType: "ctvb",
-			checkName: "valuebreachcheck",
-			severity:  "low",
+			name:               "ValueBreach",
+			breach:             ValueBreach{},
+			expectedBreachType: BreachTypeValue,
+			expectedCheckType:  "ctvb",
+			expectedCheckName:  "valuebreachcheck",
+			expectedSeverity:   "low",
 		},
 		{
-			name:      "KeyValueBreach",
-			breach:    KeyValueBreach{},
-			checkType: "ctkvb",
-			checkName: "keyvaluebreachcheck",
-			severity:  "normal",
+			name:               "KeyValueBreach",
+			breach:             KeyValueBreach{},
+			expectedBreachType: BreachTypeKeyValue,
+			expectedCheckType:  "ctkvb",
+			expectedCheckName:  "keyvaluebreachcheck",
+			expectedSeverity:   "normal",
 		},
 		{
-			name:      "KeyValuesBreach",
-			breach:    KeyValuesBreach{},
-			checkType: "ctkvsb",
-			checkName: "keyvaluesbreachcheck",
-			severity:  "high",
+			name:               "KeyValuesBreach",
+			breach:             KeyValuesBreach{},
+			expectedBreachType: BreachTypeKeyValues,
+			expectedCheckType:  "ctkvsb",
+			expectedCheckName:  "keyvaluesbreachcheck",
+			expectedSeverity:   "high",
 		},
 		{
-			name:      "BogusBreach",
-			breach:    bogusBreach{},
-			checkType: "ctbb",
-			checkName: "bogusbreachcheck",
-			severity:  "critical",
-			empty:     true,
+			name:               "BogusBreach",
+			breach:             bogusBreach{},
+			expectedBreachType: "",
+			expectedCheckType:  "ctbb",
+			expectedCheckName:  "bogusbreachcheck",
+			expectedSeverity:   "critical",
+			empty:              true,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			BreachSetCommonValues(&test.breach, test.checkType, test.checkName,
-				test.severity)
+			BreachSetCommonValues(&test.breach, test.expectedCheckType, test.expectedCheckName,
+				test.expectedSeverity)
 			if !test.empty {
-				assert.Equal(test.checkName, BreachGetCheckName(test.breach))
-				assert.Equal(test.checkType, BreachGetCheckType(test.breach))
-				assert.Equal(test.severity, BreachGetSeverity(test.breach))
+				assert.Equal(test.expectedBreachType, BreachGetBreachType(test.breach))
+				assert.Equal(test.expectedCheckName, BreachGetCheckName(test.breach))
+				assert.Equal(test.expectedCheckType, BreachGetCheckType(test.breach))
+				assert.Equal(test.expectedSeverity, BreachGetSeverity(test.breach))
 			} else {
+				assert.Equal(BreachType(""), BreachGetBreachType(test.breach))
 				assert.Equal("", BreachGetCheckName(test.breach))
 				assert.Equal("", BreachGetCheckType(test.breach))
 				assert.Equal("", BreachGetSeverity(test.breach))
@@ -75,39 +82,44 @@ func TestBreachGetters(t *testing.T) {
 	type bogusBreach struct{}
 
 	tests := []struct {
-		name               string
-		breach             Breach
-		expectedKeyLabel   string
-		expectedKey        string
-		expectedValueLabel string
-		expectedValue      string
-		expectedValues     []string
+		name                  string
+		breach                Breach
+		expectedKeyLabel      string
+		expectedKey           string
+		expectedValueLabel    string
+		expectedValue         string
+		expectedValues        []string
+		expectedExpectedValue string
 	}{
 		{
 			name: "ValueBreach",
 			breach: ValueBreach{
-				ValueLabel: "vbvl",
-				Value:      "vbv",
+				ValueLabel:    "vbvl",
+				Value:         "vbv",
+				ExpectedValue: "vbve",
 			},
-			expectedKeyLabel:   "",
-			expectedKey:        "",
-			expectedValueLabel: "vbvl",
-			expectedValue:      "vbv",
-			expectedValues:     []string(nil),
+			expectedKeyLabel:      "",
+			expectedKey:           "",
+			expectedValueLabel:    "vbvl",
+			expectedValue:         "vbv",
+			expectedValues:        []string(nil),
+			expectedExpectedValue: "vbve",
 		},
 		{
 			name: "KeyValueBreach",
 			breach: KeyValueBreach{
-				KeyLabel:   "kvbklbl",
-				Key:        "kvbk",
-				ValueLabel: "kvbvl",
-				Value:      "kvbv",
+				KeyLabel:      "kvbklbl",
+				Key:           "kvbk",
+				ValueLabel:    "kvbvl",
+				Value:         "kvbv",
+				ExpectedValue: "kvbve",
 			},
-			expectedKeyLabel:   "kvbklbl",
-			expectedKey:        "kvbk",
-			expectedValueLabel: "kvbvl",
-			expectedValue:      "kvbv",
-			expectedValues:     []string(nil),
+			expectedKeyLabel:      "kvbklbl",
+			expectedKey:           "kvbk",
+			expectedValueLabel:    "kvbvl",
+			expectedValue:         "kvbv",
+			expectedValues:        []string(nil),
+			expectedExpectedValue: "kvbve",
 		},
 		{
 			name: "KeyValuesBreach",
@@ -140,6 +152,7 @@ func TestBreachGetters(t *testing.T) {
 			assert.Equal(test.expectedKey, BreachGetKey(test.breach))
 			assert.Equal(test.expectedValueLabel, BreachGetValueLabel(test.breach))
 			assert.Equal(test.expectedValue, BreachGetValue(test.breach))
+			assert.Equal(test.expectedExpectedValue, BreachGetExpectedValue(test.breach))
 			assert.EqualValues(test.expectedValues, BreachGetValues(test.breach))
 		})
 	}
