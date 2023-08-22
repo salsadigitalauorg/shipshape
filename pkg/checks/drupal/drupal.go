@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	yamlv3 "gopkg.in/yaml.v3"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -26,44 +28,48 @@ func init() {
 	RegisterChecks()
 }
 
+func ModuleYamlKey(ct config.CheckType, m string) yaml.KeyValue {
+	if ct == FileModule {
+		return yaml.KeyValue{
+			Key:   "module." + m,
+			Value: "0",
+		}
+	}
+	return yaml.KeyValue{
+		Key:   m + ".status",
+		Value: "Enabled",
+	}
+}
+
+func DetermineModuleStatus(node yamlv3.Node, ct config.CheckType, modules []string) ([]string, []string, []string) {
+	enabled := []string{}
+	errored := []string{}
+	disabled := []string{}
+
+	for _, m := range modules {
+		kvr, _, err := yaml.CheckKeyValue(node, ModuleYamlKey(ct, m))
+		// It could be a value different from 0, which still means it's enabled.
+		if ct == FileModule && (kvr == yaml.KeyValueEqual || kvr == yaml.KeyValueNotEqual) {
+			enabled = append(enabled, m)
+		} else if kvr == yaml.KeyValueEqual {
+			enabled = append(enabled, m)
+		} else if kvr == yaml.KeyValueError {
+			errored = append(errored, err.Error())
+		} else {
+			disabled = append(disabled, m)
+		}
+	}
+
+	return enabled, errored, disabled
+}
+
 // CheckModulesInYaml applies the Check logic for Drupal Modules in yaml content.
 // It uses YamlBase to verify that the list of provided Required or
 // Disallowed modules are installed or not.
-var CheckModulesInYaml = func(c *yaml.YamlBase, ct config.CheckType, configName string, required []string, disallowed []string) {
-	moduleKey := func(m string) yaml.KeyValue {
-		if ct == FileModule {
-			return yaml.KeyValue{
-				Key:   "module." + m,
-				Value: "0",
-			}
-		}
-		return yaml.KeyValue{
-			Key:   m + ".status",
-			Value: "Enabled",
-		}
-	}
-
-	determineModuleStatus := func(modules []string) ([]string, []string, []string) {
-		enabled := []string{}
-		errored := []string{}
-		disabled := []string{}
-
-		for _, m := range modules {
-			kvr, _, err := c.CheckKeyValue(moduleKey(m), configName)
-			// It could be a value different from 0, which still means it's enabled.
-			if kvr == yaml.KeyValueEqual || kvr == yaml.KeyValueNotEqual {
-				enabled = append(enabled, m)
-			} else if kvr == yaml.KeyValueError {
-				errored = append(errored, err.Error())
-			} else {
-				disabled = append(disabled, m)
-			}
-		}
-
-		return enabled, errored, disabled
-	}
-
-	required_enabled, required_errored, required_disabled := determineModuleStatus(required)
+func CheckModulesInYaml(c *yaml.YamlBase, ct config.CheckType, configName string, required []string, disallowed []string) {
+	required_enabled,
+		required_errored,
+		required_disabled := DetermineModuleStatus(c.NodeMap[configName], ct, required)
 	if len(required_errored) > 0 {
 		c.AddFail(fmt.Sprintf(
 			"error verifying status for required modules: %s",
@@ -88,7 +94,9 @@ var CheckModulesInYaml = func(c *yaml.YamlBase, ct config.CheckType, configName 
 			strings.Join(required_enabled, ",")))
 	}
 
-	disallowed_enabled, disallowed_errored, disallowed_disabled := determineModuleStatus(disallowed)
+	disallowed_enabled,
+		disallowed_errored,
+		disallowed_disabled := DetermineModuleStatus(c.NodeMap[configName], ct, disallowed)
 	if len(disallowed_errored) > 0 {
 		c.AddFail(fmt.Sprintf(
 			"error verifying status for disallowed modules: %s",

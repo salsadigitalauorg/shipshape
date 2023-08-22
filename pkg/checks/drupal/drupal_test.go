@@ -4,12 +4,13 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	yamlv3 "gopkg.in/yaml.v3"
+
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestRegisterChecks(t *testing.T) {
@@ -20,11 +21,163 @@ func TestRegisterChecks(t *testing.T) {
 		DbPermissions: "*drupal.DbPermissionsCheck",
 		TrackingCode:  "*drupal.TrackingCodeCheck",
 		UserRole:      "*drupal.UserRoleCheck",
+		AdminUser:     "*drupal.AdminUserCheck",
+		DbUserTfa:     "*drupal.DbUserTfaCheck",
 	}
 	for ct, ts := range checksMap {
 		c := config.ChecksRegistry[ct]()
 		ctype := reflect.TypeOf(c).String()
 		assert.Equal(t, ts, ctype)
+	}
+}
+
+func TestModuleYamlKey(t *testing.T) {
+	assert := assert.New(t)
+
+	kv := ModuleYamlKey(FileModule, "foo")
+	assert.Equal(kv.Key, "module.foo")
+	assert.Equal(kv.Value, "0")
+
+	kv = ModuleYamlKey(DbModule, "bar")
+	assert.Equal(kv.Key, "bar.status")
+	assert.Equal(kv.Value, "Enabled")
+}
+
+func TestDetermineModuleStatus(t *testing.T) {
+	tests := []struct {
+		name             string
+		yaml             string
+		ct               config.CheckType
+		modules          []string
+		expectedEnabled  []string
+		expectedErrored  []string
+		expectedDisabled []string
+	}{
+		{
+			name: "all enabled - file",
+			yaml: `
+module:
+  clamav: 0
+  tfa: 1
+`,
+			modules:          []string{"clamav", "tfa"},
+			ct:               FileModule,
+			expectedEnabled:  []string{"clamav", "tfa"},
+			expectedErrored:  []string{},
+			expectedDisabled: []string{},
+		},
+		{
+			name: "all enabled - db",
+			yaml: `
+clamav:
+  status: Enabled
+tfa:
+  status: Enabled
+`,
+			modules:          []string{"clamav", "tfa"},
+			ct:               DbModule,
+			expectedEnabled:  []string{"clamav", "tfa"},
+			expectedErrored:  []string{},
+			expectedDisabled: []string{},
+		},
+		{
+			name: "all disabled - file",
+			yaml: `
+module:
+  some: 0
+  other: 1
+`,
+			modules:          []string{"clamav", "tfa"},
+			ct:               DbModule,
+			expectedEnabled:  []string{},
+			expectedErrored:  []string{},
+			expectedDisabled: []string{"clamav", "tfa"},
+		},
+		{
+			name: "all disabled - db",
+			yaml: `
+clamav:
+  status: Disabled
+tfa:
+  status: Disabled
+`,
+			modules:          []string{"clamav", "tfa"},
+			ct:               DbModule,
+			expectedEnabled:  []string{},
+			expectedErrored:  []string{},
+			expectedDisabled: []string{"clamav", "tfa"},
+		},
+		{
+			name: "some enabled - file",
+			yaml: `
+module:
+  clamav: 0
+  some: 1
+`,
+			modules:          []string{"clamav", "tfa"},
+			ct:               FileModule,
+			expectedEnabled:  []string{"clamav"},
+			expectedErrored:  []string{},
+			expectedDisabled: []string{"tfa"},
+		},
+		{
+			name: "some enabled - db",
+			yaml: `
+clamav:
+  status: Enabled
+tfa:
+  status: Disabled
+`,
+			modules:          []string{"clamav", "tfa"},
+			ct:               DbModule,
+			expectedEnabled:  []string{"clamav"},
+			expectedErrored:  []string{},
+			expectedDisabled: []string{"tfa"},
+		},
+		{
+			name: "some errored - file",
+			yaml: `
+module:
+  clamav: 0
+  tfa: 1
+`,
+			modules:          []string{"clamav", "tfa&>"},
+			ct:               FileModule,
+			expectedEnabled:  []string{"clamav"},
+			expectedErrored:  []string{"invalid character '&' at position 10, following \".tfa\""},
+			expectedDisabled: []string{},
+		},
+		{
+			name: "some errored - db",
+			yaml: `
+clamav:
+  status: Enabled
+tfa:
+  status: Disabled
+`,
+			modules:          []string{"clamav", "tfa&>"},
+			ct:               DbModule,
+			expectedEnabled:  []string{"clamav"},
+			expectedErrored:  []string{"invalid character '&' at position 3, following \"tfa\""},
+			expectedDisabled: []string{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			n := yamlv3.Node{}
+			yamlData := []byte(tt.yaml)
+			err := yamlv3.Unmarshal(yamlData, &n)
+			if err != nil {
+				t.Error(err)
+			}
+
+			assert := assert.New(t)
+			enabled, errored, disabled := DetermineModuleStatus(n, tt.ct, tt.modules)
+			assert.ElementsMatch(enabled, tt.expectedEnabled, "expected enabled modules to match")
+			assert.ElementsMatch(errored, tt.expectedErrored, "expected errors to match")
+			assert.ElementsMatch(disabled, tt.expectedDisabled, "expected disabled modules to match")
+		})
 	}
 }
 

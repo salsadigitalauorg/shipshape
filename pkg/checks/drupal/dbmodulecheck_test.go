@@ -61,9 +61,9 @@ func TestDbModuleCheck(t *testing.T) {
 			dataMap = map[string][]byte{
 				"modules": []byte(`
 block:
-  status: enabled
+  status: Enabled
 node:
-  status: enabled
+  status: Enabled
 
 `),
 			}
@@ -95,9 +95,9 @@ node:
 	c = mockCheck(map[string][]byte{
 		"modules": []byte(`
 node:
-  status: enabled
+  status: Enabled
 views_ui:
-  status: enabled
+  status: Enabled
 
 `),
 	})
