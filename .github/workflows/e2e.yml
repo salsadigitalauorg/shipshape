@@ -20,6 +20,7 @@ jobs:
     - name: Run tests
       run: |
         mkdir -p venom-output
+        docker compose exec drupal shipshape --version
         docker compose exec drupal venom run -vv --stop-on-failure --output-dir /venom-output
       # env:
       #   # Allow proper output.
