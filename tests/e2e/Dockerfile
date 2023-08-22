@@ -1,6 +1,6 @@
-ARG SHIPSHAPE_VERSION=latest
+ARG SHIPSHAPE_VERSION
 
-FROM ghcr.io/salsadigitalauorg/shipshape:${SHIPSHAPE_VERSION} AS shipshape
+FROM ghcr.io/salsadigitalauorg/shipshape:${SHIPSHAPE_VERSION:-latest} AS shipshape
 
 FROM uselagoon/php-8.1-cli-drupal
 
@@ -28,9 +28,17 @@ RUN set -ex; \
     VENOM_LATEST=$(curl -Ls -o /dev/null \
         https://github.com/ovh/venom/releases/latest -w %{url_effective}); \
     VENOM_LATEST_VERSION=${VENOM_LATEST##*/}; \
-    [[ "$(uname -m)" == "x86_64" ]] && ARCH=amd64 || ARCH=arm64; \
+    [ "$(uname -m)" == "x86_64" ] && ARCH=amd64 || ARCH=arm64; \
     curl -LO https://github.com/ovh/venom/releases/download/${VENOM_LATEST_VERSION}/venom.linux-${ARCH}; \
     chmod +x venom.linux-${ARCH}; \
     mv venom.linux-${ARCH} /usr/local/bin/venom;
 
-COPY .docker/phpstan.neon /app/phpstan.neon
+COPY tests/e2e/.docker/phpstan.neon /app/phpstan.neon
+
+COPY . /shipshape
+
+RUN set -ex; \
+    # Install shipshape.
+    [ ! -z "$SHIPSHAPE_VERSION" ] && exit 0; \
+    ls -l /shipshape; \
+    cd /shipshape && go build -o /usr/local/bin/shipshape;

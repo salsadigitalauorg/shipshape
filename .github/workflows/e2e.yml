@@ -15,10 +15,10 @@ jobs:
     - uses: actions/checkout@main
 
     - name: Build & start containers
-      run: cd tests/e2e && docker compose up --detach --build
+      run: docker compose up --detach --build
 
     - name: Run tests
-      run: cd tests/e2e && docker compose exec drupal venom run
+      run: docker compose exec drupal venom run
       env:
         # Allow proper output.
         IS_TTY: true
