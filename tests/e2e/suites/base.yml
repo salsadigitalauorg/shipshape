@@ -8,15 +8,7 @@ testcases:
     - result.systemout ShouldEqual No result available; ensure your shipshape.yml is configured correctly.
 - name: No breaches
   steps:
-  - script: |
-      set -ex;
-      cd /app;
-      ls -l /shipshape;
-      ls -l /shipshape/tests/e2e/suites/shipshape/files-illegal.yml;
-      cat /shipshape/tests/e2e/suites/shipshape/files-illegal.yml;
-      shipshape --version;
-      shipshape -f /shipshape/tests/e2e/suites/shipshape/files-illegal.yml --dump-config;
-      shipshape -f /shipshape/tests/e2e/suites/shipshape/files-illegal.yml;
+  - script: cd /app && shipshape -f /shipshape/tests/e2e/suites/shipshape/files-illegal.yml;
     assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldEqual Ship is in top shape; no breach detected!
