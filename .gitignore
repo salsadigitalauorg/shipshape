@@ -3,3 +3,4 @@ dist/
 docker-compose.override.yml
 node_modules
 registry_gen.go
+venom-output
