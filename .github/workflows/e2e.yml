@@ -26,6 +26,10 @@ jobs:
       #   # Allow proper output.
       #   IS_TTY: true
 
+    - name: Set correct perms on venom-output
+      run: docker compose exec drupal chmod 644 /venom-output/*
+      if: always()
+
     - name: Upload venom log
       uses: actions/upload-artifact@main
       with:
