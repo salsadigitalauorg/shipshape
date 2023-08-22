@@ -79,5 +79,7 @@ jobs:
       if: startsWith(github.ref_name, 'v')
 
   publish-docker:
-    needs: test-build
+    needs:
+      - test-build
+      - publish-binary
     uses: ./.github/workflows/docker-publish.yml
