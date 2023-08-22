@@ -12,6 +12,4 @@ services:
     build:
       context: .
       dockerfile: tests/e2e/Dockerfile
-    volumes:
-      - ./venom-output:/venom-output
     working_dir: /shipshape/tests/e2e/suites
