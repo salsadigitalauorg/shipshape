@@ -4,12 +4,12 @@ testcases:
 - name: Permissions
   steps:
   - script: cd /app && drush si --db-url=mysql://drupal:drupal@mariadb:3306/drupal --yes
-  - script: cd /app && shipshape -f /suites/shipshape/drupal-permissions.yml
+  - script: cd /app && shipshape -f /shipshape/tests/e2e/suites/shipshape/drupal-permissions.yml
     assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldEqual Ship is in top shape; no breach detected!
   - script: cd /app && drush role:perm:add content_editor "synchronize configuration"
-  - script: cd /app && shipshape -f /suites/shipshape/drupal-permissions.yml
+  - script: cd /app && shipshape -f /shipshape/tests/e2e/suites/shipshape/drupal-permissions.yml
     assertions:
     - result.code ShouldEqual 0
     - "result.systemout ShouldContainSubstring # Breaches were detected"

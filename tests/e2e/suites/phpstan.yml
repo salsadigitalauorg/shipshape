@@ -6,7 +6,7 @@ testcases:
   - script: |
       cd /app;
       rm -rf web/themes/custom;
-      shipshape -f /suites/shipshape/phpstan.yml
+      shipshape -f /shipshape/tests/e2e/suites/shipshape/phpstan.yml
     assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldEqual Ship is in top shape; no breach detected!
@@ -16,7 +16,7 @@ testcases:
   - script: |
       cd /app;
       mkdir -p web/themes/custom;
-      shipshape -f /suites/shipshape/phpstan.yml
+      shipshape -f /shipshape/tests/e2e/suites/shipshape/phpstan.yml
     assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldEqual Ship is in top shape; no breach detected!
@@ -27,7 +27,7 @@ testcases:
       cd /app;
       mkdir -p web/themes/custom;
       echo "<?php echo 'Hello world';" > web/themes/custom/custom.theme;
-      shipshape -f /suites/shipshape/phpstan.yml
+      shipshape -f /shipshape/tests/e2e/suites/shipshape/phpstan.yml
     assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldEqual Ship is in top shape; no breach detected!
@@ -38,7 +38,7 @@ testcases:
       cd /app;
       mkdir -p web/themes/custom;
       echo "<?php var_dump('Hello world');" > web/themes/custom/custom.theme;
-      shipshape -f /suites/shipshape/phpstan.yml
+      shipshape -f /shipshape/tests/e2e/suites/shipshape/phpstan.yml
     assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldContainSubstring [/app/web/themes/custom/custom.theme]
