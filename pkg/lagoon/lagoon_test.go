@@ -270,6 +270,19 @@ func TestBreachFactNameAndValue(t *testing.T) {
 			expectedValue: "illegal file: /an/illegal/file",
 		},
 		{
+			name: "value breach - with value and key labels and expected value",
+			breach: result.KeyValueBreach{
+				CheckName:     "update module status",
+				CheckType:     "module-status",
+				KeyLabel:      "disallowed module found",
+				ValueLabel:    "actual",
+				Value:         "enabled",
+				ExpectedValue: "disabled",
+			},
+			expectedName:  "disallowed module found: ",
+			expectedValue: "expected: disabled, actual: enabled",
+		},
+		{
 			name: "key-values breach - no label",
 			breach: result.KeyValuesBreach{
 				CheckName: "illegal files",
