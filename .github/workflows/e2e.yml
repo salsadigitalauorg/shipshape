@@ -18,10 +18,14 @@ jobs:
       run: docker compose up --detach --build
 
     - name: Run tests
-      run: docker compose exec drupal venom run
-      env:
-        # Allow proper output.
-        IS_TTY: true
+      run: |
+        set -ex
+        docker compose exec drupal tree
+        docker compose exec drupal ls -l /app
+        docker compose exec drupal venom run
+      # env:
+      #   # Allow proper output.
+      #   IS_TTY: true
 
     - name: Upload venom log
       uses: actions/upload-artifact@main
