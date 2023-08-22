@@ -69,16 +69,19 @@ type KeyValuesBreach struct {
 
 func BreachSetCommonValues(bIfc *Breach, checkType string, checkName string, severity string) {
 	if b, ok := (*bIfc).(ValueBreach); ok {
+		b.BreachType = BreachTypeValue
 		b.CheckType = checkType
 		b.CheckName = checkName
 		b.Severity = severity
 		*bIfc = b
 	} else if b, ok := (*bIfc).(KeyValueBreach); ok {
+		b.BreachType = BreachTypeKeyValue
 		b.CheckType = checkType
 		b.CheckName = checkName
 		b.Severity = severity
 		*bIfc = b
 	} else if b, ok := (*bIfc).(KeyValuesBreach); ok {
+		b.BreachType = BreachTypeKeyValues
 		b.CheckType = checkType
 		b.CheckName = checkName
 		b.Severity = severity
