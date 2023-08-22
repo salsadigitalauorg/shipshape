@@ -18,7 +18,9 @@ jobs:
       run: docker compose up --detach --build
 
     - name: Run tests
-      run: docker compose exec drupal venom run -vv --stop-on-failure --output-dir /venom-output
+      run: |
+        mkdir -p venom-output
+        docker compose exec drupal venom run -vv --stop-on-failure --output-dir /venom-output
       # env:
       #   # Allow proper output.
       #   IS_TTY: true
