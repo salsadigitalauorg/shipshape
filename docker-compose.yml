@@ -12,6 +12,4 @@ services:
     build:
       context: .
       dockerfile: tests/e2e/Dockerfile
-    volumes:
-      - ./tests/e2e/suites:/suites
-    working_dir: /suites
+    working_dir: /shipshape/tests/e2e/suites
