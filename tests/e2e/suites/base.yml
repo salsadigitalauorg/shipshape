@@ -13,7 +13,9 @@ testcases:
       cd /app;
       ls -l /shipshape;
       ls -l /shipshape/tests/e2e/suites/shipshape/files-illegal.yml;
+      cat /shipshape/tests/e2e/suites/shipshape/files-illegal.yml;
       shipshape --version;
+      shipshape -f /shipshape/tests/e2e/suites/shipshape/files-illegal.yml --dump-config;
       shipshape -f /shipshape/tests/e2e/suites/shipshape/files-illegal.yml;
     assertions:
     - result.code ShouldEqual 0
