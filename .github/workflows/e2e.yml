@@ -23,6 +23,10 @@ jobs:
       #   # Allow proper output.
       #   IS_TTY: true
 
+    - name: Copy venom-output from container
+      run: docker cp shipshape-drupal-1:/venom-output ./venom-output
+      if: always()
+
     - name: Upload venom log
       uses: actions/upload-artifact@main
       with:
