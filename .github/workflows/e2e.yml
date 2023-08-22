@@ -18,18 +18,18 @@ jobs:
       run: docker compose up --detach --build
 
     - name: Run tests
-      run: |
-        set -ex
-        docker compose exec drupal tree
-        docker compose exec drupal ls -l /app
-        docker compose exec drupal venom run
+      run: docker compose exec drupal venom run -vvv --stop-on-failure
       # env:
       #   # Allow proper output.
       #   IS_TTY: true
+
+    - name: Export venom log
+      run: docker compose exec drupal cat venom.log > venom.log
+      if: always()
 
     - name: Upload venom log
       uses: actions/upload-artifact@main
       with:
         name: venom-log
-        path: tests/e2e/suites/venom.log
+        path: venom.log
       if: always()
