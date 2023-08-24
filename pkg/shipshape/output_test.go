@@ -297,7 +297,7 @@ func TestLagoonFacts(t *testing.T) {
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		LagoonFacts(w)
-		assert.Equal("[{\"name\":\"a - file\",\"value\":\"Fail a\",\"source\":"+
+		assert.Equal("[{\"name\":\"[1] a - file\",\"value\":\"Fail a\",\"source\":"+
 			"\"Shipshape\",\"description\":\"a\",\"category\":\"file\"}]",
 			buf.String())
 	})
@@ -351,7 +351,7 @@ func TestLagoonFacts(t *testing.T) {
 			"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
 		assert.Equal("{\"query\":\"mutation ($input:AddFactsByNameInput!){"+
 			"addFactsByName(input: $input){id}}\",\"variables\":{\"input\":{"+
-			"\"environment\":\"bar\",\"facts\":[{\"name\":\"a - file\",\"value\""+
+			"\"environment\":\"bar\",\"facts\":[{\"name\":\"[1] a - file\",\"value\""+
 			":\"Fail a\",\"source\":\"Shipshape\",\"description\":\"a\",\"category"+
 			"\":\"file\"}],\"project\":\"foo\"}}}\n",
 			internal.MockLagoonRequestBodies[2])
