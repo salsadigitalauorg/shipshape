@@ -184,10 +184,10 @@ func LagoonFacts(w *bufio.Writer) {
 		return
 	}
 
-	for _, r := range RunResultList.Results {
-		for _, b := range r.Breaches {
+	for iR, r := range RunResultList.Results {
+		for iB, b := range r.Breaches {
 			facts = append(facts, lagoon.Fact{
-				Name:        lagoon.BreachFactName(b),
+				Name:        fmt.Sprintf("[%d] %s", iR+iB+1, lagoon.BreachFactName(b)),
 				Description: result.BreachGetCheckName(b),
 				Value:       lagoon.BreachFactValue(b),
 				Source:      lagoon.SourceName,
