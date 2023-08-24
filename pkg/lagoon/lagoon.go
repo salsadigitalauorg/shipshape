@@ -21,6 +21,7 @@ type Fact struct {
 }
 
 const SourceName string = "Shipshape"
+const FactMaxValueLength int = 300
 
 var ApiBaseUrl string
 var ApiToken string

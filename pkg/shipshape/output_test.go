@@ -359,4 +359,73 @@ func TestLagoonFacts(t *testing.T) {
 			"level=info msg=\"fetching environment id\" namespace=foo-bar\n")
 		assert.Equal("successfully pushed facts to the Lagoon api", buf.String())
 	})
+
+	t.Run("pushToLagoonOversizedText", func(t *testing.T) {
+		RunConfig.Checks = config.CheckMap{file.File: []config.Check{
+			&file.FileCheck{CheckBase: config.CheckBase{Name: "a"}}}}
+		RunResultList = result.NewResultList(false)
+
+		// Oversized text
+		oversizedText := ""
+		for i := 0; i <= lagoon.FactMaxValueLength; i++ {
+			oversizedText += "a"
+		}
+
+		RunResultList.Results = append(RunResultList.Results, result.Result{
+			Name:   "a",
+			Status: result.Fail,
+			Breaches: []result.Breach{result.ValueBreach{
+				CheckName: "a",
+				Value:     oversizedText,
+				CheckType: "file",
+			}},
+		})
+		RunResultList.TotalBreaches = 1
+
+		lagoon.PushFacts = true
+
+		svr := internal.MockLagoonServer()
+		lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
+		origOutput := logrus.StandardLogger().Out
+		defer func() {
+			svr.Close()
+			internal.MockLagoonReset()
+			lagoon.Client = nil
+			os.Unsetenv("LAGOON_PROJECT")
+			os.Unsetenv("LAGOON_ENVIRONMENT")
+			logrus.SetOutput(origOutput)
+			lagoon.PushFacts = false
+		}()
+
+		var logbuf bytes.Buffer
+		logrus.SetOutput(&logbuf)
+
+		os.Setenv("LAGOON_PROJECT", "foo")
+		os.Setenv("LAGOON_ENVIRONMENT", "bar")
+
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		LagoonFacts(w)
+		assert.Equal(3, internal.MockLagoonNumCalls)
+		assert.Equal("{\"query\":\"query ($ns:String!){"+
+			"environmentByKubernetesNamespaceName(kubernetesNamespaceName: "+
+			"$ns){id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
+		assert.Equal("{\"query\":\"mutation ($envId:Int!$sourceName:String!)"+
+			"{deleteFactsFromSource(input: {environment: $envId, source: "+
+			"$sourceName})}\",\"variables\":{\"envId\":50,\"sourceName\":\""+
+			"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
+		assert.Equal("{\"query\":\"mutation ($input:AddFactsByNameInput!){"+
+			"addFactsByName(input: $input){id}}\",\"variables\":{\"input\":{"+
+			"\"environment\":\"bar\",\"facts\":[{\"name\":\"[1] a - file\",\"value\""+
+			":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"+
+			"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"+
+			"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"+
+			"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"+
+			"aaaaaaaaaaa...TRUNCATED\",\"source\":\"Shipshape\",\"description\":\"a"+
+			"\",\"category\":\"file\"}],\"project\":\"foo\"}}}\n",
+			internal.MockLagoonRequestBodies[2])
+		assert.Contains(logbuf.String(),
+			"level=info msg=\"fetching environment id\" namespace=foo-bar\n")
+		assert.Equal("successfully pushed facts to the Lagoon api", buf.String())
+	})
 }

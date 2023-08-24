@@ -186,10 +186,14 @@ func LagoonFacts(w *bufio.Writer) {
 
 	for iR, r := range RunResultList.Results {
 		for iB, b := range r.Breaches {
+			value := lagoon.BreachFactValue(b)
+			if len(value) > lagoon.FactMaxValueLength {
+				value = value[:lagoon.FactMaxValueLength-12] + "...TRUNCATED"
+			}
 			facts = append(facts, lagoon.Fact{
 				Name:        fmt.Sprintf("[%d] %s", iR+iB+1, lagoon.BreachFactName(b)),
 				Description: result.BreachGetCheckName(b),
-				Value:       lagoon.BreachFactValue(b),
+				Value:       value,
 				Source:      lagoon.SourceName,
 				Category:    string(result.BreachGetCheckType(b)),
 			})
