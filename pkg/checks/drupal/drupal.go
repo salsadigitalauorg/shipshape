@@ -22,6 +22,7 @@ func RegisterChecks() {
 	config.ChecksRegistry[UserRole] = func() config.Check { return &UserRoleCheck{} }
 	config.ChecksRegistry[AdminUser] = func() config.Check { return &AdminUserCheck{} }
 	config.ChecksRegistry[DbUserTfa] = func() config.Check { return &DbUserTfaCheck{} }
+	config.ChecksRegistry[ForbiddenUser] = func() config.Check { return &ForbiddenUserCheck{} }
 }
 
 func init() {
