@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"sort"
 	"testing"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -289,6 +290,101 @@ func TestStringSlicesIntersect(t *testing.T) {
 	expectedIntersect = []string{"foo", "zoom"}
 	if len(intersect) != 2 || !reflect.DeepEqual(intersect, expectedIntersect) {
 		t.Errorf("Intersect should have 2 item, got '%+v'", intersect)
+	}
+}
+
+func TestStringSlicesIntersectUnique(t *testing.T) {
+	intersect := StringSlicesIntersectUnique(
+		[]string{"foo"}, []string{})
+	if len(intersect) != 0 {
+		t.Errorf("Intersect should be empty, got '%+v'", intersect)
+	}
+
+	intersect = StringSlicesIntersectUnique(
+		[]string{"foo"}, []string{"bar"})
+	if len(intersect) != 0 {
+		t.Errorf("Intersect should be empty, got '%+v'", intersect)
+	}
+
+	intersect = StringSlicesIntersectUnique(
+		[]string{"foo"}, []string{"bar", "foo"})
+	expectedIntersect := []string{"foo"}
+	if len(intersect) != 1 || !reflect.DeepEqual(intersect, expectedIntersect) {
+		t.Errorf("Intersect should have 1 item, got '%+v'", intersect)
+	}
+
+	intersect = StringSlicesIntersectUnique(
+		[]string{"foo", "baz", "zoom"}, []string{"bar", "foo", "zoo", "zoom"})
+	sort.Strings(intersect)
+	expectedIntersect = []string{"foo", "zoom"}
+	if len(intersect) != 2 || !reflect.DeepEqual(intersect, expectedIntersect) {
+		t.Errorf("Intersect should have 2 item, got '%+v'", intersect)
+	}
+
+	intersect = StringSlicesIntersectUnique(
+		[]string{"foo", "baz", "zoom"}, []string{"bar", "foo", "zoo", "zoom", "foo", "bar", "zoom", "zoo"})
+	sort.Strings(intersect)
+	expectedIntersect = []string{"foo", "zoom"}
+	if len(intersect) != 2 || !reflect.DeepEqual(intersect, expectedIntersect) {
+		t.Errorf("Intersect should have 2 item, got '%+v'", intersect)
+	}
+}
+
+func TestStringSlicesInterdiff(t *testing.T) {
+	interdiff := StringSlicesInterdiff(
+		[]string{"foo"}, []string{})
+	if len(interdiff) != 0 {
+		t.Errorf("Interdiff should be empty, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiff(
+		[]string{"foo"}, []string{"foo"})
+	if len(interdiff) != 0 {
+		t.Errorf("Interdiff should be empty, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiff(
+		[]string{"foo"}, []string{"bar", "foo"})
+	expectedInterdiff := []string{"bar"}
+	if len(interdiff) != 1 || !reflect.DeepEqual(interdiff, expectedInterdiff) {
+		t.Errorf("Interdiff should have 1 item, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiff(
+		[]string{"foo", "baz", "zoom"}, []string{"bar", "foo", "zoo", "zoom", "bar"})
+	sort.Strings(interdiff)
+	expectedInterdiff = []string{"bar", "bar", "zoo"}
+	if len(interdiff) != 3 || !reflect.DeepEqual(interdiff, expectedInterdiff) {
+		t.Errorf("Interdiff should have 4 item, got '%+v'", interdiff)
+	}
+}
+
+func TestStringSlicesInterdiffUnique(t *testing.T) {
+	interdiff := StringSlicesInterdiffUnique(
+		[]string{"foo"}, []string{})
+	if len(interdiff) != 0 {
+		t.Errorf("Interdiff should be empty, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiffUnique(
+		[]string{"foo"}, []string{"foo"})
+	if len(interdiff) != 0 {
+		t.Errorf("Interdiff should be empty, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiffUnique(
+		[]string{"foo"}, []string{"bar", "foo"})
+	expectedInterdiff := []string{"bar"}
+	if len(interdiff) != 1 || !reflect.DeepEqual(interdiff, expectedInterdiff) {
+		t.Errorf("Interdiff should have 1 item, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiffUnique(
+		[]string{"foo", "baz", "zoom"}, []string{"bar", "foo", "zoo", "zoom", "bar"})
+	sort.Strings(interdiff)
+	expectedInterdiff = []string{"bar", "zoo"}
+	if len(interdiff) != 2 || !reflect.DeepEqual(interdiff, expectedInterdiff) {
+		t.Errorf("Interdiff should have 2 item, got '%+v'", interdiff)
 	}
 }
 

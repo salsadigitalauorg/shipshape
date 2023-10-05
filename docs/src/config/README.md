@@ -35,6 +35,7 @@ The following check types are available:
   - [drupal-file-module](#drupal-file-module)
   - [drupal-db-module](#drupal-db-module)
   - [drupal-db-permissions](#drupal-db-permissions)
+  - [drupal-role-permissions](#drupal-role-permissions)
   - [phpstan](#phpstan)
 
 ### Common fields
@@ -171,6 +172,28 @@ documentation coming soon...
 
 ### drupal-db-permissions
 documentation coming soon...
+
+### drupal-role-permissions
+Checks for permissions of a specific role.
+
+| Field                  | Default | Required | Description                    |
+|------------------------| :-----: |:--------:|--------------------------------|
+| rid                    |    -    |   Yes    | Role ID, eg. authenticated     |
+| required-permissions   |    -    |    No    | List of required permissions   |
+| disallowed-permissions |    -    |    No    | List of disallowed permissions |
+
+Examples:
+```yaml
+checks:
+  drupal-role-permissions:
+    - name: '[DATABASE] Authenticated role check'
+      severity: high
+      rid: 'authenticated'
+      required-permissions:
+        - 'setup own tfa'
+      disallowed-permissions:
+        - 'administer users'
+```
 
 ### phpstan
 documentation coming soon...
