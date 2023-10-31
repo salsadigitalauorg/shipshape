@@ -1,0 +1,23 @@
+{
+  "license": "BSD",
+  "require": {
+    "awesome/library": "dev-my-fork-awesome-feature"
+  },
+  "repositories" : [
+    {
+      "type": "vcs",
+      "url": "https://github.com/yourgithubuser/library",
+      "no-api": true
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/yourgithubuser/library1",
+      "no-api": "true"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/yourgithubuser/library2",
+      "no-api": false
+    }
+  ]
+}

@@ -250,6 +250,21 @@ func TestMergeIntSlice(t *testing.T) {
 
 }
 
+func TestSliceContains(t *testing.T) {
+	assertion := assert.New(t)
+	assertion.False(SliceContains([]any{}, "foo"))
+	assertion.False(SliceContains([]any{"bar"}, "foo"))
+	assertion.True(SliceContains([]any{"bar", "foo"}, "foo"))
+	assertion.False(SliceContains([]any{"true"}, true))
+	assertion.False(SliceContains([]any{"true", "false"}, false))
+	assertion.False(SliceContains([]any{"true", true}, false))
+	assertion.False(SliceContains([]any{"true", true, 0, 1, nil, "false"}, false))
+	assertion.True(SliceContains([]any{"true", true, 0, 1, nil, "false"}, nil))
+	assertion.True(SliceContains([]any{"true", true, 0, 1, nil, "false"}, 0))
+	assertion.True(SliceContains([]any{"true", true, 0, 1, nil, "false"}, 1))
+	assertion.False(SliceContains([]any{"true", true, 0, 1, nil, "false"}, "1"))
+}
+
 func TestStringSliceContains(t *testing.T) {
 	assert := assert.New(t)
 	assert.False(StringSliceContains([]string{}, "foo"))

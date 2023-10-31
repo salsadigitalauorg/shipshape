@@ -30,6 +30,7 @@ The following check types are available:
   - [file](#file)
   - [yaml](#yaml)
   - [yamllint](#yamllint)
+  - [json](#json)
   - [crawler](#crawler)
   - [drush-yaml](#drush-yaml)
   - [drupal-file-module](#drupal-file-module)
@@ -63,18 +64,19 @@ file:
 ```
 
 ### yaml
+
 Checks yaml files for the presence or absence of required/disallowed values.
 
-| Field           | Default | Required | Description                                             |
-| --------------- | :-----: | :------: | ------------------------------------------------------- |
-| path            |    -    |   Yes    | Path (directory) to check for the presence of files     |
-| file            |    -    |    No    | A single file to check                                  |
-| files           |    -    |    No    | A list of files to check                                |
-| pattern         |    -    |    No    | Regex pattern defining a list of files to check         |
-| exclude-pattern |    -    |    No    | Regex pattern to exclude a list of files from the check |
-| ignore-missing  |  false  |    No    | Specify whether a missing file is a fail                |
-| values          |    -    |   Yes    | The list of keys and values for the check.              |
-
+| Field           | Default | Required | Description                                                     |
+|-----------------|:-------:|:--------:|-----------------------------------------------------------------|
+| path            |    -    |   Yes    | Path (directory) to check for the presence of files             |
+| file            |    -    |    No    | A single file to check                                          |
+| files           |    -    |    No    | A list of files to check                                        |
+| pattern         |    -    |    No    | Regex pattern defining a list of files to check                 |
+| exclude-pattern |    -    |    No    | Regex pattern to exclude a list of files from the check         |
+| ignore-missing  |  false  |    No    | Specify whether a missing file is a fail                        |
+| values          |    -    |   Yes    | The list of keys and values for the check.                      |
+| optional        |    -    |    No    | If set,  the validation will not fail if the key is not present |
 
 #### Values
 The list of values can either be simple key/value, e.g
@@ -157,6 +159,126 @@ yaml:
 
 ### yamllint
 documentation coming soon...
+
+### json
+
+Checks JSON files for the presence or absence of required/disallowed values.
+
+| Field           | Default | Required | Description                                                     |
+|-----------------|:-------:|:--------:|-----------------------------------------------------------------|
+| path            |    -    |   Yes    | Path (directory) to check for the presence of files             |
+| file            |    -    |    No    | A single file to check                                          |
+| files           |    -    |    No    | A list of files to check                                        |
+| pattern         |    -    |    No    | Regex pattern defining a list of files to check                 |
+| exclude-pattern |    -    |    No    | Regex pattern to exclude a list of files from the check         |
+| ignore-missing  |  false  |    No    | Specify whether a missing file is a fail                        |
+| key-values      |    -    |   Yes    | The list of keys and values for the check.                      |
+
+#### Key Values
+The list of values can either be simple key/value pairs, e.g
+```yaml
+key-values:
+  - key: $.license
+    value: GPL
+  - key: repositories.package1.type
+    value: library
+```
+where the file being checked is:
+```json
+{
+  "license": "BSD",
+  "repositories": {
+    "package1": {
+      "type": "vcs",
+      "url": "https://github.com/package1"
+    }
+  }
+}
+```
+in which case line `license: BSD` and `type: vcs` would be detected as a breach.
+
+The `key` can be either a [JSONPath](https://goessner.net/articles/JsonPath/index.html) or 
+a [JMESPath](https://jmespath.org/specification.html) expression. If the specified `key` doesn't present in the JSON file, 
+the validation will fail. The `optional` field could be set to `true` so that the validation will not fail if the key 
+does not present:
+```yaml
+key-values:
+  - key: $.authors
+    value: Anything
+    optional: true
+```
+
+If the `key` expression resolves to a list of values, the field `is-list` must be set to `true` so that the validation
+will not fail.
+
+Instead of checking against a single `value`, it can be a list of disallowed values, e.g
+```yaml
+key-values:
+  - key: '$.repositories..type'
+    is-list: true
+    disallowed-values:
+      - package
+      - composer-plugin 
+```
+or a list of allowed values, eg.
+```yaml
+key-values:
+  - key: '$.repositories..type'
+    is-list: true
+    allowed-values:
+      - vcs
+      - library 
+```
+
+where the file being checked is:
+```json
+{
+  "license": "BSD",
+  "repositories": {
+    "package1": {
+      "type": "vcs",
+      "url": "https://github.com/package1",
+      "no-api": true
+    },
+    "package2": {
+      "type": "composer-plugin",
+      "url": "https://github.com/package2",
+    },
+    "package3": {
+      "type": "package",
+      "url": "https://github.com/package3",
+      "no-api": false
+    }
+  }
+}
+```
+in which case lines `type: composer-plugin` and `type: package` would be detected as breaches.
+
+#### Example
+```yaml
+json:
+  - name: Validate composer.json
+    file: composer.json
+    ignore-missing: true
+    key-values:
+      - key: license
+        optional: true
+        value: MIT
+      - key: '$.repositories..no-api'
+        optional: true
+        is-list: true
+        disallowed-values:
+          - true
+          - "true"
+          - 1
+          - "1"
+        allowed-values:
+          - false
+          - "false"
+          - 0
+          - "0"
+          -
+```
 
 ### crawler
 documentation coming soon...
