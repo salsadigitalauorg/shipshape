@@ -36,6 +36,7 @@ The following check types are available:
   - [drupal-db-module](#drupal-db-module)
   - [drupal-db-permissions](#drupal-db-permissions)
   - [drupal-role-permissions](#drupal-role-permissions)
+  - [drupal-user-forbidden](#drupal-user-forbidden)
   - [phpstan](#phpstan)
 
 ### Common fields
@@ -193,6 +194,25 @@ checks:
         - 'setup own tfa'
       disallowed-permissions:
         - 'administer users'
+```
+
+### drupal-user-forbidden
+
+Checks if a forbidden user is active.
+
+| Field | Default | Required | Description          |
+| ----- | :-----: | :------: | ---------------------|
+| uid   |       1 | No       | The User ID to check |
+
+Example:
+```yaml
+checks:
+  drupal-user-forbidden:
+    - name: '[DATABASE] Active user 1 check'
+      severity: high
+    - name: '[DATABASE] Active user 2 check'
+      severity: medium
+      uid: 2
 ```
 
 ### phpstan
