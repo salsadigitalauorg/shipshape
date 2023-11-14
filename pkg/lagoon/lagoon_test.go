@@ -218,7 +218,6 @@ func TestReplaceFacts(t *testing.T) {
 		":\"foo\"}}}\n", internal.MockLagoonRequestBodies[2])
 }
 
-<<<<<<< HEAD
 func Test_GetBearerTokenFromDisk(t *testing.T) {
 	type args struct {
 		tokenLocation string
