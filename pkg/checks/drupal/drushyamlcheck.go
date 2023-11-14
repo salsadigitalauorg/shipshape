@@ -46,7 +46,8 @@ func (c *DrushYamlCheck) FetchData() {
 			msg := string(err.(*exec.ExitError).Stderr)
 			c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
 			c.AddBreach(result.ValueBreach{
-				Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
+				ValueLabel: c.ConfigName,
+				Value:      strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 		}
 	}
 }

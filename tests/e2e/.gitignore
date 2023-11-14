@@ -1,0 +1,5 @@
+suites/*.log
+# Generated when running venom run -vv
+*.step.*.dump.json
+# Generated when running venom run -vvv
+*.prof

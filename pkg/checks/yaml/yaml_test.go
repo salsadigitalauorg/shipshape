@@ -1,7 +1,10 @@
 package yaml_test
 
 import (
+	"errors"
 	"testing"
+
+	yamlv3 "gopkg.in/yaml.v3"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
@@ -95,128 +98,169 @@ foo:
 }
 
 func TestYamlCheckKeyValue(t *testing.T) {
-	assert := assert.New(t)
-
-	c := YamlBase{
-		CheckBase: config.CheckBase{
-			DataMap: map[string][]byte{
-				"data": []byte(`
+	singleValueNode := yamlv3.Node{}
+	yamlv3.Unmarshal([]byte(`
 foo:
   bar:
     - baz: zoo
+    - zap: Bam
+`), &singleValueNode)
 
-`),
-			},
-		},
-	}
-	c.UnmarshalDataMap()
-
-	// Invalid path.
-	_, _, err := c.CheckKeyValue(KeyValue{
-		Key:   "&*&^);",
-		Value: "foo",
-	}, "data")
-	assert.Equal("child name missing at position 0, following \"\"", err.Error())
-
-	// Non-existent path.
-	kvr, _, err := c.CheckKeyValue(KeyValue{
-		Key:   "foo.baz",
-		Value: "foo",
-	}, "data")
-	assert.Equal(nil, err)
-	assert.Equal(KeyValueNotFound, kvr)
-
-	// Wrong value.
-	kvr, _, err = c.CheckKeyValue(KeyValue{
-		Key:   "foo.bar[0].baz",
-		Value: "zoom",
-	}, "data")
-	assert.Equal(nil, err)
-	assert.Equal(KeyValueNotEqual, kvr)
-
-	// Correct value.
-	kvr, _, err = c.CheckKeyValue(KeyValue{
-		Key:   "foo.bar[0].baz",
-		Value: "zoo",
-	}, "data")
-	assert.Equal(nil, err)
-	assert.Equal(KeyValueEqual, kvr)
-
-	// Optional value not present.
-	kvr, _, err = c.CheckKeyValue(KeyValue{
-		Key:      "foo.bar[0].bazzle",
-		Value:    "zoom",
-		Optional: true,
-	}, "data")
-	assert.Equal(nil, err)
-	assert.Equal(KeyValueEqual, kvr)
-}
-
-func TestYamlCheckKeyValueList(t *testing.T) {
-	assert := assert.New(t)
-
-	c := YamlBase{
-		CheckBase: config.CheckBase{
-			DataMap: map[string][]byte{
-				"data": []byte(`
+	multiValueNode := yamlv3.Node{}
+	yamlv3.Unmarshal([]byte(`
 foo:
   bar:
     - baz
     - zoo
     - zoom
+`), &multiValueNode)
 
-`),
+	tests := []struct {
+		name           string
+		node           yamlv3.Node
+		keyValue       KeyValue
+		expectedResult KeyValueResult
+		expectedValues []string
+		expectedError  error
+	}{
+		{
+			name: "invalid path",
+			node: singleValueNode,
+			keyValue: KeyValue{
+				Key:   "&*&^);",
+				Value: "foo",
 			},
+			expectedResult: KeyValueError,
+			expectedValues: nil,
+			expectedError:  errors.New("child name missing at position 0, following \"\""),
+		},
+		{
+			name: "non-existent path",
+			node: singleValueNode,
+			keyValue: KeyValue{
+				Key:   "foo.baz",
+				Value: "foo",
+			},
+			expectedResult: KeyValueNotFound,
+			expectedValues: nil,
+			expectedError:  nil,
+		},
+		{
+			name: "wrong value",
+			node: singleValueNode,
+			keyValue: KeyValue{
+				Key:   "foo.bar[0].baz",
+				Value: "zoom",
+			},
+			expectedResult: KeyValueNotEqual,
+			expectedValues: []string{"zoo"},
+			expectedError:  nil,
+		},
+		{
+			name: "correct value",
+			node: singleValueNode,
+			keyValue: KeyValue{
+				Key:   "foo.bar[0].baz",
+				Value: "zoo",
+			},
+			expectedResult: KeyValueEqual,
+			expectedValues: nil,
+			expectedError:  nil,
+		},
+		{
+			name: "correct value - case sensitivity",
+			node: singleValueNode,
+			keyValue: KeyValue{
+				Key:   "foo.bar[1].zap",
+				Value: "bam",
+			},
+			expectedResult: KeyValueEqual,
+			expectedValues: nil,
+			expectedError:  nil,
+		},
+		{
+			name: "optional value not present",
+			node: singleValueNode,
+			keyValue: KeyValue{
+				Key:      "foo.bar[0].bazzle",
+				Value:    "zoom",
+				Optional: true,
+			},
+			expectedResult: KeyValueEqual,
+			expectedValues: nil,
+			expectedError:  nil,
+		},
+		{
+			name: "multivalue - disallowed list not provided",
+			node: multiValueNode,
+			keyValue: KeyValue{
+				Key:    "foo.bar",
+				IsList: true,
+			},
+			expectedResult: KeyValueError,
+			expectedValues: nil,
+			expectedError:  errors.New("list of allowed or disallowed values not provided"),
+		},
+		{
+			name: "multivalue - disallowed values in yaml",
+			node: multiValueNode,
+			keyValue: KeyValue{
+				Key:        "foo.bar",
+				IsList:     true,
+				Disallowed: []string{"baz", "zoo"},
+			},
+			expectedResult: KeyValueDisallowedFound,
+			expectedValues: []string{"baz", "zoo"},
+			expectedError:  nil,
+		},
+		{
+			name: "multivalue - no disallowed values in yaml",
+			node: multiValueNode,
+			keyValue: KeyValue{
+				Key:        "foo.bar",
+				IsList:     true,
+				Disallowed: []string{"this should", "be a success"},
+			},
+			expectedResult: KeyValueEqual,
+			expectedValues: nil,
+			expectedError:  nil,
+		},
+		{
+			name: "multivalue - allowed values in yaml all match",
+			node: multiValueNode,
+			keyValue: KeyValue{
+				Key:     "foo.bar",
+				IsList:  true,
+				Allowed: []string{"baz", "zoo", "zoom"},
+			},
+			expectedResult: KeyValueEqual,
+			expectedValues: nil,
+			expectedError:  nil,
+		},
+		{
+			name: "multivalue - value not in allowed list",
+			node: multiValueNode,
+			keyValue: KeyValue{
+				Key:     "foo.bar",
+				IsList:  true,
+				Allowed: []string{"baz", "zoo"},
+			},
+			expectedResult: KeyValueDisallowedFound,
+			expectedValues: []string{"zoom"},
+			expectedError:  nil,
 		},
 	}
-	c.UnmarshalDataMap()
 
-	// Disallowed list not provided.
-	_, _, err := c.CheckKeyValue(KeyValue{
-		Key:    "foo.bar",
-		IsList: true,
-	}, "data")
-	assert.Equal("list of allowed or disallowed values not provided", err.Error())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 
-	var kvr KeyValueResult
-	var fails []string
-	// Disallowed values in yaml.
-	kvr, fails, err = c.CheckKeyValue(KeyValue{
-		Key:        "foo.bar",
-		IsList:     true,
-		Disallowed: []string{"baz", "zoo"},
-	}, "data")
-	assert.Equal(nil, err)
-	assert.Equal(KeyValueDisallowedFound, kvr)
-	assert.EqualValues([]string{"baz", "zoo"}, fails)
-
-	// No disallowed values in yaml.
-	kvr, fails, _ = c.CheckKeyValue(KeyValue{
-		Key:        "foo.bar",
-		IsList:     true,
-		Disallowed: []string{"this should", "be a success"},
-	}, "data")
-	assert.Equal(KeyValueEqual, kvr)
-	assert.EqualValues(0, len(fails))
-
-	// Allowed values in yaml all match.
-	kvr, fails, _ = c.CheckKeyValue(KeyValue{
-		Key:     "foo.bar",
-		IsList:  true,
-		Allowed: []string{"baz", "zoo", "zoom"},
-	}, "data")
-	assert.Equal(KeyValueEqual, kvr)
-	assert.EqualValues(0, len(fails))
-
-	// Value not in Allowed list.
-	kvr, fails, _ = c.CheckKeyValue(KeyValue{
-		Key:     "foo.bar",
-		IsList:  true,
-		Allowed: []string{"baz", "zoo"},
-	}, "data")
-	assert.Equal(KeyValueDisallowedFound, kvr)
-	assert.EqualValues([]string{"zoom"}, fails)
-
+			assert := assert.New(t)
+			kvr, values, err := CheckKeyValue(tt.node, tt.keyValue)
+			assert.Equal(tt.expectedResult, kvr, "expected result to match")
+			assert.EqualValues(tt.expectedValues, values, "expected values to match")
+			assert.Equal(err, tt.expectedError, "expected error to match")
+		})
+	}
 }
 
 func TestYamlBase(t *testing.T) {

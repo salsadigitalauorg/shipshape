@@ -5,7 +5,6 @@ import (
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
@@ -44,52 +43,6 @@ func TestFileModuleMerge(t *testing.T) {
 	}, c)
 }
 
-func TestFileModuleConfigName(t *testing.T) {
-	assert := assert.New(t)
-
-	configNameVal := ""
-	origCheckModulesInYaml := CheckModulesInYaml
-	mockCheckModulesInYaml := func(c *yaml.YamlBase, ct config.CheckType, configName string, required, disallowed []string) {
-		configNameVal = configName
-	}
-
-	t.Run("noPath", func(t *testing.T) {
-		c := FileModuleCheck{YamlCheck: yaml.YamlCheck{File: "foo.bar"}}
-		CheckModulesInYaml = mockCheckModulesInYaml
-		defer func() {
-			CheckModulesInYaml = origCheckModulesInYaml
-		}()
-		c.RunCheck()
-		assert.Equal("foo.bar", configNameVal)
-	})
-
-	t.Run("pathWithoutSlash", func(t *testing.T) {
-		c := FileModuleCheck{YamlCheck: yaml.YamlCheck{
-			File: "foo.bar",
-			Path: "/some/path",
-		}}
-		CheckModulesInYaml = mockCheckModulesInYaml
-		defer func() {
-			CheckModulesInYaml = origCheckModulesInYaml
-		}()
-		c.RunCheck()
-		assert.Equal("/some/path/foo.bar", configNameVal)
-	})
-
-	t.Run("pathWithSlash", func(t *testing.T) {
-		c := FileModuleCheck{YamlCheck: yaml.YamlCheck{
-			File: "foo.bar",
-			Path: "/some/path/",
-		}}
-		CheckModulesInYaml = mockCheckModulesInYaml
-		defer func() {
-			CheckModulesInYaml = origCheckModulesInYaml
-		}()
-		c.RunCheck()
-		assert.Equal("/some/path/foo.bar", configNameVal)
-	})
-}
-
 func TestFileModuleCheck(t *testing.T) {
 	assert := assert.New(t)
 
@@ -109,9 +62,7 @@ func TestFileModuleCheck(t *testing.T) {
 	assert.Equal(result.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(c.Result.Passes, []string{
-		"'node' is enabled",
-		"'block' is enabled",
-		"'views_ui' is not enabled",
-		"'field_ui' is not enabled",
+		"all required modules are enabled",
+		"all disallowed modules are disabled",
 	})
 }

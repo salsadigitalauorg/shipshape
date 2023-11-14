@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
@@ -92,18 +93,26 @@ func (c *PhpStanCheck) FetchData() {
 
 	args := []string{
 		"analyse",
-		fmt.Sprintf("--configuration=%s", configPath),
+		"--configuration=" + configPath,
 		"--no-progress",
 		"--error-format=json",
 	}
+	foundPath := false
 	for _, p := range c.Paths {
 		path := p
 		if !filepath.IsAbs(path) {
 			path = filepath.Join(config.ProjectDir, p)
 		}
 		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			foundPath = true
 			args = append(args, path)
 		}
+	}
+
+	if !foundPath {
+		c.Result.Status = result.Pass
+		c.AddPass("no paths found to run phpstan on")
+		return
 	}
 
 	c.DataMap = map[string][]byte{}
@@ -112,21 +121,39 @@ func (c *PhpStanCheck) FetchData() {
 		if pathErr, ok := err.(*fs.PathError); ok {
 			c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
 			c.AddBreach(result.ValueBreach{
-				Value: pathErr.Path + ": " + pathErr.Err.Error()})
+				ValueLabel: pathErr.Path,
+				Value:      pathErr.Err.Error()})
 		} else if len(c.DataMap["phpstan"]) == 0 { // If errors were found, exit code will be 1.
 			c.AddFail("Phpstan failed to run: " + string(err.(*exec.ExitError).Stderr))
 			c.AddBreach(result.ValueBreach{
-				Value: "Phpstan failed to run: " + string(err.(*exec.ExitError).Stderr)})
+				ValueLabel: "Phpstan failed to run",
+				Value:      string(err.(*exec.ExitError).Stderr)})
 		}
 	}
+}
+
+// HasData is overridden here to prevent the check from failing if there is no
+// directory for phpstan to scan.
+func (c *PhpStanCheck) HasData(failCheck bool) bool {
+	if c.DataMap == nil && len(c.Result.Passes) == 0 {
+		if failCheck {
+			c.AddFail("no data available")
+		}
+		return false
+	}
+	return true
 }
 
 // UnmarshalDataMap parses the phpstan json into the PhpStan
 // type for further processing.
 func (c *PhpStanCheck) UnmarshalDataMap() {
+	if c.Result.Status == result.Pass {
+		return
+	}
+
 	if len(c.DataMap["phpstan"]) == 0 {
-		c.AddFail("no data provided")
-		c.AddBreach(result.ValueBreach{Value: "no data provided"})
+		c.Result.Status = result.Pass
+		c.AddWarning("Unhandled PHPStan response, unable to determine status.")
 		return
 	}
 
@@ -134,7 +161,9 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 	err := json.Unmarshal(c.DataMap["phpstan"], &c.phpstanResult)
 	if err != nil {
 		c.AddFail(err.Error())
-		c.AddBreach(result.ValueBreach{Value: err.Error()})
+		c.AddBreach(result.ValueBreach{
+			ValueLabel: "unable to parse phpstan result",
+			Value:      err.Error()})
 		return
 	}
 
@@ -147,7 +176,9 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 	err = json.Unmarshal(c.phpstanResult.FilesRaw, &c.phpstanResult.Files)
 	if err != nil {
 		c.AddFail(err.Error())
-		c.AddBreach(result.ValueBreach{Value: err.Error()})
+		c.AddBreach(result.ValueBreach{
+			ValueLabel: "unable to parse phpstan file errors",
+			Value:      err.Error()})
 		return
 	}
 }
@@ -161,17 +192,24 @@ func (c *PhpStanCheck) RunCheck() {
 	}
 
 	for file, errors := range c.phpstanResult.Files {
+		errLines := []string{}
 		for _, er := range errors.Messages {
 			c.AddFail(fmt.Sprintf("[%s] Line %d: %s", file, er.Line, er.Message))
-			c.AddBreach(result.KeyValueBreach{
-				Key:   fmt.Sprintf("%s:%d", file, er.Line),
-				Value: er.Message,
-			})
+			errLines = append(errLines, fmt.Sprintf("line %d: %s", er.Line, er.Message))
+
 		}
+		c.AddBreach(result.KeyValueBreach{
+			Key:   fmt.Sprintf("file contains banned functions: %s", file),
+			Value: strings.Join(errLines, "\n"),
+		})
 	}
 
 	for _, er := range c.phpstanResult.Errors {
 		c.AddFail(er)
-		c.AddBreach(result.ValueBreach{Value: er})
+	}
+	if len(c.phpstanResult.Errors) > 0 {
+		c.AddBreach(result.ValueBreach{
+			ValueLabel: "errors encountered when running phpstan",
+			Value:      strings.Join(c.phpstanResult.Errors, "\n")})
 	}
 }

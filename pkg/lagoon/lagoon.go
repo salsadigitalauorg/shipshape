@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/hasura/go-graphql-client"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -22,6 +24,7 @@ type Fact struct {
 }
 
 const SourceName string = "Shipshape"
+const FactMaxValueLength int = 300
 
 var ApiBaseUrl string
 var ApiToken string
@@ -170,4 +173,42 @@ func ReplaceFacts(facts []Fact) error {
 	}
 	log.Debug("adding new facts")
 	return AddFacts(facts)
+}
+
+func BreachFactName(b result.Breach) string {
+	var name string
+	if result.BreachGetKeyLabel(b) != "" {
+		name = fmt.Sprintf("%s: %s", result.BreachGetKeyLabel(b),
+			result.BreachGetKey(b))
+	} else if result.BreachGetKey(b) != "" {
+		name = result.BreachGetKey(b)
+	} else if result.BreachGetValueLabel(b) != "" {
+		name = result.BreachGetValueLabel(b)
+	} else {
+		name = result.BreachGetCheckName(b) + " - " +
+			string(result.BreachGetCheckType(b))
+	}
+	return name
+}
+
+func BreachFactValue(b result.Breach) string {
+	value := result.BreachGetValue(b)
+	if value == "" {
+		value = strings.Join(result.BreachGetValues(b), ", ")
+	}
+
+	label := result.BreachGetValueLabel(b)
+	if label == "" || BreachFactName(b) == label {
+		return value
+	} else {
+		value = fmt.Sprintf("%s: %s", label, value)
+	}
+
+	expected := result.BreachGetExpectedValue(b)
+	if expected == "" {
+		return value
+	} else {
+		value = fmt.Sprintf("expected: %s, %s", expected, value)
+	}
+	return value
 }

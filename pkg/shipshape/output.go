@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"strings"
 	"text/tabwriter"
-	"time"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -168,22 +166,16 @@ func JUnit(w *bufio.Writer) {
 // lagoon-facts-app to be consumed.
 // see https://github.com/uselagoon/lagoon-facts-app#arbitrary-facts
 func LagoonFacts(w *bufio.Writer) {
-	facts := []lagoon.Fact{{
-		Name:        "Last run",
-		Description: "The last time the audit was run",
-		Value:       time.Now().Format(time.RFC3339),
-		Source:      lagoon.SourceName,
-		Category:    "last-run",
-	}}
+	facts := []lagoon.Fact{}
 
 	if RunResultList.TotalBreaches == 0 {
 		if lagoon.PushFacts {
 			lagoon.InitClient()
-			err := lagoon.ReplaceFacts(facts)
+			err := lagoon.DeleteFacts()
 			if err != nil {
-				log.WithError(err).Fatal("failed to replace facts")
+				log.WithError(err).Fatal("failed to delete facts")
 			}
-			fmt.Fprint(w, "no breach to push to Lagoon; only updated last run")
+			fmt.Fprint(w, "no breach to push to Lagoon; only deleted previous facts")
 			w.Flush()
 			return
 		}
@@ -192,40 +184,16 @@ func LagoonFacts(w *bufio.Writer) {
 		return
 	}
 
-	factName := func(b result.Breach) string {
-		var name string
-		if result.BreachGetKeyLabel(b) == "" {
-			name = result.BreachGetCheckName(b) + " - " +
-				string(result.BreachGetCheckType(b))
-		} else {
-			name = fmt.Sprintf("%s: %s", result.BreachGetKeyLabel(b),
-				result.BreachGetKey(b))
-		}
-		return name
-	}
-
-	factValue := func(b result.Breach) string {
-		value := result.BreachGetValue(b)
-		if value == "" {
-			value = strings.Join(result.BreachGetValues(b), ", ")
-		}
-
-		var withLabel string
-		label := result.BreachGetValueLabel(b)
-		if label == "" {
-			withLabel = value
-		} else {
-			withLabel = fmt.Sprintf("%s: %s", label, value)
-		}
-		return withLabel
-	}
-
-	for _, r := range RunResultList.Results {
-		for _, b := range r.Breaches {
+	for iR, r := range RunResultList.Results {
+		for iB, b := range r.Breaches {
+			value := lagoon.BreachFactValue(b)
+			if len(value) > lagoon.FactMaxValueLength {
+				value = value[:lagoon.FactMaxValueLength-12] + "...TRUNCATED"
+			}
 			facts = append(facts, lagoon.Fact{
-				Name:        factName(b),
+				Name:        fmt.Sprintf("[%d] %s", iR+iB+1, lagoon.BreachFactName(b)),
 				Description: result.BreachGetCheckName(b),
-				Value:       factValue(b),
+				Value:       value,
 				Source:      lagoon.SourceName,
 				Category:    string(result.BreachGetCheckType(b)),
 			})

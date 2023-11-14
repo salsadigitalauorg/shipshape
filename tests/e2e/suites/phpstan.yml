@@ -1,0 +1,46 @@
+name: phpstan
+
+testcases:
+- name: no directory exists
+  steps:
+  - script: |
+      cd /app;
+      rm -rf web/themes/custom;
+      shipshape -f /shipshape/tests/e2e/suites/shipshape/phpstan.yml
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldEqual Ship is in top shape; no breach detected!
+
+- name: directory exists, no php files inside
+  steps:
+  - script: |
+      cd /app;
+      mkdir -p web/themes/custom;
+      shipshape -f /shipshape/tests/e2e/suites/shipshape/phpstan.yml
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldEqual Ship is in top shape; no breach detected!
+
+- name: php files exists, no breaches
+  steps:
+  - script: |
+      cd /app;
+      mkdir -p web/themes/custom;
+      echo "<?php echo 'Hello world';" > web/themes/custom/custom.theme;
+      shipshape -f /shipshape/tests/e2e/suites/shipshape/phpstan.yml
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldEqual Ship is in top shape; no breach detected!
+
+- name: breach found
+  steps:
+  - script: |
+      cd /app;
+      mkdir -p web/themes/custom;
+      echo "<?php var_dump('Hello world');" > web/themes/custom/custom.theme;
+      shipshape -f /shipshape/tests/e2e/suites/shipshape/phpstan.yml
+    assertions:
+    - result.code ShouldEqual 0
+    - result.systemout ShouldContainSubstring [/app/web/themes/custom/custom.theme]
+    - result.systemout ShouldContainSubstring Line 1
+    - result.systemout ShouldContainSubstring Calling var_dump() is forbidden, please change the code

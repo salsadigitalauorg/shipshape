@@ -61,9 +61,9 @@ func TestDbModuleCheck(t *testing.T) {
 			dataMap = map[string][]byte{
 				"modules": []byte(`
 block:
-  status: enabled
+  status: Enabled
 node:
-  status: enabled
+  status: Enabled
 
 `),
 			}
@@ -88,29 +88,27 @@ node:
 	assert.Equal(result.Pass, c.Result.Status)
 	assert.Empty(c.Result.Failures)
 	assert.ElementsMatch(c.Result.Passes, []string{
-		"'block' is enabled",
-		"'node' is enabled",
-		"'views_ui' is not enabled",
-		"'field_ui' is not enabled",
+		"all required modules are enabled",
+		"all disallowed modules are disabled",
 	})
 
 	c = mockCheck(map[string][]byte{
 		"modules": []byte(`
 node:
-  status: enabled
+  status: Enabled
 views_ui:
-  status: enabled
+  status: Enabled
 
 `),
 	})
 
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(c.Result.Passes, []string{
-		"'node' is enabled",
-		"'field_ui' is not enabled",
+		"some required modules are enabled: node",
+		"some disallowed modules are disabled: field_ui",
 	})
 	assert.ElementsMatch(c.Result.Failures, []string{
-		"'block' is not enabled",
-		"'views_ui' is enabled",
+		"required modules are not enabled: block",
+		"disallowed modules are enabled: views_ui",
 	})
 }

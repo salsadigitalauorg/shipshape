@@ -1,6 +1,8 @@
 package yaml
 
 import (
+	"strings"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -64,7 +66,7 @@ func (kv KeyValue) Equals(value string) bool {
 	if kv.Truthy {
 		return kv.EqualsTruthy(value)
 	}
-	return kv.Value == value
+	return strings.EqualFold(kv.Value, value)
 }
 
 func (kv KeyValue) EqualsTruthy(value string) bool {

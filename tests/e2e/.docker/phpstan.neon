@@ -1,0 +1,18 @@
+parameters:
+  # Disable all phpstan rules.
+  customRulesetUsed: true
+  scanDirectories:
+    - /app
+  excludePaths:
+    - /app/vendor/*
+  fileExtensions:
+    - php
+    - theme
+    - inc
+  reportUnmatchedIgnoredErrors: false
+  disallowedFunctionCalls:
+    - function: 'var_dump()'
+      message: 'please change the code'
+  disallowedMethodCalls:
+    - function: 'mysqli::*()'
+      message: 'please change the code'

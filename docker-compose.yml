@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+
+  mariadb:
+    image: uselagoon/mariadb-10.5-drupal
+    ports:
+      - "3306"
+
+  drupal:
+    image: shipshape-e2e-drupal
+    build:
+      context: .
+      dockerfile: tests/e2e/Dockerfile
+    working_dir: /shipshape/tests/e2e/suites
