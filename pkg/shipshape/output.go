@@ -208,8 +208,10 @@ func LagoonFacts(w *bufio.Writer) {
 			if err != nil {
 				log.WithError(err).Fatal("Unable to write facts to Insights Remote")
 			}
+		} else {
+			log.WithError(err).Fatal("Bearer token unable to be loaded from ", lagoon.DefaultLagoonInsightsTokenLocation)
 		}
-		fmt.Fprint(w, "successfully pushed facts to the Lagoon api")
+		fmt.Fprint(w, "successfully pushed facts to Lagoon Remote")
 		w.Flush()
 		return
 	}
