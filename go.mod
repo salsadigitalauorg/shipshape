@@ -1,10 +1,12 @@
 module github.com/salsadigitalauorg/shipshape
 
-go 1.17
+go 1.21
 
 require (
+	github.com/goccy/go-json v0.10.2
 	github.com/gocolly/colly v1.2.0
 	github.com/hasura/go-graphql-client v0.9.2
+	github.com/jmespath/go-jmespath v0.4.0
 	github.com/minio/selfupdate v0.4.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/pflag v1.0.5

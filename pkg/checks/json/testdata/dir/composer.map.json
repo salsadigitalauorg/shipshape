@@ -1,0 +1,30 @@
+{
+  "license": "MIT",
+  "require": {
+    "awesome/library": "dev-my-fork-awesome-feature",
+    "awesome/true": "true",
+    "awesome/false": false
+  },
+  "repositories" : {
+    "test/library0": {
+      "type": "vcs",
+      "url": "https://github.com/yourgithubuser/library",
+      "no-api": true
+    },
+    "test/library1": {
+      "type": "vcs",
+      "url": "https://github.com/yourgithubuser/library1",
+      "no-api": "true"
+    },
+    "test/library2" : {
+      "type": "vcs",
+      "url": "https://github.com/yourgithubuser/library2",
+      "no-api": false
+    },
+    "test/library3" : {
+      "type": "vcs",
+      "url": "https://github.com/yourgithubuser/library2",
+      "no-api": "false"
+    }
+  }
+}

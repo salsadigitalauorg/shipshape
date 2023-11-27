@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -138,6 +139,26 @@ func MergeIntSlice(slcA *[]int, slcB []int) {
 		}
 	}
 	*slcA = newSlc
+}
+
+// SliceContains determines whether an item exists in a slice of any type.
+func SliceContains(slice any, item any) bool {
+	var s []any
+	var ok bool
+	if s, ok = slice.([]any); !ok {
+		return false
+	}
+
+	for _, i := range s {
+		if i == nil && item == nil {
+			return true
+		} else if reflect.TypeOf(i) != reflect.TypeOf(item) {
+			continue
+		} else if fmt.Sprint(i) == fmt.Sprint(item) {
+			return true
+		}
+	}
+	return false
 }
 
 // StringSliceContains determines whether an item exists in a slice of string.
