@@ -36,6 +36,7 @@ The following check types are available:
   - [drupal-file-module](#drupal-file-module)
   - [drupal-db-module](#drupal-db-module)
   - [drupal-db-permissions](#drupal-db-permissions)
+  - [drupal-role-permissions](#drupal-role-permissions)
   - [drupal-user-forbidden](#drupal-user-forbidden)
   - [phpstan](#phpstan)
 
@@ -295,6 +296,28 @@ documentation coming soon...
 ### drupal-db-permissions
 documentation coming soon...
 
+### drupal-role-permissions
+Checks for permissions of a specific role.
+
+| Field                  | Default | Required | Description                    |
+|------------------------| :-----: |:--------:|--------------------------------|
+| rid                    |    -    |   Yes    | Role ID, eg. authenticated     |
+| required-permissions   |    -    |    No    | List of required permissions   |
+| disallowed-permissions |    -    |    No    | List of disallowed permissions |
+
+Examples:
+```yaml
+checks:
+  drupal-role-permissions:
+    - name: '[DATABASE] Authenticated role check'
+      severity: high
+      rid: 'authenticated'
+      required-permissions:
+        - 'setup own tfa'
+      disallowed-permissions:
+        - 'administer users'
+```
+
 ### drupal-user-forbidden
 
 Checks if a forbidden user is active.
@@ -312,7 +335,6 @@ checks:
     - name: '[DATABASE] Active user 2 check'
       severity: medium
       uid: 2
-
 ```
 
 ### phpstan

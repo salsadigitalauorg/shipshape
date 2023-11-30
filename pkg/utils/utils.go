@@ -208,6 +208,70 @@ func StringSlicesIntersect(slc1 []string, slc2 []string) []string {
 	return intersect
 }
 
+// StringSlicesIntersectUnique returns the unique strings in slc2 that also present in slc1.
+func StringSlicesIntersectUnique(slc1, slc2 []string) []string {
+	// Convert slc1 to a map for faster lookup.
+	map1 := make(map[string]struct{})
+	for _, x := range slc1 {
+		map1[x] = struct{}{}
+	}
+
+	intersect := make(map[string]struct{})
+	for _, x := range slc2 {
+		if _, found := map1[x]; found {
+			intersect[x] = struct{}{}
+		}
+	}
+
+	keys := []string(nil)
+	for k := range intersect {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
+// StringSlicesInterdiff returns the strings in slc2 that do not present in slc1.
+func StringSlicesInterdiff(slc1 []string, slc2 []string) []string {
+	// Convert slc1 to a map for faster lookup.
+	map1 := make(map[string]struct{}, len(slc1))
+	for _, x := range slc1 {
+		map1[x] = struct{}{}
+	}
+
+	interdiff := []string(nil)
+	for _, x := range slc2 {
+		if _, found := map1[x]; !found {
+			interdiff = append(interdiff, x)
+		}
+	}
+
+	return interdiff
+}
+
+// StringSlicesInterdiffUnique returns the unique strings in slc2 that do not present in slc1.
+func StringSlicesInterdiffUnique(slc1, slc2 []string) []string {
+	// Convert slc1 to a map for faster lookup.
+	map1 := make(map[string]struct{})
+	for _, x := range slc1 {
+		map1[x] = struct{}{}
+	}
+
+	interdiff := make(map[string]struct{})
+	for _, x := range slc2 {
+		if _, found := map1[x]; !found {
+			interdiff[x] = struct{}{}
+		}
+	}
+
+	keys := []string(nil)
+	for k := range interdiff {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
 // StringIsUrl determines whether a string is a url by trying to parse it.
 func StringIsUrl(s string) bool {
 	u, err := url.Parse(s)
