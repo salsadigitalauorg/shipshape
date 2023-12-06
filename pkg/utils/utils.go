@@ -220,7 +220,7 @@ func StringSliceMatch(slice []string, item string) bool {
 
 // Sift through a slice to determine if it contains eligible package
 // with optional version constrains.
-func SliceCheckString(slice []string, item string, item_version string) bool {
+func PackageCheckString(slice []string, item string, item_version string) bool {
   for _, s := range slice {
     // Parse slice with regex to:
     // 1 - package name (e.g. "bitnami/kubectl")

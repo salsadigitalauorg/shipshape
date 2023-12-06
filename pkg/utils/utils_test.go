@@ -367,11 +367,11 @@ func TestHasComposerDependency(t *testing.T) {
 	}
 }
 
-func TestSliceCheckString(t *testing.T) {
+func TestPackageCheckString(t *testing.T) {
 	assert := assert.New(t)
-	assert.False(SliceCheckString([]string{}, "bitnami/kubectl", ""))
-	assert.False(SliceCheckString([]string{"bitnami/postgresql@16"}, "bitnami/kubectl", "1.24"))
-	assert.False(SliceCheckString([]string{"bitnami/postgresql@16", "bitnami/kubectl@1.24-beta"}, "bitnami/kubectl", "1.23-alpha"))
-	assert.True(SliceCheckString([]string{"bitnami/postgresql@16", "bitnami/kubectl"}, "bitnami/kubectl", "1.24"))
-	assert.True(SliceCheckString([]string{"bitnami/postgresql@16", "bitnami/kubectl:1.24"}, "bitnami/kubectl", "1.25"))
+	assert.False(PackageCheckString([]string{}, "bitnami/kubectl", ""))
+	assert.False(PackageCheckString([]string{"bitnami/postgresql@16"}, "bitnami/kubectl", "1.24"))
+	assert.False(PackageCheckString([]string{"bitnami/postgresql@16", "bitnami/kubectl@1.24-beta"}, "bitnami/kubectl", "1.23-alpha"))
+	assert.True(PackageCheckString([]string{"bitnami/postgresql@16", "bitnami/kubectl"}, "bitnami/kubectl", "1.24"))
+	assert.True(PackageCheckString([]string{"bitnami/postgresql@16", "bitnami/kubectl:1.24"}, "bitnami/kubectl", "1.25"))
 }

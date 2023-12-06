@@ -86,7 +86,7 @@ func (c *BaseImageCheck) RunCheck() {
 						continue
 					}
 
-					if len(c.Allowed) > 0 && !utils.SliceCheckString(c.Allowed, match[1], match[2]) {
+					if len(c.Allowed) > 0 && !utils.PackageCheckString(c.Allowed, match[1], match[2]) {
 						c.AddFail(name + " is using invalid base image " + match[1])
 						c.AddBreach(result.KeyValueBreach{
 							Key:        name,
@@ -108,7 +108,7 @@ func (c *BaseImageCheck) RunCheck() {
 					continue
 				}
 
-				if !utils.SliceCheckString(c.Allowed, match[1], match[2]) {
+				if !utils.PackageCheckString(c.Allowed, match[1], match[2]) {
 					c.AddFail(name + " is using invalid base image " + match[1])
 					c.AddBreach(result.KeyValueBreach{
 						Key:        name,
