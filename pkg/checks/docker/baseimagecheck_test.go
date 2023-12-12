@@ -49,7 +49,35 @@ func TestDockerfileCheck(t *testing.T) {
 func TestInvalidDockerfileCheck(t *testing.T) {
 	assert := assert.New(t)
 	c := docker.BaseImageCheck{
-		Allowed: []string{"bitnami/redis"},
+		Allowed: []string{"bitnami/redis@latest"},
+		Paths:   []string{"./fixtures/compose-dockerfile"},
+	}
+	c.RunCheck()
+	assert.Equal(result.Fail, c.Result.Status)
+	assert.EqualValues(
+		[]string{"service1 is using invalid base image bitnami/kubectl"},
+		c.Result.Failures,
+	)
+}
+
+func TestValidDockerfileImageVersion(t *testing.T) {
+	assert := assert.New(t)
+	c := docker.BaseImageCheck{
+		Allowed: []string{"bitnami/kubectl@1.24"},
+		Paths:   []string{"./fixtures/compose-dockerfile"},
+	}
+	c.RunCheck()
+	assert.Equal(result.Pass, c.Result.Status)
+	assert.EqualValues(
+		[]string{"service1 is using valid base images"},
+		c.Result.Passes,
+	)
+}
+
+func TestInvalidDockerfileImageVersion(t *testing.T) {
+	assert := assert.New(t)
+	c := docker.BaseImageCheck{
+		Allowed: []string{"bitnami/kubectl:1.26"},
 		Paths:   []string{"./fixtures/compose-dockerfile"},
 	}
 	c.RunCheck()
@@ -84,6 +112,30 @@ func TestValidImage(t *testing.T) {
 	)
 }
 
+func TestValidImageVersions(t *testing.T) {
+	assert := assert.New(t)
+	c := docker.BaseImageCheck{
+		Allowed: []string{
+			"bitnami/kubectl@1.25.12-debian-11-r6",
+			"bitnami/postgresql:15",
+			"bitnami/redis",
+			"bitnami/mongodb@latest",
+		},
+		Paths: []string{"./fixtures/compose-image"},
+	}
+	c.RunCheck()
+	assert.Equal(result.Pass, c.Result.Status)
+	assert.ElementsMatch(
+		[]string{
+			"service1 is using valid base images",
+			"service2 is using valid base images",
+			"service3 is using valid base images",
+			"service4 is using valid base images",
+		},
+		c.Result.Passes,
+	)
+}
+
 func TestInvalidImageCheck(t *testing.T) {
 	assert := assert.New(t)
 	c := docker.BaseImageCheck{
@@ -98,6 +150,27 @@ func TestInvalidImageCheck(t *testing.T) {
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]string{"service4 is using invalid base image bitnami/mongodb"},
+		c.Result.Failures,
+	)
+}
+
+func TestInvalidImageVersions(t *testing.T) {
+	assert := assert.New(t)
+	c := docker.BaseImageCheck{
+		Allowed: []string{
+			"bitnami/kubectl@latest",
+			"bitnami/postgresql:17",
+			"bitnami/redis",
+		},
+		Paths: []string{"./fixtures/compose-image"},
+	}
+	c.RunCheck()
+	assert.Equal(result.Fail, c.Result.Status)
+	assert.EqualValues(
+		[]string{
+		  "service2 is using invalid base image bitnami/postgresql",
+		  "service4 is using invalid base image bitnami/mongodb",
+		},
 		c.Result.Failures,
 	)
 }
