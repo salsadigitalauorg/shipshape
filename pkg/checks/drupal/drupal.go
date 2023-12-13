@@ -18,6 +18,7 @@ func RegisterChecks() {
 	config.ChecksRegistry[FileModule] = func() config.Check { return &FileModuleCheck{} }
 	config.ChecksRegistry[DbModule] = func() config.Check { return &DbModuleCheck{} }
 	config.ChecksRegistry[DbPermissions] = func() config.Check { return &DbPermissionsCheck{} }
+	config.ChecksRegistry[RolePermissions] = func() config.Check { return &RolePermissionsCheck{} }
 	config.ChecksRegistry[TrackingCode] = func() config.Check { return &TrackingCodeCheck{} }
 	config.ChecksRegistry[UserRole] = func() config.Check { return &UserRoleCheck{} }
 	config.ChecksRegistry[AdminUser] = func() config.Check { return &AdminUserCheck{} }

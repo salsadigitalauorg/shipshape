@@ -12,10 +12,12 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 
 	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
+	"github.com/hashicorp/go-version"
 	"gopkg.in/yaml.v3"
 )
 
@@ -140,6 +142,26 @@ func MergeIntSlice(slcA *[]int, slcB []int) {
 	*slcA = newSlc
 }
 
+// SliceContains determines whether an item exists in a slice of any type.
+func SliceContains(slice any, item any) bool {
+	var s []any
+	var ok bool
+	if s, ok = slice.([]any); !ok {
+		return false
+	}
+
+	for _, i := range s {
+		if i == nil && item == nil {
+			return true
+		} else if reflect.TypeOf(i) != reflect.TypeOf(item) {
+			continue
+		} else if fmt.Sprint(i) == fmt.Sprint(item) {
+			return true
+		}
+	}
+	return false
+}
+
 // StringSliceContains determines whether an item exists in a slice of string.
 func StringSliceContains(slice []string, item string) bool {
 	if len(slice) == 0 {
@@ -187,6 +209,70 @@ func StringSlicesIntersect(slc1 []string, slc2 []string) []string {
 	return intersect
 }
 
+// StringSlicesIntersectUnique returns the unique strings in slc2 that also present in slc1.
+func StringSlicesIntersectUnique(slc1, slc2 []string) []string {
+	// Convert slc1 to a map for faster lookup.
+	map1 := make(map[string]struct{})
+	for _, x := range slc1 {
+		map1[x] = struct{}{}
+	}
+
+	intersect := make(map[string]struct{})
+	for _, x := range slc2 {
+		if _, found := map1[x]; found {
+			intersect[x] = struct{}{}
+		}
+	}
+
+	keys := []string(nil)
+	for k := range intersect {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
+// StringSlicesInterdiff returns the strings in slc2 that do not present in slc1.
+func StringSlicesInterdiff(slc1 []string, slc2 []string) []string {
+	// Convert slc1 to a map for faster lookup.
+	map1 := make(map[string]struct{}, len(slc1))
+	for _, x := range slc1 {
+		map1[x] = struct{}{}
+	}
+
+	interdiff := []string(nil)
+	for _, x := range slc2 {
+		if _, found := map1[x]; !found {
+			interdiff = append(interdiff, x)
+		}
+	}
+
+	return interdiff
+}
+
+// StringSlicesInterdiffUnique returns the unique strings in slc2 that do not present in slc1.
+func StringSlicesInterdiffUnique(slc1, slc2 []string) []string {
+	// Convert slc1 to a map for faster lookup.
+	map1 := make(map[string]struct{})
+	for _, x := range slc1 {
+		map1[x] = struct{}{}
+	}
+
+	interdiff := make(map[string]struct{})
+	for _, x := range slc2 {
+		if _, found := map1[x]; !found {
+			interdiff[x] = struct{}{}
+		}
+	}
+
+	keys := []string(nil)
+	for k := range interdiff {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
 // StringIsUrl determines whether a string is a url by trying to parse it.
 func StringIsUrl(s string) bool {
 	u, err := url.Parse(s)
@@ -213,6 +299,38 @@ func StringSliceMatch(slice []string, item string) bool {
 		if strings.Contains(item, s) {
 			return true
 		}
+	}
+	return false
+}
+
+// Sift through a slice to determine if it contains eligible package
+// with optional version constrains.
+func PackageCheckString(slice []string, item string, item_version string) bool {
+  for _, s := range slice {
+    // Parse slice with regex to:
+    // 1 - package name (e.g. "bitnami/kubectl")
+    // 2 - version (e.g. "8.0")
+    service_regex := regexp.MustCompile("^(.[^:@]*)?[:@]?([^ latest$]*)")
+    service_match := service_regex.FindStringSubmatch(s)
+    // Only proceed if package names were parsed successfully.
+    if len(service_match[1]) > 0 && len(item) > 0 {
+      // Check if package name matches.
+      if service_match[1] == item {
+        // Package name matched.
+        // If service does not dictate version than assume any version is allowed.
+        if len(service_match[2]) < 1 {
+          return true
+        } else if len(item_version) > 0 {
+          // Ensure that item version is not less than slice version.
+          allowedVersion, err := version.NewVersion(service_match[2])
+          imageVersion, err := version.NewVersion(item_version)
+          // Run version comparison.
+          if err == nil && allowedVersion.LessThanOrEqual(imageVersion) {
+            return true
+          }
+        }
+      }
+    }
 	}
 	return false
 }

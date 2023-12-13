@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"sort"
 	"testing"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -250,6 +251,21 @@ func TestMergeIntSlice(t *testing.T) {
 
 }
 
+func TestSliceContains(t *testing.T) {
+	assertion := assert.New(t)
+	assertion.False(SliceContains([]any{}, "foo"))
+	assertion.False(SliceContains([]any{"bar"}, "foo"))
+	assertion.True(SliceContains([]any{"bar", "foo"}, "foo"))
+	assertion.False(SliceContains([]any{"true"}, true))
+	assertion.False(SliceContains([]any{"true", "false"}, false))
+	assertion.False(SliceContains([]any{"true", true}, false))
+	assertion.False(SliceContains([]any{"true", true, 0, 1, nil, "false"}, false))
+	assertion.True(SliceContains([]any{"true", true, 0, 1, nil, "false"}, nil))
+	assertion.True(SliceContains([]any{"true", true, 0, 1, nil, "false"}, 0))
+	assertion.True(SliceContains([]any{"true", true, 0, 1, nil, "false"}, 1))
+	assertion.False(SliceContains([]any{"true", true, 0, 1, nil, "false"}, "1"))
+}
+
 func TestStringSliceContains(t *testing.T) {
 	assert := assert.New(t)
 	assert.False(StringSliceContains([]string{}, "foo"))
@@ -289,6 +305,101 @@ func TestStringSlicesIntersect(t *testing.T) {
 	expectedIntersect = []string{"foo", "zoom"}
 	if len(intersect) != 2 || !reflect.DeepEqual(intersect, expectedIntersect) {
 		t.Errorf("Intersect should have 2 item, got '%+v'", intersect)
+	}
+}
+
+func TestStringSlicesIntersectUnique(t *testing.T) {
+	intersect := StringSlicesIntersectUnique(
+		[]string{"foo"}, []string{})
+	if len(intersect) != 0 {
+		t.Errorf("Intersect should be empty, got '%+v'", intersect)
+	}
+
+	intersect = StringSlicesIntersectUnique(
+		[]string{"foo"}, []string{"bar"})
+	if len(intersect) != 0 {
+		t.Errorf("Intersect should be empty, got '%+v'", intersect)
+	}
+
+	intersect = StringSlicesIntersectUnique(
+		[]string{"foo"}, []string{"bar", "foo"})
+	expectedIntersect := []string{"foo"}
+	if len(intersect) != 1 || !reflect.DeepEqual(intersect, expectedIntersect) {
+		t.Errorf("Intersect should have 1 item, got '%+v'", intersect)
+	}
+
+	intersect = StringSlicesIntersectUnique(
+		[]string{"foo", "baz", "zoom"}, []string{"bar", "foo", "zoo", "zoom"})
+	sort.Strings(intersect)
+	expectedIntersect = []string{"foo", "zoom"}
+	if len(intersect) != 2 || !reflect.DeepEqual(intersect, expectedIntersect) {
+		t.Errorf("Intersect should have 2 item, got '%+v'", intersect)
+	}
+
+	intersect = StringSlicesIntersectUnique(
+		[]string{"foo", "baz", "zoom"}, []string{"bar", "foo", "zoo", "zoom", "foo", "bar", "zoom", "zoo"})
+	sort.Strings(intersect)
+	expectedIntersect = []string{"foo", "zoom"}
+	if len(intersect) != 2 || !reflect.DeepEqual(intersect, expectedIntersect) {
+		t.Errorf("Intersect should have 2 item, got '%+v'", intersect)
+	}
+}
+
+func TestStringSlicesInterdiff(t *testing.T) {
+	interdiff := StringSlicesInterdiff(
+		[]string{"foo"}, []string{})
+	if len(interdiff) != 0 {
+		t.Errorf("Interdiff should be empty, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiff(
+		[]string{"foo"}, []string{"foo"})
+	if len(interdiff) != 0 {
+		t.Errorf("Interdiff should be empty, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiff(
+		[]string{"foo"}, []string{"bar", "foo"})
+	expectedInterdiff := []string{"bar"}
+	if len(interdiff) != 1 || !reflect.DeepEqual(interdiff, expectedInterdiff) {
+		t.Errorf("Interdiff should have 1 item, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiff(
+		[]string{"foo", "baz", "zoom"}, []string{"bar", "foo", "zoo", "zoom", "bar"})
+	sort.Strings(interdiff)
+	expectedInterdiff = []string{"bar", "bar", "zoo"}
+	if len(interdiff) != 3 || !reflect.DeepEqual(interdiff, expectedInterdiff) {
+		t.Errorf("Interdiff should have 4 item, got '%+v'", interdiff)
+	}
+}
+
+func TestStringSlicesInterdiffUnique(t *testing.T) {
+	interdiff := StringSlicesInterdiffUnique(
+		[]string{"foo"}, []string{})
+	if len(interdiff) != 0 {
+		t.Errorf("Interdiff should be empty, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiffUnique(
+		[]string{"foo"}, []string{"foo"})
+	if len(interdiff) != 0 {
+		t.Errorf("Interdiff should be empty, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiffUnique(
+		[]string{"foo"}, []string{"bar", "foo"})
+	expectedInterdiff := []string{"bar"}
+	if len(interdiff) != 1 || !reflect.DeepEqual(interdiff, expectedInterdiff) {
+		t.Errorf("Interdiff should have 1 item, got '%+v'", interdiff)
+	}
+
+	interdiff = StringSlicesInterdiffUnique(
+		[]string{"foo", "baz", "zoom"}, []string{"bar", "foo", "zoo", "zoom", "bar"})
+	sort.Strings(interdiff)
+	expectedInterdiff = []string{"bar", "zoo"}
+	if len(interdiff) != 2 || !reflect.DeepEqual(interdiff, expectedInterdiff) {
+		t.Errorf("Interdiff should have 2 item, got '%+v'", interdiff)
 	}
 }
 
@@ -365,4 +476,13 @@ func TestHasComposerDependency(t *testing.T) {
 	if _, err := HasComposerDependency("testdata/filecontains", deps); err == nil {
 		t.Errorf("expected file not found got %s", err)
 	}
+}
+
+func TestPackageCheckString(t *testing.T) {
+	assert := assert.New(t)
+	assert.False(PackageCheckString([]string{}, "bitnami/kubectl", ""))
+	assert.False(PackageCheckString([]string{"bitnami/postgresql@16"}, "bitnami/kubectl", "1.24"))
+	assert.False(PackageCheckString([]string{"bitnami/postgresql@16", "bitnami/kubectl@1.24-beta"}, "bitnami/kubectl", "1.23-alpha"))
+	assert.True(PackageCheckString([]string{"bitnami/postgresql@16", "bitnami/kubectl"}, "bitnami/kubectl", "1.24"))
+	assert.True(PackageCheckString([]string{"bitnami/postgresql@16", "bitnami/kubectl:1.24"}, "bitnami/kubectl", "1.25"))
 }

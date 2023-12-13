@@ -1,10 +1,12 @@
 module github.com/salsadigitalauorg/shipshape
 
-go 1.17
+go 1.21
 
 require (
+	github.com/goccy/go-json v0.10.2
 	github.com/gocolly/colly v1.2.0
 	github.com/hasura/go-graphql-client v0.9.2
+	github.com/jmespath/go-jmespath v0.4.0
 	github.com/minio/selfupdate v0.4.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/pflag v1.0.5
@@ -26,6 +28,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

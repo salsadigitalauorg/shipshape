@@ -34,7 +34,7 @@ const (
 var truthyValues = []string{"1", "true"}
 var falsyValues = []string{"0", "false", "null"}
 
-// MergeIntSlice replaces the values of a KeyValue slice with those of another.
+// MergeKeyValueSlice replaces the values of a KeyValue slice with those of another.
 func MergeKeyValueSlice(slcA *[]KeyValue, slcB []KeyValue) {
 	if len(slcB) == 0 {
 		return
