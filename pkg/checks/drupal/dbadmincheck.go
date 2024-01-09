@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -136,16 +137,44 @@ func (c *AdminUserCheck) RunCheck() {
 		}
 
 		if isAdmin {
-			c.AddFail(fmt.Sprintf("Role [%s] has `is_admin: true`", roleName))
-			c.AddBreach(result.KeyValueBreach{
-				Key:        "is_admin: true",
-				ValueLabel: "role",
-				Value:      roleName,
-			})
+			if c.PerformRemediation {
+				if err := c.Remediate(roleName); err != nil {
+					c.AddFail(fmt.Sprintf(
+						"Failed to fix disallowed admin setting for role [%s] due to error: %s",
+						roleName, command.GetMsgFromCommandError(err)))
+					c.AddBreach(result.KeyValueBreach{
+						Key:        "failed to set is_admin to false",
+						ValueLabel: "role",
+						Value:      roleName,
+					})
+				} else {
+					c.AddRemediation(fmt.Sprintf(
+						"Fixed disallowed admin setting for role [%s]", roleName))
+				}
+			} else {
+				c.AddFail(fmt.Sprintf("Role [%s] has `is_admin: true`", roleName))
+				c.AddBreach(result.KeyValueBreach{
+					Key:        "is_admin: true",
+					ValueLabel: "role",
+					Value:      roleName,
+				})
+			}
 		}
 	}
 
 	if len(c.Result.Failures) == 0 {
 		c.Result.Status = result.Pass
 	}
+}
+
+// Remediate attempts to fix a breach.
+func (c *AdminUserCheck) Remediate(breachIfc interface{}) error {
+	// A breach is expected to be a string.
+	if b, ok := breachIfc.(string); ok {
+		_, err := Drush(c.DrushPath, c.Alias, []string{"config:set", "user.role." + b, "is_admin", "0"}).Exec()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
