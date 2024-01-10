@@ -1,0 +1,6 @@
+checks:
+  drupal-admin-user:
+    - name: 'Roles admin check'
+      allowed-roles:
+        - administrator
+      severity: high
