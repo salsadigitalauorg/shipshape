@@ -166,10 +166,10 @@ func TestInvalidImageVersions(t *testing.T) {
 	}
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues(
+	assert.ElementsMatch(
 		[]string{
-		  "service2 is using invalid base image bitnami/postgresql",
-		  "service4 is using invalid base image bitnami/mongodb",
+			"service2 is using invalid base image bitnami/postgresql",
+			"service4 is using invalid base image bitnami/mongodb",
 		},
 		c.Result.Failures,
 	)
