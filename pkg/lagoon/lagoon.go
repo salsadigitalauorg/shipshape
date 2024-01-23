@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"net/http"
 	"os"
 	"strings"
@@ -21,6 +22,23 @@ type Fact struct {
 	Source      string `json:"source"`
 	Description string `json:"description"`
 	Category    string `json:"category"`
+}
+
+type ProblemSeverityRating string
+
+type Problem struct {
+	EnvironmentId     int                   `json:"environment"`
+	Identifier        string                `json:"identifier"`
+	Version           string                `json:"version,omitempty"`
+	FixedVersion      string                `json:"fixedVersion,omitempty"`
+	Source            string                `json:"source,omitempty"`
+	Service           string                `json:"service,omitempty"`
+	Data              string                `json:"data"`
+	Severity          ProblemSeverityRating `json:"severity,omitempty"`
+	SeverityScore     float64               `json:"severityScore,omitempty"`
+	AssociatedPackage string                `json:"associatedPackage,omitempty"`
+	Description       string                `json:"description,omitempty"`
+	Links             string                `json:"links,omitempty"`
 }
 
 const SourceName string = "Shipshape"
@@ -90,7 +108,29 @@ func GetBearerTokenFromDisk(tokenLocation string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(b), nil
+	return strings.Trim(string(b), "\n"), nil
+}
+
+func ProblemsToInsightsRemote(problems []Problem, serviceEndpoint string, bearerToken string) error {
+	bodyString, err := json.Marshal(problems)
+	if err != nil {
+		return err
+	}
+
+	req, _ := http.NewRequest(http.MethodPost, serviceEndpoint, bytes.NewBuffer(bodyString))
+	req.Header.Set("Authorization", bearerToken)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	response, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode != 200 {
+		return fmt.Errorf("There was an error sending the problems to '%s' : %s\n", serviceEndpoint, response.Body)
+	}
+	return nil
 }
 
 func FactsToInsightsRemote(facts []Fact, serviceEndpoint string, bearerToken string) error {
@@ -148,17 +188,18 @@ func AddFacts(facts []Fact) error {
 	return nil
 }
 
-func DeleteFacts() error {
+func DeleteProblems() error {
 	envId, err := GetEnvironmentIdFromEnvVars()
 	if err != nil {
 		return err
 	}
 	var m struct {
-		DeleteFactsFromSource string `graphql:"deleteFactsFromSource(input: {environment: $envId, source: $sourceName})"`
+		DeleteFactsFromSource string `graphql:"deleteProblemsFromSource(input: {environment: $envId, source: $sourceName, service:})"`
 	}
 	variables := map[string]interface{}{
 		"envId":      envId,
 		"sourceName": SourceName,
+		"service":    "cli",
 	}
 	return Client.Mutate(context.Background(), &m, variables)
 }
@@ -167,7 +208,7 @@ func DeleteFacts() error {
 func ReplaceFacts(facts []Fact) error {
 
 	log.Debug("deleting facts before adding new")
-	err := DeleteFacts()
+	err := DeleteProblems()
 	if err != nil {
 		return err
 	}
@@ -211,4 +252,29 @@ func BreachFactValue(b result.Breach) string {
 		value = fmt.Sprintf("expected: %s, %s", expected, value)
 	}
 	return value
+}
+
+// SeverityTranslation will convert a ShipShape severity rating to a Lagoon rating
+func SeverityTranslation(ssSeverity config.Severity) ProblemSeverityRating {
+	// Currently supported severity levels in Lagoon
+	//NONE
+	//UNKNOWN
+	//NEGLIGIBLE
+	//LOW
+	//MEDIUM
+	//HIGH
+	//CRITICAL
+
+	switch ssSeverity {
+	case config.LowSeverity:
+		return "LOW"
+	case config.NormalSeverity:
+		return "MEDIUM"
+	case config.HighSeverity:
+		return "HIGH"
+	case config.CriticalSeverity:
+		return "CRITICAL"
+	}
+
+	return "UNKNOWN"
 }

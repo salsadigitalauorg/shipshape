@@ -153,7 +153,7 @@ func TestDeleteFacts(t *testing.T) {
 		logrus.SetOutput(origOutput)
 	}()
 
-	err := lagoon.DeleteFacts()
+	err := lagoon.DeleteProblems()
 	assert.NoError(err)
 	assert.Equal(2, internal.MockLagoonNumCalls)
 	assert.Equal("{\"query\":\"query ($ns:String!){"+
