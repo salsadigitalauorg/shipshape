@@ -296,6 +296,53 @@ func Test_FactsToInsightsRemote(t *testing.T) {
 	}
 }
 
+func Test_ProblemsToInsightsRemote(t *testing.T) {
+	type args struct {
+		problems    []lagoon.Problem
+		bearerToken string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantErr       assert.ErrorAssertionFunc
+		testBodyEqual bool
+	}{
+		{
+			name: "Successful post",
+			args: args{
+				problems: []lagoon.Problem{
+					{
+						EnvironmentId: 1,
+						Identifier:    "problem1",
+						Severity:      "HIGH",
+						Service:       "serviceName",
+					},
+				},
+				bearerToken: "bearertoken",
+			},
+			wantErr:       assert.NoError,
+			testBodyEqual: true,
+		},
+	}
+	for _, tt := range tests {
+
+		mockServerData := internal.MockInsightsRemoteTestState{}
+
+		serv := internal.MockRemoteInsightsServer(&mockServerData)
+
+		t.Run(tt.name, func(t *testing.T) {
+			tt.wantErr(t, lagoon.ProblemsToInsightsRemote(tt.args.problems, serv.URL, tt.args.bearerToken), fmt.Sprintf("problemsToInsightsRemote(%v, %v)", tt.args.problems, tt.args.bearerToken))
+			if tt.testBodyEqual == true { //let's check the data we sent through seems correct
+				bodyString := mockServerData.LastCallBody
+				var problems []lagoon.Problem
+				err := json.Unmarshal([]byte(bodyString), &problems)
+				assert.NoError(t, err)
+				assert.Equalf(t, tt.args.problems, problems, fmt.Sprintf("Unmarshalled Body not Equal"))
+			}
+		})
+	}
+}
+
 func TestBreachFactNameAndValue(t *testing.T) {
 	tests := []struct {
 		name          string
