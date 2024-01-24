@@ -8,7 +8,6 @@ import (
 	"testing"
 	"text/tabwriter"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/checks/file"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
@@ -66,15 +65,21 @@ func TestTableDisplay(t *testing.T) {
 				Passes: []string{"Pass b", "Pass bb", "Pass bc"},
 			},
 			{
-				Name:     "c",
-				Status:   result.Fail,
-				Failures: []string{"Fail c", "Fail cb"},
+				Name:   "c",
+				Status: result.Fail,
+				Breaches: []result.Breach{
+					result.ValueBreach{Value: "Fail c"},
+					result.ValueBreach{Value: "Fail cb"},
+				},
 			},
 			{
-				Name:     "d",
-				Status:   result.Fail,
-				Passes:   []string{"Pass d", "Pass db"},
-				Failures: []string{"Fail c", "Fail cb"},
+				Name:   "d",
+				Status: result.Fail,
+				Passes: []string{"Pass d", "Pass db"},
+				Breaches: []result.Breach{
+					result.ValueBreach{Value: "Fail c"},
+					result.ValueBreach{Value: "Fail cb"},
+				},
 			},
 		},
 	}
@@ -119,9 +124,12 @@ func TestSimpleDisplay(t *testing.T) {
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
 		RunResultList.Results = append(RunResultList.Results, result.Result{
-			Name:     "b",
-			Status:   result.Fail,
-			Failures: []string{"Fail b"}})
+			Name:   "b",
+			Status: result.Fail,
+			Breaches: []result.Breach{
+				result.ValueBreach{Value: "Fail b"},
+			},
+		})
 		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("# Breaches were detected\n\n  ### b\n     -- Fail b\n\n", buf.String())
@@ -185,6 +193,11 @@ func TestSimpleDisplay(t *testing.T) {
 			"# Non-remediated breaches\n\n", buf.String())
 	})
 }
+
+type testCheck struct{ config.CheckBase }
+
+const testCheckType config.CheckType = "test-check"
+
 func TestJUnit(t *testing.T) {
 	assert := assert.New(t)
 
@@ -196,7 +209,7 @@ func TestJUnit(t *testing.T) {
 <testsuites tests="0" errors="0"></testsuites>
 `, buf.String())
 
-	RunConfig.Checks = config.CheckMap{file.File: []config.Check{&file.FileCheck{
+	RunConfig.Checks = config.CheckMap{testCheckType: []config.Check{&testCheck{
 		CheckBase: config.CheckBase{Name: "a"},
 	}}}
 	RunResultList.Results = append(RunResultList.Results, result.Result{
@@ -205,24 +218,27 @@ func TestJUnit(t *testing.T) {
 	JUnit(w)
 	assert.Equal(`<?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="0" errors="0">
-    <testsuite name="file" tests="0" errors="0">
+    <testsuite name="test-check" tests="0" errors="0">
         <testcase name="a" classname="a"></testcase>
     </testsuite>
 </testsuites>
 `, buf.String())
 
-	RunConfig.Checks[file.File] = append(RunConfig.Checks[file.File], &file.FileCheck{
+	RunConfig.Checks[testCheckType] = append(RunConfig.Checks[testCheckType], &testCheck{
 		CheckBase: config.CheckBase{Name: "b"},
 	})
 	RunResultList.Results = append(RunResultList.Results, result.Result{
-		Name:     "b",
-		Status:   result.Fail,
-		Failures: []string{"Fail b"}})
+		Name:   "b",
+		Status: result.Fail,
+		Breaches: []result.Breach{
+			result.ValueBreach{Value: "Fail b"},
+		},
+	})
 	buf = bytes.Buffer{}
 	JUnit(w)
 	assert.Equal(`<?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="0" errors="0">
-    <testsuite name="file" tests="0" errors="0">
+    <testsuite name="test-check" tests="0" errors="0">
         <testcase name="a" classname="a"></testcase>
         <testcase name="b" classname="b">
             <error message="Fail b"></error>
@@ -280,8 +296,8 @@ func TestLagoonFacts(t *testing.T) {
 	})
 
 	t.Run("breachesDetected", func(t *testing.T) {
-		RunConfig.Checks = config.CheckMap{file.File: []config.Check{
-			&file.FileCheck{CheckBase: config.CheckBase{Name: "a"}}}}
+		RunConfig.Checks = config.CheckMap{testCheckType: []config.Check{
+			&testCheck{CheckBase: config.CheckBase{Name: "a"}}}}
 		RunResultList = result.NewResultList(false)
 		RunResultList.Results = append(RunResultList.Results, result.Result{
 			Name:   "a",
@@ -303,8 +319,8 @@ func TestLagoonFacts(t *testing.T) {
 	})
 
 	t.Run("pushToLagoon", func(t *testing.T) {
-		RunConfig.Checks = config.CheckMap{file.File: []config.Check{
-			&file.FileCheck{CheckBase: config.CheckBase{Name: "a"}}}}
+		RunConfig.Checks = config.CheckMap{testCheckType: []config.Check{
+			&testCheck{CheckBase: config.CheckBase{Name: "a"}}}}
 		RunResultList = result.NewResultList(false)
 		RunResultList.Results = append(RunResultList.Results, result.Result{
 			Name:   "a",
@@ -361,8 +377,8 @@ func TestLagoonFacts(t *testing.T) {
 	})
 
 	t.Run("pushToLagoonOversizedText", func(t *testing.T) {
-		RunConfig.Checks = config.CheckMap{file.File: []config.Check{
-			&file.FileCheck{CheckBase: config.CheckBase{Name: "a"}}}}
+		RunConfig.Checks = config.CheckMap{testCheckType: []config.Check{
+			&testCheck{CheckBase: config.CheckBase{Name: "a"}}}}
 		RunResultList = result.NewResultList(false)
 
 		// Oversized text

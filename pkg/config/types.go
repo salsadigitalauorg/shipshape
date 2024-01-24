@@ -42,7 +42,7 @@ type Check interface {
 	HasData(failCheck bool) bool
 	FetchData()
 	UnmarshalDataMap()
-	AddFail(msg string)
+	AddBreach(result.Breach)
 	AddPass(msg string)
 	AddWarning(msg string)
 	SetPerformRemediation(flag bool)

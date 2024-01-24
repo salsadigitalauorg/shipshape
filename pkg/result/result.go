@@ -18,7 +18,6 @@ type Result struct {
 	CheckType    string   `json:"check-type"`
 	Status       Status   `json:"status"`
 	Passes       []string `json:"passes"`
-	Failures     []string `json:"failures"`
 	Breaches     []Breach `json:"breaches"`
 	Warnings     []string `json:"warnings"`
 	Remediations []string `json:"remediations"`
@@ -26,9 +25,9 @@ type Result struct {
 
 // Sort reorders the Passes & Failures in order to get consistent output.
 func (r *Result) Sort() {
-	if len(r.Failures) > 0 {
-		sort.Slice(r.Failures, func(i int, j int) bool {
-			return r.Failures[i] < r.Failures[j]
+	if len(r.Breaches) > 0 {
+		sort.Slice(r.Breaches, func(i int, j int) bool {
+			return BreachGetCheckName(r.Breaches[i]) < BreachGetCheckName(r.Breaches[j])
 		})
 	}
 

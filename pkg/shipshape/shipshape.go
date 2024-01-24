@@ -191,11 +191,11 @@ func ProcessCheck(rl *result.ResultList, c config.Check) {
 		contextLogger.Print("fetching data")
 		c.FetchData()
 		c.HasData(true)
-		if len(c.GetResult().Failures) == 0 {
+		if len(c.GetResult().Breaches) == 0 {
 			c.UnmarshalDataMap()
 		}
 	}
-	if len(c.GetResult().Failures) == 0 && len(c.GetResult().Passes) == 0 {
+	if len(c.GetResult().Breaches) == 0 && len(c.GetResult().Passes) == 0 {
 		contextLogger.Print("running check")
 		c.RunCheck()
 		c.GetResult().Sort()

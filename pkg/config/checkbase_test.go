@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/checks/file"
-	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -14,17 +12,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type testCheckForCheckBaseInit struct{}
+
+const testCheckForCheckBaseInitType CheckType = "testCheckForCheckBaseInitType"
+
 func TestCheckBaseInit(t *testing.T) {
 	assert := assert.New(t)
 
 	c := CheckBase{Name: "foo"}
 	assert.Equal("foo", c.GetName())
 
-	c.Init(file.File)
+	c.Init(testCheckForCheckBaseInitType)
 	assert.Equal(NormalSeverity, c.Severity)
 	assert.Equal("foo", c.Result.Name)
 	assert.Equal(string(NormalSeverity), c.Result.Severity)
-	assert.Equal(file.File, c.GetType())
+	assert.Equal(testCheckForCheckBaseInitType, c.GetType())
 }
 
 func TestCheckBaseMerge(t *testing.T) {
@@ -142,16 +144,18 @@ func TestCheckBaseRunCheck(t *testing.T) {
 	c.FetchData()
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues([]string{"not implemented"}, c.Result.Failures)
+	assert.ElementsMatch(
+		[]result.Breach{result.ValueBreach{
+			BreachType: result.BreachTypeValue,
+			Value:      "not implemented",
+		}},
+		c.Result.Breaches)
+
 }
 
-type testCheckRemediationNotSupported struct {
-	yaml.YamlBase `yaml:",inline"`
-}
+type testCheckRemediationNotSupported struct{ CheckBase }
 
-type testCheckRemediationSupported struct {
-	yaml.YamlBase `yaml:",inline"`
-}
+type testCheckRemediationSupported struct{ CheckBase }
 
 func (c *testCheckRemediationSupported) Remediate(interface{}) error {
 	return errors.New("foo")
@@ -166,7 +170,7 @@ func TestRemediate(t *testing.T) {
 		err := c.Remediate(nil)
 		assert.NoError(err)
 		assert.Empty(c.Result.Passes)
-		assert.Empty(c.Result.Failures)
+		assert.Empty(c.Result.Breaches)
 	})
 
 	t.Run("supported", func(t *testing.T) {
@@ -175,6 +179,6 @@ func TestRemediate(t *testing.T) {
 		err := c.Remediate(nil)
 		assert.EqualError(err, "foo")
 		assert.Empty(c.Result.Passes)
-		assert.Empty(c.Result.Failures)
+		assert.Empty(c.Result.Breaches)
 	})
 }

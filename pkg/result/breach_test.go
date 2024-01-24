@@ -49,7 +49,7 @@ func TestBreachKeyValueBreachStringer(t *testing.T) {
 				ValueLabel: "key not found",
 				Value:      "enabled",
 			},
-			expected: "[config clamav.settings] key not found: enabled",
+			expected: "[config:clamav.settings] key not found: enabled",
 		},
 		{
 			name: "key-value-breach-2",

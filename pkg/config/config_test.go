@@ -3,9 +3,6 @@ package config_test
 import (
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/checks/crawler"
-	"github.com/salsadigitalauorg/shipshape/pkg/checks/file"
-	shipshape_yaml "github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/filterchecks"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks"
@@ -82,6 +79,8 @@ foo:
 func TestMerge(t *testing.T) {
 	assert := assert.New(t)
 
+	testchecks.RegisterChecks()
+
 	cfg := Config{
 		ProjectDir:   "foo",
 		FailSeverity: NormalSeverity,
@@ -105,7 +104,7 @@ func TestMerge(t *testing.T) {
 	// Ensure checks are merged properly.
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
+			testchecks.TestCheck1: {&testchecks.TestCheck1Check{CheckBase: CheckBase{Name: "filecheck1"}}},
 		},
 	})
 	assert.NoError(err)
@@ -113,48 +112,36 @@ func TestMerge(t *testing.T) {
 	assert.Equal(HighSeverity, cfg.FailSeverity)
 	assert.EqualValues(
 		CheckMap{
-			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
+			testchecks.TestCheck1: {&testchecks.TestCheck1Check{CheckBase: CheckBase{Name: "filecheck1"}}},
 		},
 		cfg.Checks,
 	)
 
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			shipshape_yaml.Yaml: {&shipshape_yaml.YamlCheck{
-				YamlBase: shipshape_yaml.YamlBase{
-					CheckBase: CheckBase{Name: "yamlcheck1"},
-				},
-			}},
+			testchecks.TestCheck2: {&testchecks.TestCheck2Check{CheckBase: CheckBase{Name: "yamlcheck1"}}},
 		},
 	})
 	assert.NoError(err)
 	assert.EqualValues(
 		CheckMap{
-			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
-			shipshape_yaml.Yaml: {&shipshape_yaml.YamlCheck{
-				YamlBase: shipshape_yaml.YamlBase{
-					CheckBase: CheckBase{Name: "yamlcheck1"},
-				},
-			}},
+			testchecks.TestCheck1: {&testchecks.TestCheck1Check{CheckBase: CheckBase{Name: "filecheck1"}}},
+			testchecks.TestCheck2: {&testchecks.TestCheck2Check{CheckBase: CheckBase{Name: "yamlcheck1"}}},
 		},
 		cfg.Checks,
 	)
 
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			crawler.Crawler: {&crawler.CrawlerCheck{CheckBase: CheckBase{Name: "crawlercheck1"}}},
+			testchecks.TestCheck3: {&testchecks.TestCheck3Check{CheckBase: CheckBase{Name: "crawlercheck1"}}},
 		},
 	})
 	assert.NoError(err)
 	assert.EqualValues(
 		CheckMap{
-			file.File: {&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1"}}},
-			shipshape_yaml.Yaml: {&shipshape_yaml.YamlCheck{
-				YamlBase: shipshape_yaml.YamlBase{
-					CheckBase: CheckBase{Name: "yamlcheck1"},
-				},
-			}},
-			crawler.Crawler: {&crawler.CrawlerCheck{CheckBase: CheckBase{Name: "crawlercheck1"}}},
+			testchecks.TestCheck1: {&testchecks.TestCheck1Check{CheckBase: CheckBase{Name: "filecheck1"}}},
+			testchecks.TestCheck2: {&testchecks.TestCheck2Check{CheckBase: CheckBase{Name: "yamlcheck1"}}},
+			testchecks.TestCheck3: {&testchecks.TestCheck3Check{CheckBase: CheckBase{Name: "crawlercheck1"}}},
 		},
 		cfg.Checks,
 	)
@@ -163,27 +150,28 @@ func TestMerge(t *testing.T) {
 		ProjectDir:   "foo",
 		FailSeverity: NormalSeverity,
 		Checks: CheckMap{
-			file.File: {&file.FileCheck{
+			testchecks.TestCheck1: {&testchecks.TestCheck1Check{
 				CheckBase: CheckBase{Name: "filecheck1", Severity: NormalSeverity},
 			}},
 		},
 	}
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			file.File: {&file.FileCheck{
+			testchecks.TestCheck1: {&testchecks.TestCheck1Check{
 				CheckBase: CheckBase{Name: "filecheck2", Severity: NormalSeverity},
-				Path:      "path1"},
+				Foo:       "path1"},
 			},
 		},
 	})
 	assert.NoError(err)
 	assert.EqualValues(
 		CheckMap{
-			file.File: {
-				&file.FileCheck{CheckBase: CheckBase{Name: "filecheck1", Severity: NormalSeverity}},
-				&file.FileCheck{
+			testchecks.TestCheck1: {
+				&testchecks.TestCheck1Check{
+					CheckBase: CheckBase{Name: "filecheck1", Severity: NormalSeverity}},
+				&testchecks.TestCheck1Check{
 					CheckBase: CheckBase{Name: "filecheck2", Severity: NormalSeverity},
-					Path:      "path1"},
+					Foo:       "path1"},
 			},
 		},
 		cfg.Checks,
@@ -192,12 +180,12 @@ func TestMerge(t *testing.T) {
 	// Test changing values for same check name.
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			file.File: {
-				&file.FileCheck{
+			testchecks.TestCheck1: {
+				&testchecks.TestCheck1Check{
 					CheckBase: CheckBase{
 						Name:     "filecheck2",
 						Severity: HighSeverity},
-					Path: "path2",
+					Foo: "path2",
 				},
 			},
 		},
@@ -205,19 +193,19 @@ func TestMerge(t *testing.T) {
 	assert.NoError(err)
 	assert.EqualValues(
 		CheckMap{
-			file.File: {
-				&file.FileCheck{
+			testchecks.TestCheck1: {
+				&testchecks.TestCheck1Check{
 					CheckBase: CheckBase{
 						Name:     "filecheck1",
 						Severity: NormalSeverity,
 					},
 				},
-				&file.FileCheck{
+				&testchecks.TestCheck1Check{
 					CheckBase: CheckBase{
 						Name:     "filecheck2",
 						Severity: HighSeverity,
 					},
-					Path: "path2",
+					Foo: "path2",
 				},
 			},
 		},
@@ -227,26 +215,26 @@ func TestMerge(t *testing.T) {
 	// Test changing values for all checks of a type.
 	err = cfg.Merge(Config{
 		Checks: CheckMap{
-			file.File: {
-				&file.FileCheck{
+			testchecks.TestCheck1: {
+				&testchecks.TestCheck1Check{
 					CheckBase: CheckBase{
 						Severity: CriticalSeverity}}}}})
 	assert.NoError(err)
 	assert.EqualValues(
 		CheckMap{
-			file.File: {
-				&file.FileCheck{
+			testchecks.TestCheck1: {
+				&testchecks.TestCheck1Check{
 					CheckBase: CheckBase{
 						Name:     "filecheck1",
 						Severity: CriticalSeverity,
 					},
 				},
-				&file.FileCheck{
+				&testchecks.TestCheck1Check{
 					CheckBase: CheckBase{
 						Name:     "filecheck2",
 						Severity: CriticalSeverity,
 					},
-					Path: "path2",
+					Foo: "path2",
 				},
 			},
 		},

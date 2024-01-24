@@ -30,14 +30,14 @@ func TableDisplay(w *tabwriter.Writer) {
 		if len(r.Passes) > 0 {
 			linePass = r.Passes[0]
 		}
-		if len(r.Failures) > 0 {
-			lineFail = r.Failures[0]
+		if len(r.Breaches) > 0 {
+			lineFail = r.Breaches[0].String()
 		}
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.Name, r.Status, linePass, lineFail)
 
-		if len(r.Passes) > 1 || len(r.Failures) > 1 {
+		if len(r.Passes) > 1 || len(r.Breaches) > 1 {
 			numPasses := len(r.Passes)
-			numFailures := len(r.Failures)
+			numFailures := len(r.Breaches)
 
 			// How many additional lines?
 			numAddLines := numPasses
@@ -52,7 +52,7 @@ func TableDisplay(w *tabwriter.Writer) {
 					linePass = r.Passes[i]
 				}
 				if numFailures > i {
-					lineFail = r.Failures[i]
+					lineFail = r.Breaches[i].String()
 				}
 				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", "", "", linePass, lineFail)
 			}
@@ -105,11 +105,11 @@ func SimpleDisplay(w *bufio.Writer) {
 	}
 
 	for _, r := range RunResultList.Results {
-		if len(r.Failures) == 0 {
+		if len(r.Breaches) == 0 {
 			continue
 		}
 		fmt.Fprintf(w, "  ### %s\n", r.Name)
-		for _, f := range r.Failures {
+		for _, f := range r.Breaches {
 			fmt.Fprintf(w, "     -- %s\n", f)
 		}
 		fmt.Fprintln(w)
@@ -143,7 +143,7 @@ func JUnit(w *bufio.Writer) {
 			}
 
 			for _, b := range RunResultList.GetBreachesByCheckName(c.GetName()) {
-				tc.Errors = append(tc.Errors, JUnitError{Message: b})
+				tc.Errors = append(tc.Errors, JUnitError{Message: b.String()})
 			}
 			ts.TestCases = append(ts.TestCases, tc)
 		}

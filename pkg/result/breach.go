@@ -36,7 +36,10 @@ type ValueBreach struct {
 }
 
 func (b ValueBreach) String() string {
-	return fmt.Sprintf("[%s] %s", b.ValueLabel, b.Value)
+	if b.ValueLabel != "" {
+		return fmt.Sprintf("[%s] %s", b.ValueLabel, b.Value)
+	}
+	return fmt.Sprintf("%s", b.Value)
 }
 
 // Breach with key and value.
@@ -63,7 +66,7 @@ func (b KeyValueBreach) String() string {
 	if b.ExpectedValue != "" {
 		return fmt.Sprintf("[%s] '%s' equals '%s', expected '%s'", b.KeyLabel, b.Key, b.Value, b.ExpectedValue)
 	}
-	return fmt.Sprintf("[%s %s] %s: %s", b.KeyLabel, b.Key, b.ValueLabel, b.Value)
+	return fmt.Sprintf("[%s:%s] %s: %s", b.KeyLabel, b.Key, b.ValueLabel, b.Value)
 }
 
 // Breach with key and list of values.
@@ -86,8 +89,11 @@ type KeyValuesBreach struct {
 }
 
 func (b KeyValuesBreach) String() string {
-	return fmt.Sprintf("[%s:%s] %s: %s", b.KeyLabel, b.Key, b.ValueLabel,
-		"["+strings.Join(b.Values, ", ")+"]")
+	if b.KeyLabel != "" && b.ValueLabel != "" {
+		return fmt.Sprintf("[%s:%s] %s: %s", b.KeyLabel, b.Key, b.ValueLabel,
+			"["+strings.Join(b.Values, ", ")+"]")
+	}
+	return fmt.Sprintf("%s: %s", b.Key, "["+strings.Join(b.Values, ", ")+"]")
 }
 
 func BreachSetCommonValues(bIfc *Breach, checkType string, checkName string, severity string) {
