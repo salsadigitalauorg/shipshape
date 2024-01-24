@@ -1,7 +1,14 @@
 package result
 
+import (
+	"fmt"
+	"strings"
+)
+
 // Breach provides a representation for different breach types.
-type Breach interface{}
+type Breach interface {
+	String() string
+}
 
 type BreachType string
 
@@ -28,6 +35,10 @@ type ValueBreach struct {
 	ExpectedValue string
 }
 
+func (b ValueBreach) String() string {
+	return fmt.Sprintf("[%s] %s", b.ValueLabel, b.Value)
+}
+
 // Breach with key and value.
 // Example:
 //
@@ -48,6 +59,13 @@ type KeyValueBreach struct {
 	ExpectedValue string
 }
 
+func (b KeyValueBreach) String() string {
+	if b.ExpectedValue != "" {
+		return fmt.Sprintf("[%s] '%s' equals '%s', expected '%s'", b.KeyLabel, b.Key, b.Value, b.ExpectedValue)
+	}
+	return fmt.Sprintf("[%s %s] %s: %s", b.KeyLabel, b.Key, b.ValueLabel, b.Value)
+}
+
 // Breach with key and list of values.
 // Example:
 //
@@ -65,6 +83,11 @@ type KeyValuesBreach struct {
 	Key        string
 	ValueLabel string
 	Values     []string
+}
+
+func (b KeyValuesBreach) String() string {
+	return fmt.Sprintf("[%s:%s] %s: %s", b.KeyLabel, b.Key, b.ValueLabel,
+		"["+strings.Join(b.Values, ", ")+"]")
 }
 
 func BreachSetCommonValues(bIfc *Breach, checkType string, checkName string, severity string) {
