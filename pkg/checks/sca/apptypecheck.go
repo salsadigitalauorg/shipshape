@@ -1,8 +1,10 @@
 package sca
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -70,6 +72,7 @@ func (c *AppTypeCheck) RunCheck() {
 	for _, path := range c.Paths {
 		entrypoints, _ := utils.Glob(path, c.Entrypoint)
 
+		disallowedFound := []string{}
 		for _, framework := range c.Disallowed {
 			likelihood := 0
 			if markers, ok := c.Markers[framework]; ok {
@@ -98,11 +101,17 @@ func (c *AppTypeCheck) RunCheck() {
 			}
 
 			if likelihood > c.Threshold {
-				c.AddFail(framework + " detected at " + path)
+				disallowedFound = append(disallowedFound, framework)
 			}
 		}
+		if len(disallowedFound) > 0 {
+			c.AddBreach(result.KeyValueBreach{
+				Key:   fmt.Sprintf("[%s] contains disallowed frameworks", path),
+				Value: "[" + strings.Join(disallowedFound, ", ") + "]",
+			})
+		}
 	}
-	if len(c.Result.Failures) == 0 {
+	if len(c.Result.Breaches) == 0 {
 		c.AddPass("No invalid application types detected")
 		c.Result.Status = result.Pass
 	}

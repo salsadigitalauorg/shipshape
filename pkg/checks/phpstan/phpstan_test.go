@@ -130,7 +130,14 @@ func TestFetchDataBinNotExists(t *testing.T) {
 	c.FetchData()
 
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues([]string{"Phpstan failed to run: /my/custom/path/phpstan: no such file or directory"}, c.Result.Failures)
+	assert.EqualValues(
+		[]result.Breach{result.ValueBreach{
+			BreachType: "value",
+			ValueLabel: "Phpstan failed to run",
+			Value:      "/my/custom/path/phpstan: no such file or directory",
+		}},
+		c.Result.Breaches,
+	)
 }
 
 func TestFetchDataBinExists(t *testing.T) {
@@ -169,7 +176,13 @@ func TestHasData(t *testing.T) {
 		c := PhpStanCheck{}
 		assert.False(c.HasData(true))
 		assert.Equal(result.Fail, c.Result.Status)
-		assert.EqualValues([]string{"no data available"}, c.Result.Failures)
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				Value:      "no data available",
+			}},
+			c.Result.Breaches,
+		)
 	})
 
 	t.Run("no data, but passed", func(t *testing.T) {
@@ -215,7 +228,18 @@ func TestUnmarshalDataMap(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.Contains(c.Result.Failures[0], "json: cannot unmarshal array into Go value of type map[string]struct")
+	assert.EqualValues(
+		[]result.Breach{result.ValueBreach{
+			BreachType: "value",
+			ValueLabel: "unable to parse phpstan file errors",
+			Value: "json: cannot unmarshal array into Go value of type " +
+				"map[string]struct { Errors int \"json:\\\"errors\\\"\"; Messages " +
+				"[]struct { Message string \"json:\\\"message\\\"\"; Line int \"json:" +
+				"\\\"line\\\"\"; Ignorable bool \"json:\\\"ignorable\\\"\" } \"json:" +
+				"\\\"messages\\\"\" }",
+		}},
+		c.Result.Breaches,
+	)
 }
 
 func TestRunCheck(t *testing.T) {
@@ -245,7 +269,14 @@ func TestRunCheck(t *testing.T) {
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues([]string{"[/app/web/themes/custom/custom/test-theme/info.php] Line 3: Calling curl_exec() is forbidden, please change the code"}, c.Result.Failures)
+	assert.EqualValues(
+		[]result.Breach{result.KeyValueBreach{
+			BreachType: "key-value",
+			Key:        "file contains banned functions: /app/web/themes/custom/custom/test-theme/info.php",
+			Value:      "line 3: Calling curl_exec() is forbidden, please change the code",
+		}},
+		c.Result.Breaches,
+	)
 
 	// Other errors found in files.
 	c = PhpStanCheck{
@@ -258,7 +289,14 @@ func TestRunCheck(t *testing.T) {
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues([]string{"Error found in file foo"}, c.Result.Failures)
+	assert.EqualValues(
+		[]result.Breach{result.ValueBreach{
+			BreachType: "value",
+			ValueLabel: "errors encountered when running phpstan",
+			Value:      "Error found in file foo",
+		}},
+		c.Result.Breaches,
+	)
 }
 
 func TestInvalidOutput(t *testing.T) {
