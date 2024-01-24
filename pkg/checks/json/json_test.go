@@ -1,13 +1,14 @@
 package json_test
 
 import (
+	"testing"
+
 	"github.com/goccy/go-json"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/json"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestJsonCheckUnmarshalDataMap(t *testing.T) {
@@ -33,9 +34,16 @@ func TestJsonCheckUnmarshalDataMap(t *testing.T) {
 	c.UnmarshalDataMap()
 	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.EqualValues(0, len(c.Result.Passes))
-	assertions.EqualValues(
-		[]string{"JSON error: invalid character 'p' looking for beginning of value"},
-		c.Result.Failures)
+	assertions.ElementsMatch(
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: result.BreachTypeValue,
+				ValueLabel: "JSON error",
+				Value:      "invalid character 'p' looking for beginning of value",
+			},
+		},
+		c.Result.Breaches,
+	)
 
 	// Valid data.
 	c = JsonCheck{
@@ -56,7 +64,7 @@ func TestJsonCheckUnmarshalDataMap(t *testing.T) {
 	}
 
 	c.UnmarshalDataMap()
-	assertions.EqualValues(0, len(c.Result.Failures))
+	assertions.EqualValues(0, len(c.Result.Breaches))
 }
 
 func TestJsonCheckKeyValue(t *testing.T) {

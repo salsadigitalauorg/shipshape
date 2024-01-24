@@ -53,13 +53,25 @@ func TestYamlLintCheck(t *testing.T) {
 	c.FetchData()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
-	assert.ElementsMatch([]string{"no file provided"}, c.Result.Failures)
+	assert.ElementsMatch(
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "yamllint",
+				CheckName:  "Test yaml lint",
+				Severity:   "normal",
+				ValueLabel: "Test yaml lint- no file",
+				Value:      "no file provided",
+			},
+		},
+		c.Result.Breaches,
+	)
 
 	c = mockCheck("non-existent-file.yml", []string{}, true)
 	c.Init(YamlLint)
 	c.FetchData()
 	assert.NotEqual(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	assert.ElementsMatch(
 		[]string{"File testdata/non-existent-file.yml does not exist"},
 		c.Result.Passes,
@@ -69,7 +81,7 @@ func TestYamlLintCheck(t *testing.T) {
 	c.Init(YamlLint)
 	c.FetchData()
 	assert.NotEqual(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	assert.ElementsMatch([]string{
 		"File testdata/non-existent-file.yml does not exist",
 		"File testdata/yaml-invalid.yml does not exist",
@@ -81,8 +93,17 @@ func TestYamlLintCheck(t *testing.T) {
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
-		[]string{"open testdata/non-existent-file.yml: no such file or directory"},
-		c.Result.Failures,
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "yamllint",
+				CheckName:  "Test yaml lint",
+				Severity:   "normal",
+				ValueLabel: "error reading file: testdata/non-existent-file.yml",
+				Value:      "open testdata/non-existent-file.yml: no such file or directory",
+			},
+		},
+		c.Result.Breaches,
 	)
 
 	c = mockCheck("", []string{"non-existent-file.yml", "yamllint-invalid.yml"}, false)
@@ -91,8 +112,17 @@ func TestYamlLintCheck(t *testing.T) {
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
-		[]string{"open testdata/non-existent-file.yml: no such file or directory"},
-		c.Result.Failures,
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "yamllint",
+				CheckName:  "Test yaml lint",
+				Severity:   "normal",
+				ValueLabel: "error reading file: testdata/non-existent-file.yml",
+				Value:      "open testdata/non-existent-file.yml: no such file or directory",
+			},
+		},
+		c.Result.Breaches,
 	)
 
 	c = mockCheck("", []string{}, false)
@@ -105,8 +135,17 @@ this: yaml
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
-		[]string{"[yaml-invalid.yml] line 3: mapping key \"this\" already defined at line 2"},
-		c.Result.Failures,
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "yamllint",
+				CheckName:  "Test yaml lint",
+				Severity:   "normal",
+				ValueLabel: "cannot decode yaml: yaml-invalid.yml",
+				Value:      "line 3: mapping key \"this\" already defined at line 2",
+			},
+		},
+		c.Result.Breaches,
 	)
 
 	c = mockCheck("", []string{}, false)
@@ -117,7 +156,7 @@ valid: yaml
 `)
 	c.UnmarshalDataMap()
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	assert.ElementsMatch(
 		[]string{"yaml-valid.yml has valid yaml."},
 		c.Result.Passes,
@@ -134,8 +173,14 @@ foo: bar
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch(
-			[]string{"[yaml-invalid-root.yml] yaml: line 1: did not find expected key"},
-			c.Result.Failures,
+			[]result.Breach{
+				result.ValueBreach{
+					BreachType: "value",
+					ValueLabel: "yaml error: yaml-invalid-root.yml",
+					Value:      "yaml: line 1: did not find expected key",
+				},
+			},
+			c.Result.Breaches,
 		)
 	})
 
@@ -149,7 +194,7 @@ foo: bar
 `)}
 		c.UnmarshalDataMap()
 		assert.Equal(result.Pass, c.Result.Status)
-		assert.Empty(c.Result.Failures)
+		assert.Empty(c.Result.Breaches)
 		assert.ElementsMatch(
 			[]string{"yaml-valid-list.yml has valid yaml."},
 			c.Result.Passes,
