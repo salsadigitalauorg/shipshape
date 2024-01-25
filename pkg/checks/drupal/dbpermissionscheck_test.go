@@ -69,7 +69,13 @@ func TestDbPermissionsUnmarshalDataMap(t *testing.T) {
 		c.UnmarshalDataMap()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
-		assert.ElementsMatch([]string{"no data provided"}, c.Result.Failures)
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				Value:      "no data provided",
+			}},
+			c.Result.Breaches,
+		)
 	})
 
 	t.Run("validData", func(t *testing.T) {
@@ -126,7 +132,11 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			Init:         true,
 			ExpectStatus: result.Fail,
 			ExpectNoPass: true,
-			ExpectFails:  []string{"list of disallowed perms not provided"},
+			ExpectFails: []result.Breach{result.ValueBreach{
+				BreachType: "value",
+				Severity:   "normal",
+				Value:      "list of disallowed perms not provided",
+			}},
 		},
 		{
 			Name: "noBreaches",
@@ -197,9 +207,23 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 				"[anonymous] no disallowed permissions",
 				"[authenticated] no disallowed permissions",
 			},
-			ExpectFails: []string{
-				"[site_administrator] disallowed permissions: [administer modules, administer permissions]",
-				"[site_editor] disallowed permissions: [administer modules]",
+			ExpectFails: []result.Breach{
+				result.KeyValuesBreach{
+					BreachType: "key-values",
+					Severity:   "normal",
+					KeyLabel:   "role",
+					Key:        "site_administrator",
+					ValueLabel: "permissions",
+					Values:     []string{"administer modules", "administer permissions"},
+				},
+				result.KeyValuesBreach{
+					BreachType: "key-values",
+					Severity:   "normal",
+					KeyLabel:   "role",
+					Key:        "site_editor",
+					ValueLabel: "permissions",
+					Values:     []string{"administer modules"},
+				},
 			},
 		},
 		{
@@ -302,9 +326,23 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 				"[anonymous] no disallowed permissions",
 				"[authenticated] no disallowed permissions",
 			},
-			ExpectFails: []string{
-				"[site_administrator] failed to fix disallowed permissions [administer modules, administer permissions] due to error: unable to run drush command",
-				"[site_editor] failed to fix disallowed permissions [administer modules] due to error: unable to run drush command",
+			ExpectFails: []result.Breach{
+				result.KeyValueBreach{
+					BreachType: "key-value",
+					Severity:   "normal",
+					KeyLabel:   "role",
+					Key:        "site_administrator",
+					ValueLabel: "failed to fix disallowed permissions due to error",
+					Value:      "unable to run drush command",
+				},
+				result.KeyValueBreach{
+					BreachType: "key-value",
+					Severity:   "normal",
+					KeyLabel:   "role",
+					Key:        "site_editor",
+					ValueLabel: "failed to fix disallowed permissions due to error",
+					Value:      "unable to run drush command",
+				},
 			},
 			ExpectNoRemediations: true,
 		},

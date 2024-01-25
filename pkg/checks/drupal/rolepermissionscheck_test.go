@@ -1,13 +1,14 @@
 package drupal_test
 
 import (
+	"os/exec"
+	"testing"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
-	"os/exec"
-	"testing"
 )
 
 func TestRolePermissionsCheck_Init(t *testing.T) {
@@ -42,7 +43,12 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		c := drupal.RolePermissionsCheck{}
 		c.RunCheck()
 		assertions.Equal(result.Fail, c.Result.Status)
-		assertions.EqualValues([]string{"no role ID provided"}, c.Result.Failures)
+		assertions.ElementsMatch(
+			[]result.Breach{result.ValueBreach{
+				BreachType: result.BreachTypeValue,
+				Value:      "no role ID provided"}},
+			c.Result.Breaches,
+		)
 	})
 
 	t.Run("failOnDrushNotFound", func(t *testing.T) {
@@ -51,7 +57,11 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		}
 		c.RunCheck()
 		assertions.Equal(result.Fail, c.Result.Status)
-		assertions.EqualValues([]string{"vendor/drush/drush/drush: no such file or directory"}, c.Result.Failures)
+		assertions.ElementsMatch(
+			[]result.Breach{result.ValueBreach{
+				BreachType: result.BreachTypeValue,
+				Value:      "vendor/drush/drush/drush: no such file or directory"}},
+			c.Result.Breaches)
 	})
 
 	t.Run("failOnDrushError", func(t *testing.T) {
@@ -69,9 +79,12 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		c.RunCheck()
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]string{"Unexpected error"},
-			c.Result.Failures,
-		)
+			[]result.Breach{result.ValueBreach{
+				BreachType: result.BreachTypeValue,
+				CheckType:  "drupal-role-permissions",
+				Severity:   "normal",
+				Value:      "Unexpected error"}},
+			c.Result.Breaches)
 	})
 
 	t.Run("failOnDrushInvalidResponse", func(t *testing.T) {
@@ -91,9 +104,12 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]string{"invalid character 'U' looking for beginning of value"},
-			c.Result.Failures,
-		)
+			[]result.Breach{result.ValueBreach{
+				BreachType: result.BreachTypeValue,
+				CheckType:  "drupal-role-permissions",
+				Severity:   "normal",
+				Value:      "invalid character 'U' looking for beginning of value"}},
+			c.Result.Breaches)
 	})
 
 	t.Run("failOnPermissions", func(t *testing.T) {
@@ -129,16 +145,27 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]string{
-				"The role [authenticated] does not have all required permissions.",
-				"The role [authenticated] has disallowed permissions.",
+			[]result.Breach{
+				result.KeyValueBreach{
+					BreachType: result.BreachTypeKeyValue,
+					CheckType:  "drupal-role-permissions",
+					Severity:   "normal",
+					KeyLabel:   "role",
+					Key:        "authenticated",
+					ValueLabel: "missing permissions",
+					Value:      "[setup own tfa]",
+				},
+				result.KeyValueBreach{
+					BreachType: result.BreachTypeKeyValue,
+					CheckType:  "drupal-role-permissions",
+					Severity:   "normal",
+					KeyLabel:   "role",
+					Key:        "authenticated",
+					ValueLabel: "disallowed permissions",
+					Value:      "[administer users]",
+				},
 			},
-			c.Result.Failures,
-		)
-		assertions.Equal("Missing permissions", (c.Result.Breaches[0]).(result.ValueBreach).ValueLabel)
-		assertions.Equal("setup own tfa", (c.Result.Breaches[0]).(result.ValueBreach).Value)
-		assertions.Equal("Disallowed permissions", (c.Result.Breaches[1]).(result.ValueBreach).ValueLabel)
-		assertions.Equal("administer users", (c.Result.Breaches[1]).(result.ValueBreach).Value)
+			c.Result.Breaches)
 	})
 
 	t.Run("passOnPermissions", func(t *testing.T) {
@@ -171,6 +198,6 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		)
 		c.RunCheck()
 		assertions.Equal(result.Pass, c.Result.Status)
-		assertions.Empty(c.Result.Failures)
+		assertions.Empty(c.Result.Breaches)
 	})
 }

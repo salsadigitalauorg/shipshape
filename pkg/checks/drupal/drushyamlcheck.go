@@ -39,12 +39,10 @@ func (c *DrushYamlCheck) FetchData() {
 	c.DataMap[c.ConfigName], err = Drush(c.DrushPath, c.Alias, c.DrushCommand.Args).Exec()
 	if err != nil {
 		if pathErr, ok := err.(*fs.PathError); ok {
-			c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
 			c.AddBreach(result.ValueBreach{
 				Value: pathErr.Path + ": " + pathErr.Err.Error()})
 		} else {
 			msg := string(err.(*exec.ExitError).Stderr)
-			c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
 			c.AddBreach(result.ValueBreach{
 				ValueLabel: c.ConfigName,
 				Value:      strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})

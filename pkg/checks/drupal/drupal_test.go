@@ -240,7 +240,14 @@ module:
 		"all required modules are enabled",
 		"all disallowed modules are disabled",
 	})
-	assert.ElementsMatch(c.Result.Failures, []string{"disallowed modules are enabled: dblog"})
+	assert.EqualValues(
+		[]result.Breach{result.KeyValuesBreach{
+			BreachType: "key-values",
+			Key:        "disallowed modules are enabled",
+			Values:     []string{"dblog"},
+		}},
+		c.Result.Breaches,
+	)
 }
 
 func TestCheckModulesInYaml(t *testing.T) {
@@ -263,10 +270,19 @@ func TestCheckModulesInYaml(t *testing.T) {
 		"some required modules are enabled: block",
 		"some disallowed modules are disabled: views_ui",
 	})
-	assert.ElementsMatch(c.Result.Failures, []string{
-		"error verifying status for required modules: invalid character '&' at position 11, following \".node\"",
-		"error verifying status for disallowed modules: invalid character '&' at position 15, following \".field_ui\"",
-	})
+	assert.ElementsMatch(
+		[]result.Breach{
+			result.KeyValuesBreach{
+				BreachType: "key-values",
+				Key:        "error verifying status for required modules",
+				Values:     []string{"invalid character '&' at position 11, following \".node\""},
+			},
+			result.KeyValuesBreach{
+				BreachType: "key-values",
+				Key:        "error verifying status for disallowed modules",
+				Values:     []string{"invalid character '&' at position 15, following \".field_ui\""},
+			},
+		}, c.Result.Breaches)
 
 	// Required is not enabled & disallowed is enabled.
 	c = mockCheck("shipshape.extension.yml")
@@ -293,10 +309,20 @@ module:
 		"some required modules are enabled: block",
 		"some disallowed modules are disabled: field_ui",
 	})
-	assert.ElementsMatch(c.Result.Failures, []string{
-		"required modules are not enabled: node",
-		"disallowed modules are enabled: views_ui",
-	})
+	assert.ElementsMatch(
+		[]result.Breach{
+			result.KeyValuesBreach{
+				BreachType: "key-values",
+				Key:        "required modules are not enabled",
+				Values:     []string{"node"},
+			},
+			result.KeyValuesBreach{
+				BreachType: "key-values",
+				Key:        "disallowed modules are enabled",
+				Values:     []string{"views_ui"},
+			},
+		},
+		c.Result.Breaches)
 
 	c = mockCheck("shipshape.extension.yml")
 	required = []string{
@@ -310,7 +336,7 @@ module:
 	c.UnmarshalDataMap()
 	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"all required modules are enabled",
 		"all disallowed modules are disabled",

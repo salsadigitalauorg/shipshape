@@ -25,7 +25,7 @@ type RunCheckTest struct {
 	ExpectNoPass         bool
 	ExpectPasses         []string
 	ExpectNoFail         bool
-	ExpectFails          []string
+	ExpectFails          []result.Breach
 	ExpectNoRemediations bool
 	ExpectRemediations   []string
 }

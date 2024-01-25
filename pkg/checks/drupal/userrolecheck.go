@@ -55,12 +55,10 @@ func (c *UserRoleCheck) getUserIds() string {
 
 	var pathErr *fs.PathError
 	if err != nil && errors.As(err, &pathErr) {
-		c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
 		c.AddBreach(result.ValueBreach{
 			Value: pathErr.Path + ": " + pathErr.Err.Error()})
 	} else if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
-		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
 		c.AddBreach(result.ValueBreach{
 			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	}
@@ -81,7 +79,6 @@ func (c *UserRoleCheck) FetchData() {
 	c.DataMap["user-info"], err = Drush(c.DrushPath, c.Alias, cmd).Exec()
 	if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
-		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
 		c.AddBreach(result.ValueBreach{
 			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	}
@@ -91,7 +88,6 @@ func (c *UserRoleCheck) FetchData() {
 // into the userRoles for further processing.
 func (c *UserRoleCheck) UnmarshalDataMap() {
 	if len(c.DataMap["user-info"]) == 0 {
-		c.AddFail("no data provided")
 		c.AddBreach(result.ValueBreach{Value: "no data provided"})
 		return
 	}
@@ -100,7 +96,6 @@ func (c *UserRoleCheck) UnmarshalDataMap() {
 	err := json.Unmarshal(c.DataMap["user-info"], &userInfoMap)
 	var synErr *json.SyntaxError
 	if err != nil && errors.As(err, &synErr) {
-		c.AddFail(err.Error())
 		c.AddBreach(result.ValueBreach{Value: err.Error()})
 		return
 	}
@@ -114,7 +109,6 @@ func (c *UserRoleCheck) UnmarshalDataMap() {
 // RunCheck implements the Check logic for disallowed user roles.
 func (c *UserRoleCheck) RunCheck() {
 	if len(c.Roles) == 0 {
-		c.AddFail("no disallowed role provided")
 		c.AddBreach(result.ValueBreach{Value: "no disallowed role provided"})
 		return
 	}
@@ -127,17 +121,16 @@ func (c *UserRoleCheck) RunCheck() {
 
 		disallowed := utils.StringSlicesIntersect(roles, c.Roles)
 		if len(disallowed) > 0 {
-			c.AddFail(fmt.Sprintf("User %d has disallowed roles: [%s]", uid, strings.Join(disallowed, ", ")))
 			c.AddBreach(result.KeyValuesBreach{
 				KeyLabel:   "user",
 				Key:        fmt.Sprintf("%d", uid),
-				ValueLabel: "roles",
+				ValueLabel: "disallowed roles",
 				Values:     disallowed,
 			})
 		}
 	}
 
-	if len(c.Result.Failures) == 0 {
+	if len(c.Result.Breaches) == 0 {
 		c.Result.Status = result.Pass
 	}
 }

@@ -51,8 +51,13 @@ func TestAdminUserFetchData(t *testing.T) {
 		c := AdminUserCheck{}
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
-		assert.EqualValues([]string{"vendor/drush/drush/drush: no such file or directory"}, c.Result.Failures)
-
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				Value:      "vendor/drush/drush/drush: no such file or directory",
+			}},
+			c.Result.Breaches,
+		)
 	})
 
 	curShellCommander := command.ShellCommander
@@ -66,7 +71,13 @@ func TestAdminUserFetchData(t *testing.T) {
 		c := AdminUserCheck{}
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
-		assert.EqualValues([]string{"unable to run drush command"}, c.Result.Failures)
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				Value:      "unable to run drush command",
+			}},
+			c.Result.Breaches,
+		)
 	})
 
 	// correct data.
@@ -93,7 +104,13 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 	t.Run("emptyDataMap", func(t *testing.T) {
 		c.UnmarshalDataMap()
 		assert.Equal(result.Fail, c.Result.Status)
-		assert.EqualValues([]string{"no data provided"}, c.Result.Failures)
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				Value:      "no data provided",
+			}},
+			c.Result.Breaches,
+		)
 	})
 
 	// Incorrect json.
@@ -106,7 +123,13 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 		}
 		c.UnmarshalDataMap()
 		assert.Equal(result.Fail, c.Result.Status)
-		assert.EqualValues([]string{"invalid character ']' after object key:value pair"}, c.Result.Failures)
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				Value:      "invalid character ']' after object key:value pair",
+			}},
+			c.Result.Breaches,
+		)
 	})
 
 	// Correct json.
@@ -152,7 +175,12 @@ func TestAdminUserRunCheck(t *testing.T) {
 				AllowedRoles: []string{"content-admin"},
 			},
 			ExpectStatus: result.Fail,
-			ExpectFails:  []string{"Role [anonymous] has `is_admin: true`"},
+			ExpectFails: []result.Breach{result.KeyValueBreach{
+				BreachType: "key-value",
+				Key:        "is_admin: true",
+				ValueLabel: "role",
+				Value:      "anonymous",
+			}},
 		},
 
 		// Role has is_admin:true but is allowed.
@@ -205,7 +233,12 @@ func TestAdminUserRunCheck(t *testing.T) {
 				)
 			},
 			ExpectStatus: result.Fail,
-			ExpectFails:  []string{"Failed to fix disallowed admin setting for role [anonymous] due to error: unable to run drush command"},
+			ExpectFails: []result.Breach{result.KeyValueBreach{
+				BreachType: "key-value",
+				Key:        "failed to set is_admin to false",
+				ValueLabel: "role",
+				Value:      "anonymous",
+			}},
 		},
 	}
 

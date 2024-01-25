@@ -41,7 +41,6 @@ func (c *DbPermissionsCheck) Merge(mergeCheck config.Check) error {
 // type for further processing.
 func (c *DbPermissionsCheck) UnmarshalDataMap() {
 	if len(c.DataMap[c.ConfigName]) == 0 {
-		c.AddFail("no data provided")
 		c.AddBreach(result.ValueBreach{Value: "no data provided"})
 	}
 
@@ -52,7 +51,6 @@ func (c *DbPermissionsCheck) UnmarshalDataMap() {
 // RunCheck implements the Check logic for Drupal Permissions in database config.
 func (c *DbPermissionsCheck) RunCheck() {
 	if len(c.Disallowed) == 0 {
-		c.AddFail("list of disallowed perms not provided")
 		c.AddBreach(result.ValueBreach{Value: "list of disallowed perms not provided"})
 	}
 
@@ -74,18 +72,18 @@ func (c *DbPermissionsCheck) RunCheck() {
 
 		if c.PerformRemediation {
 			if err := c.Remediate(DbPermissionsBreach{Role: r, Perms: strings.Join(fails, ",")}); err != nil {
-				c.AddFail(fmt.Sprintf(
-					"[%s] failed to fix disallowed permissions [%s] due to error: %s",
-					r, strings.Join(fails, ", "), command.GetMsgFromCommandError(err)))
+				c.AddBreach(result.KeyValueBreach{
+					KeyLabel:   "role",
+					Key:        r,
+					ValueLabel: "failed to fix disallowed permissions due to error",
+					Value:      command.GetMsgFromCommandError(err),
+				})
 			} else {
 				c.AddRemediation(fmt.Sprintf(
 					"[%s] fixed disallowed permissions: [%s]",
 					r, strings.Join(fails, ", ")))
 			}
 		} else {
-			c.AddFail(fmt.Sprintf(
-				"[%s] disallowed permissions: [%s]",
-				r, strings.Join(fails, ", ")))
 			c.AddBreach(result.KeyValuesBreach{
 				KeyLabel:   "role",
 				Key:        r,
@@ -95,7 +93,7 @@ func (c *DbPermissionsCheck) RunCheck() {
 		}
 	}
 
-	if len(c.Result.Failures) == 0 {
+	if len(c.Result.Breaches) == 0 {
 		c.Result.Status = result.Pass
 	}
 }
