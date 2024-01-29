@@ -80,7 +80,7 @@ func main() {
 
 	determineLogLevel()
 
-	if outputFormat == "lagoon-facts" && lagoon.PushFacts {
+	if outputFormat == "lagoon-problems" && lagoon.PushProblems {
 		if lagoonApiBaseUrl == "" {
 			log.Fatal("lagoon api base url not provided")
 		}
@@ -142,9 +142,8 @@ func main() {
 	case "simple":
 		w := bufio.NewWriter(os.Stdout)
 		shipshape.SimpleDisplay(w)
-	case "lagoon-facts":
+	case "lagoon-problems":
 		w := bufio.NewWriter(os.Stdout)
-		//shipshape.LagoonFacts(w)
 		shipshape.LagoonProblems(w)
 	}
 
@@ -180,10 +179,10 @@ func parseFlags() {
 	pflag.BoolVarP(&excludeDb, "exclude-db", "x", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
 	pflag.BoolVarP(&remediate, "remediate", "r", false, "Run remediation for supported checks")
 
-	pflag.StringVar(&lagoonApiBaseUrl, "lagoon-api-base-url", "", "Base url for the Lagoon API when requesting 'lagoon-facts' output (env: LAGOON_API_BASE_URL)")
-	pflag.StringVar(&lagoonApiToken, "lagoon-api-token", "", "Lagoon API token when requesting 'lagoon-facts' output (env: LAGOON_API_TOKEN)")
-	pflag.BoolVar(&lagoon.PushFactsToInsightRemote, "lagoon-push-facts-to-insights", false, "Push audit facts to Lagoon via Insights Remote")
-	pflag.BoolVar(&lagoon.PushFacts, "lagoon-push-facts", false, "Push audit facts to the Lagoon API")
+	pflag.StringVar(&lagoonApiBaseUrl, "lagoon-api-base-url", "", "Base url for the Lagoon API when requesting 'lagoon-problems' output (env: LAGOON_API_BASE_URL)")
+	pflag.StringVar(&lagoonApiToken, "lagoon-api-token", "", "Lagoon API token when requesting 'lagoon-problems' output (env: LAGOON_API_TOKEN)")
+	pflag.BoolVar(&lagoon.PushProblemsToInsightRemote, "lagoon-push-problems-to-insights", false, "Push audit facts to Lagoon via Insights Remote")
+	pflag.BoolVar(&lagoon.PushProblems, "lagoon-push-problems", false, "Push audit facts to the Lagoon API")
 	pflag.StringVar(&lagoon.LagoonInsightsRemoteEndpoint, "lagoon-insights-remote-endpoint", "http://lagoon-remote-insights-remote.lagoon.svc/problems", "Insights Remote Problems endpoint")
 	pflag.Parse()
 

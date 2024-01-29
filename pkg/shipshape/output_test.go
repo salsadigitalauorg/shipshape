@@ -232,7 +232,7 @@ func TestJUnit(t *testing.T) {
 `, buf.String())
 }
 
-func TestLagoonFacts(t *testing.T) {
+func TestLagoonProblems(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("noResult", func(t *testing.T) {
@@ -240,16 +240,16 @@ func TestLagoonFacts(t *testing.T) {
 
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		LagoonFacts(w)
+		LagoonProblems(w)
 		assert.Equal("[]", buf.String())
 	})
 
-	t.Run("noResultPushFacts", func(t *testing.T) {
+	t.Run("noResultPushProblems", func(t *testing.T) {
 		RunResultList = result.NewResultList(false)
 
 		svr := internal.MockLagoonServer()
 		lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
-		lagoon.PushFacts = true
+		lagoon.PushProblems = true
 		origOutput := logrus.StandardLogger().Out
 		var logbuf bytes.Buffer
 		logrus.SetOutput(&logbuf)
@@ -262,12 +262,12 @@ func TestLagoonFacts(t *testing.T) {
 			os.Unsetenv("LAGOON_PROJECT")
 			os.Unsetenv("LAGOON_ENVIRONMENT")
 			logrus.SetOutput(origOutput)
-			lagoon.PushFacts = false
+			lagoon.PushProblems = false
 		}()
 
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		LagoonFacts(w)
+		LagoonProblems(w)
 		assert.Equal(2, internal.MockLagoonNumCalls)
 		assert.Equal("{\"query\":\"query ($ns:String!){"+
 			"environmentByKubernetesNamespaceName(kubernetesNamespaceName: "+
@@ -296,7 +296,7 @@ func TestLagoonFacts(t *testing.T) {
 
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		LagoonFacts(w)
+		LagoonProblems(w)
 		assert.Equal("[{\"name\":\"[1] a - file\",\"value\":\"Fail a\",\"source\":"+
 			"\"Shipshape\",\"description\":\"a\",\"category\":\"file\"}]",
 			buf.String())
@@ -317,7 +317,7 @@ func TestLagoonFacts(t *testing.T) {
 		})
 		RunResultList.TotalBreaches = 1
 
-		lagoon.PushFacts = true
+		lagoon.PushProblems = true
 
 		svr := internal.MockLagoonServer()
 		lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
@@ -329,7 +329,7 @@ func TestLagoonFacts(t *testing.T) {
 			os.Unsetenv("LAGOON_PROJECT")
 			os.Unsetenv("LAGOON_ENVIRONMENT")
 			logrus.SetOutput(origOutput)
-			lagoon.PushFacts = false
+			lagoon.PushProblems = false
 		}()
 
 		var logbuf bytes.Buffer
@@ -340,7 +340,7 @@ func TestLagoonFacts(t *testing.T) {
 
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		LagoonFacts(w)
+		LagoonProblems(w)
 		assert.Equal(3, internal.MockLagoonNumCalls)
 		assert.Equal("{\"query\":\"query ($ns:String!){"+
 			"environmentByKubernetesNamespaceName(kubernetesNamespaceName: "+
@@ -382,7 +382,7 @@ func TestLagoonFacts(t *testing.T) {
 		})
 		RunResultList.TotalBreaches = 1
 
-		lagoon.PushFacts = true
+		lagoon.PushProblems = true
 
 		svr := internal.MockLagoonServer()
 		lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
@@ -394,7 +394,7 @@ func TestLagoonFacts(t *testing.T) {
 			os.Unsetenv("LAGOON_PROJECT")
 			os.Unsetenv("LAGOON_ENVIRONMENT")
 			logrus.SetOutput(origOutput)
-			lagoon.PushFacts = false
+			lagoon.PushProblems = false
 		}()
 
 		var logbuf bytes.Buffer
@@ -405,7 +405,7 @@ func TestLagoonFacts(t *testing.T) {
 
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		LagoonFacts(w)
+		LagoonProblems(w)
 		assert.Equal(3, internal.MockLagoonNumCalls)
 		assert.Equal("{\"query\":\"query ($ns:String!){"+
 			"environmentByKubernetesNamespaceName(kubernetesNamespaceName: "+

@@ -88,52 +88,6 @@ func TestGetEnvironmentIdFromEnvVars(t *testing.T) {
 		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
 }
 
-func TestAddFacts(t *testing.T) {
-	assert := assert.New(t)
-
-	svr := internal.MockLagoonServer()
-	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
-	origOutput := logrus.StandardLogger().Out
-	os.Setenv("LAGOON_PROJECT", "foo")
-	os.Setenv("LAGOON_ENVIRONMENT", "bar")
-	var buf bytes.Buffer
-	logrus.SetOutput(&buf)
-	defer func() {
-		svr.Close()
-		internal.MockLagoonReset()
-		lagoon.Client = nil
-		os.Unsetenv("LAGOON_PROJECT")
-		os.Unsetenv("LAGOON_ENVIRONMENT")
-		logrus.SetOutput(origOutput)
-	}()
-
-	facts := []lagoon.Fact{
-		{
-			Name:     "fact1",
-			Value:    "value1",
-			Source:   "source1",
-			Category: "cat1",
-		},
-		{
-			Name:     "fact2",
-			Value:    "value2",
-			Source:   "source1",
-			Category: "cat2",
-		},
-	}
-
-	err := lagoon.AddFacts(facts)
-	assert.NoError(err)
-	assert.Equal(1, internal.MockLagoonNumCalls)
-	assert.Equal("{\"query\":\"mutation ($input:AddFactsByNameInput!){"+
-		"addFactsByName(input: $input){id}}\",\"variables\":{\"input\":{"+
-		"\"environment\":\"bar\",\"facts\":[{\"name\":\"fact1\",\"value\":"+
-		"\"value1\",\"source\":\"source1\",\"description\":\"\",\"category\":"+
-		"\"cat1\"},{\"name\":\"fact2\",\"value\":\"value2\",\"source\":"+
-		"\"source1\",\"description\":\"\",\"category\":\"cat2\"}],\"project\""+
-		":\"foo\"}}}\n", internal.MockLagoonRequestBodies[0])
-}
-
 func TestDeleteFacts(t *testing.T) {
 	assert := assert.New(t)
 
@@ -165,59 +119,6 @@ func TestDeleteFacts(t *testing.T) {
 		"\"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
 }
 
-func TestReplaceFacts(t *testing.T) {
-	assert := assert.New(t)
-
-	svr := internal.MockLagoonServer()
-	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
-	origOutput := logrus.StandardLogger().Out
-	os.Setenv("LAGOON_PROJECT", "foo")
-	os.Setenv("LAGOON_ENVIRONMENT", "bar")
-	var buf bytes.Buffer
-	logrus.SetOutput(&buf)
-	defer func() {
-		svr.Close()
-		internal.MockLagoonReset()
-		lagoon.Client = nil
-		os.Unsetenv("LAGOON_PROJECT")
-		os.Unsetenv("LAGOON_ENVIRONMENT")
-		logrus.SetOutput(origOutput)
-	}()
-
-	facts := []lagoon.Fact{
-		{
-			Name:     "fact1",
-			Value:    "value1",
-			Source:   "source1",
-			Category: "cat1",
-		},
-		{
-			Name:     "fact2",
-			Value:    "value2",
-			Source:   "source1",
-			Category: "cat2",
-		},
-	}
-
-	err := lagoon.ReplaceFacts(facts)
-	assert.NoError(err)
-	assert.Equal(3, internal.MockLagoonNumCalls)
-	assert.Equal("{\"query\":\"query ($ns:String!){"+
-		"environmentByKubernetesNamespaceName(kubernetesNamespaceName: $ns)"+
-		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
-	assert.Equal("{\"query\":\"mutation ($envId:Int!$sourceName:String!){"+
-		"deleteFactsFromSource(input: {environment: $envId, source: "+
-		"$sourceName})}\",\"variables\":{\"envId\":50,\"sourceName\":\""+
-		"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
-	assert.Equal("{\"query\":\"mutation ($input:AddFactsByNameInput!){"+
-		"addFactsByName(input: $input){id}}\",\"variables\":{\"input\":{"+
-		"\"environment\":\"bar\",\"facts\":[{\"name\":\"fact1\",\"value\":"+
-		"\"value1\",\"source\":\"source1\",\"description\":\"\",\"category\":"+
-		"\"cat1\"},{\"name\":\"fact2\",\"value\":\"value2\",\"source\":"+
-		"\"source1\",\"description\":\"\",\"category\":\"cat2\"}],\"project\""+
-		":\"foo\"}}}\n", internal.MockLagoonRequestBodies[2])
-}
-
 func Test_GetBearerTokenFromDisk(t *testing.T) {
 	type args struct {
 		tokenLocation string
@@ -244,54 +145,6 @@ func Test_GetBearerTokenFromDisk(t *testing.T) {
 				return
 			}
 			assert.Equalf(t, tt.want, got, "getBearerTokenFromDisk(%v)", tt.args.tokenLocation)
-		})
-	}
-}
-
-func Test_FactsToInsightsRemote(t *testing.T) {
-	type args struct {
-		facts       []lagoon.Fact
-		bearerToken string
-	}
-	tests := []struct {
-		name          string
-		args          args
-		wantErr       assert.ErrorAssertionFunc
-		testBodyEqual bool
-	}{
-		{
-			name: "Successful post",
-			args: args{
-				facts: []lagoon.Fact{
-					{
-						Name:        "fact1",
-						Value:       "fact1",
-						Source:      "testing",
-						Description: "a testing fact",
-						Category:    "fact",
-					},
-				},
-				bearerToken: "bearertoken",
-			},
-			wantErr:       assert.NoError,
-			testBodyEqual: true,
-		},
-	}
-	for _, tt := range tests {
-
-		mockServerData := internal.MockInsightsRemoteTestState{}
-
-		serv := internal.MockRemoteInsightsServer(&mockServerData)
-
-		t.Run(tt.name, func(t *testing.T) {
-			tt.wantErr(t, lagoon.FactsToInsightsRemote(tt.args.facts, serv.URL, tt.args.bearerToken), fmt.Sprintf("factsToInsightsRemote(%v, %v)", tt.args.facts, tt.args.bearerToken))
-			if tt.testBodyEqual == true { //let's check the data we sent through seems correct
-				bodyString := mockServerData.LastCallBody
-				var facts []lagoon.Fact
-				err := json.Unmarshal([]byte(bodyString), &facts)
-				assert.NoError(t, err)
-				assert.Equalf(t, tt.args.facts, facts, fmt.Sprintf("Unmarshalled Body not Equal"))
-			}
 		})
 	}
 }

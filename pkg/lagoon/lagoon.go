@@ -46,8 +46,8 @@ const FactMaxValueLength int = 300
 
 var ApiBaseUrl string
 var ApiToken string
-var PushFacts bool
-var PushFactsToInsightRemote bool
+var PushProblems bool
+var PushProblemsToInsightRemote bool
 var LagoonInsightsRemoteEndpoint string
 
 var project string
@@ -133,61 +133,6 @@ func ProblemsToInsightsRemote(problems []Problem, serviceEndpoint string, bearer
 	return nil
 }
 
-func FactsToInsightsRemote(facts []Fact, serviceEndpoint string, bearerToken string) error {
-
-	bodyString, err := json.Marshal(facts)
-	if err != nil {
-		return err
-	}
-
-	req, _ := http.NewRequest(http.MethodPost, serviceEndpoint, bytes.NewBuffer(bodyString))
-	req.Header.Set("Authorization", bearerToken)
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
-	response, err := client.Do(req)
-
-	if err != nil {
-		return err
-	}
-
-	if response.StatusCode != 200 {
-		return fmt.Errorf("There was an error sending the facts to '%s' : %s\n", serviceEndpoint, response.Body)
-	}
-	return nil
-}
-
-// AddFacts pushes the given facts to the Lagoon API.
-func AddFacts(facts []Fact) error {
-	MustHaveEnvVars()
-
-	type AddFactInput struct{ Fact }
-	type AddFactsByNameInput map[string]interface{}
-
-	factsInput := []AddFactInput{}
-	for _, f := range facts {
-		factsInput = append(factsInput, AddFactInput{f})
-	}
-	var m struct {
-		AddFactsByName []struct{ Id int } `graphql:"addFactsByName(input: $input)"`
-	}
-	variables := map[string]interface{}{"input": AddFactsByNameInput{
-		"project":     os.Getenv("LAGOON_PROJECT"),
-		"environment": os.Getenv("LAGOON_ENVIRONMENT"),
-		"facts":       factsInput,
-	}}
-
-	qryStr, _ := graphql.ConstructMutation(&m, variables)
-	log.WithFields(log.Fields{
-		"query":     qryStr,
-		"variables": fmt.Sprintf("%+v", variables),
-	}).Debug("executing API mutation")
-	err := Client.Mutate(context.Background(), &m, variables)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func DeleteProblems() error {
 	envId, err := GetEnvironmentIdFromEnvVars()
 	if err != nil {
@@ -202,18 +147,6 @@ func DeleteProblems() error {
 		"service":    "cli",
 	}
 	return Client.Mutate(context.Background(), &m, variables)
-}
-
-// ReplaceFacts deletes all the Shipshape facts and then adds the new ones.
-func ReplaceFacts(facts []Fact) error {
-
-	log.Debug("deleting facts before adding new")
-	err := DeleteProblems()
-	if err != nil {
-		return err
-	}
-	log.Debug("adding new facts")
-	return AddFacts(facts)
 }
 
 func BreachFactName(b result.Breach) string {

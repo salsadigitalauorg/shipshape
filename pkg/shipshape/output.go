@@ -169,7 +169,7 @@ func LagoonProblems(w *bufio.Writer) {
 	problems := []lagoon.Problem{}
 
 	if RunResultList.TotalBreaches == 0 {
-		if lagoon.PushFacts {
+		if lagoon.PushProblems {
 			lagoon.InitClient()
 			err := lagoon.DeleteProblems()
 			if err != nil {
@@ -179,27 +179,40 @@ func LagoonProblems(w *bufio.Writer) {
 			w.Flush()
 			return
 		}
+		fmt.Fprint(w, "[]")
 		w.Flush()
 		return
 	}
 
-	for _, r := range RunResultList.Results {
+	for iR, r := range RunResultList.Results {
 		// let's marshall the breaches, they can be attached to the problem in the data field
 		_, err := json.Marshal(r.Breaches)
 		if err != nil {
 			log.WithError(err).Fatal("Unable to marshall breach information")
 		}
 
-		//if len(value) > lagoon.FactMaxValueLength {
-		//	value = value[:lagoon.FactMaxValueLength-12] + "...TRUNCATED"
-		//}
+		breachMap := map[string]string{}
+		for iB, b := range r.Breaches {
+			breachName := fmt.Sprintf("[%d] %s", iR+iB+1, lagoon.BreachFactName(b))
+			value := lagoon.BreachFactValue(b)
+			if len(value) > lagoon.FactMaxValueLength {
+				value = value[:lagoon.FactMaxValueLength-12] + "...TRUNCATED"
+			}
+			breachMap[breachName] = value
+		}
+
+		breachMapJson, err := json.Marshal(breachMap)
+		if err != nil {
+			//TODO: add some error handling here
+		}
+
 		problems = append(problems, lagoon.Problem{
 			Identifier:        r.Name,
 			Version:           "1",
 			FixedVersion:      "",
 			Source:            "shipshape",
 			Service:           "",
-			Data:              "{}",
+			Data:              string(breachMapJson),
 			Severity:          lagoon.SeverityTranslation(config.Severity(r.Severity)),
 			SeverityScore:     0,
 			AssociatedPackage: "",
@@ -208,10 +221,10 @@ func LagoonProblems(w *bufio.Writer) {
 		})
 	}
 
-	if lagoon.PushFacts {
+	if lagoon.PushProblems {
 		lagoon.InitClient()
 	}
-	if lagoon.PushFactsToInsightRemote {
+	if lagoon.PushProblemsToInsightRemote {
 		// first, let's try doing this via in-cluster functionality
 		bearerToken, err := lagoon.GetBearerTokenFromDisk(lagoon.DefaultLagoonInsightsTokenLocation)
 		if err == nil { // we have a token, and so we can proceed via the internal service call
@@ -223,82 +236,11 @@ func LagoonProblems(w *bufio.Writer) {
 		} else {
 			log.WithError(err).Fatal("Bearer token unable to be loaded from ", lagoon.DefaultLagoonInsightsTokenLocation)
 		}
-		fmt.Fprint(w, "successfully pushed facts to Lagoon Remote")
+		fmt.Fprintln(w, "successfully pushed problems to Lagoon Remote")
 		w.Flush()
 		return
+	} else {
+		fmt.Fprint(w, problems)
 	}
-	w.Flush()
-}
-
-// LagoonFacts outputs breaches in a format compatible with the
-// lagoon-facts-app to be consumed.
-// see https://github.com/uselagoon/lagoon-facts-app#arbitrary-facts
-func LagoonFacts(w *bufio.Writer) {
-	facts := []lagoon.Fact{}
-
-	if RunResultList.TotalBreaches == 0 {
-		if lagoon.PushFacts {
-			lagoon.InitClient()
-			err := lagoon.DeleteProblems()
-			if err != nil {
-				log.WithError(err).Fatal("failed to delete facts")
-			}
-			fmt.Fprint(w, "no breach to push to Lagoon; only deleted previous facts")
-			w.Flush()
-			return
-		}
-		fmt.Fprint(w, "[]")
-		w.Flush()
-		return
-	}
-
-	for iR, r := range RunResultList.Results {
-		for iB, b := range r.Breaches {
-			value := lagoon.BreachFactValue(b)
-			if len(value) > lagoon.FactMaxValueLength {
-				value = value[:lagoon.FactMaxValueLength-12] + "...TRUNCATED"
-			}
-			facts = append(facts, lagoon.Fact{
-				Name:        fmt.Sprintf("[%d] %s", iR+iB+1, lagoon.BreachFactName(b)),
-				Description: result.BreachGetCheckName(b),
-				Value:       value,
-				Source:      lagoon.SourceName,
-				Category:    string(result.BreachGetCheckType(b)),
-			})
-		}
-	}
-
-	if lagoon.PushFactsToInsightRemote {
-		// first, let's try doing this via in-cluster functionality
-		bearerToken, err := lagoon.GetBearerTokenFromDisk(lagoon.DefaultLagoonInsightsTokenLocation)
-		if err == nil { // we have a token, and so we can proceed via the internal service call
-			err = lagoon.FactsToInsightsRemote(facts, lagoon.LagoonInsightsRemoteEndpoint, bearerToken)
-			if err != nil {
-				log.WithError(err).Fatal("Unable to write facts to Insights Remote")
-			}
-		} else {
-			log.WithError(err).Fatal("Bearer token unable to be loaded from ", lagoon.DefaultLagoonInsightsTokenLocation)
-		}
-		fmt.Fprint(w, "successfully pushed facts to Lagoon Remote")
-		w.Flush()
-		return
-	}
-
-	if lagoon.PushFacts {
-		lagoon.InitClient()
-		err := lagoon.ReplaceFacts(facts)
-		if err != nil {
-			log.WithError(err).Fatal("failed to replace facts")
-		}
-		fmt.Fprint(w, "successfully pushed facts to the Lagoon api")
-		w.Flush()
-		return
-	}
-
-	factsBytes, err := json.Marshal(facts)
-	if err != nil {
-		log.WithError(err).Fatalf("error occurred while converting to json")
-	}
-	fmt.Fprint(w, string(factsBytes))
 	w.Flush()
 }
