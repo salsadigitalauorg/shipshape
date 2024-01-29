@@ -203,7 +203,7 @@ func LagoonProblems(w *bufio.Writer) {
 
 		breachMapJson, err := json.Marshal(breachMap)
 		if err != nil {
-			//TODO: add some error handling here
+			log.WithError(err).Fatal("Unable to write problems to Insights Remote")
 		}
 
 		problems = append(problems, lagoon.Problem{
@@ -230,7 +230,7 @@ func LagoonProblems(w *bufio.Writer) {
 		if err == nil { // we have a token, and so we can proceed via the internal service call
 			err = lagoon.ProblemsToInsightsRemote(problems, lagoon.LagoonInsightsRemoteEndpoint, bearerToken)
 			if err != nil {
-				log.WithError(err).Fatal("Unable to write facts to Insights Remote")
+				log.WithError(err).Fatal("Unable to write problems to Insights Remote")
 			}
 
 		} else {
