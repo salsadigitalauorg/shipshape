@@ -52,28 +52,43 @@ func TestFileCheckRunCheck(t *testing.T) {
 		Path:              "file-non-existent",
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
+	c.Name = "filecheck1"
 	c.Init(File)
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(
-		[]string{"lstat testdata/file-non-existent: no such file or directory"},
-		c.Result.Failures,
+		[]result.Breach{result.ValueBreach{
+			CheckType:  "file",
+			CheckName:  "filecheck1",
+			BreachType: result.BreachTypeValue,
+			Severity:   "normal",
+			ValueLabel: "error finding files",
+			Value:      "lstat testdata/file-non-existent: no such file or directory",
+		}},
+		c.Result.Breaches,
 	)
 
 	c = FileCheck{
 		DisallowedPattern: "^(adminer|phpmyadmin|bigdump)?\\.php$",
 	}
+	c.Name = "filecheck2"
 	c.Init(File)
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(
-		[]string{
-			"Illegal file found: testdata/adminer.php",
-			"Illegal file found: testdata/sub/phpmyadmin.php",
+		[]result.Breach{
+			result.KeyValueBreach{
+				CheckType:  "file",
+				CheckName:  "filecheck2",
+				BreachType: result.BreachTypeKeyValue,
+				Severity:   "normal",
+				Key:        "filecheck2 - illegal files found",
+				Value:      "testdata/adminer.php\ntestdata/sub/phpmyadmin.php",
+			},
 		},
-		c.Result.Failures,
+		c.Result.Breaches,
 	)
 
 	c = FileCheck{
@@ -84,6 +99,6 @@ func TestFileCheckRunCheck(t *testing.T) {
 	c.RunCheck()
 
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.Equal(0, len(c.Result.Failures))
+	assert.Equal(0, len(c.Result.Breaches))
 	assert.EqualValues([]string{"No illegal files"}, c.Result.Passes)
 }

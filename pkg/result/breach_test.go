@@ -8,10 +8,103 @@ import (
 	. "github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
-func TestBreachSetCommonValues(t *testing.T) {
+func TestBreachValueBreachStringer(t *testing.T) {
 	assert := assert.New(t)
 
-	type bogusBreach struct{}
+	tests := []struct {
+		name     string
+		breach   Breach
+		expected string
+	}{
+		{
+			name: "value-breach",
+			breach: ValueBreach{
+				ValueLabel: "file not found",
+				Value:      "foo.ext",
+			},
+			expected: "[file not found] foo.ext",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(test.expected, test.breach.String())
+		})
+	}
+}
+
+func TestBreachKeyValueBreachStringer(t *testing.T) {
+	assert := assert.New(t)
+
+	tests := []struct {
+		name     string
+		breach   Breach
+		expected string
+	}{
+		{
+			name: "key-value-breach-1",
+			breach: KeyValueBreach{
+				KeyLabel:   "config",
+				Key:        "clamav.settings",
+				ValueLabel: "key not found",
+				Value:      "enabled",
+			},
+			expected: "[config:clamav.settings] key not found: enabled",
+		},
+		{
+			name: "key-value-breach-2",
+			breach: KeyValueBreach{
+				KeyLabel:      "clamav.settings",
+				Key:           "enabled",
+				Value:         "false",
+				ExpectedValue: "true",
+			},
+			expected: "[clamav.settings] 'enabled' equals 'false', expected 'true'",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(test.expected, test.breach.String())
+		})
+	}
+}
+
+func TestBreachKeyValuesBreachStringers(t *testing.T) {
+	assert := assert.New(t)
+
+	tests := []struct {
+		name     string
+		breach   Breach
+		expected string
+	}{
+		{
+			name: "KeyValuesBreach",
+			breach: KeyValuesBreach{
+				KeyLabel:   "role",
+				Key:        "admin",
+				ValueLabel: "disallowed permissions",
+				Values:     []string{"delete the site", "delete the world"},
+			},
+			expected: "[role:admin] disallowed permissions: [delete the site, delete the world]",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(test.expected, test.breach.String())
+		})
+	}
+}
+
+type bogusBreach struct{}
+
+func (b bogusBreach) String() string {
+	return ""
+}
+
+func TestBreachSetCommonValues(t *testing.T) {
+	assert := assert.New(t)
 
 	tests := []struct {
 		name               string
@@ -78,8 +171,6 @@ func TestBreachSetCommonValues(t *testing.T) {
 
 func TestBreachGetters(t *testing.T) {
 	assert := assert.New(t)
-
-	type bogusBreach struct{}
 
 	tests := []struct {
 		name                  string

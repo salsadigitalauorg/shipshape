@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -58,12 +57,10 @@ func (c *AdminUserCheck) getActiveRoles() map[string]string {
 	activeRoles, err := Drush(c.DrushPath, c.Alias, cmd).Exec()
 	var pathErr *fs.PathError
 	if err != nil && errors.As(err, &pathErr) {
-		c.AddFail(pathErr.Path + ": " + pathErr.Err.Error())
 		c.AddBreach(result.ValueBreach{
 			Value: pathErr.Path + ": " + pathErr.Err.Error()})
 	} else if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
-		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
 		c.AddBreach(result.ValueBreach{
 			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	} else {
@@ -71,7 +68,6 @@ func (c *AdminUserCheck) getActiveRoles() map[string]string {
 		err = json.Unmarshal(activeRoles, &rolesListMap)
 		var synErr *json.SyntaxError
 		if err != nil && errors.As(err, &synErr) {
-			c.AddFail(err.Error())
 			c.AddBreach(result.ValueBreach{Value: err.Error()})
 		}
 	}
@@ -98,7 +94,6 @@ func (c *AdminUserCheck) FetchData() {
 
 	if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
-		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
 		c.AddBreach(result.ValueBreach{
 			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	}
@@ -108,7 +103,6 @@ func (c *AdminUserCheck) FetchData() {
 // into the roleConfigs for further processing.
 func (c *AdminUserCheck) UnmarshalDataMap() {
 	if len(c.DataMap) == 0 {
-		c.AddFail("no data provided")
 		c.AddBreach(result.ValueBreach{Value: "no data provided"})
 		return
 	}
@@ -119,7 +113,6 @@ func (c *AdminUserCheck) UnmarshalDataMap() {
 		err := json.Unmarshal([]byte(element), &role)
 		var synErr *json.SyntaxError
 		if err != nil && errors.As(err, &synErr) {
-			c.AddFail(err.Error())
 			c.AddBreach(result.ValueBreach{Value: err.Error()})
 			return
 		}
@@ -139,9 +132,6 @@ func (c *AdminUserCheck) RunCheck() {
 		if isAdmin {
 			if c.PerformRemediation {
 				if err := c.Remediate(roleName); err != nil {
-					c.AddFail(fmt.Sprintf(
-						"Failed to fix disallowed admin setting for role [%s] due to error: %s",
-						roleName, command.GetMsgFromCommandError(err)))
 					c.AddBreach(result.KeyValueBreach{
 						Key:        "failed to set is_admin to false",
 						ValueLabel: "role",
@@ -152,7 +142,6 @@ func (c *AdminUserCheck) RunCheck() {
 						"Fixed disallowed admin setting for role [%s]", roleName))
 				}
 			} else {
-				c.AddFail(fmt.Sprintf("Role [%s] has `is_admin: true`", roleName))
 				c.AddBreach(result.KeyValueBreach{
 					Key:        "is_admin: true",
 					ValueLabel: "role",
@@ -162,7 +151,7 @@ func (c *AdminUserCheck) RunCheck() {
 		}
 	}
 
-	if len(c.Result.Failures) == 0 {
+	if len(c.Result.Breaches) == 0 {
 		c.Result.Status = result.Pass
 	}
 }

@@ -38,7 +38,6 @@ func (c *YamlCheck) readFile(fkey string, fname string) {
 			c.AddPass(fmt.Sprintf("File %s does not exist", fname))
 			c.Result.Status = result.Pass
 		} else {
-			c.AddFail(err.Error())
 			c.AddBreach(result.ValueBreach{
 				ValueLabel: "error reading file: " + fname,
 				Value:      err.Error()})
@@ -66,7 +65,6 @@ func (c *YamlCheck) FetchData() {
 				c.AddPass(fmt.Sprintf("Path %s does not exist", configPath))
 				c.Result.Status = result.Pass
 			} else {
-				c.AddFail(err.Error())
 				c.AddBreach(result.ValueBreach{
 					ValueLabel: "error finding files in path: " + configPath,
 					Value:      err.Error()})
@@ -79,7 +77,6 @@ func (c *YamlCheck) FetchData() {
 			c.Result.Status = result.Pass
 			return
 		} else if len(files) == 0 {
-			c.AddFail("no matching config files found")
 			c.AddBreach(result.ValueBreach{
 				ValueLabel: c.Name + "- no file",
 				Value:      "no matching yaml files found"})
@@ -91,7 +88,6 @@ func (c *YamlCheck) FetchData() {
 			c.readFile(fname, fname)
 		}
 	} else {
-		c.AddFail("no file provided")
 		c.AddBreach(result.ValueBreach{
 			ValueLabel: c.Name + "- no file",
 			Value:      "no file provided"})

@@ -73,17 +73,11 @@ func CheckModulesInYaml(c *yaml.YamlBase, ct config.CheckType, configName string
 		required_errored,
 		required_disabled := DetermineModuleStatus(c.NodeMap[configName], ct, required)
 	if len(required_errored) > 0 {
-		c.AddFail(fmt.Sprintf(
-			"error verifying status for required modules: %s",
-			strings.Join(required_errored, ",")))
 		c.AddBreach(result.KeyValuesBreach{
 			Key:    "error verifying status for required modules",
 			Values: required_errored})
 	}
 	if len(required_disabled) > 0 {
-		c.AddFail(fmt.Sprintf(
-			"required modules are not enabled: %s",
-			strings.Join(required_disabled, ",")))
 		c.AddBreach(result.KeyValuesBreach{
 			Key:    "required modules are not enabled",
 			Values: required_disabled})
@@ -100,17 +94,11 @@ func CheckModulesInYaml(c *yaml.YamlBase, ct config.CheckType, configName string
 		disallowed_errored,
 		disallowed_disabled := DetermineModuleStatus(c.NodeMap[configName], ct, disallowed)
 	if len(disallowed_errored) > 0 {
-		c.AddFail(fmt.Sprintf(
-			"error verifying status for disallowed modules: %s",
-			strings.Join(disallowed_errored, ",")))
 		c.AddBreach(result.KeyValuesBreach{
 			Key:    "error verifying status for disallowed modules",
 			Values: disallowed_errored})
 	}
 	if len(disallowed_enabled) > 0 {
-		c.AddFail(fmt.Sprintf(
-			"disallowed modules are enabled: %s",
-			strings.Join(disallowed_enabled, ",")))
 		c.AddBreach(result.KeyValuesBreach{
 			Key:    "disallowed modules are enabled",
 			Values: disallowed_enabled})
@@ -123,7 +111,7 @@ func CheckModulesInYaml(c *yaml.YamlBase, ct config.CheckType, configName string
 			strings.Join(disallowed_disabled, ",")))
 	}
 
-	if len(c.Result.Failures) == 0 {
+	if len(c.Result.Breaches) == 0 {
 		c.Result.Status = result.Pass
 	}
 }

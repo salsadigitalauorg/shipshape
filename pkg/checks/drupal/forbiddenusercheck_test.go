@@ -1,14 +1,15 @@
 package drupal_test
 
 import (
+	"os/exec"
+	"testing"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
-	"os/exec"
-	"testing"
 )
 
 func TestForbiddenUserCheck_Init(t *testing.T) {
@@ -46,7 +47,13 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		c := drupal.ForbiddenUserCheck{}
 		c.RunCheck()
 		assertions.Equal(result.Fail, c.Result.Status)
-		assertions.EqualValues([]string{"vendor/drush/drush/drush: no such file or directory"}, c.Result.Failures)
+		assertions.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				Value:      "vendor/drush/drush/drush: no such file or directory",
+			}},
+			c.Result.Breaches,
+		)
 	})
 
 	t.Run("failOnDrushError", func(t *testing.T) {
@@ -62,8 +69,13 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		c.RunCheck()
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]string{"Unable to find a matching user"},
-			c.Result.Failures,
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "drupal-user-forbidden",
+				Severity:   "normal",
+				Value:      "Unable to find a matching user",
+			}},
+			c.Result.Breaches,
 		)
 	})
 
@@ -82,8 +94,13 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]string{"invalid character 'U' looking for beginning of value"},
-			c.Result.Failures,
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "drupal-user-forbidden",
+				Severity:   "normal",
+				Value:      "invalid character 'U' looking for beginning of value",
+			}},
+			c.Result.Breaches,
 		)
 	})
 
@@ -107,8 +124,14 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]string{"Forbidden user [1] is active"},
-			c.Result.Failures,
+			[]result.Breach{result.KeyValueBreach{
+				BreachType: "key-value",
+				CheckType:  "drupal-user-forbidden",
+				Severity:   "normal",
+				Key:        "forbidden user is active",
+				Value:      "1",
+			}},
+			c.Result.Breaches,
 		)
 	})
 
@@ -130,7 +153,7 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		)
 		c.RunCheck()
 		assertions.Equal(result.Pass, c.Result.Status)
-		assertions.Empty(c.Result.Failures)
+		assertions.Empty(c.Result.Breaches)
 		assertions.ElementsMatch(
 			[]string{"No forbidden user is active."},
 			c.Result.Passes,
@@ -177,7 +200,7 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 		)
 		c.RunCheck()
 		assertions.Equal(result.Pass, c.Result.Status)
-		assertions.Empty(c.Result.Failures)
+		assertions.Empty(c.Result.Breaches)
 		assertions.ElementsMatch(
 			[]string{"Blocked the forbidden user [1]"},
 			c.Result.Remediations,

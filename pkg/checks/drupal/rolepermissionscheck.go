@@ -3,13 +3,13 @@ package drupal
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"io/fs"
 	"os/exec"
 	"strings"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 const RolePermissions config.CheckType = "drupal-role-permissions"
@@ -41,12 +41,10 @@ func (c *RolePermissionsCheck) GetRolePermissions() []string {
 
 	var pathError *fs.PathError
 	if err != nil && errors.As(err, &pathError) {
-		c.AddFail(pathError.Path + ": " + pathError.Err.Error())
 		c.AddBreach(result.ValueBreach{
 			Value: pathError.Path + ": " + pathError.Err.Error()})
 	} else if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
-		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
 		c.AddBreach(result.ValueBreach{
 			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	} else {
@@ -65,7 +63,6 @@ func (c *RolePermissionsCheck) GetRolePermissions() []string {
 		err = json.Unmarshal(drushOutput, &rolePermissionsMap)
 		var syntaxError *json.SyntaxError
 		if err != nil && errors.As(err, &syntaxError) {
-			c.AddFail(err.Error())
 			c.AddBreach(result.ValueBreach{Value: err.Error()})
 		}
 
@@ -90,7 +87,6 @@ func (c *RolePermissionsCheck) Merge(mergeCheck config.Check) error {
 // RunCheck implements the Check logic for role permissions.
 func (c *RolePermissionsCheck) RunCheck() {
 	if c.RoleId == "" {
-		c.AddFail("no role ID provided")
 		c.AddBreach(result.ValueBreach{Value: "no role ID provided"})
 		return
 	}
@@ -99,24 +95,26 @@ func (c *RolePermissionsCheck) RunCheck() {
 	// Check for required permissions.
 	diff := utils.StringSlicesInterdiffUnique(rolePermissions, c.RequiredPermissions)
 	if len(diff) > 0 {
-		c.AddFail(fmt.Sprintf("The role [%s] does not have all required permissions.", c.RoleId))
-		c.AddBreach(result.ValueBreach{
-			ValueLabel: "Missing permissions",
-			Value:      strings.Join(diff, ", "),
+		c.AddBreach(result.KeyValueBreach{
+			KeyLabel:   "role",
+			Key:        c.RoleId,
+			ValueLabel: "missing permissions",
+			Value:      "[" + strings.Join(diff, ", ") + "]",
 		})
 	}
 
 	// Check for disallowed permissions.
 	diff = utils.StringSlicesIntersectUnique(rolePermissions, c.DisallowedPermissions)
 	if len(diff) > 0 {
-		c.AddFail(fmt.Sprintf("The role [%s] has disallowed permissions.", c.RoleId))
-		c.AddBreach(result.ValueBreach{
-			ValueLabel: "Disallowed permissions",
-			Value:      strings.Join(diff, ", ")},
-		)
+		c.AddBreach(result.KeyValueBreach{
+			KeyLabel:   "role",
+			Key:        c.RoleId,
+			ValueLabel: "disallowed permissions",
+			Value:      "[" + strings.Join(diff, ", ") + "]",
+		})
 	}
 
-	if len(c.Result.Failures) == 0 {
+	if len(c.Result.Breaches) == 0 {
 		c.Result.Status = result.Pass
 	}
 }

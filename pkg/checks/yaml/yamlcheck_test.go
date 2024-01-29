@@ -53,7 +53,16 @@ func TestYamlCheck(t *testing.T) {
 	c.FetchData()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
-	assert.EqualValues([]string{"no file provided"}, c.Result.Failures)
+	assert.EqualValues(
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: "value",
+				ValueLabel: "- no file",
+				Value:      "no file provided",
+			},
+		},
+		c.Result.Breaches,
+	)
 
 	// Non-existent file.
 	config.ProjectDir = "testdata"
@@ -63,7 +72,18 @@ func TestYamlCheck(t *testing.T) {
 	c.FetchData()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
-	assert.EqualValues([]string{"open testdata/non-existent.yml: no such file or directory"}, c.Result.Failures)
+	assert.EqualValues(
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "yaml",
+				Severity:   "normal",
+				ValueLabel: "error reading file: testdata/non-existent.yml",
+				Value:      "open testdata/non-existent.yml: no such file or directory",
+			},
+		},
+		c.Result.Breaches,
+	)
 
 	// Non-existent file with ignore missing.
 	c = mockCheck()
@@ -71,7 +91,7 @@ func TestYamlCheck(t *testing.T) {
 	c.IgnoreMissing = &cTrue
 	c.FetchData()
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	assert.EqualValues([]string{"File testdata/non-existent.yml does not exist"}, c.Result.Passes)
 
 	// Single file.
@@ -80,12 +100,12 @@ func TestYamlCheck(t *testing.T) {
 	c.FetchData()
 	// Should not fail yet.
 	assert.NotEqual(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	assert.True(c.HasData(false))
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	assert.EqualValues([]string{"[update.settings.yml] 'check.interval_days' equals '7'"}, c.Result.Passes)
 
 	// Bad File pattern.
@@ -95,7 +115,16 @@ func TestYamlCheck(t *testing.T) {
 	c.FetchData()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
-	assert.EqualValues([]string{"error parsing regexp: missing argument to repetition operator: `*`"}, c.Result.Failures)
+	assert.EqualValues(
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: "value",
+				ValueLabel: "error finding files in path: testdata",
+				Value:      "error parsing regexp: missing argument to repetition operator: `*`",
+			},
+		},
+		c.Result.Breaches,
+	)
 
 	// File pattern with no matching files.
 	c = mockCheck()
@@ -103,7 +132,16 @@ func TestYamlCheck(t *testing.T) {
 	c.FetchData()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
-	assert.EqualValues([]string{"no matching config files found"}, c.Result.Failures)
+	assert.EqualValues(
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: "value",
+				ValueLabel: "- no file",
+				Value:      "no matching yaml files found",
+			},
+		},
+		c.Result.Breaches,
+	)
 
 	// File pattern with no matching files, ignoring missing.
 	c = mockCheck()
@@ -111,7 +149,7 @@ func TestYamlCheck(t *testing.T) {
 	c.IgnoreMissing = &cTrue
 	c.FetchData()
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	assert.EqualValues([]string{"no matching config files found"}, c.Result.Passes)
 
 	// Correct single file pattern & value.
@@ -120,18 +158,18 @@ func TestYamlCheck(t *testing.T) {
 	c.Path = "dir/subdir"
 	c.FetchData()
 	assert.NotEqual(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.EqualValues([]string{"[testdata/dir/subdir/foo.bar.yml] 'check.interval_days' equals '7'"}, c.Result.Passes)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 
 	// Recursive file lookup.
 	c = mockCheck()
 	c.Pattern = ".*.bar.yml"
 	c.FetchData()
 	assert.NotEqual(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
@@ -142,9 +180,31 @@ func TestYamlCheck(t *testing.T) {
 			"[testdata/foo.bar.yml] 'check.interval_days' equals '7'"},
 		c.Result.Passes)
 	assert.ElementsMatch(
-		[]string{
-			"[testdata/dir/subdir/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'",
-			"[testdata/dir/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'",
-			"[testdata/zoom.bar.yml] 'check.interval_days' equals '5', expected '7'"},
-		c.Result.Failures)
+		[]result.Breach{
+			result.KeyValueBreach{
+				BreachType:    "key-value",
+				KeyLabel:      "testdata/dir/subdir/zoom.bar.yml",
+				Key:           "check.interval_days",
+				ValueLabel:    "actual",
+				Value:         "5",
+				ExpectedValue: "7",
+			},
+			result.KeyValueBreach{
+				BreachType:    "key-value",
+				KeyLabel:      "testdata/dir/zoom.bar.yml",
+				Key:           "check.interval_days",
+				ValueLabel:    "actual",
+				Value:         "5",
+				ExpectedValue: "7",
+			},
+			result.KeyValueBreach{
+				BreachType:    "key-value",
+				KeyLabel:      "testdata/zoom.bar.yml",
+				Key:           "check.interval_days",
+				ValueLabel:    "actual",
+				Value:         "5",
+				ExpectedValue: "7",
+			},
+		},
+		c.Result.Breaches)
 }

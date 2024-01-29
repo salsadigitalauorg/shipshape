@@ -60,7 +60,7 @@ func (rl *ResultList) AddResult(r Result) {
 	defer lock.Unlock()
 	rl.Results = append(rl.Results, r)
 
-	breachesIncr := len(r.Failures)
+	breachesIncr := len(r.Breaches)
 	atomic.AddUint32(&rl.TotalBreaches, uint32(breachesIncr))
 	rl.BreachCountByType[r.CheckType] = rl.BreachCountByType[r.CheckType] + breachesIncr
 	rl.BreachCountBySeverity[r.Severity] = rl.BreachCountBySeverity[r.Severity] + breachesIncr
@@ -71,23 +71,23 @@ func (rl *ResultList) AddResult(r Result) {
 }
 
 // GetBreachesByCheckName fetches the list of failures by check name.
-func (rl *ResultList) GetBreachesByCheckName(cn string) []string {
-	var breaches []string
+func (rl *ResultList) GetBreachesByCheckName(cn string) []Breach {
+	var breaches []Breach
 	for _, r := range rl.Results {
 		if r.Name == cn {
-			breaches = append(breaches, r.Failures...)
+			breaches = append(breaches, r.Breaches...)
 		}
 	}
 	return breaches
 }
 
 // GetBreachesBySeverity fetches the list of failures by severity.
-func (rl *ResultList) GetBreachesBySeverity(s string) []string {
-	var breaches []string
+func (rl *ResultList) GetBreachesBySeverity(s string) []Breach {
+	var breaches []Breach
 
 	for _, r := range rl.Results {
 		if r.Severity == s {
-			breaches = append(breaches, r.Failures...)
+			breaches = append(breaches, r.Breaches...)
 		}
 	}
 	return breaches

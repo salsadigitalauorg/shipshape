@@ -5,11 +5,11 @@ package json
 import (
 	"errors"
 	"fmt"
+
 	"github.com/goccy/go-json"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
-	"strings"
 )
 
 // UnmarshalDataMap parses the DataMap into Json for further processing.
@@ -21,8 +21,7 @@ func (c *JsonCheck) UnmarshalDataMap() {
 		var n any
 		err := json.Unmarshal(data, &n)
 		if err != nil {
-			c.AddFail("JSON error: " + err.Error())
-			c.AddBreach(result.ValueBreach{Value: err.Error()})
+			c.AddBreach(result.ValueBreach{ValueLabel: "JSON error", Value: err.Error()})
 			return
 		}
 		c.Node[configName] = n
@@ -37,10 +36,8 @@ func (c *JsonCheck) processData(configName string) {
 		kvr, fails, err := CheckKeyValue(c.Node[configName], kv)
 		switch kvr {
 		case yaml.KeyValueError:
-			c.AddFail(err.Error())
 			c.AddBreach(result.ValueBreach{Value: err.Error()})
 		case yaml.KeyValueNotFound:
-			c.AddFail(fmt.Sprintf("[%s] '%s' not found", configName, kv.Key))
 			c.AddBreach(result.KeyValueBreach{
 				KeyLabel:   "config",
 				Key:        configName,
@@ -48,8 +45,6 @@ func (c *JsonCheck) processData(configName string) {
 				Value:      kv.Key,
 			})
 		case yaml.KeyValueNotEqual:
-			c.AddFail(fmt.Sprintf("[%s] '%s' equals '%s', expected '%s'",
-				configName, kv.Key, fails[0], kv.Value))
 			c.AddBreach(result.KeyValueBreach{
 				KeyLabel:      configName,
 				Key:           kv.Key,
@@ -58,8 +53,6 @@ func (c *JsonCheck) processData(configName string) {
 				Value:         fails[0],
 			})
 		case yaml.KeyValueDisallowedFound:
-			c.AddFail(fmt.Sprintf("[%s] disallowed %s: [%s]", configName,
-				kv.Key, strings.Join(fails, ", ")))
 			c.AddBreach(result.KeyValuesBreach{
 				KeyLabel:   "config",
 				Key:        configName,
@@ -74,7 +67,7 @@ func (c *JsonCheck) processData(configName string) {
 			}
 		}
 	}
-	if len(c.Result.Failures) != 0 {
+	if len(c.Result.Breaches) != 0 {
 		c.Result.Status = result.Fail
 	} else {
 		c.Result.Status = result.Pass

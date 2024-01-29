@@ -157,7 +157,35 @@ func TestRunChecks(t *testing.T) {
 		string(testchecks.TestCheck2): 1,
 	}, rl.BreachCountByType)
 	assert.ElementsMatch([]result.Result{
-		{Name: "test1stcheck", Severity: "normal", CheckType: "test-check-1", Status: "Fail", Passes: []string(nil), Failures: []string{"no data available"}, Warnings: []string(nil)},
-		{Name: "test2ndcheck", Severity: "normal", CheckType: "test-check-2", Status: "Fail", Passes: []string(nil), Failures: []string{"no data available"}, Warnings: []string(nil)}},
+		{
+			Name:      "test1stcheck",
+			Severity:  "normal",
+			CheckType: "test-check-1",
+			Status:    "Fail",
+			Passes:    []string(nil),
+			Breaches: []result.Breach{result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "test-check-1",
+				CheckName:  "test1stcheck",
+				Severity:   "normal",
+				Value:      "no data available",
+			}},
+			Warnings: []string(nil),
+		},
+		{
+			Name:      "test2ndcheck",
+			Severity:  "normal",
+			CheckType: "test-check-2",
+			Status:    "Fail",
+			Passes:    []string(nil),
+			Breaches: []result.Breach{result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "test-check-2",
+				CheckName:  "test2ndcheck",
+				Severity:   "normal",
+				Value:      "no data available",
+			}},
+			Warnings: []string(nil),
+		}},
 		rl.Results)
 }

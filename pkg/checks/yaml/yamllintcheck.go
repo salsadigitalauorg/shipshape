@@ -2,6 +2,7 @@ package yaml
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -25,11 +26,13 @@ func (c *YamlLintCheck) UnmarshalDataMap() {
 		err := yaml.Unmarshal([]byte(data), &ifc)
 		if err != nil {
 			if typeErr, ok := err.(*yaml.TypeError); ok {
-				for _, msg := range typeErr.Errors {
-					c.AddFail(fmt.Sprintf("[%s] %s", f, msg))
-				}
+				c.AddBreach(result.ValueBreach{
+					ValueLabel: "cannot decode yaml: " + f,
+					Value:      strings.Join(typeErr.Errors, "\n")})
 			} else {
-				c.AddFail(fmt.Sprintf("[%s] %s", f, err.Error()))
+				c.AddBreach(result.ValueBreach{
+					ValueLabel: "yaml error: " + f,
+					Value:      err.Error()})
 			}
 		} else {
 			c.AddPass(fmt.Sprintf("%s has valid yaml.", f))

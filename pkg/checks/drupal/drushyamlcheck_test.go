@@ -75,8 +75,13 @@ func TestDrushYamlCheck(t *testing.T) {
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch(
-			[]string{"vendor/drush/drush/drush: no such file or directory"},
-			c.Result.Failures,
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "drush-yaml",
+				Severity:   "normal",
+				Value:      "vendor/drush/drush/drush: no such file or directory",
+			}},
+			c.Result.Breaches,
 		)
 	})
 
@@ -99,8 +104,12 @@ func TestDrushYamlCheck(t *testing.T) {
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch(
-			[]string{"unable to run drush command"},
-			c.Result.Failures,
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				ValueLabel: "core.extension",
+				Value:      "unable to run drush command",
+			}},
+			c.Result.Breaches,
 		)
 	})
 
@@ -125,6 +134,6 @@ module:
 		c.FetchData()
 		assert.NotEqual(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
-		assert.Empty(c.Result.Failures)
+		assert.Empty(c.Result.Breaches)
 	})
 }

@@ -25,7 +25,7 @@ type RunCheckTest struct {
 	ExpectNoPass         bool
 	ExpectPasses         []string
 	ExpectNoFail         bool
-	ExpectFails          []string
+	ExpectFails          []result.Breach
 	ExpectNoRemediations bool
 	ExpectRemediations   []string
 }
@@ -63,12 +63,12 @@ func TestRunCheck(t *testing.T, ctest RunCheckTest) {
 	}
 
 	if ctest.ExpectNoFail {
-		assert.Empty(r.Failures)
+		assert.Empty(r.Breaches)
 	} else {
 		assert.ElementsMatchf(
 			ctest.ExpectFails,
-			r.Failures,
-			"Expected fails: %#v \nGot %#v", ctest.ExpectFails, r.Failures)
+			r.Breaches,
+			"Expected fails: %#v \nGot %#v", ctest.ExpectFails, r.Breaches)
 	}
 
 	if ctest.ExpectNoRemediations {

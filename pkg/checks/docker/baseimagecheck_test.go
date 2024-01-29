@@ -55,8 +55,13 @@ func TestInvalidDockerfileCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]string{"service1 is using invalid base image bitnami/kubectl"},
-		c.Result.Failures,
+		[]result.Breach{result.KeyValueBreach{
+			BreachType: result.BreachTypeKeyValue,
+			Key:        "service1",
+			ValueLabel: "invalid base image",
+			Value:      "bitnami/kubectl"},
+		},
+		c.Result.Breaches,
 	)
 }
 
@@ -83,8 +88,13 @@ func TestInvalidDockerfileImageVersion(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]string{"service1 is using invalid base image bitnami/kubectl"},
-		c.Result.Failures,
+		[]result.Breach{result.KeyValueBreach{
+			BreachType: result.BreachTypeKeyValue,
+			Key:        "service1",
+			ValueLabel: "invalid base image",
+			Value:      "bitnami/kubectl"},
+		},
+		c.Result.Breaches,
 	)
 }
 
@@ -149,8 +159,13 @@ func TestInvalidImageCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]string{"service4 is using invalid base image bitnami/mongodb"},
-		c.Result.Failures,
+		[]result.Breach{result.KeyValueBreach{
+			BreachType: result.BreachTypeKeyValue,
+			Key:        "service4",
+			ValueLabel: "invalid base image",
+			Value:      "bitnami/mongodb:5.0.19-debian-11-r11"},
+		},
+		c.Result.Breaches,
 	)
 }
 
@@ -167,11 +182,21 @@ func TestInvalidImageVersions(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(
-		[]string{
-			"service2 is using invalid base image bitnami/postgresql",
-			"service4 is using invalid base image bitnami/mongodb",
+		[]result.Breach{
+			result.KeyValueBreach{
+				BreachType: result.BreachTypeKeyValue,
+				Key:        "service2",
+				ValueLabel: "invalid base image",
+				Value:      "bitnami/postgresql@16",
+			},
+			result.KeyValueBreach{
+				BreachType: result.BreachTypeKeyValue,
+				Key:        "service4",
+				ValueLabel: "invalid base image",
+				Value:      "bitnami/mongodb:5.0.19-debian-11-r11",
+			},
 		},
-		c.Result.Failures,
+		c.Result.Breaches,
 	)
 }
 

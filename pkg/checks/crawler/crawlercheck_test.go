@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/crawler"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -58,8 +59,15 @@ func TestCrawlerCheck(t *testing.T) {
 	c.Init(Crawler)
 	c.RunCheck()
 	assert.ElementsMatch(
-		[]string{fmt.Sprintf("Invalid response for: %s/not-found got 404", server.URL)},
-		c.Result.Failures,
+		[]result.Breach{result.KeyValueBreach{
+			BreachType: result.BreachTypeKeyValue,
+			CheckType:  "crawler",
+			Severity:   "normal",
+			Key:        fmt.Sprintf("%s/not-found", server.URL),
+			ValueLabel: "invalid response",
+			Value:      "404"},
+		},
+		c.Result.Breaches,
 	)
 
 	c = CrawlerCheck{
@@ -70,7 +78,7 @@ func TestCrawlerCheck(t *testing.T) {
 
 	c.Init(Crawler)
 	c.RunCheck()
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	assert.ElementsMatch(
 		[]string{"All requests completed successfully"},
 		c.Result.Passes,

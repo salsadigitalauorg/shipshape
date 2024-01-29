@@ -86,7 +86,7 @@ node:
 
 	c = mockCheck(nil)
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"all required modules are enabled",
 		"all disallowed modules are disabled",
@@ -107,8 +107,23 @@ views_ui:
 		"some required modules are enabled: node",
 		"some disallowed modules are disabled: field_ui",
 	})
-	assert.ElementsMatch(c.Result.Failures, []string{
-		"required modules are not enabled: block",
-		"disallowed modules are enabled: views_ui",
-	})
+	assert.ElementsMatch(
+		[]result.Breach{
+			result.KeyValuesBreach{
+				BreachType: "key-values",
+				CheckType:  "drupal-db-module",
+				Severity:   "normal",
+				Key:        "required modules are not enabled",
+				Values:     []string{"block"},
+			},
+			result.KeyValuesBreach{
+				BreachType: "key-values",
+				CheckType:  "drupal-db-module",
+				Severity:   "normal",
+				Key:        "disallowed modules are enabled",
+				Values:     []string{"views_ui"},
+			},
+		},
+		c.Result.Breaches,
+	)
 }
