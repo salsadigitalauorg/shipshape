@@ -60,7 +60,7 @@ func TestFileModuleCheck(t *testing.T) {
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.Empty(c.Result.Failures)
+	assert.Empty(c.Result.Breaches)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"all required modules are enabled",
 		"all disallowed modules are disabled",

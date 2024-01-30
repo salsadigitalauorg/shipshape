@@ -87,7 +87,6 @@ func (c *BaseImageCheck) RunCheck() {
 					}
 
 					if len(c.Allowed) > 0 && !utils.PackageCheckString(c.Allowed, match[1], match[2]) {
-						c.AddFail(name + " is using invalid base image " + match[1])
 						c.AddBreach(result.KeyValueBreach{
 							Key:        name,
 							ValueLabel: "invalid base image",
@@ -109,7 +108,6 @@ func (c *BaseImageCheck) RunCheck() {
 				}
 
 				if !utils.PackageCheckString(c.Allowed, match[1], match[2]) {
-					c.AddFail(name + " is using invalid base image " + match[1])
 					c.AddBreach(result.KeyValueBreach{
 						Key:        name,
 						ValueLabel: "invalid base image",
@@ -123,7 +121,7 @@ func (c *BaseImageCheck) RunCheck() {
 			}
 		}
 
-		if len(c.Result.Failures) == 0 {
+		if len(c.Result.Breaches) == 0 {
 			c.Result.Status = result.Pass
 		}
 	}

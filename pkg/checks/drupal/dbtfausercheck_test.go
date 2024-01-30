@@ -28,9 +28,15 @@ func TestDbTfaUserCheck(t *testing.T) {
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
-		assert.ElementsMatch(
-			[]string{"Error calling drush ev."},
-			c.Result.Failures,
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "drupal-db-user-tfa",
+				Severity:   "normal",
+				ValueLabel: "error fetching drush user info",
+				Value:      "unable to run drush command",
+			}},
+			c.Result.Breaches,
 		)
 	})
 
@@ -55,9 +61,15 @@ func TestDbTfaUserCheck(t *testing.T) {
 		c.RunCheck()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
-		assert.ElementsMatch(
-			[]string{"Two-factor authentication not enabled for active user shipshape-1, with UID 1."},
-			c.Result.Failures,
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "drupal-db-user-tfa",
+				Severity:   "normal",
+				ValueLabel: "users with TFA disabled",
+				Value:      "shipshape-1:1",
+			}},
+			c.Result.Breaches,
 		)
 	})
 
@@ -86,9 +98,15 @@ func TestDbTfaUserCheck(t *testing.T) {
 		c.RunCheck()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
-		assert.ElementsMatch(
-			[]string{"Two-factor authentication not enabled for active user shipshape-1, with UID 1.", "Two-factor authentication not enabled for active user shipshape-2, with UID 2."},
-			c.Result.Failures,
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "drupal-db-user-tfa",
+				Severity:   "normal",
+				ValueLabel: "users with TFA disabled",
+				Value:      "shipshape-1:1, shipshape-2:2",
+			}},
+			c.Result.Breaches,
 		)
 	})
 	t.Run("passOnEmptyQueryResult", func(t *testing.T) {
@@ -106,8 +124,8 @@ func TestDbTfaUserCheck(t *testing.T) {
 		c.FetchData()
 		c.RunCheck()
 		assert.Equal(result.Pass, c.Result.Status)
-		assert.Empty(c.Result.Failures)
-		assert.ElementsMatch(
+		assert.Empty(c.Result.Breaches)
+		assert.EqualValues(
 			[]string{"All active users have two-factor authentication enabled."},
 			c.Result.Passes,
 		)

@@ -1,12 +1,13 @@
 package json_test
 
 import (
+	"testing"
+
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/json"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var cFalse = false
@@ -79,7 +80,16 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.FetchData()
 	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
-	assertions.EqualValues([]string{"no file provided"}, c.Result.Failures)
+	assertions.ElementsMatch(
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: result.BreachTypeValue,
+				ValueLabel: "- no file",
+				Value:      "no file provided",
+			},
+		},
+		c.Result.Breaches,
+	)
 
 	// Non-existent file.
 	config.ProjectDir = "testdata"
@@ -89,7 +99,18 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.FetchData()
 	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
-	assertions.EqualValues([]string{"open testdata/non-existent.json: no such file or directory"}, c.Result.Failures)
+	assertions.ElementsMatch(
+		[]result.Breach{
+			result.ValueBreach{
+				CheckType:  "json",
+				Severity:   "normal",
+				BreachType: result.BreachTypeValue,
+				ValueLabel: "error reading file: testdata/non-existent.json",
+				Value:      "open testdata/non-existent.json: no such file or directory",
+			},
+		},
+		c.Result.Breaches,
+	)
 
 	// Non-existent file with ignore missing.
 	c = mockCheck()
@@ -97,7 +118,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.IgnoreMissing = &cTrue
 	c.FetchData()
 	assertions.Equal(result.Pass, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	assertions.EqualValues([]string{"File testdata/non-existent.json does not exist"}, c.Result.Passes)
 
 	// Single file.
@@ -106,12 +127,12 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.FetchData()
 	// Should not fail yet.
 	assertions.NotEqual(result.Fail, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	assertions.True(c.HasData(false))
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assertions.Equal(result.Pass, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	assertions.EqualValues([]string{"[composer.map.json] '$.license' equals 'MIT'"}, c.Result.Passes)
 
 	// Bad File pattern.
@@ -121,7 +142,16 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.FetchData()
 	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
-	assertions.EqualValues([]string{"error parsing regexp: missing argument to repetition operator: `*`"}, c.Result.Failures)
+	assertions.ElementsMatch(
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: result.BreachTypeValue,
+				ValueLabel: "error finding files in path: testdata",
+				Value:      "error parsing regexp: missing argument to repetition operator: `*`",
+			},
+		},
+		c.Result.Breaches,
+	)
 
 	// File pattern with no matching files.
 	c = mockCheck()
@@ -129,7 +159,16 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.FetchData()
 	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
-	assertions.EqualValues([]string{"no matching config files found"}, c.Result.Failures)
+	assertions.ElementsMatch(
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: result.BreachTypeValue,
+				ValueLabel: "- no file",
+				Value:      "no matching yaml files found",
+			},
+		},
+		c.Result.Breaches,
+	)
 
 	// File pattern with no matching files, ignoring missing.
 	c = mockCheck()
@@ -137,7 +176,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.IgnoreMissing = &cTrue
 	c.FetchData()
 	assertions.Equal(result.Pass, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	assertions.EqualValues([]string{"no matching config files found"}, c.Result.Passes)
 
 	// Correct single file pattern & value.
@@ -146,18 +185,18 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.Path = "dir/subdir"
 	c.FetchData()
 	assertions.NotEqual(result.Fail, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assertions.EqualValues([]string{"[testdata/dir/subdir/composer.map.json] '$.license' equals 'MIT'"}, c.Result.Passes)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 
 	// Recursive file lookup.
 	c = mockCheck()
 	c.Pattern = ".*.*.json"
 	c.FetchData()
 	assertions.NotEqual(result.Fail, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assertions.Equal(result.Fail, c.Result.Status)
@@ -169,12 +208,34 @@ func TestJsonCheckRunCheck(t *testing.T) {
 		},
 		c.Result.Passes)
 	assertions.ElementsMatch(
-		[]string{
-			"[testdata/dir/subdir/composer.array.json] '$.license' equals 'BSD', expected 'MIT'",
-			"[testdata/dir/composer.array.json] '$.license' equals 'BSD', expected 'MIT'",
-			"[testdata/composer.array.json] '$.license' equals 'BSD', expected 'MIT'",
+		[]result.Breach{
+			result.KeyValueBreach{
+				BreachType:    result.BreachTypeKeyValue,
+				KeyLabel:      "testdata/composer.array.json",
+				Key:           "$.license",
+				ValueLabel:    "actual",
+				Value:         "BSD",
+				ExpectedValue: "MIT",
+			},
+			result.KeyValueBreach{
+				BreachType:    result.BreachTypeKeyValue,
+				KeyLabel:      "testdata/dir/composer.array.json",
+				Key:           "$.license",
+				ValueLabel:    "actual",
+				Value:         "BSD",
+				ExpectedValue: "MIT",
+			},
+			result.KeyValueBreach{
+				BreachType:    result.BreachTypeKeyValue,
+				KeyLabel:      "testdata/dir/subdir/composer.array.json",
+				Key:           "$.license",
+				ValueLabel:    "actual",
+				Value:         "BSD",
+				ExpectedValue: "MIT",
+			},
 		},
-		c.Result.Failures)
+		c.Result.Breaches,
+	)
 
 	// Test disallowed values.
 	c = JsonCheck{
@@ -192,17 +253,23 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.File = "composer.map.json"
 	c.FetchData()
 	assertions.NotEqual(result.Fail, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	assertions.True(c.HasData(false))
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
-		[]string{
-			"[composer.map.json] disallowed $.license: [MIT]",
+		[]result.Breach{
+			result.KeyValuesBreach{
+				BreachType: result.BreachTypeKeyValues,
+				KeyLabel:   "config",
+				Key:        "composer.map.json",
+				ValueLabel: "disallowed $.license",
+				Values:     []string{"MIT"},
+			},
 		},
-		c.Result.Failures)
+		c.Result.Breaches)
 
 	// Test allowed values not matched.
 	c = JsonCheck{
@@ -220,17 +287,23 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.File = "composer.map.json"
 	c.FetchData()
 	assertions.NotEqual(result.Fail, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	assertions.True(c.HasData(false))
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
-		[]string{
-			"[composer.map.json] disallowed $.license: [MIT]",
+		[]result.Breach{
+			result.KeyValuesBreach{
+				BreachType: result.BreachTypeKeyValues,
+				KeyLabel:   "config",
+				Key:        "composer.map.json",
+				ValueLabel: "disallowed $.license",
+				Values:     []string{"MIT"},
+			},
 		},
-		c.Result.Failures)
+		c.Result.Breaches)
 
 	// Test incorrect key value.
 	c = JsonCheck{
@@ -248,17 +321,20 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.File = "composer.map.json"
 	c.FetchData()
 	assertions.NotEqual(result.Fail, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	assertions.True(c.HasData(false))
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
-		[]string{
-			"json: invalid path format: found invalid path character * after dot",
+		[]result.Breach{
+			result.ValueBreach{
+				BreachType: result.BreachTypeValue,
+				Value:      "json: invalid path format: found invalid path character * after dot",
+			},
 		},
-		c.Result.Failures)
+		c.Result.Breaches)
 
 	// Test non-existent key value.
 	c = JsonCheck{
@@ -274,17 +350,23 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.File = "composer.map.json"
 	c.FetchData()
 	assertions.NotEqual(result.Fail, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	assertions.True(c.HasData(false))
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
-		[]string{
-			"[composer.map.json] '$.authors' not found",
+		[]result.Breach{
+			result.KeyValueBreach{
+				BreachType: result.BreachTypeKeyValue,
+				KeyLabel:   "config",
+				Key:        "composer.map.json",
+				ValueLabel: "key not found",
+				Value:      "$.authors",
+			},
 		},
-		c.Result.Failures)
+		c.Result.Breaches)
 
 	// Test is-list.
 	c = JsonCheck{
@@ -301,12 +383,12 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	c.File = "composer.map.json"
 	c.FetchData()
 	assertions.NotEqual(result.Fail, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	assertions.True(c.HasData(false))
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assertions.Equal(result.Pass, c.Result.Status)
-	assertions.Empty(c.Result.Failures)
+	assertions.Empty(c.Result.Breaches)
 	assertions.ElementsMatch(
 		[]string{
 			"[composer.map.json] no disallowed 'repositories.*.type'",

@@ -54,8 +54,13 @@ func TestFetchData(t *testing.T) {
 		c := UserRoleCheck{}
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
-		assert.EqualValues([]string{"vendor/drush/drush/drush: no such file or directory"}, c.Result.Failures)
-
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				Value:      "vendor/drush/drush/drush: no such file or directory",
+			}},
+			c.Result.Breaches,
+		)
 	})
 
 	curShellCommander := command.ShellCommander
@@ -79,13 +84,25 @@ func TestFetchData(t *testing.T) {
 		c := UserRoleCheck{}
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
-		assert.EqualValues([]string{"unable to run drush sql query"}, c.Result.Failures)
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				Value:      "unable to run drush sql query",
+			}},
+			c.Result.Breaches,
+		)
 
 		sqlQueryFail = false
 		c = UserRoleCheck{}
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
-		assert.EqualValues([]string{"unable to run drush command"}, c.Result.Failures)
+		assert.EqualValues(
+			[]result.Breach{result.ValueBreach{
+				BreachType: "value",
+				Value:      "unable to run drush command",
+			}},
+			c.Result.Breaches,
+		)
 	})
 
 	// correct data.
@@ -110,7 +127,13 @@ func TestUnmarshalData(t *testing.T) {
 	c := UserRoleCheck{}
 	c.UnmarshalDataMap()
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues([]string{"no data provided"}, c.Result.Failures)
+	assert.EqualValues(
+		[]result.Breach{result.ValueBreach{
+			BreachType: "value",
+			Value:      "no data provided",
+		}},
+		c.Result.Breaches,
+	)
 
 	// Incorrect json.
 	c = UserRoleCheck{
@@ -121,7 +144,13 @@ func TestUnmarshalData(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues([]string{"invalid character ']' after object key:value pair"}, c.Result.Failures)
+	assert.EqualValues(
+		[]result.Breach{result.ValueBreach{
+			BreachType: "value",
+			Value:      "invalid character ']' after object key:value pair",
+		}},
+		c.Result.Breaches,
+	)
 
 	// Correct json.
 	c = UserRoleCheck{
@@ -150,7 +179,13 @@ func TestRunCheck(t *testing.T) {
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues([]string{"no disallowed role provided"}, c.Result.Failures)
+	assert.EqualValues(
+		[]result.Breach{result.ValueBreach{
+			BreachType: "value",
+			Value:      "no disallowed role provided",
+		}},
+		c.Result.Breaches,
+	)
 
 	// User has disallowed roles.
 	c = UserRoleCheck{
@@ -163,7 +198,16 @@ func TestRunCheck(t *testing.T) {
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues([]string{"User 1 has disallowed roles: [site-admin, content-admin]"}, c.Result.Failures)
+	assert.EqualValues(
+		[]result.Breach{result.KeyValuesBreach{
+			BreachType: "key-values",
+			KeyLabel:   "user",
+			Key:        "1",
+			ValueLabel: "disallowed roles",
+			Values:     []string{"site-admin", "content-admin"},
+		}},
+		c.Result.Breaches,
+	)
 
 	// User allowed to have disallowed roles.
 	c = UserRoleCheck{

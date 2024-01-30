@@ -3,7 +3,6 @@ package yaml
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -37,7 +36,10 @@ func (c *YamlBase) Merge(mergeCheck config.Check) error {
 // RunCheck implements the base logic for running checks against Yaml data.
 func (c *YamlBase) RunCheck() {
 	for configName := range c.DataMap {
-		c.processData(configName)
+		c.determineBreaches(configName)
+	}
+	if len(c.Result.Breaches) == 0 {
+		c.Result.Status = result.Pass
 	}
 }
 
@@ -50,7 +52,6 @@ func (c *YamlBase) UnmarshalDataMap() {
 		n := yaml.Node{}
 		err := yaml.Unmarshal([]byte(data), &n)
 		if err != nil {
-			c.AddFail(err.Error())
 			c.AddBreach(result.ValueBreach{Value: err.Error()})
 			return
 		}
@@ -58,18 +59,15 @@ func (c *YamlBase) UnmarshalDataMap() {
 	}
 }
 
-// processData runs the actual checks against the list of KeyValues provided in
-// the Check configuration and determines the Status (Pass or Fail) and Pass or
-// Fail messages of the Check Result.
-func (c *YamlBase) processData(configName string) {
+// determineBreaches runs the actual checks against the list of KeyValues provided in
+// the Check configuration and determines possible breaches.
+func (c *YamlBase) determineBreaches(configName string) {
 	for _, kv := range c.Values {
 		kvr, fails, err := CheckKeyValue(c.NodeMap[configName], kv)
 		switch kvr {
 		case KeyValueError:
-			c.AddFail(err.Error())
 			c.AddBreach(result.ValueBreach{Value: err.Error()})
 		case KeyValueNotFound:
-			c.AddFail(fmt.Sprintf("[%s] '%s' not found", configName, kv.Key))
 			c.AddBreach(result.KeyValueBreach{
 				KeyLabel:   "config",
 				Key:        configName,
@@ -77,8 +75,6 @@ func (c *YamlBase) processData(configName string) {
 				Value:      kv.Key,
 			})
 		case KeyValueNotEqual:
-			c.AddFail(fmt.Sprintf("[%s] '%s' equals '%s', expected '%s'",
-				configName, kv.Key, fails[0], kv.Value))
 			c.AddBreach(result.KeyValueBreach{
 				KeyLabel:      configName,
 				Key:           kv.Key,
@@ -87,8 +83,6 @@ func (c *YamlBase) processData(configName string) {
 				Value:         fails[0],
 			})
 		case KeyValueDisallowedFound:
-			c.AddFail(fmt.Sprintf("[%s] disallowed %s: [%s]", configName,
-				kv.Key, strings.Join(fails, ", ")))
 			c.AddBreach(result.KeyValuesBreach{
 				KeyLabel:   "config",
 				Key:        configName,
@@ -102,11 +96,6 @@ func (c *YamlBase) processData(configName string) {
 				c.AddPass(fmt.Sprintf("[%s] '%s' equals '%s'", configName, kv.Key, kv.Value))
 			}
 		}
-	}
-	if len(c.Result.Failures) != 0 {
-		c.Result.Status = result.Fail
-	} else {
-		c.Result.Status = result.Pass
 	}
 }
 

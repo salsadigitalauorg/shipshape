@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/salsadigitalauorg/shipshape/pkg/command"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"io/fs"
 	"os/exec"
 	"strings"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
 const ForbiddenUser config.CheckType = "drupal-user-forbidden"
@@ -39,12 +40,10 @@ func (c *ForbiddenUserCheck) CheckUserStatus() bool {
 	userStatus, err := Drush(c.DrushPath, c.Alias, cmd).Exec()
 	var pathError *fs.PathError
 	if err != nil && errors.As(err, &pathError) {
-		c.AddFail(pathError.Path + ": " + pathError.Err.Error())
 		c.AddBreach(result.ValueBreach{
 			Value: pathError.Path + ": " + pathError.Err.Error()})
 	} else if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
-		c.AddFail(strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", ""))
 		c.AddBreach(result.ValueBreach{
 			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	} else {
@@ -58,7 +57,6 @@ func (c *ForbiddenUserCheck) CheckUserStatus() bool {
 		err = json.Unmarshal(userStatus, &userStatusMap)
 		var syntaxError *json.SyntaxError
 		if err != nil && errors.As(err, &syntaxError) {
-			c.AddFail(err.Error())
 			c.AddBreach(result.ValueBreach{Value: err.Error()})
 		}
 
@@ -74,9 +72,12 @@ func (c *ForbiddenUserCheck) CheckUserStatus() bool {
 func (c *ForbiddenUserCheck) Remediate(breachIfc interface{}) error {
 	_, err := Drush(c.DrushPath, c.Alias, []string{"user:block", "--uid=" + c.UserId}).Exec()
 	if err != nil {
-		c.AddFail(fmt.Sprintf(
-			"Failed to block the active forbidden user [%s] due to error: %s",
-			c.UserId, command.GetMsgFromCommandError(err)))
+		c.AddBreach(result.KeyValueBreach{
+			KeyLabel:   "user",
+			Key:        c.UserId,
+			ValueLabel: "error blocking forbidden user",
+			Value:      command.GetMsgFromCommandError(err),
+		})
 		return err
 	}
 	return nil
@@ -101,15 +102,14 @@ func (c *ForbiddenUserCheck) RunCheck() {
 				c.AddRemediation(fmt.Sprintf("Blocked the forbidden user [%s]", c.UserId))
 			}
 		} else {
-			c.AddFail(fmt.Sprintf("Forbidden user [%s] is active", c.UserId))
 			c.AddBreach(result.KeyValueBreach{
-				Key:   "uid",
+				Key:   "forbidden user is active",
 				Value: c.UserId,
 			})
 		}
 	}
 
-	if len(c.Result.Failures) == 0 {
+	if len(c.Result.Breaches) == 0 {
 		c.Result.Status = result.Pass
 		c.AddPass("No forbidden user is active.")
 	}

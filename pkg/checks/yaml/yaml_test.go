@@ -54,9 +54,10 @@ foo:
 	c.UnmarshalDataMap()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.EqualValues(
-		[]string{"yaml: line 4: found character that cannot start any token"},
-		c.Result.Failures)
+	assert.ElementsMatch([]result.Breach{result.ValueBreach{
+		BreachType: result.BreachTypeValue,
+		Value:      "yaml: line 4: found character that cannot start any token"}},
+		c.Result.Breaches)
 
 	// Valid data.
 	c = YamlBase{
@@ -72,7 +73,7 @@ foo:
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.EqualValues(0, len(c.Result.Failures))
+	assert.EqualValues(0, len(c.Result.Breaches))
 
 	// Invalid yaml kec.
 	c = YamlBase{
@@ -92,9 +93,10 @@ foo:
 	c.RunCheck()
 
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues(
-		[]string{"invalid character '&' at position 3, following \"baz\""},
-		c.Result.Failures)
+	assert.ElementsMatch([]result.Breach{result.ValueBreach{
+		BreachType: result.BreachTypeValue,
+		Value:      "invalid character '&' at position 3, following \"baz\""}},
+		c.Result.Breaches)
 }
 
 func TestYamlCheckKeyValue(t *testing.T) {
@@ -269,7 +271,10 @@ func TestYamlBase(t *testing.T) {
 	c := YamlBase{}
 	c.HasData(true)
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues([]string{"no data available"}, c.Result.Failures)
+	assert.ElementsMatch([]result.Breach{result.ValueBreach{
+		BreachType: result.BreachTypeValue,
+		Value:      "no data available"}},
+		c.Result.Breaches)
 
 	mockCheck := func() YamlBase {
 		return YamlBase{
@@ -297,7 +302,7 @@ notification:
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.EqualValues(0, len(c.Result.Failures))
+	assert.EqualValues(0, len(c.Result.Breaches))
 	assert.EqualValues([]string{"[data] 'check.interval_days' equals '7'"}, c.Result.Passes)
 
 	// Wrong key, correct value.
@@ -311,7 +316,13 @@ notification:
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.EqualValues([]string{"[data] 'check.interval' not found"}, c.Result.Failures)
+	assert.ElementsMatch([]result.Breach{result.KeyValueBreach{
+		BreachType: result.BreachTypeKeyValue,
+		KeyLabel:   "config",
+		Key:        "data",
+		ValueLabel: "key not found",
+		Value:      "check.interval"}},
+		c.Result.Breaches)
 
 	// Correct key, wrong value.
 	c = mockCheck()
@@ -325,7 +336,14 @@ notification:
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.EqualValues([]string{"[data] 'check.interval_days' equals '7', expected '8'"}, c.Result.Failures)
+	assert.ElementsMatch([]result.Breach{result.KeyValueBreach{
+		BreachType:    result.BreachTypeKeyValue,
+		KeyLabel:      "data",
+		Key:           "check.interval_days",
+		ValueLabel:    "actual",
+		Value:         "7",
+		ExpectedValue: "8"}},
+		c.Result.Breaches)
 
 	// Multiple config values - all correct.
 	c = mockCheck()
@@ -342,7 +360,7 @@ notification:
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.EqualValues(0, len(c.Result.Failures))
+	assert.EqualValues(0, len(c.Result.Breaches))
 	assert.EqualValues(
 		[]string{
 			"[data] 'check.interval_days' equals '7'",
@@ -377,7 +395,13 @@ efgh:
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.EqualValues([]string{"[data] disallowed *.some: [thing 2]"}, c.Result.Failures)
+	assert.ElementsMatch([]result.Breach{result.KeyValuesBreach{
+		BreachType: result.BreachTypeKeyValues,
+		KeyLabel:   "config",
+		Key:        "data",
+		ValueLabel: "disallowed *.some",
+		Values:     []string{"thing 2"}}},
+		c.Result.Breaches)
 }
 
 func TestYamlBaseListValues(t *testing.T) {
@@ -410,13 +434,19 @@ foo:
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.EqualValues([]string{"[data] disallowed foo: [b, c]"}, c.Result.Failures)
+	assert.ElementsMatch([]result.Breach{result.KeyValuesBreach{
+		BreachType: result.BreachTypeKeyValues,
+		KeyLabel:   "config",
+		Key:        "data",
+		ValueLabel: "disallowed foo",
+		Values:     []string{"b", "c"}}},
+		c.Result.Breaches)
 
 	c = mockCheck()
 	c.Values[0].Disallowed = []string{"e"}
 	c.UnmarshalDataMap()
 	c.RunCheck()
 	assert.Equal(result.Pass, c.Result.Status)
-	assert.EqualValues(0, len(c.Result.Failures))
+	assert.EqualValues(0, len(c.Result.Breaches))
 	assert.EqualValues([]string{"[data] no disallowed 'foo'"}, c.Result.Passes)
 }
