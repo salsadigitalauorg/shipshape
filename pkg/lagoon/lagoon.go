@@ -139,12 +139,12 @@ func DeleteProblems() error {
 		return err
 	}
 	var m struct {
-		DeleteFactsFromSource string `graphql:"deleteProblemsFromSource(input: {environment: $envId, source: $sourceName, service:})"`
+		DeleteFactsFromSource string `graphql:"deleteProblemsFromSource(input: {environment: $envId, source: $sourceName, service:$service})"`
 	}
 	variables := map[string]interface{}{
 		"envId":      envId,
 		"sourceName": SourceName,
-		"service":    "cli",
+		"service":    "",
 	}
 	return Client.Mutate(context.Background(), &m, variables)
 }

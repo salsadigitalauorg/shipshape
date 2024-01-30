@@ -169,7 +169,7 @@ func LagoonProblems(w *bufio.Writer) {
 	problems := []lagoon.Problem{}
 
 	if RunResultList.TotalBreaches == 0 {
-		if lagoon.PushProblems {
+		if lagoon.PushProblemsToInsightRemote {
 			lagoon.InitClient()
 			err := lagoon.DeleteProblems()
 			if err != nil {
