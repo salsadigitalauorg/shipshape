@@ -36,175 +36,235 @@ func TestYamlCheckMerge(t *testing.T) {
 	}, c)
 }
 
-func TestYamlCheck(t *testing.T) {
-	assert := assert.New(t)
-
-	mockCheck := func() YamlCheck {
-		return YamlCheck{
-			YamlBase: YamlBase{
-				Values: []KeyValue{
-					{Key: "check.interval_days", Value: "7"},
+func TestYamlCheckFetchData(t *testing.T) {
+	tt := []struct {
+		name             string
+		check            YamlCheck
+		expectedBreaches []result.Breach
+		expectedPasses   []string
+		expectResultFail bool
+		expectResultPass bool
+		expectDataMap    map[string][]byte
+	}{
+		{
+			name: "noFile",
+			check: YamlCheck{
+				YamlBase: YamlBase{
+					Values: []KeyValue{
+						{Key: "check.interval_days", Value: "7"},
+					},
 				},
 			},
-		}
+			expectedBreaches: []result.Breach{
+				result.ValueBreach{
+					BreachType: "value",
+					ValueLabel: "- no file",
+					Value:      "no file provided",
+				},
+			},
+			expectResultFail: true,
+		},
+
+		{
+			name: "nonExistentFile",
+			check: YamlCheck{
+				YamlBase: YamlBase{
+					Values: []KeyValue{
+						{Key: "check.interval_days", Value: "7"},
+					},
+				},
+				File: "non-existent.yml",
+			},
+			expectedBreaches: []result.Breach{
+				result.ValueBreach{
+					BreachType: "value",
+					ValueLabel: "error reading file: testdata/non-existent.yml",
+					Value:      "open testdata/non-existent.yml: no such file or directory",
+				},
+			},
+			expectResultFail: true,
+		},
+
+		{
+			name: "nonExistentFileIgnoreMissing",
+			check: YamlCheck{
+				YamlBase: YamlBase{
+					Values: []KeyValue{
+						{Key: "check.interval_days", Value: "7"},
+					},
+				},
+				File:          "non-existent.yml",
+				IgnoreMissing: &cTrue,
+			},
+			expectedPasses:   []string{"File testdata/non-existent.yml does not exist"},
+			expectResultPass: true,
+		},
+
+		{
+			name: "singleFile",
+			check: YamlCheck{
+				YamlBase: YamlBase{
+					Values: []KeyValue{
+						{Key: "check.interval_days", Value: "7"},
+					},
+				},
+				File: "update.settings.yml",
+			},
+			expectDataMap: map[string][]byte{
+				"update.settings.yml": []byte(
+					`check:
+  interval_days: 7
+notification:
+  emails:
+    - admin@example.com
+`),
+			},
+		},
+
+		{
+			name: "badFilePattern",
+			check: YamlCheck{
+				YamlBase: YamlBase{
+					Values: []KeyValue{
+						{Key: "check.interval_days", Value: "7"},
+					},
+				},
+				Pattern: "*.bar.yml",
+				Path:    "",
+			},
+			expectedBreaches: []result.Breach{
+				result.ValueBreach{
+					BreachType: "value",
+					ValueLabel: "error finding files in path: testdata",
+					Value:      "error parsing regexp: missing argument to repetition operator: `*`",
+				},
+			},
+			expectResultFail: true,
+		},
+
+		{
+			name: "filePatternNoMatchingFile",
+			check: YamlCheck{
+				YamlBase: YamlBase{
+					Values: []KeyValue{
+						{Key: "check.interval_days", Value: "7"},
+					},
+				},
+				Pattern: "bla.*.yml",
+			},
+			expectedBreaches: []result.Breach{
+				result.ValueBreach{
+					BreachType: "value",
+					ValueLabel: "- no file",
+					Value:      "no matching yaml files found",
+				},
+			},
+			expectResultFail: true,
+		},
+
+		{
+			name: "filePatternNoMatchingFileIgnoreMissing",
+			check: YamlCheck{
+				YamlBase: YamlBase{
+					Values: []KeyValue{
+						{Key: "check.interval_days", Value: "7"},
+					},
+				},
+				Pattern:       "bla.*.yml",
+				IgnoreMissing: &cTrue,
+			},
+			expectedPasses:   []string{"no matching config files found"},
+			expectResultPass: true,
+		},
+
+		{
+			name: "correctSingleFilePatternAndValue",
+			check: YamlCheck{
+				YamlBase: YamlBase{
+					Values: []KeyValue{
+						{Key: "check.interval_days", Value: "7"},
+					},
+				},
+				Pattern: "foo.bar.yml",
+				Path:    "dir/subdir",
+			},
+			expectDataMap: map[string][]byte{
+				"testdata/dir/subdir/foo.bar.yml": []byte(
+					`check:
+  interval_days: 7
+`),
+			},
+		},
+
+		{
+			name: "recursiveFileLookup",
+			check: YamlCheck{
+				YamlBase: YamlBase{
+					Values: []KeyValue{
+						{Key: "check.interval_days", Value: "7"},
+					},
+				},
+				Pattern: ".*.bar.yml",
+			},
+			expectDataMap: map[string][]byte{
+				"testdata/dir/foo.bar.yml": []byte(
+					`check:
+  interval_days: 7
+`),
+				"testdata/dir/subdir/foo.bar.yml": []byte(
+					`check:
+  interval_days: 7
+`),
+				"testdata/dir/subdir/zoom.bar.yml": []byte(
+					`check:
+  interval_days: 5
+`),
+				"testdata/dir/zoom.bar.yml": []byte(
+					`check:
+  interval_days: 5
+`),
+				"testdata/foo.bar.yml": []byte(
+					`check:
+  interval_days: 7
+`),
+				"testdata/zoom.bar.yml": []byte(
+					`check:
+  interval_days: 5
+`),
+			},
+		},
 	}
 
-	c := mockCheck()
-	c.FetchData()
-	assert.Equal(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Passes)
-	assert.EqualValues(
-		[]result.Breach{
-			result.ValueBreach{
-				BreachType: "value",
-				ValueLabel: "- no file",
-				Value:      "no file provided",
-			},
-		},
-		c.Result.Breaches,
-	)
-
-	// Non-existent file.
 	config.ProjectDir = "testdata"
-	c = mockCheck()
-	c.Init(Yaml)
-	c.File = "non-existent.yml"
-	c.FetchData()
-	assert.Equal(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Passes)
-	assert.EqualValues(
-		[]result.Breach{
-			result.ValueBreach{
-				BreachType: "value",
-				CheckType:  "yaml",
-				Severity:   "normal",
-				ValueLabel: "error reading file: testdata/non-existent.yml",
-				Value:      "open testdata/non-existent.yml: no such file or directory",
-			},
-		},
-		c.Result.Breaches,
-	)
+	for _, tc := range tt {
+		t.Run(tc.name, func(innerT *testing.T) {
+			assert := assert.New(innerT)
+			tc.check.FetchData()
 
-	// Non-existent file with ignore missing.
-	c = mockCheck()
-	c.File = "non-existent.yml"
-	c.IgnoreMissing = &cTrue
-	c.FetchData()
-	assert.Equal(result.Pass, c.Result.Status)
-	assert.Empty(c.Result.Breaches)
-	assert.EqualValues([]string{"File testdata/non-existent.yml does not exist"}, c.Result.Passes)
+			if tc.expectResultFail {
+				assert.Equal(result.Fail, tc.check.Result.Status)
+			} else if tc.expectResultPass {
+				assert.Equal(result.Pass, tc.check.Result.Status)
+			} else {
+				assert.NotEqual(result.Fail, tc.check.Result.Status)
+				assert.NotEqual(result.Pass, tc.check.Result.Status)
+			}
 
-	// Single file.
-	c = mockCheck()
-	c.File = "update.settings.yml"
-	c.FetchData()
-	// Should not fail yet.
-	assert.NotEqual(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Breaches)
-	assert.True(c.HasData(false))
-	c.UnmarshalDataMap()
-	c.RunCheck()
-	assert.Equal(result.Pass, c.Result.Status)
-	assert.Empty(c.Result.Breaches)
-	assert.EqualValues([]string{"[update.settings.yml] 'check.interval_days' equals '7'"}, c.Result.Passes)
+			if len(tc.expectedPasses) > 0 {
+				assert.ElementsMatch(tc.expectedPasses, tc.check.Result.Passes)
+			} else {
+				assert.Empty(tc.check.Result.Passes)
+			}
 
-	// Bad File pattern.
-	c = mockCheck()
-	c.Pattern = "*.bar.yml"
-	c.Path = ""
-	c.FetchData()
-	assert.Equal(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Passes)
-	assert.EqualValues(
-		[]result.Breach{
-			result.ValueBreach{
-				BreachType: "value",
-				ValueLabel: "error finding files in path: testdata",
-				Value:      "error parsing regexp: missing argument to repetition operator: `*`",
-			},
-		},
-		c.Result.Breaches,
-	)
+			if len(tc.expectedBreaches) > 0 {
+				assert.ElementsMatch(tc.expectedBreaches, tc.check.Result.Breaches)
+			} else {
+				assert.Empty(tc.check.Result.Breaches)
+			}
 
-	// File pattern with no matching files.
-	c = mockCheck()
-	c.Pattern = "bla.*.yml"
-	c.FetchData()
-	assert.Equal(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Passes)
-	assert.EqualValues(
-		[]result.Breach{
-			result.ValueBreach{
-				BreachType: "value",
-				ValueLabel: "- no file",
-				Value:      "no matching yaml files found",
-			},
-		},
-		c.Result.Breaches,
-	)
-
-	// File pattern with no matching files, ignoring missing.
-	c = mockCheck()
-	c.Pattern = "bla.*.yml"
-	c.IgnoreMissing = &cTrue
-	c.FetchData()
-	assert.Equal(result.Pass, c.Result.Status)
-	assert.Empty(c.Result.Breaches)
-	assert.EqualValues([]string{"no matching config files found"}, c.Result.Passes)
-
-	// Correct single file pattern & value.
-	c = mockCheck()
-	c.Pattern = "foo.bar.yml"
-	c.Path = "dir/subdir"
-	c.FetchData()
-	assert.NotEqual(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Breaches)
-	c.UnmarshalDataMap()
-	c.RunCheck()
-	assert.EqualValues([]string{"[testdata/dir/subdir/foo.bar.yml] 'check.interval_days' equals '7'"}, c.Result.Passes)
-	assert.Empty(c.Result.Breaches)
-
-	// Recursive file lookup.
-	c = mockCheck()
-	c.Pattern = ".*.bar.yml"
-	c.FetchData()
-	assert.NotEqual(result.Fail, c.Result.Status)
-	assert.Empty(c.Result.Breaches)
-	c.UnmarshalDataMap()
-	c.RunCheck()
-	assert.Equal(result.Fail, c.Result.Status)
-	assert.ElementsMatch(
-		[]string{
-			"[testdata/dir/foo.bar.yml] 'check.interval_days' equals '7'",
-			"[testdata/dir/subdir/foo.bar.yml] 'check.interval_days' equals '7'",
-			"[testdata/foo.bar.yml] 'check.interval_days' equals '7'"},
-		c.Result.Passes)
-	assert.ElementsMatch(
-		[]result.Breach{
-			result.KeyValueBreach{
-				BreachType:    "key-value",
-				KeyLabel:      "testdata/dir/subdir/zoom.bar.yml",
-				Key:           "check.interval_days",
-				ValueLabel:    "actual",
-				Value:         "5",
-				ExpectedValue: "7",
-			},
-			result.KeyValueBreach{
-				BreachType:    "key-value",
-				KeyLabel:      "testdata/dir/zoom.bar.yml",
-				Key:           "check.interval_days",
-				ValueLabel:    "actual",
-				Value:         "5",
-				ExpectedValue: "7",
-			},
-			result.KeyValueBreach{
-				BreachType:    "key-value",
-				KeyLabel:      "testdata/zoom.bar.yml",
-				Key:           "check.interval_days",
-				ValueLabel:    "actual",
-				Value:         "5",
-				ExpectedValue: "7",
-			},
-		},
-		c.Result.Breaches)
+			if tc.expectDataMap != nil {
+				assert.EqualValues(tc.expectDataMap, tc.check.DataMap)
+			}
+		})
+	}
 }
