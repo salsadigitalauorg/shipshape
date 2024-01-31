@@ -57,18 +57,18 @@ func (c *AdminUserCheck) getActiveRoles() map[string]string {
 	activeRoles, err := Drush(c.DrushPath, c.Alias, cmd).Exec()
 	var pathErr *fs.PathError
 	if err != nil && errors.As(err, &pathErr) {
-		c.AddBreach(result.ValueBreach{
+		c.AddBreach(&result.ValueBreach{
 			Value: pathErr.Path + ": " + pathErr.Err.Error()})
 	} else if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
-		c.AddBreach(result.ValueBreach{
+		c.AddBreach(&result.ValueBreach{
 			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	} else {
 		// Unmarshal roles JSON.
 		err = json.Unmarshal(activeRoles, &rolesListMap)
 		var synErr *json.SyntaxError
 		if err != nil && errors.As(err, &synErr) {
-			c.AddBreach(result.ValueBreach{Value: err.Error()})
+			c.AddBreach(&result.ValueBreach{Value: err.Error()})
 		}
 	}
 
@@ -94,7 +94,7 @@ func (c *AdminUserCheck) FetchData() {
 
 	if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
-		c.AddBreach(result.ValueBreach{
+		c.AddBreach(&result.ValueBreach{
 			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	}
 }
@@ -103,7 +103,7 @@ func (c *AdminUserCheck) FetchData() {
 // into the roleConfigs for further processing.
 func (c *AdminUserCheck) UnmarshalDataMap() {
 	if len(c.DataMap) == 0 {
-		c.AddBreach(result.ValueBreach{Value: "no data provided"})
+		c.AddBreach(&result.ValueBreach{Value: "no data provided"})
 		return
 	}
 
@@ -113,7 +113,7 @@ func (c *AdminUserCheck) UnmarshalDataMap() {
 		err := json.Unmarshal([]byte(element), &role)
 		var synErr *json.SyntaxError
 		if err != nil && errors.As(err, &synErr) {
-			c.AddBreach(result.ValueBreach{Value: err.Error()})
+			c.AddBreach(&result.ValueBreach{Value: err.Error()})
 			return
 		}
 		// Collect role config.
@@ -130,7 +130,7 @@ func (c *AdminUserCheck) RunCheck() {
 		}
 
 		if isAdmin {
-			c.AddBreach(result.KeyValueBreach{
+			c.AddBreach(&result.KeyValueBreach{
 				Key:        "is_admin: true",
 				ValueLabel: "role",
 				Value:      roleName,
@@ -142,13 +142,13 @@ func (c *AdminUserCheck) RunCheck() {
 // Remediate attempts to fix a breach.
 func (c *AdminUserCheck) Remediate() {
 	for _, b := range c.Result.Breaches {
-		b, ok := b.(result.KeyValueBreach)
+		b, ok := b.(*result.KeyValueBreach)
 		if !ok {
 			continue
 		}
 		_, err := Drush(c.DrushPath, c.Alias, []string{"config:set", "user.role." + b.Value, "is_admin", "0"}).Exec()
 		if err != nil {
-			c.AddBreach(result.KeyValueBreach{
+			c.AddBreach(&result.KeyValueBreach{
 				Key:        "failed to set is_admin to false",
 				ValueLabel: "role",
 				Value:      b.Value,

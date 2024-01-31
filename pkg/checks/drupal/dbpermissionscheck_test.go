@@ -70,7 +70,7 @@ func TestDbPermissionsUnmarshalDataMap(t *testing.T) {
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "no data provided",
 			}},
@@ -132,7 +132,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			Init:         true,
 			ExpectStatus: result.Fail,
 			ExpectNoPass: true,
-			ExpectFails: []result.Breach{result.ValueBreach{
+			ExpectFails: []result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Severity:   "normal",
 				Value:      "list of disallowed perms not provided",
@@ -208,7 +208,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 				"[authenticated] no disallowed permissions",
 			},
 			ExpectFails: []result.Breach{
-				result.KeyValuesBreach{
+				&result.KeyValuesBreach{
 					BreachType: "key-values",
 					Severity:   "normal",
 					KeyLabel:   "role",
@@ -216,7 +216,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 					ValueLabel: "permissions",
 					Values:     []string{"administer modules", "administer permissions"},
 				},
-				result.KeyValuesBreach{
+				&result.KeyValuesBreach{
 					BreachType: "key-values",
 					Severity:   "normal",
 					KeyLabel:   "role",
@@ -327,7 +327,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 				"[authenticated] no disallowed permissions",
 			},
 			ExpectFails: []result.Breach{
-				result.KeyValueBreach{
+				&result.KeyValueBreach{
 					BreachType: "key-value",
 					Severity:   "normal",
 					KeyLabel:   "role",
@@ -335,7 +335,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 					ValueLabel: "failed to fix disallowed permissions due to error",
 					Value:      "unable to run drush command",
 				},
-				result.KeyValueBreach{
+				&result.KeyValueBreach{
 					BreachType: "key-value",
 					Severity:   "normal",
 					KeyLabel:   "role",
@@ -371,14 +371,14 @@ func TestDbPermissionsRemediate(t *testing.T) {
 			nil)
 
 		c := DbPermissionsCheck{}
-		c.AddBreach(result.KeyValuesBreach{
+		c.AddBreach(&result.KeyValuesBreach{
 			KeyLabel:   "role",
 			Key:        "foo",
 			ValueLabel: "permissions",
 			Values:     []string{"bar", "baz"},
 		})
 		c.Remediate()
-		assert.EqualValues([]result.Breach{result.ValueBreach{
+		assert.EqualValues([]result.Breach{&result.ValueBreach{
 			BreachType: "value",
 			Value:      "unable to run drush command",
 		}}, c.Result.Breaches)
@@ -389,7 +389,7 @@ func TestDbPermissionsRemediate(t *testing.T) {
 		command.ShellCommander = internal.ShellCommanderMaker(nil, nil, &generatedCommand)
 
 		c := DbPermissionsCheck{}
-		c.AddBreach(result.KeyValuesBreach{
+		c.AddBreach(&result.KeyValuesBreach{
 			KeyLabel:   "role",
 			Key:        "foo",
 			ValueLabel: "permissions",

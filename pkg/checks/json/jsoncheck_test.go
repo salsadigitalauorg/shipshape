@@ -82,7 +82,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
-			result.ValueBreach{
+			&result.ValueBreach{
 				BreachType: result.BreachTypeValue,
 				ValueLabel: "- no file",
 				Value:      "no file provided",
@@ -101,7 +101,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
-			result.ValueBreach{
+			&result.ValueBreach{
 				CheckType:  "json",
 				Severity:   "normal",
 				BreachType: result.BreachTypeValue,
@@ -144,7 +144,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
-			result.ValueBreach{
+			&result.ValueBreach{
 				BreachType: result.BreachTypeValue,
 				ValueLabel: "error finding files in path: testdata",
 				Value:      "error parsing regexp: missing argument to repetition operator: `*`",
@@ -161,7 +161,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
-			result.ValueBreach{
+			&result.ValueBreach{
 				BreachType: result.BreachTypeValue,
 				ValueLabel: "- no file",
 				Value:      "no matching yaml files found",
@@ -209,7 +209,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 		c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
-			result.KeyValueBreach{
+			&result.KeyValueBreach{
 				BreachType:    result.BreachTypeKeyValue,
 				KeyLabel:      "testdata/composer.array.json",
 				Key:           "$.license",
@@ -217,7 +217,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 				Value:         "BSD",
 				ExpectedValue: "MIT",
 			},
-			result.KeyValueBreach{
+			&result.KeyValueBreach{
 				BreachType:    result.BreachTypeKeyValue,
 				KeyLabel:      "testdata/dir/composer.array.json",
 				Key:           "$.license",
@@ -225,7 +225,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 				Value:         "BSD",
 				ExpectedValue: "MIT",
 			},
-			result.KeyValueBreach{
+			&result.KeyValueBreach{
 				BreachType:    result.BreachTypeKeyValue,
 				KeyLabel:      "testdata/dir/subdir/composer.array.json",
 				Key:           "$.license",
@@ -261,7 +261,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
-			result.KeyValuesBreach{
+			&result.KeyValuesBreach{
 				BreachType: result.BreachTypeKeyValues,
 				KeyLabel:   "config",
 				Key:        "composer.map.json",
@@ -295,7 +295,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
-			result.KeyValuesBreach{
+			&result.KeyValuesBreach{
 				BreachType: result.BreachTypeKeyValues,
 				KeyLabel:   "config",
 				Key:        "composer.map.json",
@@ -329,7 +329,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
-			result.ValueBreach{
+			&result.ValueBreach{
 				BreachType: result.BreachTypeValue,
 				Value:      "json: invalid path format: found invalid path character * after dot",
 			},
@@ -358,7 +358,7 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
-			result.KeyValueBreach{
+			&result.KeyValueBreach{
 				BreachType: result.BreachTypeKeyValue,
 				KeyLabel:   "config",
 				Key:        "composer.map.json",

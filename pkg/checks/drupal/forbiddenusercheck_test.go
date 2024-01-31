@@ -48,7 +48,7 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		c.RunCheck()
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "vendor/drush/drush/drush: no such file or directory",
 			}},
@@ -69,7 +69,7 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		c.RunCheck()
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-user-forbidden",
 				Severity:   "normal",
@@ -94,7 +94,7 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-user-forbidden",
 				Severity:   "normal",
@@ -124,7 +124,7 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{result.KeyValueBreach{
+			[]result.Breach{&result.KeyValueBreach{
 				BreachType: "key-value",
 				CheckType:  "drupal-user-forbidden",
 				Severity:   "normal",
@@ -177,7 +177,7 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 			nil,
 		)
 		c.Remediate()
-		assertions.EqualValues([]result.Breach{result.ValueBreach{
+		assertions.EqualValues([]result.Breach{&result.ValueBreach{
 			BreachType: "value",
 			Value:      "Unable to find a matching user",
 		}}, c.Result.Breaches)

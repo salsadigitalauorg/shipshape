@@ -163,7 +163,7 @@ func TestRunChecks(t *testing.T) {
 			CheckType: "test-check-1",
 			Status:    "Fail",
 			Passes:    []string(nil),
-			Breaches: []result.Breach{result.ValueBreach{
+			Breaches: []result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "test-check-1",
 				CheckName:  "test1stcheck",
@@ -178,7 +178,7 @@ func TestRunChecks(t *testing.T) {
 			CheckType: "test-check-2",
 			Status:    "Fail",
 			Passes:    []string(nil),
-			Breaches: []result.Breach{result.ValueBreach{
+			Breaches: []result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "test-check-2",
 				CheckName:  "test2ndcheck",

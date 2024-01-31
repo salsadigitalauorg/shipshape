@@ -76,7 +76,7 @@ func TestDrushYamlCheckFetchData(t *testing.T) {
 				Command:    "status",
 				ConfigName: "core.extension",
 			},
-			ExpectBreaches: []result.Breach{result.ValueBreach{
+			ExpectBreaches: []result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drush-yaml",
 				Severity:   "normal",
@@ -98,7 +98,7 @@ func TestDrushYamlCheckFetchData(t *testing.T) {
 					nil,
 				)
 			},
-			ExpectBreaches: []result.Breach{result.ValueBreach{
+			ExpectBreaches: []result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drush-yaml",
 				Severity:   "normal",
@@ -177,7 +177,7 @@ func TestDrushYamlCheckRunCheck(t *testing.T) {
 			PreRun: func(t *testing.T) {
 				command.ShellCommander = internal.ShellCommanderMaker(nil, nil, nil)
 			},
-			ExpectFails: []result.Breach{result.KeyValueBreach{
+			ExpectFails: []result.Breach{&result.KeyValueBreach{
 				BreachType:    "key-value",
 				KeyLabel:      "core.extension",
 				Key:           "profile",
@@ -205,7 +205,7 @@ func TestDrushYamlCheckRunCheck(t *testing.T) {
 			PreRun: func(t *testing.T) {
 				command.ShellCommander = internal.ShellCommanderMaker(nil, nil, nil)
 			},
-			ExpectFails: []result.Breach{result.KeyValueBreach{
+			ExpectFails: []result.Breach{&result.KeyValueBreach{
 				BreachType:    "key-value",
 				KeyLabel:      "core.extension",
 				Key:           "profile",

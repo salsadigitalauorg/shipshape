@@ -55,7 +55,7 @@ func TestFetchData(t *testing.T) {
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "vendor/drush/drush/drush: no such file or directory",
 			}},
@@ -85,7 +85,7 @@ func TestFetchData(t *testing.T) {
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "unable to run drush sql query",
 			}},
@@ -97,7 +97,7 @@ func TestFetchData(t *testing.T) {
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "unable to run drush command",
 			}},
@@ -128,7 +128,7 @@ func TestUnmarshalData(t *testing.T) {
 	c.UnmarshalDataMap()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.ValueBreach{
+		[]result.Breach{&result.ValueBreach{
 			BreachType: "value",
 			Value:      "no data provided",
 		}},
@@ -145,7 +145,7 @@ func TestUnmarshalData(t *testing.T) {
 	c.UnmarshalDataMap()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.ValueBreach{
+		[]result.Breach{&result.ValueBreach{
 			BreachType: "value",
 			Value:      "invalid character ']' after object key:value pair",
 		}},
@@ -180,7 +180,7 @@ func TestRunCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.ValueBreach{
+		[]result.Breach{&result.ValueBreach{
 			BreachType: "value",
 			Value:      "no disallowed role provided",
 		}},
@@ -199,7 +199,7 @@ func TestRunCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.KeyValuesBreach{
+		[]result.Breach{&result.KeyValuesBreach{
 			BreachType: "key-values",
 			KeyLabel:   "user",
 			Key:        "1",

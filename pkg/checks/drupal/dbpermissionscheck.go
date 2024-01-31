@@ -41,7 +41,7 @@ func (c *DbPermissionsCheck) Merge(mergeCheck config.Check) error {
 // type for further processing.
 func (c *DbPermissionsCheck) UnmarshalDataMap() {
 	if len(c.DataMap[c.ConfigName]) == 0 {
-		c.AddBreach(result.ValueBreach{Value: "no data provided"})
+		c.AddBreach(&result.ValueBreach{Value: "no data provided"})
 	}
 
 	c.Permissions = map[string]DrushRole{}
@@ -51,7 +51,7 @@ func (c *DbPermissionsCheck) UnmarshalDataMap() {
 // RunCheck implements the Check logic for Drupal Permissions in database config.
 func (c *DbPermissionsCheck) RunCheck() {
 	if len(c.Disallowed) == 0 {
-		c.AddBreach(result.ValueBreach{Value: "list of disallowed perms not provided"})
+		c.AddBreach(&result.ValueBreach{Value: "list of disallowed perms not provided"})
 	}
 
 	for r, perms := range c.Permissions {
@@ -70,7 +70,7 @@ func (c *DbPermissionsCheck) RunCheck() {
 			return fails[i] < fails[j]
 		})
 
-		c.AddBreach(result.KeyValuesBreach{
+		c.AddBreach(&result.KeyValuesBreach{
 			KeyLabel:   "role",
 			Key:        r,
 			ValueLabel: "permissions",
@@ -82,7 +82,7 @@ func (c *DbPermissionsCheck) RunCheck() {
 // Remediate attempts to remove any disallowed permissions detected.
 func (c *DbPermissionsCheck) Remediate() {
 	for _, b := range c.Result.Breaches {
-		b, ok := b.(result.KeyValuesBreach)
+		b, ok := b.(*result.KeyValuesBreach)
 		if !ok {
 			continue
 		}
@@ -90,7 +90,7 @@ func (c *DbPermissionsCheck) Remediate() {
 			c.DrushPath, c.Alias,
 			[]string{"role:perm:remove", b.Key, strings.Join(b.Values, ",")}).Exec()
 		if err != nil {
-			c.AddBreach(result.KeyValueBreach{
+			c.AddBreach(&result.KeyValueBreach{
 				KeyLabel:   "role",
 				Key:        b.Key,
 				ValueLabel: "failed to fix disallowed permissions due to error",

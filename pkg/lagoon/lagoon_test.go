@@ -205,7 +205,7 @@ func TestBreachFactNameAndValue(t *testing.T) {
 	}{
 		{
 			name: "value breach - no label",
-			breach: result.ValueBreach{
+			breach: &result.ValueBreach{
 				CheckName: "illegal file",
 				CheckType: "file",
 				Value:     "/an/illegal/file",
@@ -215,7 +215,7 @@ func TestBreachFactNameAndValue(t *testing.T) {
 		},
 		{
 			name: "value breach - label",
-			breach: result.ValueBreach{
+			breach: &result.ValueBreach{
 				CheckName:  "illegal file",
 				CheckType:  "file",
 				ValueLabel: "the illegal file exists",
@@ -226,7 +226,7 @@ func TestBreachFactNameAndValue(t *testing.T) {
 		},
 		{
 			name: "key-value breach - with value label",
-			breach: result.KeyValueBreach{
+			breach: &result.KeyValueBreach{
 				CheckName:  "illegal file",
 				CheckType:  "file",
 				Key:        "illegal file found",
@@ -238,7 +238,7 @@ func TestBreachFactNameAndValue(t *testing.T) {
 		},
 		{
 			name: "key-value breach - with value and key labels",
-			breach: result.KeyValueBreach{
+			breach: &result.KeyValueBreach{
 				CheckName:  "illegal file",
 				CheckType:  "file",
 				KeyLabel:   "illegal file found in",
@@ -251,7 +251,7 @@ func TestBreachFactNameAndValue(t *testing.T) {
 		},
 		{
 			name: "value breach - with value and key labels and expected value",
-			breach: result.KeyValueBreach{
+			breach: &result.KeyValueBreach{
 				CheckName:     "update module status",
 				CheckType:     "module-status",
 				KeyLabel:      "disallowed module found",
@@ -264,7 +264,7 @@ func TestBreachFactNameAndValue(t *testing.T) {
 		},
 		{
 			name: "key-values breach - no label",
-			breach: result.KeyValuesBreach{
+			breach: &result.KeyValuesBreach{
 				CheckName: "illegal files",
 				CheckType: "file",
 				Values:    []string{"/an/illegal/file", "/another/illegal/file"},

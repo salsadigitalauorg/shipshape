@@ -52,7 +52,7 @@ func TestAdminUserFetchData(t *testing.T) {
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "vendor/drush/drush/drush: no such file or directory",
 			}},
@@ -72,7 +72,7 @@ func TestAdminUserFetchData(t *testing.T) {
 		c.FetchData()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "unable to run drush command",
 			}},
@@ -105,7 +105,7 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 		c.UnmarshalDataMap()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "no data provided",
 			}},
@@ -124,7 +124,7 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 		c.UnmarshalDataMap()
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "invalid character ']' after object key:value pair",
 			}},
@@ -174,7 +174,7 @@ func TestAdminUserRunCheck(t *testing.T) {
 				AllowedRoles: []string{"content-admin"},
 			},
 			ExpectStatus: result.Fail,
-			ExpectFails: []result.Breach{result.KeyValueBreach{
+			ExpectFails: []result.Breach{&result.KeyValueBreach{
 				BreachType: "key-value",
 				Key:        "is_admin: true",
 				ValueLabel: "role",

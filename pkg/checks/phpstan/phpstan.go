@@ -119,11 +119,11 @@ func (c *PhpStanCheck) FetchData() {
 	c.DataMap["phpstan"], err = command.ShellCommander(phpstanPath, args...).Output()
 	if err != nil {
 		if pathErr, ok := err.(*fs.PathError); ok {
-			c.AddBreach(result.ValueBreach{
+			c.AddBreach(&result.ValueBreach{
 				ValueLabel: pathErr.Path,
 				Value:      pathErr.Err.Error()})
 		} else if len(c.DataMap["phpstan"]) == 0 { // If errors were found, exit code will be 1.
-			c.AddBreach(result.ValueBreach{
+			c.AddBreach(&result.ValueBreach{
 				ValueLabel: "Phpstan failed to run",
 				Value:      string(err.(*exec.ExitError).Stderr)})
 		}
@@ -135,7 +135,7 @@ func (c *PhpStanCheck) FetchData() {
 func (c *PhpStanCheck) HasData(failCheck bool) bool {
 	if c.DataMap == nil && len(c.Result.Passes) == 0 {
 		if failCheck {
-			c.AddBreach(result.ValueBreach{Value: "no data available"})
+			c.AddBreach(&result.ValueBreach{Value: "no data available"})
 		}
 		return false
 	}
@@ -158,7 +158,7 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 	c.phpstanResult = PhpStanResult{}
 	err := json.Unmarshal(c.DataMap["phpstan"], &c.phpstanResult)
 	if err != nil {
-		c.AddBreach(result.ValueBreach{
+		c.AddBreach(&result.ValueBreach{
 			ValueLabel: "unable to parse phpstan result",
 			Value:      err.Error()})
 		return
@@ -172,7 +172,7 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 	// Unmarshal file errors.
 	err = json.Unmarshal(c.phpstanResult.FilesRaw, &c.phpstanResult.Files)
 	if err != nil {
-		c.AddBreach(result.ValueBreach{
+		c.AddBreach(&result.ValueBreach{
 			ValueLabel: "unable to parse phpstan file errors",
 			Value:      err.Error()})
 		return
@@ -193,14 +193,14 @@ func (c *PhpStanCheck) RunCheck() {
 			errLines = append(errLines, fmt.Sprintf("line %d: %s", er.Line, er.Message))
 
 		}
-		c.AddBreach(result.KeyValueBreach{
+		c.AddBreach(&result.KeyValueBreach{
 			Key:   fmt.Sprintf("file contains banned functions: %s", file),
 			Value: strings.Join(errLines, "\n"),
 		})
 	}
 
 	if len(c.phpstanResult.Errors) > 0 {
-		c.AddBreach(result.ValueBreach{
+		c.AddBreach(&result.ValueBreach{
 			ValueLabel: "errors encountered when running phpstan",
 			Value:      strings.Join(c.phpstanResult.Errors, "\n")})
 	}

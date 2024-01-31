@@ -54,7 +54,7 @@ foo:
 	c.UnmarshalDataMap()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.ElementsMatch([]result.Breach{result.ValueBreach{
+	assert.ElementsMatch([]result.Breach{&result.ValueBreach{
 		BreachType: result.BreachTypeValue,
 		Value:      "yaml: line 4: found character that cannot start any token"}},
 		c.Result.Breaches)
@@ -93,7 +93,7 @@ foo:
 	c.RunCheck()
 
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.ElementsMatch([]result.Breach{result.ValueBreach{
+	assert.ElementsMatch([]result.Breach{&result.ValueBreach{
 		BreachType: result.BreachTypeValue,
 		Value:      "invalid character '&' at position 3, following \"baz\""}},
 		c.Result.Breaches)
@@ -271,7 +271,7 @@ func TestYamlBase(t *testing.T) {
 	c := YamlBase{}
 	c.HasData(true)
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.ElementsMatch([]result.Breach{result.ValueBreach{
+	assert.ElementsMatch([]result.Breach{&result.ValueBreach{
 		BreachType: result.BreachTypeValue,
 		Value:      "no data available"}},
 		c.Result.Breaches)
@@ -316,7 +316,7 @@ notification:
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.ElementsMatch([]result.Breach{result.KeyValueBreach{
+	assert.ElementsMatch([]result.Breach{&result.KeyValueBreach{
 		BreachType: result.BreachTypeKeyValue,
 		KeyLabel:   "config",
 		Key:        "data",
@@ -336,7 +336,7 @@ notification:
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.ElementsMatch([]result.Breach{result.KeyValueBreach{
+	assert.ElementsMatch([]result.Breach{&result.KeyValueBreach{
 		BreachType:    result.BreachTypeKeyValue,
 		KeyLabel:      "data",
 		Key:           "check.interval_days",
@@ -395,7 +395,7 @@ efgh:
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.ElementsMatch([]result.Breach{result.KeyValuesBreach{
+	assert.ElementsMatch([]result.Breach{&result.KeyValuesBreach{
 		BreachType: result.BreachTypeKeyValues,
 		KeyLabel:   "config",
 		Key:        "data",
@@ -434,7 +434,7 @@ foo:
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.ElementsMatch([]result.Breach{result.KeyValuesBreach{
+	assert.ElementsMatch([]result.Breach{&result.KeyValuesBreach{
 		BreachType: result.BreachTypeKeyValues,
 		KeyLabel:   "config",
 		Key:        "data",

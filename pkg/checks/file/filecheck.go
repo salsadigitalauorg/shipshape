@@ -55,7 +55,7 @@ func (c *FileCheck) RequiresData() bool { return false }
 func (c *FileCheck) RunCheck() {
 	files, err := utils.FindFiles(filepath.Join(config.ProjectDir, c.Path), c.DisallowedPattern, c.ExcludePattern, c.SkipDir)
 	if err != nil {
-		c.AddBreach(result.ValueBreach{
+		c.AddBreach(&result.ValueBreach{
 			ValueLabel: "error finding files",
 			Value:      err.Error()})
 		return
@@ -65,7 +65,7 @@ func (c *FileCheck) RunCheck() {
 		c.AddPass("No illegal files")
 		return
 	}
-	c.AddBreach(result.KeyValueBreach{
+	c.AddBreach(&result.KeyValueBreach{
 		Key:   fmt.Sprintf("%s - illegal files found", c.Name),
 		Value: strings.Join(files, "\n"),
 	})

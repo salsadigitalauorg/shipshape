@@ -105,7 +105,7 @@ func (c *AppTypeCheck) RunCheck() {
 			}
 		}
 		if len(disallowedFound) > 0 {
-			c.AddBreach(result.KeyValueBreach{
+			c.AddBreach(&result.KeyValueBreach{
 				Key:   fmt.Sprintf("[%s] contains disallowed frameworks", path),
 				Value: "[" + strings.Join(disallowedFound, ", ") + "]",
 			})

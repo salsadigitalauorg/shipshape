@@ -21,7 +21,7 @@ func (c *JsonCheck) UnmarshalDataMap() {
 		var n any
 		err := json.Unmarshal(data, &n)
 		if err != nil {
-			c.AddBreach(result.ValueBreach{ValueLabel: "JSON error", Value: err.Error()})
+			c.AddBreach(&result.ValueBreach{ValueLabel: "JSON error", Value: err.Error()})
 			return
 		}
 		c.Node[configName] = n
@@ -36,16 +36,16 @@ func (c *JsonCheck) processData(configName string) {
 		kvr, fails, err := CheckKeyValue(c.Node[configName], kv)
 		switch kvr {
 		case yaml.KeyValueError:
-			c.AddBreach(result.ValueBreach{Value: err.Error()})
+			c.AddBreach(&result.ValueBreach{Value: err.Error()})
 		case yaml.KeyValueNotFound:
-			c.AddBreach(result.KeyValueBreach{
+			c.AddBreach(&result.KeyValueBreach{
 				KeyLabel:   "config",
 				Key:        configName,
 				ValueLabel: "key not found",
 				Value:      kv.Key,
 			})
 		case yaml.KeyValueNotEqual:
-			c.AddBreach(result.KeyValueBreach{
+			c.AddBreach(&result.KeyValueBreach{
 				KeyLabel:      configName,
 				Key:           kv.Key,
 				ValueLabel:    "actual",
@@ -53,7 +53,7 @@ func (c *JsonCheck) processData(configName string) {
 				Value:         fails[0],
 			})
 		case yaml.KeyValueDisallowedFound:
-			c.AddBreach(result.KeyValuesBreach{
+			c.AddBreach(&result.KeyValuesBreach{
 				KeyLabel:   "config",
 				Key:        configName,
 				ValueLabel: fmt.Sprintf("disallowed %s", kv.Key),

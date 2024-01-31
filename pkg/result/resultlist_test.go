@@ -99,11 +99,11 @@ func TestResultListAddResult(t *testing.T) {
 		Severity:  "high",
 		CheckType: string(testCheckType),
 		Breaches: []Breach{
-			ValueBreach{Value: "fail1"},
-			ValueBreach{Value: "fail2"},
-			ValueBreach{Value: "fail3"},
-			ValueBreach{Value: "fail4"},
-			ValueBreach{Value: "fail5"},
+			&ValueBreach{Value: "fail1"},
+			&ValueBreach{Value: "fail2"},
+			&ValueBreach{Value: "fail3"},
+			&ValueBreach{Value: "fail4"},
+			&ValueBreach{Value: "fail5"},
 		},
 		Remediations: []string{"fixed1"},
 	})
@@ -117,11 +117,11 @@ func TestResultListAddResult(t *testing.T) {
 		Severity:  "critical",
 		CheckType: string(testCheck2Type),
 		Breaches: []Breach{
-			ValueBreach{Value: "fail1"},
-			ValueBreach{Value: "fail2"},
-			ValueBreach{Value: "fail3"},
-			ValueBreach{Value: "fail4"},
-			ValueBreach{Value: "fail5"},
+			&ValueBreach{Value: "fail1"},
+			&ValueBreach{Value: "fail2"},
+			&ValueBreach{Value: "fail3"},
+			&ValueBreach{Value: "fail4"},
+			&ValueBreach{Value: "fail5"},
 		},
 	})
 	assert.Equal(10, int(rl.TotalBreaches))
@@ -141,12 +141,12 @@ func TestResultListAddResult(t *testing.T) {
 			rl.AddResult(Result{
 				Severity:  "high",
 				CheckType: string(testCheckType),
-				Breaches:  []Breach{ValueBreach{Value: "fail6"}},
+				Breaches:  []Breach{&ValueBreach{Value: "fail6"}},
 			})
 			rl.AddResult(Result{
 				Severity:     "critical",
 				CheckType:    string(testCheck2Type),
-				Breaches:     []Breach{ValueBreach{Value: "fail7"}},
+				Breaches:     []Breach{&ValueBreach{Value: "fail7"}},
 				Remediations: []string{"fixed2", "fixed3"},
 			})
 		}()
@@ -170,29 +170,29 @@ func TestResultListGetBreachesByCheckName(t *testing.T) {
 			{
 				Name: "check1",
 				Breaches: []Breach{
-					ValueBreach{Value: "failure1"},
-					ValueBreach{Value: "failure 2"},
+					&ValueBreach{Value: "failure1"},
+					&ValueBreach{Value: "failure 2"},
 				},
 			},
 			{
 				Name: "check2",
 				Breaches: []Breach{
-					ValueBreach{Value: "failure3"},
-					ValueBreach{Value: "failure 4"},
+					&ValueBreach{Value: "failure3"},
+					&ValueBreach{Value: "failure 4"},
 				},
 			},
 		},
 	}
 	assert.EqualValues(
 		[]Breach{
-			ValueBreach{Value: "failure1"},
-			ValueBreach{Value: "failure 2"},
+			&ValueBreach{Value: "failure1"},
+			&ValueBreach{Value: "failure 2"},
 		},
 		rl.GetBreachesByCheckName("check1"))
 	assert.EqualValues(
 		[]Breach{
-			ValueBreach{Value: "failure3"},
-			ValueBreach{Value: "failure 4"},
+			&ValueBreach{Value: "failure3"},
+			&ValueBreach{Value: "failure 4"},
 		},
 		rl.GetBreachesByCheckName("check2"))
 }
@@ -205,29 +205,29 @@ func TestResultListGetBreachesBySeverity(t *testing.T) {
 			{
 				Severity: "high",
 				Breaches: []Breach{
-					ValueBreach{Value: "failure1"},
-					ValueBreach{Value: "failure 2"},
+					&ValueBreach{Value: "failure1"},
+					&ValueBreach{Value: "failure 2"},
 				},
 			},
 			{
 				Severity: "normal",
 				Breaches: []Breach{
-					ValueBreach{Value: "failure3"},
-					ValueBreach{Value: "failure 4"},
+					&ValueBreach{Value: "failure3"},
+					&ValueBreach{Value: "failure 4"},
 				},
 			},
 		},
 	}
 	assert.EqualValues(
 		[]Breach{
-			ValueBreach{Value: "failure1"},
-			ValueBreach{Value: "failure 2"},
+			&ValueBreach{Value: "failure1"},
+			&ValueBreach{Value: "failure 2"},
 		},
 		rl.GetBreachesBySeverity("high"))
 	assert.EqualValues(
 		[]Breach{
-			ValueBreach{Value: "failure3"},
-			ValueBreach{Value: "failure 4"},
+			&ValueBreach{Value: "failure3"},
+			&ValueBreach{Value: "failure 4"},
 		},
 		rl.GetBreachesBySeverity("normal"))
 }

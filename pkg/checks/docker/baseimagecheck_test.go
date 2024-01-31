@@ -55,7 +55,7 @@ func TestInvalidDockerfileCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.KeyValueBreach{
+		[]result.Breach{&result.KeyValueBreach{
 			BreachType: result.BreachTypeKeyValue,
 			Key:        "service1",
 			ValueLabel: "invalid base image",
@@ -88,7 +88,7 @@ func TestInvalidDockerfileImageVersion(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.KeyValueBreach{
+		[]result.Breach{&result.KeyValueBreach{
 			BreachType: result.BreachTypeKeyValue,
 			Key:        "service1",
 			ValueLabel: "invalid base image",
@@ -159,7 +159,7 @@ func TestInvalidImageCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.KeyValueBreach{
+		[]result.Breach{&result.KeyValueBreach{
 			BreachType: result.BreachTypeKeyValue,
 			Key:        "service4",
 			ValueLabel: "invalid base image",
@@ -183,13 +183,13 @@ func TestInvalidImageVersions(t *testing.T) {
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(
 		[]result.Breach{
-			result.KeyValueBreach{
+			&result.KeyValueBreach{
 				BreachType: result.BreachTypeKeyValue,
 				Key:        "service2",
 				ValueLabel: "invalid base image",
 				Value:      "bitnami/postgresql@16",
 			},
-			result.KeyValueBreach{
+			&result.KeyValueBreach{
 				BreachType: result.BreachTypeKeyValue,
 				Key:        "service4",
 				ValueLabel: "invalid base image",

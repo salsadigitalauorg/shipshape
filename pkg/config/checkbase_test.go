@@ -89,21 +89,21 @@ func TestAddBreach(t *testing.T) {
 			checkType: vbCheckType,
 			checkName: "vbCheck",
 			severity:  "high",
-			breach:    result.ValueBreach{},
+			breach:    &result.ValueBreach{},
 		},
 		{
 			name:      "KeyValueBreach",
 			checkType: kvbCheckType,
 			checkName: "kvbCheck",
 			severity:  "low",
-			breach:    result.KeyValueBreach{},
+			breach:    &result.KeyValueBreach{},
 		},
 		{
 			name:      "KeyValuesBreach",
 			checkType: kvsbCheckType,
 			checkName: "kvsbCheck",
 			severity:  "normal",
-			breach:    result.KeyValuesBreach{},
+			breach:    &result.KeyValuesBreach{},
 		},
 	}
 
@@ -112,9 +112,9 @@ func TestAddBreach(t *testing.T) {
 			c := CheckBase{Name: test.checkName, Severity: test.severity}
 			c.Init(test.checkType)
 			c.AddBreach(test.breach)
-			assert.Equal(string(test.checkType), result.BreachGetCheckType(c.Result.Breaches[0]))
-			assert.Equal(test.checkName, result.BreachGetCheckName(c.Result.Breaches[0]))
-			assert.Equal(string(test.severity), result.BreachGetSeverity(c.Result.Breaches[0]))
+			assert.Equal(string(test.checkType), c.Result.Breaches[0].GetCheckType())
+			assert.Equal(test.checkName, c.Result.Breaches[0].GetCheckName())
+			assert.Equal(string(test.severity), c.Result.Breaches[0].GetSeverity())
 		})
 	}
 }
@@ -143,7 +143,7 @@ func TestCheckBaseRunCheck(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(
-		[]result.Breach{result.ValueBreach{
+		[]result.Breach{&result.ValueBreach{
 			BreachType: result.BreachTypeValue,
 			Value:      "not implemented",
 		}},

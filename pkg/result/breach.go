@@ -7,6 +7,11 @@ import (
 
 // Breach provides a representation for different breach types.
 type Breach interface {
+	GetCheckName() string
+	GetCheckType() string
+	GetSeverity() string
+	GetType() BreachType
+	SetCommonValues(checkType string, checkName string, severity string)
 	String() string
 }
 
@@ -35,11 +40,34 @@ type ValueBreach struct {
 	ExpectedValue string
 }
 
+func (b *ValueBreach) GetCheckName() string {
+	return b.CheckName
+}
+
+func (b *ValueBreach) GetCheckType() string {
+	return b.CheckType
+}
+
+func (b *ValueBreach) GetSeverity() string {
+	return b.Severity
+}
+
+func (b *ValueBreach) GetType() BreachType {
+	return BreachTypeValue
+}
+
+func (b *ValueBreach) SetCommonValues(checkType string, checkName string, severity string) {
+	b.BreachType = b.GetType()
+	b.CheckType = checkType
+	b.CheckName = checkName
+	b.Severity = severity
+}
+
 func (b ValueBreach) String() string {
 	if b.ValueLabel != "" {
 		return fmt.Sprintf("[%s] %s", b.ValueLabel, b.Value)
 	}
-	return fmt.Sprintf("%s", b.Value)
+	return b.Value
 }
 
 // Breach with key and value.
@@ -60,6 +88,29 @@ type KeyValueBreach struct {
 	ValueLabel    string
 	Value         string
 	ExpectedValue string
+}
+
+func (b *KeyValueBreach) GetCheckName() string {
+	return b.CheckName
+}
+
+func (b *KeyValueBreach) GetCheckType() string {
+	return b.CheckType
+}
+
+func (b *KeyValueBreach) GetType() BreachType {
+	return BreachTypeKeyValue
+}
+
+func (b *KeyValueBreach) GetSeverity() string {
+	return b.Severity
+}
+
+func (b *KeyValueBreach) SetCommonValues(checkType string, checkName string, severity string) {
+	b.BreachType = b.GetType()
+	b.CheckType = checkType
+	b.CheckName = checkName
+	b.Severity = severity
 }
 
 func (b KeyValueBreach) String() string {
@@ -88,6 +139,29 @@ type KeyValuesBreach struct {
 	Values     []string
 }
 
+func (b *KeyValuesBreach) GetCheckName() string {
+	return b.CheckName
+}
+
+func (b *KeyValuesBreach) GetCheckType() string {
+	return b.CheckType
+}
+
+func (b *KeyValuesBreach) GetSeverity() string {
+	return b.Severity
+}
+
+func (b *KeyValuesBreach) GetType() BreachType {
+	return BreachTypeKeyValues
+}
+
+func (b *KeyValuesBreach) SetCommonValues(checkType string, checkName string, severity string) {
+	b.BreachType = b.GetType()
+	b.CheckType = checkType
+	b.CheckName = checkName
+	b.Severity = severity
+}
+
 func (b KeyValuesBreach) String() string {
 	if b.KeyLabel != "" && b.ValueLabel != "" {
 		return fmt.Sprintf("[%s:%s] %s: %s", b.KeyLabel, b.Key, b.ValueLabel,
@@ -96,121 +170,55 @@ func (b KeyValuesBreach) String() string {
 	return fmt.Sprintf("%s: %s", b.Key, "["+strings.Join(b.Values, ", ")+"]")
 }
 
-func BreachSetCommonValues(bIfc *Breach, checkType string, checkName string, severity string) {
-	if b, ok := (*bIfc).(ValueBreach); ok {
-		b.BreachType = BreachTypeValue
-		b.CheckType = checkType
-		b.CheckName = checkName
-		b.Severity = severity
-		*bIfc = b
-	} else if b, ok := (*bIfc).(KeyValueBreach); ok {
-		b.BreachType = BreachTypeKeyValue
-		b.CheckType = checkType
-		b.CheckName = checkName
-		b.Severity = severity
-		*bIfc = b
-	} else if b, ok := (*bIfc).(KeyValuesBreach); ok {
-		b.BreachType = BreachTypeKeyValues
-		b.CheckType = checkType
-		b.CheckName = checkName
-		b.Severity = severity
-		*bIfc = b
-	}
-}
-
-func BreachGetBreachType(bIfc Breach) BreachType {
-	if _, ok := bIfc.(ValueBreach); ok {
-		return BreachTypeValue
-	} else if _, ok := bIfc.(KeyValueBreach); ok {
-		return BreachTypeKeyValue
-	} else if _, ok := bIfc.(KeyValuesBreach); ok {
-		return BreachTypeKeyValues
-	}
-	return ""
-}
-
-func BreachGetCheckType(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
-		return b.CheckType
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
-		return b.CheckType
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
-		return b.CheckType
-	}
-	return ""
-}
-
-func BreachGetCheckName(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
-		return b.CheckName
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
-		return b.CheckName
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
-		return b.CheckName
-	}
-	return ""
-}
-
-func BreachGetSeverity(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
-		return b.Severity
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
-		return b.Severity
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
-		return b.Severity
-	}
-	return ""
-}
-
 func BreachGetKeyLabel(bIfc Breach) string {
-	if b, ok := bIfc.(KeyValueBreach); ok {
+	if b, ok := bIfc.(*KeyValueBreach); ok {
 		return b.KeyLabel
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
+	} else if b, ok := bIfc.(*KeyValuesBreach); ok {
 		return b.KeyLabel
 	}
 	return ""
 }
 
 func BreachGetKey(bIfc Breach) string {
-	if b, ok := bIfc.(KeyValueBreach); ok {
+	if b, ok := bIfc.(*KeyValueBreach); ok {
 		return b.Key
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
+	} else if b, ok := bIfc.(*KeyValuesBreach); ok {
 		return b.Key
 	}
 	return ""
 }
 
 func BreachGetValueLabel(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
+	if b, ok := bIfc.(*ValueBreach); ok {
 		return b.ValueLabel
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
+	} else if b, ok := bIfc.(*KeyValueBreach); ok {
 		return b.ValueLabel
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
+	} else if b, ok := bIfc.(*KeyValuesBreach); ok {
 		return b.ValueLabel
 	}
 	return ""
 }
 
 func BreachGetValue(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
+	if b, ok := bIfc.(*ValueBreach); ok {
 		return b.Value
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
+	} else if b, ok := bIfc.(*KeyValueBreach); ok {
 		return b.Value
 	}
 	return ""
 }
 
 func BreachGetValues(bIfc Breach) []string {
-	if b, ok := bIfc.(KeyValuesBreach); ok {
+	if b, ok := bIfc.(*KeyValuesBreach); ok {
 		return b.Values
 	}
 	return []string(nil)
 }
 
 func BreachGetExpectedValue(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
+	if b, ok := bIfc.(*ValueBreach); ok {
 		return b.ExpectedValue
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
+	} else if b, ok := bIfc.(*KeyValueBreach); ok {
 		return b.ExpectedValue
 	}
 	return ""

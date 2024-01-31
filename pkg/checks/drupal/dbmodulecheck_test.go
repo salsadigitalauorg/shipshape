@@ -109,14 +109,14 @@ views_ui:
 	})
 	assert.ElementsMatch(
 		[]result.Breach{
-			result.KeyValuesBreach{
+			&result.KeyValuesBreach{
 				BreachType: "key-values",
 				CheckType:  "drupal-db-module",
 				Severity:   "normal",
 				Key:        "required modules are not enabled",
 				Values:     []string{"block"},
 			},
-			result.KeyValuesBreach{
+			&result.KeyValuesBreach{
 				BreachType: "key-values",
 				CheckType:  "drupal-db-module",
 				Severity:   "normal",

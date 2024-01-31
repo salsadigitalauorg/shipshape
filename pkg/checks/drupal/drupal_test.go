@@ -241,7 +241,7 @@ module:
 		"all disallowed modules are disabled",
 	})
 	assert.EqualValues(
-		[]result.Breach{result.KeyValuesBreach{
+		[]result.Breach{&result.KeyValuesBreach{
 			BreachType: "key-values",
 			Key:        "disallowed modules are enabled",
 			Values:     []string{"dblog"},
@@ -272,12 +272,12 @@ func TestCheckModulesInYaml(t *testing.T) {
 	})
 	assert.ElementsMatch(
 		[]result.Breach{
-			result.KeyValuesBreach{
+			&result.KeyValuesBreach{
 				BreachType: "key-values",
 				Key:        "error verifying status for required modules",
 				Values:     []string{"invalid character '&' at position 11, following \".node\""},
 			},
-			result.KeyValuesBreach{
+			&result.KeyValuesBreach{
 				BreachType: "key-values",
 				Key:        "error verifying status for disallowed modules",
 				Values:     []string{"invalid character '&' at position 15, following \".field_ui\""},
@@ -311,12 +311,12 @@ module:
 	})
 	assert.ElementsMatch(
 		[]result.Breach{
-			result.KeyValuesBreach{
+			&result.KeyValuesBreach{
 				BreachType: "key-values",
 				Key:        "required modules are not enabled",
 				Values:     []string{"node"},
 			},
-			result.KeyValuesBreach{
+			&result.KeyValuesBreach{
 				BreachType: "key-values",
 				Key:        "disallowed modules are enabled",
 				Values:     []string{"views_ui"},

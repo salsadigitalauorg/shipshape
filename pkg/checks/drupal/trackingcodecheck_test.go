@@ -88,7 +88,7 @@ func TestTrackingCodeCheckFails(t *testing.T) {
 	c.RunCheck()
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(
-		[]result.Breach{result.KeyValueBreach{
+		[]result.Breach{&result.KeyValueBreach{
 			BreachType: "key-value",
 			CheckType:  "drupal-tracking-code",
 			Severity:   "normal",

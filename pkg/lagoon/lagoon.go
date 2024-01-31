@@ -226,8 +226,8 @@ func BreachFactName(b result.Breach) string {
 	} else if result.BreachGetValueLabel(b) != "" {
 		name = result.BreachGetValueLabel(b)
 	} else {
-		name = result.BreachGetCheckName(b) + " - " +
-			string(result.BreachGetCheckType(b))
+		name = b.GetCheckName() + " - " +
+			string(b.GetCheckType())
 	}
 	return name
 }

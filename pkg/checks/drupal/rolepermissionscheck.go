@@ -41,11 +41,11 @@ func (c *RolePermissionsCheck) GetRolePermissions() []string {
 
 	var pathError *fs.PathError
 	if err != nil && errors.As(err, &pathError) {
-		c.AddBreach(result.ValueBreach{
+		c.AddBreach(&result.ValueBreach{
 			Value: pathError.Path + ": " + pathError.Err.Error()})
 	} else if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
-		c.AddBreach(result.ValueBreach{
+		c.AddBreach(&result.ValueBreach{
 			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	} else {
 		// Unmarshal role:list JSON.
@@ -63,7 +63,7 @@ func (c *RolePermissionsCheck) GetRolePermissions() []string {
 		err = json.Unmarshal(drushOutput, &rolePermissionsMap)
 		var syntaxError *json.SyntaxError
 		if err != nil && errors.As(err, &syntaxError) {
-			c.AddBreach(result.ValueBreach{Value: err.Error()})
+			c.AddBreach(&result.ValueBreach{Value: err.Error()})
 		}
 
 		if len(rolePermissionsMap[c.RoleId]["perms"]) > 0 {
@@ -87,7 +87,7 @@ func (c *RolePermissionsCheck) Merge(mergeCheck config.Check) error {
 // RunCheck implements the Check logic for role permissions.
 func (c *RolePermissionsCheck) RunCheck() {
 	if c.RoleId == "" {
-		c.AddBreach(result.ValueBreach{Value: "no role ID provided"})
+		c.AddBreach(&result.ValueBreach{Value: "no role ID provided"})
 		return
 	}
 
@@ -95,7 +95,7 @@ func (c *RolePermissionsCheck) RunCheck() {
 	// Check for required permissions.
 	diff := utils.StringSlicesInterdiffUnique(rolePermissions, c.RequiredPermissions)
 	if len(diff) > 0 {
-		c.AddBreach(result.KeyValueBreach{
+		c.AddBreach(&result.KeyValueBreach{
 			KeyLabel:   "role",
 			Key:        c.RoleId,
 			ValueLabel: "missing permissions",
@@ -106,7 +106,7 @@ func (c *RolePermissionsCheck) RunCheck() {
 	// Check for disallowed permissions.
 	diff = utils.StringSlicesIntersectUnique(rolePermissions, c.DisallowedPermissions)
 	if len(diff) > 0 {
-		c.AddBreach(result.KeyValueBreach{
+		c.AddBreach(&result.KeyValueBreach{
 			KeyLabel:   "role",
 			Key:        c.RoleId,
 			ValueLabel: "disallowed permissions",

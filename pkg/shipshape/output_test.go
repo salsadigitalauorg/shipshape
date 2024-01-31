@@ -62,8 +62,8 @@ func TestTableDisplay(t *testing.T) {
 				Name:   "c",
 				Status: result.Fail,
 				Breaches: []result.Breach{
-					result.ValueBreach{Value: "Fail c"},
-					result.ValueBreach{Value: "Fail cb"},
+					&result.ValueBreach{Value: "Fail c"},
+					&result.ValueBreach{Value: "Fail cb"},
 				},
 			},
 			{
@@ -71,8 +71,8 @@ func TestTableDisplay(t *testing.T) {
 				Status: result.Fail,
 				Passes: []string{"Pass d", "Pass db"},
 				Breaches: []result.Breach{
-					result.ValueBreach{Value: "Fail c"},
-					result.ValueBreach{Value: "Fail cb"},
+					&result.ValueBreach{Value: "Fail c"},
+					&result.ValueBreach{Value: "Fail cb"},
 				},
 			},
 		},
@@ -121,7 +121,7 @@ func TestSimpleDisplay(t *testing.T) {
 			Name:   "b",
 			Status: result.Fail,
 			Breaches: []result.Breach{
-				result.ValueBreach{Value: "Fail b"},
+				&result.ValueBreach{Value: "Fail b"},
 			},
 		})
 		buf = bytes.Buffer{}
@@ -225,7 +225,7 @@ func TestJUnit(t *testing.T) {
 		Name:   "b",
 		Status: result.Fail,
 		Breaches: []result.Breach{
-			result.ValueBreach{Value: "Fail b"},
+			&result.ValueBreach{Value: "Fail b"},
 		},
 	})
 	buf = bytes.Buffer{}

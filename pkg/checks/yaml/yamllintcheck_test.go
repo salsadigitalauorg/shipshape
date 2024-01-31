@@ -55,7 +55,7 @@ func TestYamlLintCheck(t *testing.T) {
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
 		[]result.Breach{
-			result.ValueBreach{
+			&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "yamllint",
 				CheckName:  "Test yaml lint",
@@ -94,7 +94,7 @@ func TestYamlLintCheck(t *testing.T) {
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
 		[]result.Breach{
-			result.ValueBreach{
+			&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "yamllint",
 				CheckName:  "Test yaml lint",
@@ -113,7 +113,7 @@ func TestYamlLintCheck(t *testing.T) {
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
 		[]result.Breach{
-			result.ValueBreach{
+			&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "yamllint",
 				CheckName:  "Test yaml lint",
@@ -136,7 +136,7 @@ this: yaml
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
 		[]result.Breach{
-			result.ValueBreach{
+			&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "yamllint",
 				CheckName:  "Test yaml lint",
@@ -174,7 +174,7 @@ foo: bar
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch(
 			[]result.Breach{
-				result.ValueBreach{
+				&result.ValueBreach{
 					BreachType: "value",
 					ValueLabel: "yaml error: yaml-invalid-root.yml",
 					Value:      "yaml: line 1: did not find expected key",

@@ -49,7 +49,7 @@ func TestYamlCheckFetchData(t *testing.T) {
 				},
 			},
 			ExpectBreaches: []result.Breach{
-				result.ValueBreach{
+				&result.ValueBreach{
 					BreachType: "value",
 					CheckType:  "yaml",
 					Severity:   "normal",
@@ -71,7 +71,7 @@ func TestYamlCheckFetchData(t *testing.T) {
 				File: "non-existent.yml",
 			},
 			ExpectBreaches: []result.Breach{
-				result.ValueBreach{
+				&result.ValueBreach{
 					BreachType: "value",
 					CheckType:  "yaml",
 					Severity:   "normal",
@@ -130,7 +130,7 @@ notification:
 				Path:    "",
 			},
 			ExpectBreaches: []result.Breach{
-				result.ValueBreach{
+				&result.ValueBreach{
 					BreachType: "value",
 					CheckType:  "yaml",
 					Severity:   "normal",
@@ -152,7 +152,7 @@ notification:
 				Pattern: "bla.*.yml",
 			},
 			ExpectBreaches: []result.Breach{
-				result.ValueBreach{
+				&result.ValueBreach{
 					BreachType: "value",
 					CheckType:  "yaml",
 					Severity:   "normal",

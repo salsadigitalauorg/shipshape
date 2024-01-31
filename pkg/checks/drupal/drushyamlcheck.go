@@ -39,11 +39,11 @@ func (c *DrushYamlCheck) FetchData() {
 	c.DataMap[c.ConfigName], err = Drush(c.DrushPath, c.Alias, c.DrushCommand.Args).Exec()
 	if err != nil {
 		if pathErr, ok := err.(*fs.PathError); ok {
-			c.AddBreach(result.ValueBreach{
+			c.AddBreach(&result.ValueBreach{
 				Value: pathErr.Path + ": " + pathErr.Err.Error()})
 		} else {
 			msg := string(err.(*exec.ExitError).Stderr)
-			c.AddBreach(result.ValueBreach{
+			c.AddBreach(&result.ValueBreach{
 				ValueLabel: c.ConfigName,
 				Value:      strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 		}
@@ -55,7 +55,7 @@ func (c *DrushYamlCheck) FetchData() {
 func (c *DrushYamlCheck) Remediate() {
 	_, err := Drush(c.DrushPath, c.Alias, strings.Fields(c.RemediationCommand)).Exec()
 	if err != nil {
-		c.AddBreach(result.ValueBreach{
+		c.AddBreach(&result.ValueBreach{
 			ValueLabel: c.ConfigName,
 			Value:      err.Error()})
 	}

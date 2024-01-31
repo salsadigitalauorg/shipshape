@@ -27,7 +27,7 @@ type Result struct {
 func (r *Result) Sort() {
 	if len(r.Breaches) > 0 {
 		sort.Slice(r.Breaches, func(i int, j int) bool {
-			return BreachGetCheckName(r.Breaches[i]) < BreachGetCheckName(r.Breaches[j])
+			return r.Breaches[i].GetCheckName() < r.Breaches[j].GetCheckName()
 		})
 	}
 

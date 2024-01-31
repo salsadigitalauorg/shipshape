@@ -63,7 +63,7 @@ func (c *CheckBase) FetchData() {}
 func (c *CheckBase) HasData(failCheck bool) bool {
 	if c.DataMap == nil {
 		if failCheck {
-			c.AddBreach(result.ValueBreach{Value: "no data available"})
+			c.AddBreach(&result.ValueBreach{Value: "no data available"})
 		}
 		return false
 	}
@@ -77,7 +77,7 @@ func (c *CheckBase) UnmarshalDataMap() {}
 // AddBreach appends a Breach to the Result and sets the Check as Fail.
 func (c *CheckBase) AddBreach(b result.Breach) {
 	c.Result.Status = result.Fail
-	result.BreachSetCommonValues(&b, string(c.cType), c.Name, string(c.Severity))
+	b.SetCommonValues(string(c.cType), c.Name, string(c.Severity))
 	c.Result.Breaches = append(
 		c.Result.Breaches,
 		b,
@@ -111,7 +111,7 @@ func (c *CheckBase) AddRemediation(msg string) {
 // generating the result and remediating breaches.
 // This is where c.Result should be populated.
 func (c *CheckBase) RunCheck() {
-	c.AddBreach(result.ValueBreach{Value: "not implemented"})
+	c.AddBreach(&result.ValueBreach{Value: "not implemented"})
 }
 
 // GetResult returns a ref of the result.

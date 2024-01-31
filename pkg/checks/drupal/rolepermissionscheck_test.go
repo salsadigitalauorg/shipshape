@@ -44,7 +44,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		c.RunCheck()
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.ElementsMatch(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: result.BreachTypeValue,
 				Value:      "no role ID provided"}},
 			c.Result.Breaches,
@@ -58,7 +58,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		c.RunCheck()
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.ElementsMatch(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: result.BreachTypeValue,
 				Value:      "vendor/drush/drush/drush: no such file or directory"}},
 			c.Result.Breaches)
@@ -79,7 +79,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		c.RunCheck()
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: result.BreachTypeValue,
 				CheckType:  "drupal-role-permissions",
 				Severity:   "normal",
@@ -104,7 +104,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: result.BreachTypeValue,
 				CheckType:  "drupal-role-permissions",
 				Severity:   "normal",
@@ -146,7 +146,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
 			[]result.Breach{
-				result.KeyValueBreach{
+				&result.KeyValueBreach{
 					BreachType: result.BreachTypeKeyValue,
 					CheckType:  "drupal-role-permissions",
 					Severity:   "normal",
@@ -155,7 +155,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 					ValueLabel: "missing permissions",
 					Value:      "[setup own tfa]",
 				},
-				result.KeyValueBreach{
+				&result.KeyValueBreach{
 					BreachType: result.BreachTypeKeyValue,
 					CheckType:  "drupal-role-permissions",
 					Severity:   "normal",
