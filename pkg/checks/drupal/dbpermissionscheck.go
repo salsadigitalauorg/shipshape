@@ -70,40 +70,36 @@ func (c *DbPermissionsCheck) RunCheck() {
 			return fails[i] < fails[j]
 		})
 
-		if c.PerformRemediation {
-			if err := c.Remediate(DbPermissionsBreach{Role: r, Perms: strings.Join(fails, ",")}); err != nil {
-				c.AddBreach(result.KeyValueBreach{
-					KeyLabel:   "role",
-					Key:        r,
-					ValueLabel: "failed to fix disallowed permissions due to error",
-					Value:      command.GetMsgFromCommandError(err),
-				})
-			} else {
-				c.AddRemediation(fmt.Sprintf(
-					"[%s] fixed disallowed permissions: [%s]",
-					r, strings.Join(fails, ", ")))
-			}
-		} else {
-			c.AddBreach(result.KeyValuesBreach{
-				KeyLabel:   "role",
-				Key:        r,
-				ValueLabel: "permissions",
-				Values:     fails,
-			})
-		}
-	}
-
-	if len(c.Result.Breaches) == 0 {
-		c.Result.Status = result.Pass
+		c.AddBreach(result.KeyValuesBreach{
+			KeyLabel:   "role",
+			Key:        r,
+			ValueLabel: "permissions",
+			Values:     fails,
+		})
 	}
 }
 
-// Remediate attempts to fix a breach.
-func (c *DbPermissionsCheck) Remediate(breachIfc interface{}) error {
-	b := breachIfc.(DbPermissionsBreach)
-	_, err := Drush(c.DrushPath, c.Alias, []string{"role:perm:remove", b.Role, b.Perms}).Exec()
-	if err != nil {
-		return err
+// Remediate attempts to remove any disallowed permissions detected.
+func (c *DbPermissionsCheck) Remediate() {
+	for _, b := range c.Result.Breaches {
+		b, ok := b.(result.KeyValuesBreach)
+		if !ok {
+			continue
+		}
+		_, err := Drush(
+			c.DrushPath, c.Alias,
+			[]string{"role:perm:remove", b.Key, strings.Join(b.Values, ",")}).Exec()
+		if err != nil {
+			c.AddBreach(result.KeyValueBreach{
+				KeyLabel:   "role",
+				Key:        b.Key,
+				ValueLabel: "failed to fix disallowed permissions due to error",
+				Value:      command.GetMsgFromCommandError(err),
+			})
+		} else {
+			c.AddRemediation(fmt.Sprintf(
+				"[%s] fixed disallowed permissions: [%s]",
+				b.Key, strings.Join(b.Values, ", ")))
+		}
 	}
-	return nil
 }

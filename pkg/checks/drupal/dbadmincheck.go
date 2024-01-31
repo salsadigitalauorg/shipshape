@@ -130,40 +130,32 @@ func (c *AdminUserCheck) RunCheck() {
 		}
 
 		if isAdmin {
-			if c.PerformRemediation {
-				if err := c.Remediate(roleName); err != nil {
-					c.AddBreach(result.KeyValueBreach{
-						Key:        "failed to set is_admin to false",
-						ValueLabel: "role",
-						Value:      roleName,
-					})
-				} else {
-					c.AddRemediation(fmt.Sprintf(
-						"Fixed disallowed admin setting for role [%s]", roleName))
-				}
-			} else {
-				c.AddBreach(result.KeyValueBreach{
-					Key:        "is_admin: true",
-					ValueLabel: "role",
-					Value:      roleName,
-				})
-			}
+			c.AddBreach(result.KeyValueBreach{
+				Key:        "is_admin: true",
+				ValueLabel: "role",
+				Value:      roleName,
+			})
 		}
-	}
-
-	if len(c.Result.Breaches) == 0 {
-		c.Result.Status = result.Pass
 	}
 }
 
 // Remediate attempts to fix a breach.
-func (c *AdminUserCheck) Remediate(breachIfc interface{}) error {
-	// A breach is expected to be a string.
-	if b, ok := breachIfc.(string); ok {
-		_, err := Drush(c.DrushPath, c.Alias, []string{"config:set", "user.role." + b, "is_admin", "0"}).Exec()
+func (c *AdminUserCheck) Remediate() {
+	for _, b := range c.Result.Breaches {
+		b, ok := b.(result.KeyValueBreach)
+		if !ok {
+			continue
+		}
+		_, err := Drush(c.DrushPath, c.Alias, []string{"config:set", "user.role." + b.Value, "is_admin", "0"}).Exec()
 		if err != nil {
-			return err
+			c.AddBreach(result.KeyValueBreach{
+				Key:        "failed to set is_admin to false",
+				ValueLabel: "role",
+				Value:      b.Value,
+			})
+		} else {
+			c.AddRemediation(fmt.Sprintf(
+				"Fixed disallowed admin setting for role [%s]", b.Value))
 		}
 	}
-	return nil
 }

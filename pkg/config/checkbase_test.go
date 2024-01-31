@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type testCheckForCheckBaseInit struct{}
-
 const testCheckForCheckBaseInitType CheckType = "testCheckForCheckBaseInitType"
 
 func TestCheckBaseInit(t *testing.T) {
@@ -167,8 +165,7 @@ func TestRemediate(t *testing.T) {
 	t.Run("notSupported", func(t *testing.T) {
 		c := testCheckRemediationNotSupported{}
 
-		err := c.Remediate(nil)
-		assert.NoError(err)
+		c.Remediate()
 		assert.Empty(c.Result.Passes)
 		assert.Empty(c.Result.Breaches)
 	})

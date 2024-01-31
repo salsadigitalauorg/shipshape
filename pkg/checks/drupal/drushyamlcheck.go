@@ -49,3 +49,14 @@ func (c *DrushYamlCheck) FetchData() {
 		}
 	}
 }
+
+// Remediate attempts to remediate a breach by running the drush command
+// specified in the check.
+func (c *DrushYamlCheck) Remediate() {
+	_, err := Drush(c.DrushPath, c.Alias, strings.Fields(c.RemediationCommand)).Exec()
+	if err != nil {
+		c.AddBreach(result.ValueBreach{
+			ValueLabel: c.ConfigName,
+			Value:      err.Error()})
+	}
+}

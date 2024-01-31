@@ -238,8 +238,8 @@ notification:
 
 	config.ProjectDir = "testdata"
 	for _, tc := range tt {
-		tc.Check.Init(Yaml)
 		t.Run(tc.Name, func(innerT *testing.T) {
+			tc.Check.Init(Yaml)
 			internal.TestFetchData(innerT, tc)
 		})
 	}

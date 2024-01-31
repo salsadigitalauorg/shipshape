@@ -371,8 +371,17 @@ func TestDbPermissionsRemediate(t *testing.T) {
 			nil)
 
 		c := DbPermissionsCheck{}
-		err := c.Remediate(DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
-		assert.Error(err, "unable to run drush command")
+		c.AddBreach(result.KeyValuesBreach{
+			KeyLabel:   "role",
+			Key:        "foo",
+			ValueLabel: "permissions",
+			Values:     []string{"bar", "baz"},
+		})
+		c.Remediate()
+		assert.EqualValues([]result.Breach{result.ValueBreach{
+			BreachType: "value",
+			Value:      "unable to run drush command",
+		}}, c.Result.Breaches)
 	})
 
 	t.Run("drushCommandIsCorrect", func(t *testing.T) {
@@ -380,7 +389,13 @@ func TestDbPermissionsRemediate(t *testing.T) {
 		command.ShellCommander = internal.ShellCommanderMaker(nil, nil, &generatedCommand)
 
 		c := DbPermissionsCheck{}
-		c.Remediate(DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
+		c.AddBreach(result.KeyValuesBreach{
+			KeyLabel:   "role",
+			Key:        "foo",
+			ValueLabel: "permissions",
+			Values:     []string{"bar", "baz"},
+		})
+		c.Remediate()
 		assert.Equal("vendor/drush/drush/drush role:perm:remove foo bar,baz", generatedCommand)
 	})
 }

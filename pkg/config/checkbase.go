@@ -119,9 +119,12 @@ func (c *CheckBase) GetResult() *result.Result {
 	return &c.Result
 }
 
+// ShouldPerformRemediation returns whether to remediate or not.
+func (c *CheckBase) ShouldPerformRemediation() bool {
+	return c.PerformRemediation
+}
+
 // Remediate should implement the logic to fix the breach(es).
 // Any type or custom struct can be used for the breach; it just needs to be
 // cast to the required type before being used.
-func (c *CheckBase) Remediate(breachIfc interface{}) error {
-	return nil
-}
+func (c *CheckBase) Remediate() {}

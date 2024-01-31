@@ -176,10 +176,11 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 			&exec.ExitError{Stderr: []byte("Unable to find a matching user")},
 			nil,
 		)
-		err := c.Remediate(nil)
-		assertions.NotNil(err)
-		msg := string(err.(*exec.ExitError).Stderr)
-		assertions.Equal("Unable to find a matching user", msg)
+		c.Remediate()
+		assertions.EqualValues([]result.Breach{result.ValueBreach{
+			BreachType: "value",
+			Value:      "Unable to find a matching user",
+		}}, c.Result.Breaches)
 	})
 
 	t.Run("passOnBlockingInactiveUser", func(t *testing.T) {

@@ -49,7 +49,8 @@ type Check interface {
 	AddRemediation(msg string)
 	RunCheck()
 	GetResult() *result.Result
-	Remediate(breachIfc interface{}) error
+	ShouldPerformRemediation() bool
+	Remediate()
 }
 
 // CheckBase provides the basic structure for all Checks.

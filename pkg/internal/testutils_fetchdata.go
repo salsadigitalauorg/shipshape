@@ -18,7 +18,7 @@ type FetchDataTest struct {
 	// Initialise the check before testing.
 	Init bool
 	// Func to run before running the check
-	PreRun func(t *testing.T)
+	PreFetch func(t *testing.T)
 	// Expected values after running the check.
 	ExpectPasses     []string
 	ExpectBreaches   []result.Breach
@@ -31,6 +31,11 @@ type FetchDataTest struct {
 func TestFetchData(t *testing.T, ctest FetchDataTest) {
 	t.Helper()
 	assert := assert.New(t)
+
+	if ctest.PreFetch != nil {
+		ctest.PreFetch(t)
+	}
+
 	ctest.Check.FetchData()
 
 	r := ctest.Check.GetResult()

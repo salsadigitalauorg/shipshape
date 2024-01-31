@@ -69,18 +69,25 @@ func (c *ForbiddenUserCheck) CheckUserStatus() bool {
 }
 
 // Remediate attempts to block an active forbidden user.
-func (c *ForbiddenUserCheck) Remediate(breachIfc interface{}) error {
-	_, err := Drush(c.DrushPath, c.Alias, []string{"user:block", "--uid=" + c.UserId}).Exec()
-	if err != nil {
-		c.AddBreach(result.KeyValueBreach{
-			KeyLabel:   "user",
-			Key:        c.UserId,
-			ValueLabel: "error blocking forbidden user",
-			Value:      command.GetMsgFromCommandError(err),
-		})
-		return err
+func (c *ForbiddenUserCheck) Remediate() {
+	for _, b := range c.Result.Breaches {
+		if _, ok := b.(result.KeyValueBreach); !ok {
+			continue
+		}
+
+		_, err := Drush(c.DrushPath, c.Alias, []string{"user:block", "--uid=" + c.UserId}).Exec()
+		if err != nil {
+			c.AddBreach(result.KeyValueBreach{
+				KeyLabel:   "user",
+				Key:        c.UserId,
+				ValueLabel: "error blocking forbidden user",
+				Value:      command.GetMsgFromCommandError(err),
+			})
+		} else {
+			c.AddRemediation(fmt.Sprintf("Blocked the forbidden user [%s]", c.UserId))
+		}
 	}
-	return nil
+
 }
 
 // Merge implementation for ForbiddenUserCheck check.
@@ -97,16 +104,10 @@ func (c *ForbiddenUserCheck) HasData(failCheck bool) bool {
 func (c *ForbiddenUserCheck) RunCheck() {
 	userActive := c.CheckUserStatus()
 	if userActive {
-		if c.PerformRemediation {
-			if err := c.Remediate(nil); err == nil {
-				c.AddRemediation(fmt.Sprintf("Blocked the forbidden user [%s]", c.UserId))
-			}
-		} else {
-			c.AddBreach(result.KeyValueBreach{
-				Key:   "forbidden user is active",
-				Value: c.UserId,
-			})
-		}
+		c.AddBreach(result.KeyValueBreach{
+			Key:   "forbidden user is active",
+			Value: c.UserId,
+		})
 	}
 
 	if len(c.Result.Breaches) == 0 {
