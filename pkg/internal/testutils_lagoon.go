@@ -19,8 +19,8 @@ func MockLagoonServer() *httptest.Server {
 		// Response for the first request, environment id.
 		if strings.Contains(string(reqBody), "environmentByKubernetesNamespaceName") {
 			fmt.Fprintf(w, "{\"data\":{\"environmentByKubernetesNamespaceName\":{\"id\": 50}}}")
-		} else if strings.Contains(string(reqBody), "deleteFactsFromSource") { // Response for the deletion.
-			fmt.Fprintf(w, "{\"data\":{\"deleteFactsFromSource\":\"success\"}}")
+		} else if strings.Contains(string(reqBody), "deleteProblemsFromSource") { // Response for the deletion.
+			fmt.Fprintf(w, "{\"data\":{\"deleteProblemsFromSource\":\"success\"}}")
 		} else if strings.Contains(string(reqBody), "AddFactsByNameInput") { // Response for the add.
 			fmt.Fprintf(w, "{}")
 		} else {

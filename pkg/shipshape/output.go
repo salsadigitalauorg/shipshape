@@ -2,16 +2,11 @@ package shipshape
 
 import (
 	"bufio"
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"text/tabwriter"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // TableDisplay generates the tabular output for the ResultList.
@@ -160,87 +155,5 @@ func JUnit(w *bufio.Writer) {
 	fmt.Fprint(w, xml.Header)
 	fmt.Fprint(w, string(xmlBytes))
 	fmt.Fprintln(w)
-	w.Flush()
-}
-
-// LagoonProblems pushes problems to either the Lagoon API or Insights-Remote endpoint
-// see https://github.com/uselagoon/insights-remote#insights-written-directly-to-insights-remote
-func LagoonProblems(w *bufio.Writer) {
-	problems := []lagoon.Problem{}
-
-	if RunResultList.TotalBreaches == 0 {
-		if lagoon.PushProblemsToInsightRemote {
-			lagoon.InitClient()
-			err := lagoon.DeleteProblems()
-			if err != nil {
-				log.WithError(err).Fatal("failed to delete problems")
-			}
-			fmt.Fprint(w, "no breach to push to Lagoon; only deleted previous problems")
-			w.Flush()
-			return
-		}
-		fmt.Fprint(w, "[]")
-		w.Flush()
-		return
-	}
-
-	for iR, r := range RunResultList.Results {
-		// let's marshall the breaches, they can be attached to the problem in the data field
-		_, err := json.Marshal(r.Breaches)
-		if err != nil {
-			log.WithError(err).Fatal("Unable to marshall breach information")
-		}
-
-		breachMap := map[string]string{}
-		for iB, b := range r.Breaches {
-			breachName := fmt.Sprintf("[%d] %s", iR+iB+1, lagoon.BreachFactName(b))
-			value := lagoon.BreachFactValue(b)
-			if len(value) > lagoon.FactMaxValueLength {
-				value = value[:lagoon.FactMaxValueLength-12] + "...TRUNCATED"
-			}
-			breachMap[breachName] = value
-		}
-
-		breachMapJson, err := json.Marshal(breachMap)
-		if err != nil {
-			log.WithError(err).Fatal("Unable to write problems to Insights Remote")
-		}
-
-		problems = append(problems, lagoon.Problem{
-			Identifier:        r.Name,
-			Version:           "1",
-			FixedVersion:      "",
-			Source:            "shipshape",
-			Service:           "",
-			Data:              string(breachMapJson),
-			Severity:          lagoon.SeverityTranslation(config.Severity(r.Severity)),
-			SeverityScore:     0,
-			AssociatedPackage: "",
-			Description:       "",
-			Links:             "",
-		})
-	}
-
-	if lagoon.PushProblems {
-		lagoon.InitClient()
-	}
-	if lagoon.PushProblemsToInsightRemote {
-		// first, let's try doing this via in-cluster functionality
-		bearerToken, err := lagoon.GetBearerTokenFromDisk(lagoon.DefaultLagoonInsightsTokenLocation)
-		if err == nil { // we have a token, and so we can proceed via the internal service call
-			err = lagoon.ProblemsToInsightsRemote(problems, lagoon.LagoonInsightsRemoteEndpoint, bearerToken)
-			if err != nil {
-				log.WithError(err).Fatal("Unable to write problems to Insights Remote")
-			}
-
-		} else {
-			log.WithError(err).Fatal("Bearer token unable to be loaded from ", lagoon.DefaultLagoonInsightsTokenLocation)
-		}
-		fmt.Fprintln(w, "successfully pushed problems to Lagoon Remote")
-		w.Flush()
-		return
-	} else {
-		fmt.Fprint(w, problems)
-	}
 	w.Flush()
 }

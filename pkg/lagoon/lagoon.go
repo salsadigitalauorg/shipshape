@@ -1,6 +1,7 @@
 package lagoon
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -109,6 +110,73 @@ func GetBearerTokenFromDisk(tokenLocation string) (string, error) {
 		return "", err
 	}
 	return strings.Trim(string(b), "\n"), nil
+}
+
+func ProcessResultList(w *bufio.Writer, list result.ResultList) error {
+	problems := []Problem{}
+
+	if list.TotalBreaches == 0 {
+		InitClient()
+		err := DeleteProblems()
+		if err != nil {
+			return err
+		}
+		fmt.Fprint(w, "no breach to push to Lagoon; only deleted previous problems")
+		w.Flush()
+		return nil
+	}
+
+	for iR, r := range list.Results {
+		// let's marshall the breaches, they can be attached to the problem in the data field
+		_, err := json.Marshal(r.Breaches)
+		if err != nil {
+			log.WithError(err).Fatal("Unable to marshall breach information")
+		}
+
+		breachMap := map[string]string{}
+		for iB, b := range r.Breaches {
+			breachName := fmt.Sprintf("[%d] %s", iR+iB+1, BreachFactName(b))
+			value := BreachFactValue(b)
+			if len(value) > FactMaxValueLength {
+				value = value[:FactMaxValueLength-12] + "...TRUNCATED"
+			}
+			breachMap[breachName] = value
+		}
+
+		breachMapJson, err := json.Marshal(breachMap)
+		if err != nil {
+			log.WithError(err).Fatal("Unable to write problems to Insights Remote")
+		}
+
+		problems = append(problems, Problem{
+			Identifier:        r.Name,
+			Version:           "1",
+			FixedVersion:      "",
+			Source:            "shipshape",
+			Service:           "",
+			Data:              string(breachMapJson),
+			Severity:          SeverityTranslation(config.Severity(r.Severity)),
+			SeverityScore:     0,
+			AssociatedPackage: "",
+			Description:       "",
+			Links:             "",
+		})
+	}
+
+	InitClient()
+	// first, let's try doing this via in-cluster functionality
+	bearerToken, err := GetBearerTokenFromDisk(DefaultLagoonInsightsTokenLocation)
+	if err == nil { // we have a token, and so we can proceed via the internal service call
+		err = ProblemsToInsightsRemote(problems, LagoonInsightsRemoteEndpoint, bearerToken)
+		if err != nil {
+			return err
+		}
+	} else {
+		return err
+	}
+	fmt.Fprintln(w, "successfully pushed problems to Lagoon Remote")
+	w.Flush()
+	return nil
 }
 
 func ProblemsToInsightsRemote(problems []Problem, serviceEndpoint string, bearerToken string) error {

@@ -88,7 +88,7 @@ func TestGetEnvironmentIdFromEnvVars(t *testing.T) {
 		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
 }
 
-func TestDeleteFacts(t *testing.T) {
+func TestDeleteProblems(t *testing.T) {
 	assert := assert.New(t)
 
 	svr := internal.MockLagoonServer()
@@ -113,9 +113,9 @@ func TestDeleteFacts(t *testing.T) {
 	assert.Equal("{\"query\":\"query ($ns:String!){"+
 		"environmentByKubernetesNamespaceName(kubernetesNamespaceName: $ns)"+
 		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
-	assert.Equal("{\"query\":\"mutation ($envId:Int!$sourceName:String!){"+
-		"deleteFactsFromSource(input: {environment: $envId, source: "+
-		"$sourceName})}\",\"variables\":{\"envId\":50,\"sourceName\":"+
+	assert.Equal("{\"query\":\"mutation ($envId:Int!$service:String!$sourceName:String!)"+
+		"{deleteProblemsFromSource(input: {environment: $envId, source: "+
+		"$sourceName, service:$service})}\",\"variables\":{\"envId\":50,\"service\":\"\",\"sourceName\":"+
 		"\"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
 }
 
