@@ -9,6 +9,7 @@ import (
 type Breach interface {
 	GetCheckName() string
 	GetCheckType() string
+	GetRemediation() *Remediation
 	GetSeverity() string
 	GetType() BreachType
 	SetCommonValues(checkType string, checkName string, severity string)
@@ -26,6 +27,8 @@ const (
 	BreachTypeKeyValues BreachType = "key-values"
 )
 
+//go:generate go run ../../cmd/gen.go breach-type --type=Value,KeyValue,KeyValues
+
 // Simple breach with no key.
 // Example:
 //
@@ -38,29 +41,7 @@ type ValueBreach struct {
 	ValueLabel    string
 	Value         string
 	ExpectedValue string
-}
-
-func (b *ValueBreach) GetCheckName() string {
-	return b.CheckName
-}
-
-func (b *ValueBreach) GetCheckType() string {
-	return b.CheckType
-}
-
-func (b *ValueBreach) GetSeverity() string {
-	return b.Severity
-}
-
-func (b *ValueBreach) GetType() BreachType {
-	return BreachTypeValue
-}
-
-func (b *ValueBreach) SetCommonValues(checkType string, checkName string, severity string) {
-	b.BreachType = b.GetType()
-	b.CheckType = checkType
-	b.CheckName = checkName
-	b.Severity = severity
+	Remediation
 }
 
 func (b ValueBreach) String() string {
@@ -88,29 +69,7 @@ type KeyValueBreach struct {
 	ValueLabel    string
 	Value         string
 	ExpectedValue string
-}
-
-func (b *KeyValueBreach) GetCheckName() string {
-	return b.CheckName
-}
-
-func (b *KeyValueBreach) GetCheckType() string {
-	return b.CheckType
-}
-
-func (b *KeyValueBreach) GetType() BreachType {
-	return BreachTypeKeyValue
-}
-
-func (b *KeyValueBreach) GetSeverity() string {
-	return b.Severity
-}
-
-func (b *KeyValueBreach) SetCommonValues(checkType string, checkName string, severity string) {
-	b.BreachType = b.GetType()
-	b.CheckType = checkType
-	b.CheckName = checkName
-	b.Severity = severity
+	Remediation
 }
 
 func (b KeyValueBreach) String() string {
@@ -137,29 +96,7 @@ type KeyValuesBreach struct {
 	Key        string
 	ValueLabel string
 	Values     []string
-}
-
-func (b *KeyValuesBreach) GetCheckName() string {
-	return b.CheckName
-}
-
-func (b *KeyValuesBreach) GetCheckType() string {
-	return b.CheckType
-}
-
-func (b *KeyValuesBreach) GetSeverity() string {
-	return b.Severity
-}
-
-func (b *KeyValuesBreach) GetType() BreachType {
-	return BreachTypeKeyValues
-}
-
-func (b *KeyValuesBreach) SetCommonValues(checkType string, checkName string, severity string) {
-	b.BreachType = b.GetType()
-	b.CheckType = checkType
-	b.CheckName = checkName
-	b.Severity = severity
+	Remediation
 }
 
 func (b KeyValuesBreach) String() string {
