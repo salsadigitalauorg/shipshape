@@ -80,7 +80,8 @@ func main() {
 
 	determineLogLevel()
 
-	if outputFormat == "lagoon-problems" && lagoon.PushProblems {
+	// simple check to ensure we have everything we need to write to the API if required.
+	if lagoon.PushProblemsToInsightRemote {
 		if lagoonApiBaseUrl == "" {
 			log.Fatal("lagoon api base url not provided")
 		}

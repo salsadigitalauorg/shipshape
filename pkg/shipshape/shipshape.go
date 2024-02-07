@@ -19,7 +19,7 @@ import (
 
 var RunConfig config.Config
 var RunResultList result.ResultList
-var OutputFormats = []string{"json", "junit", "simple", "table", "lagoon-problems"}
+var OutputFormats = []string{"json", "junit", "simple", "table"}
 
 func Init(projectDir string, configFiles []string, checkTypesToRun []string, excludeDb bool, remediate bool, logLevel string, lagoonApiBaseUrl string, lagoonApiToken string) error {
 	if logLevel == "" {

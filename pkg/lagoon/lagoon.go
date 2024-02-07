@@ -47,7 +47,6 @@ const FactMaxValueLength int = 300
 
 var ApiBaseUrl string
 var ApiToken string
-var PushProblems bool
 var PushProblemsToInsightRemote bool
 var LagoonInsightsRemoteEndpoint string
 
