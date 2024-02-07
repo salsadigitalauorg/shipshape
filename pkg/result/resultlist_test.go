@@ -14,40 +14,23 @@ func TestNewResultList(t *testing.T) {
 
 	t.Run("emptyInit", func(t *testing.T) {
 		rl := NewResultList(false)
-		assert.Equal(rl.RemediationPerformed, false)
-		assert.Equal(rl.Results, []Result{})
-		assert.Equal(rl.CheckCountByType, map[string]int{})
-		assert.Equal(rl.BreachCountByType, map[string]int{})
-		assert.Equal(rl.BreachCountBySeverity, map[string]int{})
-		assert.Equal(rl.RemediationCountByType, map[string]int{})
+		assert.Equal(false, rl.RemediationPerformed)
+		assert.Equal([]Result{}, rl.Results)
+		assert.Equal(map[string]int{}, rl.CheckCountByType)
+		assert.Equal(map[string]int{}, rl.BreachCountByType)
+		assert.Equal(map[string]int{}, rl.BreachCountBySeverity)
+		assert.Nil(rl.RemediationTotals)
 	})
 
 	t.Run("remediation", func(t *testing.T) {
 		rl := NewResultList(true)
-		assert.Equal(rl.RemediationPerformed, true)
-		assert.Equal(rl.Results, []Result{})
-		assert.Equal(rl.CheckCountByType, map[string]int{})
-		assert.Equal(rl.BreachCountByType, map[string]int{})
-		assert.Equal(rl.BreachCountBySeverity, map[string]int{})
-		assert.Equal(rl.RemediationCountByType, map[string]int{})
+		assert.Equal(true, rl.RemediationPerformed)
+		assert.Equal([]Result{}, rl.Results)
+		assert.Equal(map[string]int{}, rl.CheckCountByType)
+		assert.Equal(map[string]int{}, rl.BreachCountByType)
+		assert.Equal(map[string]int{}, rl.BreachCountBySeverity)
+		assert.Nil(rl.RemediationTotals)
 	})
-
-}
-
-func TestResultListStatus(t *testing.T) {
-	assert := assert.New(t)
-
-	rl := ResultList{
-		Results: []Result{
-			{Status: Pass},
-			{Status: Pass},
-			{Status: Pass},
-		},
-	}
-	assert.Equal(Pass, rl.Status())
-
-	rl.Results[0].Status = Fail
-	assert.Equal(Fail, rl.Status())
 }
 
 const testCheckType config.CheckType = "test-check"
@@ -92,26 +75,25 @@ func TestResultListAddResult(t *testing.T) {
 		BreachCountByType:     map[string]int{},
 		BreachCountBySeverity: map[string]int{},
 
-		TotalRemediations:      0,
-		RemediationCountByType: map[string]int{},
+		RemediationTotals: map[string]uint32{"successful": 0},
 	}
 	rl.AddResult(Result{
 		Severity:  "high",
 		CheckType: string(testCheckType),
 		Breaches: []Breach{
-			&ValueBreach{Value: "fail1"},
+			&ValueBreach{Value: "fail1", Remediation: Remediation{
+				Status:   RemediationStatusSuccess,
+				Messages: []string{"fixed1"},
+			}},
 			&ValueBreach{Value: "fail2"},
 			&ValueBreach{Value: "fail3"},
 			&ValueBreach{Value: "fail4"},
 			&ValueBreach{Value: "fail5"},
 		},
-		Remediations: []string{"fixed1"},
 	})
 	assert.Equal(5, int(rl.TotalBreaches))
 	assert.Equal(5, rl.BreachCountByType[string(testCheckType)])
 	assert.Equal(5, rl.BreachCountBySeverity["high"])
-	assert.Equal(1, int(rl.TotalRemediations))
-	assert.Equal(1, rl.RemediationCountByType[string(testCheckType)])
 
 	rl.AddResult(Result{
 		Severity:  "critical",
@@ -129,9 +111,6 @@ func TestResultListAddResult(t *testing.T) {
 	assert.Equal(5, rl.BreachCountByType[string(testCheck2Type)])
 	assert.Equal(5, rl.BreachCountBySeverity["high"])
 	assert.Equal(5, rl.BreachCountBySeverity["critical"])
-	assert.Equal(1, int(rl.TotalRemediations))
-	assert.Equal(1, rl.RemediationCountByType[string(testCheckType)])
-	assert.Equal(0, rl.RemediationCountByType[string(testCheck2Type)])
 
 	var wg sync.WaitGroup
 	for i := 0; i < 100; i++ {
@@ -144,10 +123,15 @@ func TestResultListAddResult(t *testing.T) {
 				Breaches:  []Breach{&ValueBreach{Value: "fail6"}},
 			})
 			rl.AddResult(Result{
-				Severity:     "critical",
-				CheckType:    string(testCheck2Type),
-				Breaches:     []Breach{&ValueBreach{Value: "fail7"}},
-				Remediations: []string{"fixed2", "fixed3"},
+				Severity:  "critical",
+				CheckType: string(testCheck2Type),
+				Breaches: []Breach{&ValueBreach{
+					Value: "fail7",
+					Remediation: Remediation{
+						Status:   RemediationStatusSuccess,
+						Messages: []string{"fixed2", "fixed3"},
+					},
+				}},
 			})
 		}()
 	}
@@ -157,9 +141,167 @@ func TestResultListAddResult(t *testing.T) {
 	assert.Equal(105, rl.BreachCountByType[string(testCheck2Type)])
 	assert.Equal(105, rl.BreachCountBySeverity["high"])
 	assert.Equal(105, rl.BreachCountBySeverity["critical"])
-	assert.Equal(201, int(rl.TotalRemediations))
-	assert.Equal(1, rl.RemediationCountByType[string(testCheckType)])
-	assert.Equal(200, rl.RemediationCountByType[string(testCheck2Type)])
+}
+
+func TestResultListStatus(t *testing.T) {
+	assert := assert.New(t)
+
+	rl := ResultList{
+		Results: []Result{
+			{Status: Pass},
+			{Status: Pass},
+			{Status: Pass},
+		},
+	}
+	assert.Equal(Pass, rl.Status())
+
+	rl.Results[0].Status = Fail
+	assert.Equal(Fail, rl.Status())
+}
+
+func TestResultListRemediationTotalsCount(t *testing.T) {
+	tt := []struct {
+		name     string
+		results  []Result
+		expected map[string]uint32
+	}{
+		{
+			name: "allSuccess",
+			results: []Result{
+				{Breaches: []Breach{
+					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
+					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
+				}},
+				{Breaches: []Breach{
+					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
+				}},
+			},
+			expected: map[string]uint32{
+				"unsupported": 0,
+				"successful":  3,
+				"failed":      0,
+				"partial":     0,
+			},
+		},
+		{
+			name: "countingWorks",
+			results: []Result{
+				{Breaches: []Breach{
+					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
+					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
+					&ValueBreach{Remediation: Remediation{Status: RemediationStatusFailed}},
+				}},
+				{Breaches: []Breach{
+					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
+					&ValueBreach{Remediation: Remediation{Status: RemediationStatusPartial}},
+				}},
+				{Breaches: []Breach{
+					&ValueBreach{Remediation: Remediation{Status: RemediationStatusFailed}},
+					&ValueBreach{Remediation: Remediation{Status: RemediationStatusNoSupport}},
+				}},
+			},
+			expected: map[string]uint32{
+				"unsupported": 1,
+				"successful":  3,
+				"failed":      2,
+				"partial":     1,
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			assert := assert.New(t)
+			rl := ResultList{
+				Results: tc.results,
+			}
+			rl.RemediationTotalsCount()
+			assert.Equal(tc.expected, rl.RemediationTotals)
+		})
+	}
+}
+
+func TestResultListRemediationStatus(t *testing.T) {
+	tt := []struct {
+		name                 string
+		remediationPerformed bool
+		results              []Result
+		expected             RemediationStatus
+	}{
+		{
+			name:                 "noRemediation",
+			remediationPerformed: false,
+			results:              []Result{{Breaches: []Breach{&ValueBreach{}}}},
+			expected:             "",
+		},
+		{
+			name:                 "allSuccess",
+			remediationPerformed: true,
+			results: []Result{
+				{
+					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}}},
+				},
+				{
+					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}}},
+				},
+				{
+					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}}},
+				},
+			},
+			expected: RemediationStatusSuccess,
+		},
+		{
+			name:                 "partial",
+			remediationPerformed: true,
+			results: []Result{
+				{
+					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusPartial}}},
+				},
+				{
+					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusFailed}}},
+				},
+			},
+			expected: RemediationStatusPartial,
+		},
+		{
+			name:                 "fail",
+			remediationPerformed: true,
+			results: []Result{
+				{
+					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusFailed}}},
+				},
+				{
+					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusFailed}}},
+				},
+			},
+			expected: RemediationStatusFailed,
+		},
+		{
+			name:                 "unsupported",
+			remediationPerformed: true,
+			results: []Result{
+				{
+					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusNoSupport}}},
+				},
+				{
+					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusNoSupport}}},
+				},
+			},
+			expected: RemediationStatusNoSupport,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			assert := assert.New(t)
+			rl := ResultList{
+				RemediationPerformed: tc.remediationPerformed,
+				Results:              tc.results,
+			}
+			rl.RemediationTotalsCount()
+			assert.Equal(tc.expected, rl.RemediationStatus())
+		})
+	}
 }
 
 func TestResultListGetBreachesByCheckName(t *testing.T) {
@@ -230,29 +372,6 @@ func TestResultListGetBreachesBySeverity(t *testing.T) {
 			&ValueBreach{Value: "failure 4"},
 		},
 		rl.GetBreachesBySeverity("normal"))
-}
-
-func TestResultListGetRemediationsByCheckName(t *testing.T) {
-	assert := assert.New(t)
-
-	rl := ResultList{
-		Results: []Result{
-			{
-				Name:         "check1",
-				Remediations: []string{"fix1", "fix 2"},
-			},
-			{
-				Name:         "check2",
-				Remediations: []string{"fix3", "fix 4"},
-			},
-		},
-	}
-	assert.EqualValues(
-		[]string{"fix1", "fix 2"},
-		rl.GetRemediationsByCheckName("check1"))
-	assert.EqualValues(
-		[]string{"fix3", "fix 4"},
-		rl.GetRemediationsByCheckName("check2"))
 }
 
 func TestResultListSort(t *testing.T) {

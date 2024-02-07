@@ -48,9 +48,9 @@ type Check interface {
 	SetPerformRemediation(flag bool)
 	AddRemediation(msg string)
 	RunCheck()
-	GetResult() *result.Result
 	ShouldPerformRemediation() bool
 	Remediate()
+	GetResult() *result.Result
 }
 
 // CheckBase provides the basic structure for all Checks.

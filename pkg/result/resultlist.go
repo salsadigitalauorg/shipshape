@@ -9,40 +9,28 @@ import (
 // ResultList is a wrapper around a list of results, providing some useful
 // methods to manipulate and use it.
 type ResultList struct {
-	RemediationPerformed         bool           `json:"remediation-performed"`
-	TotalChecks                  uint32         `json:"total-checks"`
-	TotalBreaches                uint32         `json:"total-breaches"`
-	TotalRemediations            uint32         `json:"total-remediations"`
-	TotalUnsupportedRemediations uint32         `json:"total-unsupported-remediations"`
-	CheckCountByType             map[string]int `json:"check-count-by-type"`
-	BreachCountByType            map[string]int `json:"breach-count-by-type"`
-	BreachCountBySeverity        map[string]int `json:"breach-count-by-severity"`
-	RemediationCountByType       map[string]int `json:"remediation-count-by-type"`
-	Results                      []Result       `json:"results"`
+	RemediationPerformed  bool              `json:"remediation-performed"`
+	TotalChecks           uint32            `json:"total-checks"`
+	TotalBreaches         uint32            `json:"total-breaches"`
+	RemediationTotals     map[string]uint32 `json:"remediation-totals"`
+	CheckCountByType      map[string]int    `json:"check-count-by-type"`
+	BreachCountByType     map[string]int    `json:"breach-count-by-type"`
+	BreachCountBySeverity map[string]int    `json:"breach-count-by-severity"`
+	Results               []Result          `json:"results"`
 }
 
 // Use locks to make map mutations concurrency-safe.
 var lock = sync.RWMutex{}
 
 func NewResultList(remediate bool) ResultList {
-	return ResultList{
-		RemediationPerformed:   remediate,
-		Results:                []Result{},
-		CheckCountByType:       map[string]int{},
-		BreachCountByType:      map[string]int{},
-		BreachCountBySeverity:  map[string]int{},
-		RemediationCountByType: map[string]int{},
+	rl := ResultList{
+		RemediationPerformed:  remediate,
+		Results:               []Result{},
+		CheckCountByType:      map[string]int{},
+		BreachCountByType:     map[string]int{},
+		BreachCountBySeverity: map[string]int{},
 	}
-}
-
-// Status calculates and returns the overall result of all check results.
-func (rl *ResultList) Status() Status {
-	for _, r := range rl.Results {
-		if r.Status == Fail {
-			return Fail
-		}
-	}
-	return Pass
+	return rl
 }
 
 // IncrChecks increments the total checks count & checks count by type.
@@ -64,10 +52,62 @@ func (rl *ResultList) AddResult(r Result) {
 	atomic.AddUint32(&rl.TotalBreaches, uint32(breachesIncr))
 	rl.BreachCountByType[r.CheckType] = rl.BreachCountByType[r.CheckType] + breachesIncr
 	rl.BreachCountBySeverity[r.Severity] = rl.BreachCountBySeverity[r.Severity] + breachesIncr
+}
 
-	remediationsIncr := len(r.Remediations)
-	atomic.AddUint32(&rl.TotalRemediations, uint32(remediationsIncr))
-	rl.RemediationCountByType[r.CheckType] = rl.RemediationCountByType[r.CheckType] + remediationsIncr
+// Status calculates and returns the overall result of all check results.
+func (rl *ResultList) Status() Status {
+	for _, r := range rl.Results {
+		if r.Status == Fail {
+			return Fail
+		}
+	}
+	return Pass
+}
+
+// RemediationTotalsCount calculates the total number of unsupported,
+// successful, failed and partial remediations across all checks.
+func (rl *ResultList) RemediationTotalsCount() {
+	rl.RemediationTotals = map[string]uint32{
+		"unsupported": 0,
+		"successful":  0,
+		"failed":      0,
+		"partial":     0,
+	}
+	for _, r := range rl.Results {
+		unsupported, successful, failed, partial := r.RemediationsCount()
+		rl.RemediationTotals["unsupported"] = rl.RemediationTotals["unsupported"] + unsupported
+		rl.RemediationTotals["successful"] = rl.RemediationTotals["successful"] + successful
+		rl.RemediationTotals["failed"] = rl.RemediationTotals["failed"] + failed
+		rl.RemediationTotals["partial"] = rl.RemediationTotals["partial"] + partial
+	}
+}
+
+// RemediationStatus calculates and returns the overall result of
+// remediation for all breaches.
+func (rl *ResultList) RemediationStatus() RemediationStatus {
+	if !rl.RemediationPerformed {
+		return ""
+	}
+
+	if rl.RemediationTotals["partial"] > 0 ||
+		(rl.RemediationTotals["success"] > 0 &&
+			(rl.RemediationTotals["failed"] > 0 ||
+				rl.RemediationTotals["unsupported"] > 0)) {
+		return RemediationStatusPartial
+	}
+	if rl.RemediationTotals["unsupported"] > 0 &&
+		rl.RemediationTotals["success"] == 0 &&
+		rl.RemediationTotals["failed"] == 0 &&
+		rl.RemediationTotals["partial"] == 0 {
+		return RemediationStatusNoSupport
+	}
+	if rl.RemediationTotals["failed"] > 0 &&
+		rl.RemediationTotals["success"] == 0 &&
+		rl.RemediationTotals["unsupported"] == 0 &&
+		rl.RemediationTotals["partial"] == 0 {
+		return RemediationStatusFailed
+	}
+	return RemediationStatusSuccess
 }
 
 // GetBreachesByCheckName fetches the list of failures by check name.
@@ -91,17 +131,6 @@ func (rl *ResultList) GetBreachesBySeverity(s string) []Breach {
 		}
 	}
 	return breaches
-}
-
-// GetBreachesByCheckName fetches the list of failures by check name.
-func (rl *ResultList) GetRemediationsByCheckName(cn string) []string {
-	var remediations []string
-	for _, r := range rl.Results {
-		if r.Name == cn {
-			remediations = append(remediations, r.Remediations...)
-		}
-	}
-	return remediations
 }
 
 // Sort reorders the results by name.
