@@ -24,7 +24,9 @@ func Registry(chkPkg string) {
 	importLine := fmt.Sprintf("import _ \"%s\"", pkgFullName)
 	newFileLines := []string{}
 	for i, line := range fileLines {
-		if i == 2 {
+		// Add the import line before the last line,
+		// so that the last line is always a newline.
+		if i == len(fileLines)-1 {
 			newFileLines = append(newFileLines, importLine)
 		}
 		newFileLines = append(newFileLines, line)

@@ -1,6 +1,9 @@
+# Generated files
+registry_gen.go
+pkg/result/breach_gen.go
+
 build
 dist/
 docker-compose.override.yml
 node_modules
-registry_gen.go
 venom-output
