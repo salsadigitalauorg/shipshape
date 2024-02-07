@@ -67,46 +67,66 @@ func SimpleDisplay(w *bufio.Writer) {
 
 	printRemediations := func() {
 		for _, r := range RunResultList.Results {
-			if len(r.Remediations) == 0 {
+			_, successful, _, _ := r.RemediationsCount()
+			if successful == 0 {
 				continue
 			}
 			fmt.Fprintf(w, "  ### %s\n", r.Name)
-			for _, f := range r.Remediations {
-				fmt.Fprintf(w, "     -- %s\n", f)
+			for _, b := range r.Breaches {
+				if b.GetRemediation().Status != result.RemediationStatusSuccess {
+					continue
+				}
+				for _, msg := range b.GetRemediation().Messages {
+					fmt.Fprintf(w, "     -- %s\n", msg)
+				}
 			}
 			fmt.Fprintln(w)
 		}
 	}
 
-	if RunResultList.Status() == result.Pass && int(RunResultList.TotalRemediations) == 0 {
+	if RunResultList.RemediationPerformed && RunResultList.TotalBreaches > 0 {
+		switch RunResultList.RemediationStatus() {
+		case result.RemediationStatusNoSupport:
+			fmt.Fprint(w, "Breaches were detected but none of them could be "+
+				"fixed as remediation is not supported for them yet.\n\n")
+			fmt.Fprint(w, "# Non-remediated breaches\n\n")
+		case result.RemediationStatusFailed:
+			fmt.Fprint(w, "Breaches were detected but none of them could "+
+				"be fixed as there were errors when trying to remediate.\n\n")
+			fmt.Fprint(w, "# Non-remediated breaches\n\n")
+		case result.RemediationStatusPartial:
+			fmt.Fprint(w, "Breaches were detected but not all of them could "+
+				"be fixed as they are either not supported yet or there were "+
+				"errors when trying to remediate.\n\n")
+			fmt.Fprint(w, "# Remediations\n\n")
+			printRemediations()
+			fmt.Fprint(w, "# Non-remediated breaches\n\n")
+		case result.RemediationStatusSuccess:
+			fmt.Fprintf(w, "Breaches were detected but were all fixed successfully!\n\n")
+			printRemediations()
+			w.Flush()
+			return
+		}
+	} else if RunResultList.Status() == result.Pass {
 		fmt.Fprint(w, "Ship is in top shape; no breach detected!\n")
-		w.Flush()
-		return
-	} else if RunResultList.Status() == result.Pass && int(RunResultList.TotalRemediations) > 0 {
-		fmt.Fprintf(w, "Breaches were detected but were all fixed successfully!\n\n")
-		printRemediations()
 		w.Flush()
 		return
 	}
 
-	if RunResultList.RemediationPerformed && int(RunResultList.TotalBreaches) > 0 {
-		fmt.Fprint(w, "Breaches were detected but not all of them could "+
-			"be fixed as they are either not supported yet or there were "+
-			"errors when trying to remediate.\n\n")
-		fmt.Fprint(w, "# Remediations\n\n")
-		printRemediations()
-		fmt.Fprint(w, "# Non-remediated breaches\n\n")
-	} else if !RunResultList.RemediationPerformed {
+	if !RunResultList.RemediationPerformed {
 		fmt.Fprint(w, "# Breaches were detected\n\n")
 	}
 
 	for _, r := range RunResultList.Results {
-		if len(r.Breaches) == 0 {
+		if len(r.Breaches) == 0 || r.RemediationStatus == result.RemediationStatusSuccess {
 			continue
 		}
 		fmt.Fprintf(w, "  ### %s\n", r.Name)
-		for _, f := range r.Breaches {
-			fmt.Fprintf(w, "     -- %s\n", f)
+		for _, b := range r.Breaches {
+			if b.GetRemediation().Status == result.RemediationStatusSuccess {
+				continue
+			}
+			fmt.Fprintf(w, "     -- %s\n", b)
 		}
 		fmt.Fprintln(w)
 	}

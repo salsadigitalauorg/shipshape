@@ -90,19 +90,19 @@ func (rl *ResultList) RemediationStatus() RemediationStatus {
 	}
 
 	if rl.RemediationTotals["partial"] > 0 ||
-		(rl.RemediationTotals["success"] > 0 &&
+		(rl.RemediationTotals["successful"] > 0 &&
 			(rl.RemediationTotals["failed"] > 0 ||
 				rl.RemediationTotals["unsupported"] > 0)) {
 		return RemediationStatusPartial
 	}
 	if rl.RemediationTotals["unsupported"] > 0 &&
-		rl.RemediationTotals["success"] == 0 &&
+		rl.RemediationTotals["successful"] == 0 &&
 		rl.RemediationTotals["failed"] == 0 &&
 		rl.RemediationTotals["partial"] == 0 {
 		return RemediationStatusNoSupport
 	}
 	if rl.RemediationTotals["failed"] > 0 &&
-		rl.RemediationTotals["success"] == 0 &&
+		rl.RemediationTotals["successful"] == 0 &&
 		rl.RemediationTotals["unsupported"] == 0 &&
 		rl.RemediationTotals["partial"] == 0 {
 		return RemediationStatusFailed
