@@ -58,27 +58,26 @@ func TestJsonCheckMerge(t *testing.T) {
 	assertions.EqualError(err, "can only merge checks with the same name")
 }
 
-func TestJsonCheckRunCheck(t *testing.T) {
+func MockJsonCheck() JsonCheck {
+	return JsonCheck{
+		KeyValues: []KeyValue{
+			{
+				KeyValue: yaml.KeyValue{
+					Key:   "$.license",
+					Value: "MIT",
+				},
+				DisallowedValues: nil,
+				AllowedValues:    nil,
+			},
+		},
+	}
+}
+
+func TestJsonCheckFetchData(t *testing.T) {
 	assertions := assert.New(t)
 
-	mockCheck := func() JsonCheck {
-		return JsonCheck{
-			KeyValues: []KeyValue{
-				{
-					KeyValue: yaml.KeyValue{
-						Key:   "$.license",
-						Value: "MIT",
-					},
-					DisallowedValues: nil,
-					AllowedValues:    nil,
-				},
-			},
-		}
-	}
-
-	c := mockCheck()
+	c := MockJsonCheck()
 	c.FetchData()
-	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
@@ -93,11 +92,10 @@ func TestJsonCheckRunCheck(t *testing.T) {
 
 	// Non-existent file.
 	config.ProjectDir = "testdata"
-	c = mockCheck()
+	c = MockJsonCheck()
 	c.Init(Json)
 	c.File = "non-existent.json"
 	c.FetchData()
-	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
@@ -113,34 +111,18 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	)
 
 	// Non-existent file with ignore missing.
-	c = mockCheck()
+	c = MockJsonCheck()
 	c.File = "non-existent.json"
 	c.IgnoreMissing = &cTrue
 	c.FetchData()
-	assertions.Equal(result.Pass, c.Result.Status)
 	assertions.Empty(c.Result.Breaches)
 	assertions.EqualValues([]string{"File testdata/non-existent.json does not exist"}, c.Result.Passes)
 
-	// Single file.
-	c = mockCheck()
-	c.File = "composer.map.json"
-	c.FetchData()
-	// Should not fail yet.
-	assertions.NotEqual(result.Fail, c.Result.Status)
-	assertions.Empty(c.Result.Breaches)
-	assertions.True(c.HasData(false))
-	c.UnmarshalDataMap()
-	c.RunCheck()
-	assertions.Equal(result.Pass, c.Result.Status)
-	assertions.Empty(c.Result.Breaches)
-	assertions.EqualValues([]string{"[composer.map.json] '$.license' equals 'MIT'"}, c.Result.Passes)
-
 	// Bad File pattern.
-	c = mockCheck()
+	c = MockJsonCheck()
 	c.Pattern = "*.composer.json"
 	c.Path = ""
 	c.FetchData()
-	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
@@ -154,10 +136,9 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	)
 
 	// File pattern with no matching files.
-	c = mockCheck()
+	c = MockJsonCheck()
 	c.Pattern = "composer*.json"
 	c.FetchData()
-	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Passes)
 	assertions.ElementsMatch(
 		[]result.Breach{
@@ -171,20 +152,34 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	)
 
 	// File pattern with no matching files, ignoring missing.
-	c = mockCheck()
+	c = MockJsonCheck()
 	c.Pattern = "composer*.json"
 	c.IgnoreMissing = &cTrue
 	c.FetchData()
-	assertions.Equal(result.Pass, c.Result.Status)
 	assertions.Empty(c.Result.Breaches)
 	assertions.EqualValues([]string{"no matching config files found"}, c.Result.Passes)
+}
+
+func TestJsonCheckRunCheck(t *testing.T) {
+	assertions := assert.New(t)
+
+	// Single file.
+	c := MockJsonCheck()
+	c.File = "composer.map.json"
+	c.FetchData()
+	assertions.Empty(c.Result.Breaches)
+	assertions.True(c.HasData(false))
+	c.UnmarshalDataMap()
+	c.RunCheck()
+	assertions.Equal(result.Pass, c.Result.Status)
+	assertions.Empty(c.Result.Breaches)
+	assertions.EqualValues([]string{"[composer.map.json] '$.license' equals 'MIT'"}, c.Result.Passes)
 
 	// Correct single file pattern & value.
-	c = mockCheck()
+	c = MockJsonCheck()
 	c.Pattern = "composer.map.json"
 	c.Path = "dir/subdir"
 	c.FetchData()
-	assertions.NotEqual(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Breaches)
 	c.UnmarshalDataMap()
 	c.RunCheck()
@@ -192,10 +187,9 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	assertions.Empty(c.Result.Breaches)
 
 	// Recursive file lookup.
-	c = mockCheck()
+	c = MockJsonCheck()
 	c.Pattern = ".*.*.json"
 	c.FetchData()
-	assertions.NotEqual(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Breaches)
 	c.UnmarshalDataMap()
 	c.RunCheck()
@@ -252,7 +246,6 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	}
 	c.File = "composer.map.json"
 	c.FetchData()
-	assertions.NotEqual(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Breaches)
 	assertions.True(c.HasData(false))
 	c.UnmarshalDataMap()
@@ -286,7 +279,6 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	}
 	c.File = "composer.map.json"
 	c.FetchData()
-	assertions.NotEqual(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Breaches)
 	assertions.True(c.HasData(false))
 	c.UnmarshalDataMap()
@@ -320,7 +312,6 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	}
 	c.File = "composer.map.json"
 	c.FetchData()
-	assertions.NotEqual(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Breaches)
 	assertions.True(c.HasData(false))
 	c.UnmarshalDataMap()
@@ -349,7 +340,6 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	}
 	c.File = "composer.map.json"
 	c.FetchData()
-	assertions.NotEqual(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Breaches)
 	assertions.True(c.HasData(false))
 	c.UnmarshalDataMap()
@@ -382,7 +372,6 @@ func TestJsonCheckRunCheck(t *testing.T) {
 	}
 	c.File = "composer.map.json"
 	c.FetchData()
-	assertions.NotEqual(result.Fail, c.Result.Status)
 	assertions.Empty(c.Result.Breaches)
 	assertions.True(c.HasData(false))
 	c.UnmarshalDataMap()

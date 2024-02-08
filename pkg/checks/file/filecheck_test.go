@@ -55,6 +55,7 @@ func TestFileCheckRunCheck(t *testing.T) {
 	c.Name = "filecheck1"
 	c.Init(File)
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(
@@ -75,6 +76,7 @@ func TestFileCheckRunCheck(t *testing.T) {
 	c.Name = "filecheck2"
 	c.Init(File)
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(

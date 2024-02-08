@@ -128,8 +128,6 @@ func TestFetchDataBinNotExists(t *testing.T) {
 		Paths:  []string{dir},
 	}
 	c.FetchData()
-
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]result.Breach{&result.ValueBreach{
 			BreachType: "value",
@@ -175,7 +173,6 @@ func TestHasData(t *testing.T) {
 		assert := assert.New(t)
 		c := PhpStanCheck{}
 		assert.False(c.HasData(true))
-		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
 			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
@@ -227,7 +224,6 @@ func TestUnmarshalDataMap(t *testing.T) {
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]result.Breach{&result.ValueBreach{
 			BreachType: "value",
@@ -255,6 +251,7 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues([]string{"no error found"}, c.Result.Passes)
 
@@ -268,6 +265,7 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]result.Breach{&result.KeyValueBreach{
@@ -288,6 +286,7 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]result.Breach{&result.ValueBreach{

@@ -32,7 +32,6 @@ func TestJsonCheckUnmarshalDataMap(t *testing.T) {
 	}
 
 	c.UnmarshalDataMap()
-	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.EqualValues(0, len(c.Result.Passes))
 	assertions.ElementsMatch(
 		[]result.Breach{

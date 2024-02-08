@@ -52,7 +52,6 @@ foo:
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.ElementsMatch([]result.Breach{&result.ValueBreach{
 		BreachType: result.BreachTypeValue,
@@ -91,6 +90,7 @@ foo:
 		},
 	}
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch([]result.Breach{&result.ValueBreach{
@@ -270,7 +270,6 @@ func TestYamlBase(t *testing.T) {
 
 	c := YamlBase{}
 	c.HasData(true)
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch([]result.Breach{&result.ValueBreach{
 		BreachType: result.BreachTypeValue,
 		Value:      "no data available"}},
@@ -314,6 +313,7 @@ notification:
 		},
 	}
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.ElementsMatch([]result.Breach{&result.KeyValueBreach{
@@ -334,6 +334,7 @@ notification:
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.ElementsMatch([]result.Breach{&result.KeyValueBreach{
@@ -359,6 +360,7 @@ notification:
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Breaches))
 	assert.EqualValues(
@@ -393,6 +395,7 @@ efgh:
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.ElementsMatch([]result.Breach{&result.KeyValuesBreach{
@@ -432,6 +435,7 @@ foo:
 	c := mockCheck()
 	c.UnmarshalDataMap()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
 	assert.ElementsMatch([]result.Breach{&result.KeyValuesBreach{
@@ -446,6 +450,7 @@ foo:
 	c.Values[0].Disallowed = []string{"e"}
 	c.UnmarshalDataMap()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Breaches))
 	assert.EqualValues([]string{"[data] no disallowed 'foo'"}, c.Result.Passes)

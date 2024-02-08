@@ -29,29 +29,28 @@ func TestYamlLintMerge(t *testing.T) {
 	}, c)
 }
 
-func TestYamlLintCheck(t *testing.T) {
+func MockYamlLintCheck(file string, files []string, ignoreMissing bool) YamlLintCheck {
+	return YamlLintCheck{
+		YamlCheck: YamlCheck{
+			YamlBase: YamlBase{
+				CheckBase: config.CheckBase{
+					Name:    "Test yaml lint",
+					DataMap: map[string][]byte{},
+				},
+			},
+			File:          file,
+			Files:         files,
+			IgnoreMissing: &ignoreMissing,
+		},
+	}
+}
+
+func TestYamlLintCheckFetchData(t *testing.T) {
 	assert := assert.New(t)
 
-	mockCheck := func(file string, files []string, ignoreMissing bool) YamlLintCheck {
-		return YamlLintCheck{
-			YamlCheck: YamlCheck{
-				YamlBase: YamlBase{
-					CheckBase: config.CheckBase{
-						Name:    "Test yaml lint",
-						DataMap: map[string][]byte{},
-					},
-				},
-				File:          file,
-				Files:         files,
-				IgnoreMissing: &ignoreMissing,
-			},
-		}
-	}
-
-	c := mockCheck("", []string{}, false)
+	c := MockYamlLintCheck("", []string{}, false)
 	c.Init(YamlLint)
 	c.FetchData()
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
 		[]result.Breach{
@@ -67,30 +66,27 @@ func TestYamlLintCheck(t *testing.T) {
 		c.Result.Breaches,
 	)
 
-	c = mockCheck("non-existent-file.yml", []string{}, true)
+	c = MockYamlLintCheck("non-existent-file.yml", []string{}, true)
 	c.Init(YamlLint)
 	c.FetchData()
-	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Breaches)
 	assert.ElementsMatch(
 		[]string{"File testdata/non-existent-file.yml does not exist"},
 		c.Result.Passes,
 	)
 
-	c = mockCheck("", []string{"non-existent-file.yml", "yaml-invalid.yml"}, true)
+	c = MockYamlLintCheck("", []string{"non-existent-file.yml", "yaml-invalid.yml"}, true)
 	c.Init(YamlLint)
 	c.FetchData()
-	assert.NotEqual(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Breaches)
 	assert.ElementsMatch([]string{
 		"File testdata/non-existent-file.yml does not exist",
 		"File testdata/yaml-invalid.yml does not exist",
 	}, c.Result.Passes)
 
-	c = mockCheck("non-existent-file.yml", []string{}, false)
+	c = MockYamlLintCheck("non-existent-file.yml", []string{}, false)
 	c.Init(YamlLint)
 	c.FetchData()
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
 		[]result.Breach{
@@ -106,10 +102,9 @@ func TestYamlLintCheck(t *testing.T) {
 		c.Result.Breaches,
 	)
 
-	c = mockCheck("", []string{"non-existent-file.yml", "yamllint-invalid.yml"}, false)
+	c = MockYamlLintCheck("", []string{"non-existent-file.yml", "yamllint-invalid.yml"}, false)
 	c.Init(YamlLint)
 	c.FetchData()
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
 		[]result.Breach{
@@ -124,14 +119,19 @@ func TestYamlLintCheck(t *testing.T) {
 		},
 		c.Result.Breaches,
 	)
+}
 
-	c = mockCheck("", []string{}, false)
+func TestYamlLintCheckUnmarshalDataMap(t *testing.T) {
+	assert := assert.New(t)
+
+	c := MockYamlLintCheck("", []string{}, false)
 	c.Init(YamlLint)
 	c.DataMap["yaml-invalid.yml"] = []byte(`
 this: is invalid
 this: yaml
 `)
 	c.UnmarshalDataMap()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
@@ -148,13 +148,14 @@ this: yaml
 		c.Result.Breaches,
 	)
 
-	c = mockCheck("", []string{}, false)
+	c = MockYamlLintCheck("", []string{}, false)
 	c.Init(YamlLint)
 	c.DataMap["yaml-valid.yml"] = []byte(`
 this: is
 valid: yaml
 `)
 	c.UnmarshalDataMap()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Pass, c.Result.Status)
 	assert.Empty(c.Result.Breaches)
 	assert.ElementsMatch(
@@ -170,6 +171,7 @@ foo: bar
 - item 1
 `)}
 		c.UnmarshalDataMap()
+		c.Result.DetermineResultStatus(false)
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch(
@@ -193,6 +195,7 @@ foo: bar
     foo: bar
 `)}
 		c.UnmarshalDataMap()
+		c.Result.DetermineResultStatus(false)
 		assert.Equal(result.Pass, c.Result.Status)
 		assert.Empty(c.Result.Breaches)
 		assert.ElementsMatch(

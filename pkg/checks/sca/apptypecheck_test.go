@@ -24,6 +24,7 @@ func TestIsDrupalCheck(t *testing.T) {
 	c.Dependencies["drupal"] = []string{"drupal/core-recommended"}
 
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]result.Breach{&result.KeyValueBreach{
@@ -64,6 +65,7 @@ func TestIsWordpressCheck(t *testing.T) {
 	c.Dirs["wordpress"] = []string{"wp-admin", "wp-content", "wp-includes"}
 
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]result.Breach{&result.KeyValueBreach{
@@ -90,6 +92,7 @@ func TestIsSymfonyCheck(t *testing.T) {
 	c.Dependencies["symfony"] = []string{"symfony/runtime", "symfony/symfony", "symfony/framework"}
 
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]result.Breach{&result.KeyValueBreach{
@@ -116,6 +119,7 @@ func TestIsLaravelCheck(t *testing.T) {
 	c.Dependencies["laravel"] = []string{"laravel/framework", "laravel/tinker"}
 
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]result.Breach{&result.KeyValueBreach{

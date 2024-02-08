@@ -53,6 +53,7 @@ func TestInvalidDockerfileCheck(t *testing.T) {
 		Paths:   []string{"./fixtures/compose-dockerfile"},
 	}
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]result.Breach{&result.KeyValueBreach{
@@ -86,6 +87,7 @@ func TestInvalidDockerfileImageVersion(t *testing.T) {
 		Paths:   []string{"./fixtures/compose-dockerfile"},
 	}
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]result.Breach{&result.KeyValueBreach{
@@ -157,6 +159,7 @@ func TestInvalidImageCheck(t *testing.T) {
 		Paths: []string{"./fixtures/compose-image"},
 	}
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
 		[]result.Breach{&result.KeyValueBreach{
@@ -180,6 +183,7 @@ func TestInvalidImageVersions(t *testing.T) {
 		Paths: []string{"./fixtures/compose-image"},
 	}
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(
 		[]result.Breach{
