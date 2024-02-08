@@ -198,11 +198,14 @@ func ProcessCheck(rl *result.ResultList, c config.Check) {
 	if len(c.GetResult().Breaches) == 0 && len(c.GetResult().Passes) == 0 {
 		contextLogger.Print("running check")
 		c.RunCheck()
-		if len(c.GetResult().Breaches) > 0 && c.ShouldPerformRemediation() {
-			contextLogger.Print("performing remediation")
-			c.Remediate()
-		}
+	}
+	if len(c.GetResult().Breaches) > 0 && c.ShouldPerformRemediation() {
+		contextLogger.Print("performing remediation")
+		c.Remediate()
 	}
 	c.GetResult().DetermineResultStatus(c.ShouldPerformRemediation())
+	contextLogger.
+		WithFields(log.Fields{"result": c.GetResult()}).
+		Print("check processed")
 	rl.AddResult(*c.GetResult())
 }

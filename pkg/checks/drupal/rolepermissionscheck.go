@@ -3,10 +3,9 @@ package drupal
 import (
 	"encoding/json"
 	"errors"
-	"io/fs"
-	"os/exec"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -32,6 +31,16 @@ func (c *RolePermissionsCheck) Init(ct config.CheckType) {
 	c.RequiresDb = true
 }
 
+// Merge implementation for RolePermissionsCheck check.
+func (c *RolePermissionsCheck) Merge(mergeCheck config.Check) error {
+	return nil
+}
+
+// HasData implementation for RolePermissionsCheck check.
+func (c *RolePermissionsCheck) HasData(failCheck bool) bool {
+	return true
+}
+
 // GetRolePermissions get the permissions of the role.
 func (c *RolePermissionsCheck) GetRolePermissions() []string {
 	// Command: drush role:list --filter=id=anonymous --fields=perms --format=json
@@ -39,14 +48,8 @@ func (c *RolePermissionsCheck) GetRolePermissions() []string {
 
 	drushOutput, err := Drush(c.DrushPath, c.Alias, cmd).Exec()
 
-	var pathError *fs.PathError
-	if err != nil && errors.As(err, &pathError) {
-		c.AddBreach(&result.ValueBreach{
-			Value: pathError.Path + ": " + pathError.Err.Error()})
-	} else if err != nil {
-		msg := string(err.(*exec.ExitError).Stderr)
-		c.AddBreach(&result.ValueBreach{
-			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
+	if err != nil {
+		c.AddBreach(&result.ValueBreach{Value: command.GetMsgFromCommandError(err)})
 	} else {
 		// Unmarshal role:list JSON.
 		// {
@@ -71,16 +74,6 @@ func (c *RolePermissionsCheck) GetRolePermissions() []string {
 		}
 	}
 
-	return nil
-}
-
-// HasData implementation for RolePermissionsCheck check.
-func (c *RolePermissionsCheck) HasData(failCheck bool) bool {
-	return true
-}
-
-// Merge implementation for RolePermissionsCheck check.
-func (c *RolePermissionsCheck) Merge(mergeCheck config.Check) error {
 	return nil
 }
 

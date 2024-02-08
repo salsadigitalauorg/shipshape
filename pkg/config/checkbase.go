@@ -116,7 +116,11 @@ func (c *CheckBase) ShouldPerformRemediation() bool {
 // Remediate should implement the logic to fix the breach(es).
 // Any type or custom struct can be used for the breach; it just needs to be
 // cast to the required type before being used.
-func (c *CheckBase) Remediate() {}
+func (c *CheckBase) Remediate() {
+	for _, b := range c.Result.Breaches {
+		b.SetRemediation(result.RemediationStatusNoSupport, "")
+	}
+}
 
 // GetResult returns a ref of the result.
 func (c *CheckBase) GetResult() *result.Result {
