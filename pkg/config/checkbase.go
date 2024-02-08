@@ -76,7 +76,6 @@ func (c *CheckBase) UnmarshalDataMap() {}
 
 // AddBreach appends a Breach to the Result and sets the Check as Fail.
 func (c *CheckBase) AddBreach(b result.Breach) {
-	c.Result.Status = result.Fail
 	b.SetCommonValues(string(c.cType), c.Name, string(c.Severity))
 	c.Result.Breaches = append(
 		c.Result.Breaches,
@@ -102,9 +101,9 @@ func (c *CheckBase) SetPerformRemediation(flag bool) {
 	c.PerformRemediation = flag
 }
 
-// AddWarning appends a Warning message to the result.
+// AddRemediation appends a Remediation message to the result.
 func (c *CheckBase) AddRemediation(msg string) {
-	c.Result.Remediations = append(c.Result.Remediations, msg)
+	// c.Result.Remediations = append(c.Result.Remediations, msg)
 }
 
 // RunCheck contains the core logic for running the check,
@@ -112,11 +111,6 @@ func (c *CheckBase) AddRemediation(msg string) {
 // This is where c.Result should be populated.
 func (c *CheckBase) RunCheck() {
 	c.AddBreach(&result.ValueBreach{Value: "not implemented"})
-}
-
-// GetResult returns a ref of the result.
-func (c *CheckBase) GetResult() *result.Result {
-	return &c.Result
 }
 
 // ShouldPerformRemediation returns whether to remediate or not.
@@ -128,3 +122,8 @@ func (c *CheckBase) ShouldPerformRemediation() bool {
 // Any type or custom struct can be used for the breach; it just needs to be
 // cast to the required type before being used.
 func (c *CheckBase) Remediate() {}
+
+// GetResult returns a ref of the result.
+func (c *CheckBase) GetResult() *result.Result {
+	return &c.Result
+}

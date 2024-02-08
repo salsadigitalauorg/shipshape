@@ -60,13 +60,25 @@ func TestHasData(t *testing.T) {
 
 	c := CheckBase{Name: "foo"}
 	assert.False(c.HasData(false))
+	assert.Empty(c.Result.Breaches)
+	c.Result.DetermineResultStatus(false)
 	assert.NotEqual(result.Fail, c.Result.Status)
 
 	assert.False(c.HasData(true))
+	assert.EqualValues([]result.Breach{
+		&result.ValueBreach{
+			BreachType: "value",
+			CheckName:  "foo",
+			Value:      "no data available",
+		},
+	}, c.Result.Breaches)
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 
 	c = CheckBase{Name: "foo", DataMap: map[string][]byte{"foo": []byte(`bar`)}}
 	assert.True(c.HasData(true))
+	assert.Empty(c.Result.Breaches)
+	c.Result.DetermineResultStatus(false)
 	assert.NotEqual(result.Fail, c.Result.Status)
 }
 
@@ -141,8 +153,9 @@ func TestCheckBaseRunCheck(t *testing.T) {
 	c := CheckBase{}
 	c.FetchData()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.ElementsMatch(
+	assert.EqualValues(
 		[]result.Breach{&result.ValueBreach{
 			BreachType: result.BreachTypeValue,
 			Value:      "not implemented",
