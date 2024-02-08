@@ -134,6 +134,10 @@ checks:
 }
 
 func TestRunChecks(t *testing.T) {
+	currLogOut := logrus.StandardLogger().Out
+	defer logrus.SetOutput(currLogOut)
+	logrus.SetOutput(io.Discard)
+
 	assert := assert.New(t)
 
 	test1stCheck := &testchecks.TestCheck1Check{}
@@ -149,13 +153,14 @@ func TestRunChecks(t *testing.T) {
 		},
 	}
 
-	rl := RunChecks()
-	assert.Equal(uint32(2), rl.TotalChecks)
-	assert.Equal(uint32(2), rl.TotalBreaches)
+	RunResultList = result.NewResultList(false)
+	RunChecks()
+	assert.Equal(uint32(2), RunResultList.TotalChecks)
+	assert.Equal(uint32(2), RunResultList.TotalBreaches)
 	assert.EqualValues(map[string]int{
 		string(testchecks.TestCheck1): 1,
 		string(testchecks.TestCheck2): 1,
-	}, rl.BreachCountByType)
+	}, RunResultList.BreachCountByType)
 	assert.ElementsMatch([]result.Result{
 		{
 			Name:      "test1stcheck",
@@ -187,5 +192,5 @@ func TestRunChecks(t *testing.T) {
 			}},
 			Warnings: []string(nil),
 		}},
-		rl.Results)
+		RunResultList.Results)
 }

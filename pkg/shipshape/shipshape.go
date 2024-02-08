@@ -161,7 +161,7 @@ func ParseConfigData(configData [][]byte) error {
 	return nil
 }
 
-func RunChecks() result.ResultList {
+func RunChecks() {
 	log.Print("preparing concurrent check runs")
 	var wg sync.WaitGroup
 	for ct, checks := range RunConfig.Checks {
@@ -178,7 +178,7 @@ func RunChecks() result.ResultList {
 	}
 	wg.Wait()
 	RunResultList.Sort()
-	return RunResultList
+	RunResultList.RemediationTotalsCount()
 }
 
 func ProcessCheck(rl *result.ResultList, c config.Check) {
@@ -198,16 +198,11 @@ func ProcessCheck(rl *result.ResultList, c config.Check) {
 	if len(c.GetResult().Breaches) == 0 && len(c.GetResult().Passes) == 0 {
 		contextLogger.Print("running check")
 		c.RunCheck()
-		if len(c.GetResult().Breaches) > 0 {
-			if !c.ShouldPerformRemediation() {
-				c.GetResult().Status = result.Fail
-			} else {
-				c.Remediate()
-			}
-		} else {
-			c.GetResult().Status = result.Pass
+		if len(c.GetResult().Breaches) > 0 && c.ShouldPerformRemediation() {
+			contextLogger.Print("performing remediation")
+			c.Remediate()
 		}
-		c.GetResult().Sort()
 	}
+	c.GetResult().DetermineResultStatus(c.ShouldPerformRemediation())
 	rl.AddResult(*c.GetResult())
 }
