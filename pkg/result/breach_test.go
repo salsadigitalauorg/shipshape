@@ -126,6 +126,8 @@ func (b bogusBreach) String() string {
 	return ""
 }
 
+func (b bogusBreach) SetRemediation(status RemediationStatus, msg string) {}
+
 func TestBreachSetCommonValues(t *testing.T) {
 	assert := assert.New(t)
 

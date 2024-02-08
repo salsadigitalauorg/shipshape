@@ -13,6 +13,7 @@ type Breach interface {
 	GetSeverity() string
 	GetType() BreachType
 	SetCommonValues(checkType string, checkName string, severity string)
+	SetRemediation(status RemediationStatus, msg string)
 	String() string
 }
 

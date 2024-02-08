@@ -55,6 +55,13 @@ func (b *{{.BreachType}}Breach) SetCommonValues(checkType string, checkName stri
 	b.CheckName = checkName
 	b.Severity = severity
 }
+
+func (b *{{.BreachType}}Breach) SetRemediation(status RemediationStatus, msg string) {
+	b.Remediation.Status = status
+	if msg != "" {
+		b.Remediation.Messages = []string{msg}
+	}
+}
 `
 	tmpl, err := template.New("breachTypeFuncs").Parse(tmplStr)
 	if err != nil {
