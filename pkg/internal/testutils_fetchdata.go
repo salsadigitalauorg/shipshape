@@ -20,11 +20,9 @@ type FetchDataTest struct {
 	// Func to run before running the check
 	PreFetch func(t *testing.T)
 	// Expected values after running the check.
-	ExpectPasses     []string
-	ExpectBreaches   []result.Breach
-	ExpectStatusFail bool
-	ExpectStatusPass bool
-	ExpectDataMap    map[string][]byte
+	ExpectPasses   []string
+	ExpectBreaches []result.Breach
+	ExpectDataMap  map[string][]byte
 }
 
 // TestFetchData can be used to run test scenarios in test tables.
@@ -39,15 +37,6 @@ func TestFetchData(t *testing.T, ctest FetchDataTest) {
 	ctest.Check.FetchData()
 
 	r := ctest.Check.GetResult()
-
-	if ctest.ExpectStatusFail {
-		assert.Equal(result.Fail, r.Status)
-	} else if ctest.ExpectStatusPass {
-		assert.Equal(result.Pass, r.Status)
-	} else {
-		assert.NotEqual(result.Fail, r.Status)
-		assert.NotEqual(result.Pass, r.Status)
-	}
 
 	if len(ctest.ExpectPasses) > 0 {
 		assert.ElementsMatch(ctest.ExpectPasses, r.Passes)

@@ -42,6 +42,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 	t.Run("failOnNoRoleProvided", func(t *testing.T) {
 		c := drupal.RolePermissionsCheck{}
 		c.RunCheck()
+		c.Result.DetermineResultStatus(false)
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.ElementsMatch(
 			[]result.Breach{&result.ValueBreach{
@@ -56,6 +57,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 			RoleId: "authenticated",
 		}
 		c.RunCheck()
+		c.Result.DetermineResultStatus(false)
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.ElementsMatch(
 			[]result.Breach{&result.ValueBreach{
@@ -77,6 +79,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 			nil,
 		)
 		c.RunCheck()
+		c.Result.DetermineResultStatus(false)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
 			[]result.Breach{&result.ValueBreach{
@@ -101,6 +104,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 			nil,
 		)
 		c.RunCheck()
+		c.Result.DetermineResultStatus(false)
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
@@ -142,6 +146,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 			nil,
 		)
 		c.RunCheck()
+		c.Result.DetermineResultStatus(false)
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
@@ -197,6 +202,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 			nil,
 		)
 		c.RunCheck()
+		c.Result.DetermineResultStatus(false)
 		assertions.Equal(result.Pass, c.Result.Status)
 		assertions.Empty(c.Result.Breaches)
 	})

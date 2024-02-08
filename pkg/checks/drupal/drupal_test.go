@@ -265,7 +265,6 @@ func TestCheckModulesInYaml(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"some required modules are enabled: block",
 		"some disallowed modules are disabled: views_ui",
@@ -304,7 +303,6 @@ module:
 	}
 	c.UnmarshalDataMap()
 	CheckModulesInYaml(&c, FileModule, "shipshape.extension.yml", required, disallowed)
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(c.Result.Passes, []string{
 		"some required modules are enabled: block",
 		"some disallowed modules are disabled: field_ui",

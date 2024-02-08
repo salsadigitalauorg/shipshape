@@ -90,14 +90,11 @@ func (c *DbPermissionsCheck) Remediate() {
 			c.DrushPath, c.Alias,
 			[]string{"role:perm:remove", b.Key, strings.Join(b.Values, ",")}).Exec()
 		if err != nil {
-			c.AddBreach(&result.KeyValueBreach{
-				KeyLabel:   "role",
-				Key:        b.Key,
-				ValueLabel: "failed to fix disallowed permissions due to error",
-				Value:      command.GetMsgFromCommandError(err),
-			})
+			b.SetRemediation(result.RemediationStatusFailed, fmt.Sprintf(
+				"failed to fix disallowed permissions for role '%s' due to error: %s",
+				b.Key, command.GetMsgFromCommandError(err)))
 		} else {
-			c.AddRemediation(fmt.Sprintf(
+			b.SetRemediation(result.RemediationStatusSuccess, fmt.Sprintf(
 				"[%s] fixed disallowed permissions: [%s]",
 				b.Key, strings.Join(b.Values, ", ")))
 		}

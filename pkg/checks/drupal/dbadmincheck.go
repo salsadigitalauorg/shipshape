@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -146,15 +147,14 @@ func (c *AdminUserCheck) Remediate() {
 		if !ok {
 			continue
 		}
+
 		_, err := Drush(c.DrushPath, c.Alias, []string{"config:set", "user.role." + b.Value, "is_admin", "0"}).Exec()
 		if err != nil {
-			c.AddBreach(&result.KeyValueBreach{
-				Key:        "failed to set is_admin to false",
-				ValueLabel: "role",
-				Value:      b.Value,
-			})
+			b.SetRemediation(result.RemediationStatusFailed, fmt.Sprintf(
+				"failed to set is_admin to false for role '%s' due to error: %s",
+				b.Value, command.GetMsgFromCommandError(err)))
 		} else {
-			c.AddRemediation(fmt.Sprintf(
+			b.SetRemediation(result.RemediationStatusSuccess, fmt.Sprintf(
 				"Fixed disallowed admin setting for role [%s]", b.Value))
 		}
 	}

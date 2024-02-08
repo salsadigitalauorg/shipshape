@@ -77,14 +77,12 @@ func (c *ForbiddenUserCheck) Remediate() {
 
 		_, err := Drush(c.DrushPath, c.Alias, []string{"user:block", "--uid=" + c.UserId}).Exec()
 		if err != nil {
-			c.AddBreach(&result.KeyValueBreach{
-				KeyLabel:   "user",
-				Key:        c.UserId,
-				ValueLabel: "error blocking forbidden user",
-				Value:      command.GetMsgFromCommandError(err),
-			})
+			b.SetRemediation(result.RemediationStatusFailed, fmt.Sprintf(
+				"error blocking forbidden user '%s' due to error: %s",
+				c.UserId, command.GetMsgFromCommandError(err)))
 		} else {
-			c.AddRemediation(fmt.Sprintf("Blocked the forbidden user [%s]", c.UserId))
+			b.SetRemediation(result.RemediationStatusSuccess, fmt.Sprintf(
+				"Blocked the forbidden user [%s]", c.UserId))
 		}
 	}
 

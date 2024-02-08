@@ -46,7 +46,6 @@ type Check interface {
 	AddPass(msg string)
 	AddWarning(msg string)
 	SetPerformRemediation(flag bool)
-	AddRemediation(msg string)
 	RunCheck()
 	ShouldPerformRemediation() bool
 	Remediate()

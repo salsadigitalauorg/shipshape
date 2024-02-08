@@ -81,6 +81,7 @@ node:
 		c.Init(DbModule)
 		c.UnmarshalDataMap()
 		c.RunCheck()
+		c.Result.DetermineResultStatus(false)
 		return c
 	}
 

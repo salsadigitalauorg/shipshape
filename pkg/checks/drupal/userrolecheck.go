@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -70,7 +71,7 @@ func (c *UserRoleCheck) FetchData() {
 	var err error
 
 	userIds := c.getUserIds()
-	if c.Result.Status == result.Fail {
+	if len(c.Result.Breaches) > 0 {
 		return
 	}
 
@@ -78,7 +79,7 @@ func (c *UserRoleCheck) FetchData() {
 	cmd := []string{"user:information", "--uid=" + userIds, "--fields=roles", "--format=json"}
 	c.DataMap["user-info"], err = Drush(c.DrushPath, c.Alias, cmd).Exec()
 	if err != nil {
-		msg := string(err.(*exec.ExitError).Stderr)
+		msg := command.GetMsgFromCommandError(err)
 		c.AddBreach(&result.ValueBreach{
 			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	}

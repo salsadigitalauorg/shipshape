@@ -61,5 +61,5 @@ func TestDrushQuery(t *testing.T) {
 
 	_, err := drupal.Drush("", "", []string{}).Query("SELECT uid FROM users")
 	assert.NoError(t, err)
-	assert.Equal(t, "vendor/drush/drush/drush sql:query SELECT uid FROM users", generatedCommand)
+	assert.Equal(t, "vendor/drush/drush/drush sql:query 'SELECT uid FROM users'", generatedCommand)
 }

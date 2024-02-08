@@ -57,7 +57,6 @@ func TestYamlCheckFetchData(t *testing.T) {
 					Value:      "no file provided",
 				},
 			},
-			ExpectStatusFail: true,
 		},
 
 		{
@@ -79,7 +78,6 @@ func TestYamlCheckFetchData(t *testing.T) {
 					Value:      "open testdata/non-existent.yml: no such file or directory",
 				},
 			},
-			ExpectStatusFail: true,
 		},
 
 		{
@@ -93,8 +91,7 @@ func TestYamlCheckFetchData(t *testing.T) {
 				File:          "non-existent.yml",
 				IgnoreMissing: &cTrue,
 			},
-			ExpectPasses:     []string{"File testdata/non-existent.yml does not exist"},
-			ExpectStatusPass: true,
+			ExpectPasses: []string{"File testdata/non-existent.yml does not exist"},
 		},
 
 		{
@@ -138,7 +135,6 @@ notification:
 					Value:      "error parsing regexp: missing argument to repetition operator: `*`",
 				},
 			},
-			ExpectStatusFail: true,
 		},
 
 		{
@@ -160,7 +156,6 @@ notification:
 					Value:      "no matching yaml files found",
 				},
 			},
-			ExpectStatusFail: true,
 		},
 
 		{
@@ -174,8 +169,7 @@ notification:
 				Pattern:       "bla.*.yml",
 				IgnoreMissing: &cTrue,
 			},
-			ExpectPasses:     []string{"no matching config files found"},
-			ExpectStatusPass: true,
+			ExpectPasses: []string{"no matching config files found"},
 		},
 
 		{

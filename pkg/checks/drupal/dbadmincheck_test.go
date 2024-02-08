@@ -50,7 +50,6 @@ func TestAdminUserFetchData(t *testing.T) {
 	t.Run("drushNotFound", func(t *testing.T) {
 		c := AdminUserCheck{}
 		c.FetchData()
-		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
 			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
@@ -70,7 +69,6 @@ func TestAdminUserFetchData(t *testing.T) {
 		)
 		c := AdminUserCheck{}
 		c.FetchData()
-		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
 			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
@@ -103,7 +101,6 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 	// Empty datamap.
 	t.Run("emptyDataMap", func(t *testing.T) {
 		c.UnmarshalDataMap()
-		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
 			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
@@ -122,7 +119,6 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 			},
 		}
 		c.UnmarshalDataMap()
-		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
 			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
@@ -161,6 +157,7 @@ func TestAdminUserRunCheck(t *testing.T) {
 				},
 				AllowedRoles: []string{"authenticated", "content-admin"},
 			},
+			ExpectStatus: result.Pass,
 		},
 
 		// Role has is_admin:true.
@@ -192,6 +189,7 @@ func TestAdminUserRunCheck(t *testing.T) {
 				},
 				AllowedRoles: []string{"anonymous", "content-admin"},
 			},
+			ExpectStatus: result.Pass,
 		},
 	}
 
@@ -226,9 +224,16 @@ func TestAdminUserRemediate(t *testing.T) {
 			Value:      "foo",
 		})
 		c.Remediate()
-		assert.EqualValues([]result.Breach{&result.ValueBreach{
-			BreachType: "value",
-			Value:      "unable to run drush command",
+		assert.EqualValues([]result.Breach{&result.KeyValueBreach{
+			BreachType: "key-value",
+			Key:        "is_admin: true",
+			ValueLabel: "role",
+			Value:      "foo",
+			Remediation: result.Remediation{
+				Status: "failed",
+				Messages: []string{"failed to set is_admin to false for role 'foo' " +
+					"due to error: unable to run drush command"},
+			},
 		}}, c.Result.Breaches)
 	})
 
@@ -237,6 +242,11 @@ func TestAdminUserRemediate(t *testing.T) {
 		command.ShellCommander = internal.ShellCommanderMaker(nil, nil, &generatedCommand)
 
 		c := AdminUserCheck{}
+		c.AddBreach(&result.KeyValueBreach{
+			Key:        "is_admin: true",
+			ValueLabel: "role",
+			Value:      "foo",
+		})
 		c.Remediate()
 		assert.Equal("vendor/drush/drush/drush config:set user.role.foo is_admin 0", generatedCommand)
 	})

@@ -1,13 +1,17 @@
 package drupal
 
 import (
+	"fmt"
 	"io/fs"
 	"os/exec"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Init implementation for the drush-based yaml check.
@@ -53,10 +57,30 @@ func (c *DrushYamlCheck) FetchData() {
 // Remediate attempts to remediate a breach by running the drush command
 // specified in the check.
 func (c *DrushYamlCheck) Remediate() {
-	_, err := Drush(c.DrushPath, c.Alias, strings.Fields(c.RemediationCommand)).Exec()
-	if err != nil {
-		c.AddBreach(&result.ValueBreach{
-			ValueLabel: c.ConfigName,
-			Value:      err.Error()})
+	for _, b := range c.Result.Breaches {
+		contextLogger := log.WithFields(log.Fields{
+			"check-type": c.GetType(),
+			"check-name": c.GetName(),
+			"breach":     b,
+		})
+		if c.RemediateCommand == "" {
+			contextLogger.Print("no remediation command specified - failing")
+			b.SetRemediation(result.RemediationStatusNoSupport, "")
+			return
+		}
+
+		contextLogger.Print("running remediation command")
+		_, err := command.ShellCommander("sh", "-c", c.RemediateCommand).Output()
+		if err != nil {
+			b.SetRemediation(result.RemediationStatusFailed, fmt.Sprintf(
+				"error running remediation command for config '%s' due to error: %s",
+				c.ConfigName, command.GetMsgFromCommandError(err)))
+		} else {
+			if c.RemediateMsg == "" {
+				c.RemediateMsg = fmt.Sprintf(
+					"remediation command for config '%s' ran successfully", c.ConfigName)
+			}
+			b.SetRemediation(result.RemediationStatusSuccess, c.RemediateMsg)
+		}
 	}
 }

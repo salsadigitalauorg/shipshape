@@ -101,11 +101,6 @@ func (c *CheckBase) SetPerformRemediation(flag bool) {
 	c.PerformRemediation = flag
 }
 
-// AddRemediation appends a Remediation message to the result.
-func (c *CheckBase) AddRemediation(msg string) {
-	// c.Result.Remediations = append(c.Result.Remediations, msg)
-}
-
 // RunCheck contains the core logic for running the check,
 // generating the result and remediating breaches.
 // This is where c.Result should be populated.
