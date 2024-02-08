@@ -1,8 +1,13 @@
 package lagoon
 
 import (
+	"bufio"
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"net/http"
 	"os"
 	"strings"
 
@@ -20,12 +25,30 @@ type Fact struct {
 	Category    string `json:"category"`
 }
 
+type ProblemSeverityRating string
+
+type Problem struct {
+	EnvironmentId     int                   `json:"environment"`
+	Identifier        string                `json:"identifier"`
+	Version           string                `json:"version,omitempty"`
+	FixedVersion      string                `json:"fixedVersion,omitempty"`
+	Source            string                `json:"source,omitempty"`
+	Service           string                `json:"service,omitempty"`
+	Data              string                `json:"data"`
+	Severity          ProblemSeverityRating `json:"severity,omitempty"`
+	SeverityScore     float64               `json:"severityScore,omitempty"`
+	AssociatedPackage string                `json:"associatedPackage,omitempty"`
+	Description       string                `json:"description,omitempty"`
+	Links             string                `json:"links,omitempty"`
+}
+
 const SourceName string = "Shipshape"
 const FactMaxValueLength int = 300
 
 var ApiBaseUrl string
 var ApiToken string
-var PushFacts bool
+var PushProblemsToInsightRemote bool
+var LagoonInsightsRemoteEndpoint string
 
 var project string
 var environment string
@@ -72,62 +95,125 @@ func GetEnvironmentIdFromEnvVars() (int, error) {
 	return q.EnvironmentByKubernetesNamespaceName.Id, nil
 }
 
-// AddFacts pushes the given facts to the Lagoon API.
-func AddFacts(facts []Fact) error {
-	MustHaveEnvVars()
+const DefaultLagoonInsightsTokenLocation = "/var/run/secrets/lagoon/dynamic/insights-token/INSIGHTS_TOKEN"
 
-	type AddFactInput struct{ Fact }
-	type AddFactsByNameInput map[string]interface{}
-
-	factsInput := []AddFactInput{}
-	for _, f := range facts {
-		factsInput = append(factsInput, AddFactInput{f})
+func GetBearerTokenFromDisk(tokenLocation string) (string, error) {
+	//first, we check that the token exists on disk
+	_, err := os.Stat(tokenLocation)
+	if err != nil {
+		return "", fmt.Errorf("Unable to load insights token from disk")
 	}
-	var m struct {
-		AddFactsByName []struct{ Id int } `graphql:"addFactsByName(input: $input)"`
-	}
-	variables := map[string]interface{}{"input": AddFactsByNameInput{
-		"project":     os.Getenv("LAGOON_PROJECT"),
-		"environment": os.Getenv("LAGOON_ENVIRONMENT"),
-		"facts":       factsInput,
-	}}
 
-	qryStr, _ := graphql.ConstructMutation(&m, variables)
-	log.WithFields(log.Fields{
-		"query":     qryStr,
-		"variables": fmt.Sprintf("%+v", variables),
-	}).Debug("executing API mutation")
-	err := Client.Mutate(context.Background(), &m, variables)
+	b, err := os.ReadFile(tokenLocation)
+	if err != nil {
+		return "", err
+	}
+	return strings.Trim(string(b), "\n"), nil
+}
+
+func ProcessResultList(w *bufio.Writer, list result.ResultList) error {
+	problems := []Problem{}
+
+	if list.TotalBreaches == 0 {
+		InitClient()
+		err := DeleteProblems()
+		if err != nil {
+			return err
+		}
+		fmt.Fprint(w, "no breach to push to Lagoon; only deleted previous problems")
+		w.Flush()
+		return nil
+	}
+
+	for iR, r := range list.Results {
+		// let's marshall the breaches, they can be attached to the problem in the data field
+		_, err := json.Marshal(r.Breaches)
+		if err != nil {
+			log.WithError(err).Fatal("Unable to marshall breach information")
+		}
+
+		breachMap := map[string]string{}
+		for iB, b := range r.Breaches {
+			breachName := fmt.Sprintf("[%d] %s", iR+iB+1, BreachFactName(b))
+			value := BreachFactValue(b)
+			if len(value) > FactMaxValueLength {
+				value = value[:FactMaxValueLength-12] + "...TRUNCATED"
+			}
+			breachMap[breachName] = value
+		}
+
+		breachMapJson, err := json.Marshal(breachMap)
+		if err != nil {
+			log.WithError(err).Fatal("Unable to write problems to Insights Remote")
+		}
+
+		problems = append(problems, Problem{
+			Identifier:        r.Name,
+			Version:           "1",
+			FixedVersion:      "",
+			Source:            "shipshape",
+			Service:           "",
+			Data:              string(breachMapJson),
+			Severity:          SeverityTranslation(config.Severity(r.Severity)),
+			SeverityScore:     0,
+			AssociatedPackage: "",
+			Description:       "",
+			Links:             "",
+		})
+	}
+
+	InitClient()
+	// first, let's try doing this via in-cluster functionality
+	bearerToken, err := GetBearerTokenFromDisk(DefaultLagoonInsightsTokenLocation)
+	if err == nil { // we have a token, and so we can proceed via the internal service call
+		err = ProblemsToInsightsRemote(problems, LagoonInsightsRemoteEndpoint, bearerToken)
+		if err != nil {
+			return err
+		}
+	} else {
+		return err
+	}
+	fmt.Fprintln(w, "successfully pushed problems to Lagoon Remote")
+	w.Flush()
+	return nil
+}
+
+func ProblemsToInsightsRemote(problems []Problem, serviceEndpoint string, bearerToken string) error {
+	bodyString, err := json.Marshal(problems)
 	if err != nil {
 		return err
+	}
+
+	req, _ := http.NewRequest(http.MethodPost, serviceEndpoint, bytes.NewBuffer(bodyString))
+	req.Header.Set("Authorization", bearerToken)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	response, err := client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode != 200 {
+		return fmt.Errorf("There was an error sending the problems to '%s' : %s\n", serviceEndpoint, response.Body)
 	}
 	return nil
 }
 
-func DeleteFacts() error {
+func DeleteProblems() error {
 	envId, err := GetEnvironmentIdFromEnvVars()
 	if err != nil {
 		return err
 	}
 	var m struct {
-		DeleteFactsFromSource string `graphql:"deleteFactsFromSource(input: {environment: $envId, source: $sourceName})"`
+		DeleteFactsFromSource string `graphql:"deleteProblemsFromSource(input: {environment: $envId, source: $sourceName, service:$service})"`
 	}
 	variables := map[string]interface{}{
 		"envId":      envId,
 		"sourceName": SourceName,
+		"service":    "",
 	}
 	return Client.Mutate(context.Background(), &m, variables)
-}
-
-// ReplaceFacts deletes all the Shipshape facts and then adds the new ones.
-func ReplaceFacts(facts []Fact) error {
-	log.Debug("deleting facts before adding new")
-	err := DeleteFacts()
-	if err != nil {
-		return err
-	}
-	log.Debug("adding new facts")
-	return AddFacts(facts)
 }
 
 func BreachFactName(b result.Breach) string {
@@ -166,4 +252,29 @@ func BreachFactValue(b result.Breach) string {
 		value = fmt.Sprintf("expected: %s, %s", expected, value)
 	}
 	return value
+}
+
+// SeverityTranslation will convert a ShipShape severity rating to a Lagoon rating
+func SeverityTranslation(ssSeverity config.Severity) ProblemSeverityRating {
+	// Currently supported severity levels in Lagoon
+	//NONE
+	//UNKNOWN
+	//NEGLIGIBLE
+	//LOW
+	//MEDIUM
+	//HIGH
+	//CRITICAL
+
+	switch ssSeverity {
+	case config.LowSeverity:
+		return "LOW"
+	case config.NormalSeverity:
+		return "MEDIUM"
+	case config.HighSeverity:
+		return "HIGH"
+	case config.CriticalSeverity:
+		return "CRITICAL"
+	}
+
+	return "UNKNOWN"
 }

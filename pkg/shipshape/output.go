@@ -2,15 +2,11 @@ package shipshape
 
 import (
 	"bufio"
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"text/tabwriter"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // TableDisplay generates the tabular output for the ResultList.
@@ -159,62 +155,5 @@ func JUnit(w *bufio.Writer) {
 	fmt.Fprint(w, xml.Header)
 	fmt.Fprint(w, string(xmlBytes))
 	fmt.Fprintln(w)
-	w.Flush()
-}
-
-// LagoonFacts outputs breaches in a format compatible with the
-// lagoon-facts-app to be consumed.
-// see https://github.com/uselagoon/lagoon-facts-app#arbitrary-facts
-func LagoonFacts(w *bufio.Writer) {
-	facts := []lagoon.Fact{}
-
-	if RunResultList.TotalBreaches == 0 {
-		if lagoon.PushFacts {
-			lagoon.InitClient()
-			err := lagoon.DeleteFacts()
-			if err != nil {
-				log.WithError(err).Fatal("failed to delete facts")
-			}
-			fmt.Fprint(w, "no breach to push to Lagoon; only deleted previous facts")
-			w.Flush()
-			return
-		}
-		fmt.Fprint(w, "[]")
-		w.Flush()
-		return
-	}
-
-	for iR, r := range RunResultList.Results {
-		for iB, b := range r.Breaches {
-			value := lagoon.BreachFactValue(b)
-			if len(value) > lagoon.FactMaxValueLength {
-				value = value[:lagoon.FactMaxValueLength-12] + "...TRUNCATED"
-			}
-			facts = append(facts, lagoon.Fact{
-				Name:        fmt.Sprintf("[%d] %s", iR+iB+1, lagoon.BreachFactName(b)),
-				Description: result.BreachGetCheckName(b),
-				Value:       value,
-				Source:      lagoon.SourceName,
-				Category:    string(result.BreachGetCheckType(b)),
-			})
-		}
-	}
-
-	if lagoon.PushFacts {
-		lagoon.InitClient()
-		err := lagoon.ReplaceFacts(facts)
-		if err != nil {
-			log.WithError(err).Fatal("failed to replace facts")
-		}
-		fmt.Fprint(w, "successfully pushed facts to the Lagoon api")
-		w.Flush()
-		return
-	}
-
-	factsBytes, err := json.Marshal(facts)
-	if err != nil {
-		log.WithError(err).Fatalf("error occurred while converting to json")
-	}
-	fmt.Fprint(w, string(factsBytes))
 	w.Flush()
 }

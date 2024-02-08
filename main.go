@@ -80,7 +80,8 @@ func main() {
 
 	determineLogLevel()
 
-	if outputFormat == "lagoon-facts" && lagoon.PushFacts {
+	// simple check to ensure we have everything we need to write to the API if required.
+	if lagoon.PushProblemsToInsightRemote {
 		if lagoonApiBaseUrl == "" {
 			log.Fatal("lagoon api base url not provided")
 		}
@@ -142,9 +143,14 @@ func main() {
 	case "simple":
 		w := bufio.NewWriter(os.Stdout)
 		shipshape.SimpleDisplay(w)
-	case "lagoon-facts":
+	}
+
+	if lagoon.PushProblemsToInsightRemote {
 		w := bufio.NewWriter(os.Stdout)
-		shipshape.LagoonFacts(w)
+		err := lagoon.ProcessResultList(w, shipshape.RunResultList)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	if shipshape.RunResultList.Status() == result.Fail && errorCodeOnFailure &&
@@ -178,11 +184,10 @@ func parseFlags() {
 	pflag.BoolVarP(&debug, "debug", "d", false, "Display debug information - equivalent to --log-level debug")
 	pflag.BoolVarP(&excludeDb, "exclude-db", "x", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
 	pflag.BoolVarP(&remediate, "remediate", "r", false, "Run remediation for supported checks")
-
-	pflag.StringVar(&lagoonApiBaseUrl, "lagoon-api-base-url", "", "Base url for the Lagoon API when requesting 'lagoon-facts' output (env: LAGOON_API_BASE_URL)")
-	pflag.StringVar(&lagoonApiToken, "lagoon-api-token", "", "Lagoon API token when requesting 'lagoon-facts' output (env: LAGOON_API_TOKEN)")
-	pflag.BoolVar(&lagoon.PushFacts, "lagoon-push-facts", false, "Push audit facts to the Lagoon API")
-
+	pflag.StringVar(&lagoonApiBaseUrl, "lagoon-api-base-url", "", "Base url for the Lagoon API when pushing problems to API (env: LAGOON_API_BASE_URL)")
+	pflag.StringVar(&lagoonApiToken, "lagoon-api-token", "", "Lagoon API token when pushing problems to API (env: LAGOON_API_TOKEN)")
+	pflag.BoolVar(&lagoon.PushProblemsToInsightRemote, "lagoon-push-problems-to-insights", false, "Push audit facts to Lagoon via Insights Remote")
+	pflag.StringVar(&lagoon.LagoonInsightsRemoteEndpoint, "lagoon-insights-remote-endpoint", "http://lagoon-remote-insights-remote.lagoon.svc/problems", "Insights Remote Problems endpoint")
 	pflag.Parse()
 
 	if displayUsage {
