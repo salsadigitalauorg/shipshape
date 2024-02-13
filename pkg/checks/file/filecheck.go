@@ -1,7 +1,6 @@
 package file
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -66,7 +65,7 @@ func (c *FileCheck) RunCheck() {
 		return
 	}
 	c.AddBreach(&result.ValueBreach{
-		ValueLabel: fmt.Sprintf("%s - illegal files found", c.Name),
-		Value:      strings.Join(files, "\n"),
+		ValueLabel: "illegal files found",
+		Value:      strings.Join(files, ","),
 	})
 }
