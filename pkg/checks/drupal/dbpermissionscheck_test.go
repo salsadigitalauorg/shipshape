@@ -7,7 +7,6 @@ import (
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
@@ -67,10 +66,11 @@ func TestDbPermissionsUnmarshalDataMap(t *testing.T) {
 	t.Run("noDataProvided", func(t *testing.T) {
 		c := DbPermissionsCheck{}
 		c.UnmarshalDataMap()
+		c.Result.DetermineResultStatus(false)
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "no data provided",
 			}},
@@ -132,7 +132,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 			Init:         true,
 			ExpectStatus: result.Fail,
 			ExpectNoPass: true,
-			ExpectFails: []result.Breach{result.ValueBreach{
+			ExpectFails: []result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Severity:   "normal",
 				Value:      "list of disallowed perms not provided",
@@ -208,7 +208,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 				"[authenticated] no disallowed permissions",
 			},
 			ExpectFails: []result.Breach{
-				result.KeyValuesBreach{
+				&result.KeyValuesBreach{
 					BreachType: "key-values",
 					Severity:   "normal",
 					KeyLabel:   "role",
@@ -216,7 +216,7 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 					ValueLabel: "permissions",
 					Values:     []string{"administer modules", "administer permissions"},
 				},
-				result.KeyValuesBreach{
+				&result.KeyValuesBreach{
 					BreachType: "key-values",
 					Severity:   "normal",
 					KeyLabel:   "role",
@@ -225,126 +225,6 @@ func TestDbPermissionsRunCheck(t *testing.T) {
 					Values:     []string{"administer modules"},
 				},
 			},
-		},
-		{
-			Name: "breachRemediation",
-			Check: &DbPermissionsCheck{
-				DrushYamlCheck: DrushYamlCheck{
-					YamlBase: yaml.YamlBase{
-						CheckBase: config.CheckBase{
-							PerformRemediation: true,
-						},
-					},
-				},
-				Permissions: map[string]DrushRole{
-					"anonymous": {
-						Label: "Anonymous user",
-						Perms: []string{"access content", "view media"},
-					},
-					"authenticated": {
-						Label: "Authenticated user",
-						Perms: []string{"access content", "view media"},
-					},
-					"site_administrator": {
-						Label: "Site Administrator",
-						Perms: []string{"administer modules", "administer permissions"},
-					},
-					"another_site_administrator": {
-						Label: "Site Administrator",
-						Perms: []string{"administer modules", "administer permissions"},
-					},
-					"site_editor": {
-						Label: "Site Editor",
-						Perms: []string{"administer modules"},
-					},
-				},
-				Disallowed:   []string{"administer modules", "administer permissions"},
-				ExcludeRoles: []string{"another_site_administrator"},
-			},
-			Init: true,
-			PreRun: func(t *testing.T) {
-				command.ShellCommander = internal.ShellCommanderMaker(nil, nil, nil)
-			},
-			Sort:         true,
-			ExpectStatus: result.Pass,
-			ExpectPasses: []string{
-				"[anonymous] no disallowed permissions",
-				"[authenticated] no disallowed permissions",
-			},
-			ExpectNoFail: true,
-			ExpectRemediations: []string{
-				"[site_administrator] fixed disallowed permissions: [administer modules, administer permissions]",
-				"[site_editor] fixed disallowed permissions: [administer modules]",
-			},
-		},
-		{
-			Name: "breachRemediationExitError",
-			Check: &DbPermissionsCheck{
-				DrushYamlCheck: DrushYamlCheck{
-					YamlBase: yaml.YamlBase{
-						CheckBase: config.CheckBase{
-							PerformRemediation: true,
-						},
-					},
-				},
-				Permissions: map[string]DrushRole{
-					"anonymous": {
-						Label: "Anonymous user",
-						Perms: []string{"access content", "view media"},
-					},
-					"authenticated": {
-						Label: "Authenticated user",
-						Perms: []string{"access content", "view media"},
-					},
-					"site_administrator": {
-						Label: "Site Administrator",
-						Perms: []string{"administer modules", "administer permissions"},
-					},
-					"another_site_administrator": {
-						Label: "Site Administrator",
-						Perms: []string{"administer modules", "administer permissions"},
-					},
-					"site_editor": {
-						Label: "Site Editor",
-						Perms: []string{"administer modules"},
-					},
-				},
-				Disallowed:   []string{"administer modules", "administer permissions"},
-				ExcludeRoles: []string{"another_site_administrator"},
-			},
-			Init: true,
-			PreRun: func(t *testing.T) {
-				command.ShellCommander = internal.ShellCommanderMaker(
-					nil,
-					&exec.ExitError{Stderr: []byte("unable to run drush command")},
-					nil,
-				)
-			},
-			Sort:         true,
-			ExpectStatus: result.Fail,
-			ExpectPasses: []string{
-				"[anonymous] no disallowed permissions",
-				"[authenticated] no disallowed permissions",
-			},
-			ExpectFails: []result.Breach{
-				result.KeyValueBreach{
-					BreachType: "key-value",
-					Severity:   "normal",
-					KeyLabel:   "role",
-					Key:        "site_administrator",
-					ValueLabel: "failed to fix disallowed permissions due to error",
-					Value:      "unable to run drush command",
-				},
-				result.KeyValueBreach{
-					BreachType: "key-value",
-					Severity:   "normal",
-					KeyLabel:   "role",
-					Key:        "site_editor",
-					ValueLabel: "failed to fix disallowed permissions due to error",
-					Value:      "unable to run drush command",
-				},
-			},
-			ExpectNoRemediations: true,
 		},
 	}
 
@@ -371,8 +251,25 @@ func TestDbPermissionsRemediate(t *testing.T) {
 			nil)
 
 		c := DbPermissionsCheck{}
-		err := c.Remediate(DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
-		assert.Error(err, "unable to run drush command")
+		c.AddBreach(&result.KeyValuesBreach{
+			BreachType: "key-values",
+			KeyLabel:   "role",
+			Key:        "foo",
+			ValueLabel: "permissions",
+			Values:     []string{"bar", "baz"},
+		})
+		c.Remediate()
+		assert.EqualValues([]result.Breach{&result.KeyValuesBreach{
+			BreachType: "key-values",
+			KeyLabel:   "role",
+			Key:        "foo",
+			ValueLabel: "permissions",
+			Values:     []string{"bar", "baz"},
+			Remediation: result.Remediation{
+				Status:   result.RemediationStatusFailed,
+				Messages: []string{"failed to fix disallowed permissions for role 'foo' due to error: unable to run drush command"},
+			},
+		}}, c.Result.Breaches)
 	})
 
 	t.Run("drushCommandIsCorrect", func(t *testing.T) {
@@ -380,7 +277,13 @@ func TestDbPermissionsRemediate(t *testing.T) {
 		command.ShellCommander = internal.ShellCommanderMaker(nil, nil, &generatedCommand)
 
 		c := DbPermissionsCheck{}
-		c.Remediate(DbPermissionsBreach{Role: "foo", Perms: "bar,baz"})
+		c.AddBreach(&result.KeyValuesBreach{
+			KeyLabel:   "role",
+			Key:        "foo",
+			ValueLabel: "permissions",
+			Values:     []string{"bar", "baz"},
+		})
+		c.Remediate()
 		assert.Equal("vendor/drush/drush/drush role:perm:remove foo bar,baz", generatedCommand)
 	})
 }

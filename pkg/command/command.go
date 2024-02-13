@@ -10,6 +10,8 @@ import (
 	"errors"
 	"io/fs"
 	"os/exec"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // IShellCommand is an interface for running shell commands.
@@ -25,7 +27,12 @@ type ExecShellCommand struct {
 // NewExecShellCommander returns a command instance.
 func NewExecShellCommander(name string, arg ...string) IShellCommand {
 	execCmd := exec.Command(name, arg...)
-	return ExecShellCommand{Cmd: execCmd}
+	return &ExecShellCommand{Cmd: execCmd}
+}
+
+func (c *ExecShellCommand) Output() ([]byte, error) {
+	log.WithField("command", c).Debug("running command")
+	return c.Cmd.Output()
 }
 
 // ShellCommander provides a wrapper around the commander to allow for better

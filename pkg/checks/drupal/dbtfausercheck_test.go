@@ -29,7 +29,7 @@ func TestDbTfaUserCheck(t *testing.T) {
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-db-user-tfa",
 				Severity:   "normal",
@@ -62,7 +62,7 @@ func TestDbTfaUserCheck(t *testing.T) {
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-db-user-tfa",
 				Severity:   "normal",
@@ -99,7 +99,7 @@ func TestDbTfaUserCheck(t *testing.T) {
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-db-user-tfa",
 				Severity:   "normal",

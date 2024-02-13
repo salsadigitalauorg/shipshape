@@ -62,8 +62,8 @@ func TestTableDisplay(t *testing.T) {
 				Name:   "c",
 				Status: result.Fail,
 				Breaches: []result.Breach{
-					result.ValueBreach{Value: "Fail c"},
-					result.ValueBreach{Value: "Fail cb"},
+					&result.ValueBreach{Value: "Fail c"},
+					&result.ValueBreach{Value: "Fail cb"},
 				},
 			},
 			{
@@ -71,8 +71,8 @@ func TestTableDisplay(t *testing.T) {
 				Status: result.Fail,
 				Passes: []string{"Pass d", "Pass db"},
 				Breaches: []result.Breach{
-					result.ValueBreach{Value: "Fail c"},
-					result.ValueBreach{Value: "Fail cb"},
+					&result.ValueBreach{Value: "Fail c"},
+					&result.ValueBreach{Value: "Fail cb"},
 				},
 			},
 		},
@@ -121,10 +121,9 @@ func TestSimpleDisplay(t *testing.T) {
 			Name:   "b",
 			Status: result.Fail,
 			Breaches: []result.Breach{
-				result.ValueBreach{Value: "Fail b"},
+				&result.ValueBreach{Value: "Fail b"},
 			},
 		})
-		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("# Breaches were detected\n\n  ### b\n     -- Fail b\n\n", buf.String())
 	})
@@ -135,56 +134,93 @@ func TestSimpleDisplay(t *testing.T) {
 		w := bufio.NewWriter(&buf)
 		RunResultList.Results = append(RunResultList.Results, result.Result{
 			Name: "a", Status: result.Pass})
-		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
 	})
 
 	t.Run("allBreachesRemediated", func(t *testing.T) {
-		RunResultList = result.ResultList{RemediationPerformed: true}
+		RunResultList = result.ResultList{
+			Results: []result.Result{{
+				Name: "a",
+				Breaches: []result.Breach{
+					&result.ValueBreach{
+						Remediation: result.Remediation{
+							Status:   result.RemediationStatusSuccess,
+							Messages: []string{"fixed 1"},
+						},
+					},
+				}}},
+			TotalBreaches:        1,
+			RemediationPerformed: true,
+			RemediationTotals:    map[string]uint32{"successful": 1},
+		}
+
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		RunResultList.TotalRemediations = 1
-		RunResultList.Results = append(RunResultList.Results, result.Result{
-			Name: "a", Status: result.Pass, Remediations: []string{"fixed 1"}})
-		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Breaches were detected but were all fixed successfully!\n\n"+
 			"  ### a\n     -- fixed 1\n\n", buf.String())
 	})
 
 	t.Run("someBreachesRemediated", func(t *testing.T) {
-		RunResultList = result.ResultList{RemediationPerformed: true}
+		RunResultList = result.ResultList{
+			Results: []result.Result{{
+				Name: "a",
+				Breaches: []result.Breach{
+					&result.ValueBreach{
+						Value: "Fail a",
+						Remediation: result.Remediation{
+							Status:   result.RemediationStatusSuccess,
+							Messages: []string{"fixed 1"},
+						},
+					},
+					&result.ValueBreach{
+						Value: "Fail b",
+						Remediation: result.Remediation{
+							Status:   result.RemediationStatusFailed,
+							Messages: []string{"not fixed 1"},
+						},
+					},
+				}}},
+			TotalBreaches:        2,
+			RemediationPerformed: true,
+			RemediationTotals:    map[string]uint32{"successful": 1, "failed": 1},
+		}
+
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		RunResultList.TotalRemediations = 1
-		RunResultList.TotalBreaches = 1
-		RunResultList.Results = append(RunResultList.Results, result.Result{
-			Name: "a", Status: result.Fail, Remediations: []string{"fixed 1"}})
-		buf = bytes.Buffer{}
 		SimpleDisplay(w)
 		assert.Equal("Breaches were detected but not all of them could be "+
 			"fixed as they are either not supported yet or there were errors "+
 			"when trying to remediate.\n\n"+
 			"# Remediations\n\n  ### a\n     -- fixed 1\n\n"+
-			"# Non-remediated breaches\n\n", buf.String())
+			"# Non-remediated breaches\n\n  ### a\n     -- Fail b\n\n", buf.String())
 	})
 
 	t.Run("noBreachRemediated", func(t *testing.T) {
-		RunResultList = result.ResultList{RemediationPerformed: true}
+		RunResultList = result.ResultList{
+			Results: []result.Result{{
+				Name: "a",
+				Breaches: []result.Breach{
+					&result.ValueBreach{
+						Remediation: result.Remediation{
+							Status:   result.RemediationStatusFailed,
+							Messages: []string{"failed 1"},
+						},
+					},
+				}}},
+			TotalBreaches:        1,
+			RemediationPerformed: true,
+			RemediationTotals:    map[string]uint32{"failed": 1},
+		}
+
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
-		RunResultList.TotalBreaches = 1
-		RunResultList.TotalRemediations = 0
-		RunResultList.Results = append(RunResultList.Results, result.Result{
-			Name: "a", Status: result.Fail})
-		buf = bytes.Buffer{}
 		SimpleDisplay(w)
-		assert.Equal("Breaches were detected but not all of them could be "+
-			"fixed as they are either not supported yet or there were errors "+
-			"when trying to remediate.\n\n"+
-			"# Remediations\n\n"+
-			"# Non-remediated breaches\n\n", buf.String())
+		assert.Equal("Breaches were detected but none of them could be "+
+			"fixed as there were errors when trying to remediate.\n\n"+
+			"# Non-remediated breaches\n\n"+
+			"  ### a\n     -- \n\n", buf.String())
 	})
 }
 
@@ -225,7 +261,7 @@ func TestJUnit(t *testing.T) {
 		Name:   "b",
 		Status: result.Fail,
 		Breaches: []result.Breach{
-			result.ValueBreach{Value: "Fail b"},
+			&result.ValueBreach{Value: "Fail b"},
 		},
 	})
 	buf = bytes.Buffer{}

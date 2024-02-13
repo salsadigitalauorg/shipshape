@@ -32,11 +32,10 @@ func TestJsonCheckUnmarshalDataMap(t *testing.T) {
 	}
 
 	c.UnmarshalDataMap()
-	assertions.Equal(result.Fail, c.Result.Status)
 	assertions.EqualValues(0, len(c.Result.Passes))
 	assertions.ElementsMatch(
 		[]result.Breach{
-			result.ValueBreach{
+			&result.ValueBreach{
 				BreachType: result.BreachTypeValue,
 				ValueLabel: "JSON error",
 				Value:      "invalid character 'p' looking for beginning of value",

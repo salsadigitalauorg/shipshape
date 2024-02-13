@@ -12,6 +12,7 @@ import (
 var (
 	arg          string
 	checkpackage string
+	breachTypes  []string
 )
 
 func main() {
@@ -25,11 +26,18 @@ func main() {
 		}
 		gen.Registry(checkpackage)
 		break
+	case "breach-type":
+		if len(breachTypes) == 0 {
+			log.Fatal("missing flags; struct is required")
+		}
+		gen.BreachType(breachTypes)
+		break
 	}
 }
 
 func parseFlags() {
 	pflag.StringVar(&checkpackage, "checkpackage", "", "The package to which the check belongs")
+	pflag.StringSliceVar(&breachTypes, "type", []string{}, "The breach type")
 	pflag.Parse()
 }
 

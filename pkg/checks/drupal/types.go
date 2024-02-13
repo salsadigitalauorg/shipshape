@@ -22,10 +22,12 @@ type DrushCommand struct {
 }
 
 type DrushYamlCheck struct {
-	yaml.YamlBase `yaml:",inline"`
-	DrushCommand  `yaml:",inline"`
-	Command       string `yaml:"command"`
-	ConfigName    string `yaml:"config-name"`
+	yaml.YamlBase    `yaml:",inline"`
+	DrushCommand     `yaml:",inline"`
+	Command          string `yaml:"command"`
+	ConfigName       string `yaml:"config-name"`
+	RemediateCommand string `yaml:"remediate-command"`
+	RemediateMsg     string `yaml:"remediate-msg"`
 }
 
 type FileModuleCheck struct {

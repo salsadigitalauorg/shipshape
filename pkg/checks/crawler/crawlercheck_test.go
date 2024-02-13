@@ -59,7 +59,7 @@ func TestCrawlerCheck(t *testing.T) {
 	c.Init(Crawler)
 	c.RunCheck()
 	assert.ElementsMatch(
-		[]result.Breach{result.KeyValueBreach{
+		[]result.Breach{&result.KeyValueBreach{
 			BreachType: result.BreachTypeKeyValue,
 			CheckType:  "crawler",
 			Severity:   "normal",

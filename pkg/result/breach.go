@@ -7,6 +7,13 @@ import (
 
 // Breach provides a representation for different breach types.
 type Breach interface {
+	GetCheckName() string
+	GetCheckType() string
+	GetRemediation() *Remediation
+	GetSeverity() string
+	GetType() BreachType
+	SetCommonValues(checkType string, checkName string, severity string)
+	SetRemediation(status RemediationStatus, msg string)
 	String() string
 }
 
@@ -21,6 +28,8 @@ const (
 	BreachTypeKeyValues BreachType = "key-values"
 )
 
+//go:generate go run ../../cmd/gen.go breach-type --type=Value,KeyValue,KeyValues
+
 // Simple breach with no key.
 // Example:
 //
@@ -33,13 +42,14 @@ type ValueBreach struct {
 	ValueLabel    string
 	Value         string
 	ExpectedValue string
+	Remediation
 }
 
 func (b ValueBreach) String() string {
 	if b.ValueLabel != "" {
 		return fmt.Sprintf("[%s] %s", b.ValueLabel, b.Value)
 	}
-	return fmt.Sprintf("%s", b.Value)
+	return b.Value
 }
 
 // Breach with key and value.
@@ -60,6 +70,7 @@ type KeyValueBreach struct {
 	ValueLabel    string
 	Value         string
 	ExpectedValue string
+	Remediation
 }
 
 func (b KeyValueBreach) String() string {
@@ -86,6 +97,7 @@ type KeyValuesBreach struct {
 	Key        string
 	ValueLabel string
 	Values     []string
+	Remediation
 }
 
 func (b KeyValuesBreach) String() string {
@@ -96,121 +108,55 @@ func (b KeyValuesBreach) String() string {
 	return fmt.Sprintf("%s: %s", b.Key, "["+strings.Join(b.Values, ", ")+"]")
 }
 
-func BreachSetCommonValues(bIfc *Breach, checkType string, checkName string, severity string) {
-	if b, ok := (*bIfc).(ValueBreach); ok {
-		b.BreachType = BreachTypeValue
-		b.CheckType = checkType
-		b.CheckName = checkName
-		b.Severity = severity
-		*bIfc = b
-	} else if b, ok := (*bIfc).(KeyValueBreach); ok {
-		b.BreachType = BreachTypeKeyValue
-		b.CheckType = checkType
-		b.CheckName = checkName
-		b.Severity = severity
-		*bIfc = b
-	} else if b, ok := (*bIfc).(KeyValuesBreach); ok {
-		b.BreachType = BreachTypeKeyValues
-		b.CheckType = checkType
-		b.CheckName = checkName
-		b.Severity = severity
-		*bIfc = b
-	}
-}
-
-func BreachGetBreachType(bIfc Breach) BreachType {
-	if _, ok := bIfc.(ValueBreach); ok {
-		return BreachTypeValue
-	} else if _, ok := bIfc.(KeyValueBreach); ok {
-		return BreachTypeKeyValue
-	} else if _, ok := bIfc.(KeyValuesBreach); ok {
-		return BreachTypeKeyValues
-	}
-	return ""
-}
-
-func BreachGetCheckType(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
-		return b.CheckType
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
-		return b.CheckType
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
-		return b.CheckType
-	}
-	return ""
-}
-
-func BreachGetCheckName(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
-		return b.CheckName
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
-		return b.CheckName
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
-		return b.CheckName
-	}
-	return ""
-}
-
-func BreachGetSeverity(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
-		return b.Severity
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
-		return b.Severity
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
-		return b.Severity
-	}
-	return ""
-}
-
 func BreachGetKeyLabel(bIfc Breach) string {
-	if b, ok := bIfc.(KeyValueBreach); ok {
+	if b, ok := bIfc.(*KeyValueBreach); ok {
 		return b.KeyLabel
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
+	} else if b, ok := bIfc.(*KeyValuesBreach); ok {
 		return b.KeyLabel
 	}
 	return ""
 }
 
 func BreachGetKey(bIfc Breach) string {
-	if b, ok := bIfc.(KeyValueBreach); ok {
+	if b, ok := bIfc.(*KeyValueBreach); ok {
 		return b.Key
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
+	} else if b, ok := bIfc.(*KeyValuesBreach); ok {
 		return b.Key
 	}
 	return ""
 }
 
 func BreachGetValueLabel(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
+	if b, ok := bIfc.(*ValueBreach); ok {
 		return b.ValueLabel
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
+	} else if b, ok := bIfc.(*KeyValueBreach); ok {
 		return b.ValueLabel
-	} else if b, ok := bIfc.(KeyValuesBreach); ok {
+	} else if b, ok := bIfc.(*KeyValuesBreach); ok {
 		return b.ValueLabel
 	}
 	return ""
 }
 
 func BreachGetValue(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
+	if b, ok := bIfc.(*ValueBreach); ok {
 		return b.Value
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
+	} else if b, ok := bIfc.(*KeyValueBreach); ok {
 		return b.Value
 	}
 	return ""
 }
 
 func BreachGetValues(bIfc Breach) []string {
-	if b, ok := bIfc.(KeyValuesBreach); ok {
+	if b, ok := bIfc.(*KeyValuesBreach); ok {
 		return b.Values
 	}
 	return []string(nil)
 }
 
 func BreachGetExpectedValue(bIfc Breach) string {
-	if b, ok := bIfc.(ValueBreach); ok {
+	if b, ok := bIfc.(*ValueBreach); ok {
 		return b.ExpectedValue
-	} else if b, ok := bIfc.(KeyValueBreach); ok {
+	} else if b, ok := bIfc.(*KeyValueBreach); ok {
 		return b.ExpectedValue
 	}
 	return ""

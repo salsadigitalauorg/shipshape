@@ -26,11 +26,11 @@ func (c *YamlLintCheck) UnmarshalDataMap() {
 		err := yaml.Unmarshal([]byte(data), &ifc)
 		if err != nil {
 			if typeErr, ok := err.(*yaml.TypeError); ok {
-				c.AddBreach(result.ValueBreach{
+				c.AddBreach(&result.ValueBreach{
 					ValueLabel: "cannot decode yaml: " + f,
 					Value:      strings.Join(typeErr.Errors, "\n")})
 			} else {
-				c.AddBreach(result.ValueBreach{
+				c.AddBreach(&result.ValueBreach{
 					ValueLabel: "yaml error: " + f,
 					Value:      err.Error()})
 			}

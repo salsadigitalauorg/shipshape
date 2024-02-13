@@ -6,7 +6,6 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
@@ -46,14 +45,14 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 	t.Run("failOnDrushNotFound", func(t *testing.T) {
 		c := drupal.ForbiddenUserCheck{}
 		c.RunCheck()
+		c.Result.DetermineResultStatus(false)
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "vendor/drush/drush/drush: no such file or directory",
 			}},
-			c.Result.Breaches,
-		)
+			c.Result.Breaches)
 	})
 
 	t.Run("failOnDrushError", func(t *testing.T) {
@@ -69,7 +68,7 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		c.RunCheck()
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-user-forbidden",
 				Severity:   "normal",
@@ -91,10 +90,11 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 			nil,
 		)
 		c.RunCheck()
+		c.Result.DetermineResultStatus(false)
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-user-forbidden",
 				Severity:   "normal",
@@ -121,10 +121,11 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 			nil,
 		)
 		c.RunCheck()
+		c.Result.DetermineResultStatus(false)
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{result.KeyValueBreach{
+			[]result.Breach{&result.KeyValueBreach{
 				BreachType: "key-value",
 				CheckType:  "drupal-user-forbidden",
 				Severity:   "normal",
@@ -167,24 +168,38 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 	defer func() { command.ShellCommander = curShellCommander }()
 
 	t.Run("failOnDrushError", func(t *testing.T) {
-		c := drupal.ForbiddenUserCheck{}
-		c.Init(drupal.ForbiddenUser)
-		assertions.True(c.RequiresDb)
+		c := drupal.ForbiddenUserCheck{UserId: "1"}
+		c.AddBreach(&result.KeyValueBreach{
+			BreachType: "key-value",
+			Key:        "forbidden user is active",
+			Value:      c.UserId,
+		})
 
 		command.ShellCommander = internal.ShellCommanderMaker(
 			nil,
 			&exec.ExitError{Stderr: []byte("Unable to find a matching user")},
 			nil,
 		)
-		err := c.Remediate(nil)
-		assertions.NotNil(err)
-		msg := string(err.(*exec.ExitError).Stderr)
-		assertions.Equal("Unable to find a matching user", msg)
+		c.Remediate()
+		assertions.EqualValues([]result.Breach{&result.KeyValueBreach{
+			BreachType: "key-value",
+			Key:        "forbidden user is active",
+			Value:      c.UserId,
+			Remediation: result.Remediation{
+				Status: result.RemediationStatusFailed,
+				Messages: []string{"error blocking forbidden user '1' due to error: " +
+					"Unable to find a matching user"}}},
+		}, c.Result.Breaches)
+		c.Result.DetermineResultStatus(true)
 	})
 
 	t.Run("passOnBlockingInactiveUser", func(t *testing.T) {
-		c := drupal.ForbiddenUserCheck{CheckBase: config.CheckBase{PerformRemediation: true}}
-		c.Init(drupal.ForbiddenUser)
+		c := drupal.ForbiddenUserCheck{UserId: "1"}
+		c.AddBreach(&result.KeyValueBreach{
+			BreachType: "key-value",
+			Key:        "forbidden user is active",
+			Value:      c.UserId,
+		})
 
 		stdout := `
 {
@@ -198,16 +213,16 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 			nil,
 			nil,
 		)
-		c.RunCheck()
+		c.Remediate()
+		assertions.EqualValues([]result.Breach{&result.KeyValueBreach{
+			BreachType: "key-value",
+			Key:        "forbidden user is active",
+			Value:      c.UserId,
+			Remediation: result.Remediation{
+				Status:   result.RemediationStatusSuccess,
+				Messages: []string{"Blocked the forbidden user [1]"}}},
+		}, c.Result.Breaches)
+		c.Result.DetermineResultStatus(true)
 		assertions.Equal(result.Pass, c.Result.Status)
-		assertions.Empty(c.Result.Breaches)
-		assertions.ElementsMatch(
-			[]string{"Blocked the forbidden user [1]"},
-			c.Result.Remediations,
-		)
-		assertions.ElementsMatch(
-			[]string{"No forbidden user is active."},
-			c.Result.Passes,
-		)
 	})
 }

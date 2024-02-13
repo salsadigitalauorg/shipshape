@@ -128,10 +128,8 @@ func TestFetchDataBinNotExists(t *testing.T) {
 		Paths:  []string{dir},
 	}
 	c.FetchData()
-
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.ValueBreach{
+		[]result.Breach{&result.ValueBreach{
 			BreachType: "value",
 			ValueLabel: "Phpstan failed to run",
 			Value:      "/my/custom/path/phpstan: no such file or directory",
@@ -175,9 +173,8 @@ func TestHasData(t *testing.T) {
 		assert := assert.New(t)
 		c := PhpStanCheck{}
 		assert.False(c.HasData(true))
-		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "no data available",
 			}},
@@ -227,9 +224,8 @@ func TestUnmarshalDataMap(t *testing.T) {
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.ValueBreach{
+		[]result.Breach{&result.ValueBreach{
 			BreachType: "value",
 			ValueLabel: "unable to parse phpstan file errors",
 			Value: "json: cannot unmarshal array into Go value of type " +
@@ -255,6 +251,7 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Pass, c.Result.Status)
 	assert.EqualValues([]string{"no error found"}, c.Result.Passes)
 
@@ -268,9 +265,10 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.KeyValueBreach{
+		[]result.Breach{&result.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "file contains banned functions: /app/web/themes/custom/custom/test-theme/info.php",
 			Value:      "line 3: Calling curl_exec() is forbidden, please change the code",
@@ -288,9 +286,10 @@ func TestRunCheck(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.ValueBreach{
+		[]result.Breach{&result.ValueBreach{
 			BreachType: "value",
 			ValueLabel: "errors encountered when running phpstan",
 			Value:      "Error found in file foo",

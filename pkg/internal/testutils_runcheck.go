@@ -1,10 +1,12 @@
 package internal
 
 import (
+	"io"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,19 +23,21 @@ type RunCheckTest struct {
 	// Func to run before running the check
 	PreRun func(t *testing.T)
 	// Expected values after running the check.
-	ExpectStatus         result.Status
-	ExpectNoPass         bool
-	ExpectPasses         []string
-	ExpectNoFail         bool
-	ExpectFails          []result.Breach
-	ExpectNoRemediations bool
-	ExpectRemediations   []string
+	ExpectStatus result.Status
+	ExpectNoPass bool
+	ExpectPasses []string
+	ExpectNoFail bool
+	ExpectFails  []result.Breach
 }
 
 // TestRunCheck can be used to run test scenarios in test tables.
 func TestRunCheck(t *testing.T, ctest RunCheckTest) {
 	t.Helper()
 	assert := assert.New(t)
+	// Hide logging output.
+	currLogOut := logrus.StandardLogger().Out
+	defer logrus.SetOutput(currLogOut)
+	logrus.SetOutput(io.Discard)
 
 	c := ctest.Check
 
@@ -47,6 +51,7 @@ func TestRunCheck(t *testing.T, ctest RunCheckTest) {
 	c.RunCheck()
 
 	r := c.GetResult()
+	r.DetermineResultStatus(false)
 	if ctest.Sort {
 		r.Sort()
 	}
@@ -69,14 +74,5 @@ func TestRunCheck(t *testing.T, ctest RunCheckTest) {
 			ctest.ExpectFails,
 			r.Breaches,
 			"Expected fails: %#v \nGot %#v", ctest.ExpectFails, r.Breaches)
-	}
-
-	if ctest.ExpectNoRemediations {
-		assert.Empty(r.Remediations)
-	} else {
-		assert.ElementsMatchf(
-			ctest.ExpectRemediations,
-			r.Remediations,
-			"Expected remediations: %#v \nGot %#v", ctest.ExpectRemediations, r.Remediations)
 	}
 }

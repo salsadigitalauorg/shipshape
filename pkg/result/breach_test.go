@@ -18,7 +18,7 @@ func TestBreachValueBreachStringer(t *testing.T) {
 	}{
 		{
 			name: "value-breach",
-			breach: ValueBreach{
+			breach: &ValueBreach{
 				ValueLabel: "file not found",
 				Value:      "foo.ext",
 			},
@@ -43,7 +43,7 @@ func TestBreachKeyValueBreachStringer(t *testing.T) {
 	}{
 		{
 			name: "key-value-breach-1",
-			breach: KeyValueBreach{
+			breach: &KeyValueBreach{
 				KeyLabel:   "config",
 				Key:        "clamav.settings",
 				ValueLabel: "key not found",
@@ -53,7 +53,7 @@ func TestBreachKeyValueBreachStringer(t *testing.T) {
 		},
 		{
 			name: "key-value-breach-2",
-			breach: KeyValueBreach{
+			breach: &KeyValueBreach{
 				KeyLabel:      "clamav.settings",
 				Key:           "enabled",
 				Value:         "false",
@@ -80,7 +80,7 @@ func TestBreachKeyValuesBreachStringers(t *testing.T) {
 	}{
 		{
 			name: "KeyValuesBreach",
-			breach: KeyValuesBreach{
+			breach: &KeyValuesBreach{
 				KeyLabel:   "role",
 				Key:        "admin",
 				ValueLabel: "disallowed permissions",
@@ -99,9 +99,34 @@ func TestBreachKeyValuesBreachStringers(t *testing.T) {
 
 type bogusBreach struct{}
 
+func (b bogusBreach) GetCheckName() string {
+	return ""
+}
+
+func (b bogusBreach) GetCheckType() string {
+	return ""
+}
+
+func (b bogusBreach) GetRemediation() *Remediation {
+	return &Remediation{}
+}
+
+func (b bogusBreach) GetSeverity() string {
+	return ""
+}
+
+func (b bogusBreach) GetType() BreachType {
+	return ""
+}
+
+func (b bogusBreach) SetCommonValues(checkType string, checkName string, severity string) {
+}
+
 func (b bogusBreach) String() string {
 	return ""
 }
+
+func (b bogusBreach) SetRemediation(status RemediationStatus, msg string) {}
 
 func TestBreachSetCommonValues(t *testing.T) {
 	assert := assert.New(t)
@@ -117,7 +142,7 @@ func TestBreachSetCommonValues(t *testing.T) {
 	}{
 		{
 			name:               "ValueBreach",
-			breach:             ValueBreach{},
+			breach:             &ValueBreach{},
 			expectedBreachType: BreachTypeValue,
 			expectedCheckType:  "ctvb",
 			expectedCheckName:  "valuebreachcheck",
@@ -125,7 +150,7 @@ func TestBreachSetCommonValues(t *testing.T) {
 		},
 		{
 			name:               "KeyValueBreach",
-			breach:             KeyValueBreach{},
+			breach:             &KeyValueBreach{},
 			expectedBreachType: BreachTypeKeyValue,
 			expectedCheckType:  "ctkvb",
 			expectedCheckName:  "keyvaluebreachcheck",
@@ -133,7 +158,7 @@ func TestBreachSetCommonValues(t *testing.T) {
 		},
 		{
 			name:               "KeyValuesBreach",
-			breach:             KeyValuesBreach{},
+			breach:             &KeyValuesBreach{},
 			expectedBreachType: BreachTypeKeyValues,
 			expectedCheckType:  "ctkvsb",
 			expectedCheckName:  "keyvaluesbreachcheck",
@@ -141,7 +166,7 @@ func TestBreachSetCommonValues(t *testing.T) {
 		},
 		{
 			name:               "BogusBreach",
-			breach:             bogusBreach{},
+			breach:             &bogusBreach{},
 			expectedBreachType: "",
 			expectedCheckType:  "ctbb",
 			expectedCheckName:  "bogusbreachcheck",
@@ -152,18 +177,18 @@ func TestBreachSetCommonValues(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			BreachSetCommonValues(&test.breach, test.expectedCheckType, test.expectedCheckName,
+			test.breach.SetCommonValues(test.expectedCheckType, test.expectedCheckName,
 				test.expectedSeverity)
 			if !test.empty {
-				assert.Equal(test.expectedBreachType, BreachGetBreachType(test.breach))
-				assert.Equal(test.expectedCheckName, BreachGetCheckName(test.breach))
-				assert.Equal(test.expectedCheckType, BreachGetCheckType(test.breach))
-				assert.Equal(test.expectedSeverity, BreachGetSeverity(test.breach))
+				assert.Equal(test.expectedBreachType, test.breach.GetType())
+				assert.Equal(test.expectedCheckName, test.breach.GetCheckName())
+				assert.Equal(test.expectedCheckType, test.breach.GetCheckType())
+				assert.Equal(test.expectedSeverity, test.breach.GetSeverity())
 			} else {
-				assert.Equal(BreachType(""), BreachGetBreachType(test.breach))
-				assert.Equal("", BreachGetCheckName(test.breach))
-				assert.Equal("", BreachGetCheckType(test.breach))
-				assert.Equal("", BreachGetSeverity(test.breach))
+				assert.Equal(BreachType(""), test.breach.GetType())
+				assert.Equal("", test.breach.GetCheckName())
+				assert.Equal("", test.breach.GetCheckType())
+				assert.Equal("", test.breach.GetSeverity())
 			}
 		})
 	}
@@ -184,7 +209,7 @@ func TestBreachGetters(t *testing.T) {
 	}{
 		{
 			name: "ValueBreach",
-			breach: ValueBreach{
+			breach: &ValueBreach{
 				ValueLabel:    "vbvl",
 				Value:         "vbv",
 				ExpectedValue: "vbve",
@@ -198,7 +223,7 @@ func TestBreachGetters(t *testing.T) {
 		},
 		{
 			name: "KeyValueBreach",
-			breach: KeyValueBreach{
+			breach: &KeyValueBreach{
 				KeyLabel:      "kvbklbl",
 				Key:           "kvbk",
 				ValueLabel:    "kvbvl",
@@ -214,7 +239,7 @@ func TestBreachGetters(t *testing.T) {
 		},
 		{
 			name: "KeyValuesBreach",
-			breach: KeyValuesBreach{
+			breach: &KeyValuesBreach{
 				KeyLabel:   "kvsbklbl",
 				Key:        "kvsbk",
 				ValueLabel: "kvsbvl",

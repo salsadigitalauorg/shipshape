@@ -21,7 +21,7 @@ func TestExecReplacement(t *testing.T) {
 
 	t.Run("differentStruct", func(t *testing.T) {
 		cmd := command.ShellCommander("foo", "bar")
-		assert.IsType(command.ExecShellCommand{}, cmd)
+		assert.IsType(&command.ExecShellCommand{}, cmd)
 
 		curShellCommander := command.ShellCommander
 		defer func() { command.ShellCommander = curShellCommander }()

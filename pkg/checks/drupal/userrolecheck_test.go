@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestInit(t *testing.T) {
+func TestUserRoleCheckInit(t *testing.T) {
 	c := UserRoleCheck{}
 	c.Init(UserRole)
 	assert.True(t, c.RequiresDb)
@@ -47,15 +47,14 @@ func TestUserRoleMerge(t *testing.T) {
 	}, c)
 }
 
-func TestFetchData(t *testing.T) {
+func TestUserRoleCheckFetchData(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("drushNotFound", func(t *testing.T) {
 		c := UserRoleCheck{}
 		c.FetchData()
-		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "vendor/drush/drush/drush: no such file or directory",
 			}},
@@ -63,9 +62,9 @@ func TestFetchData(t *testing.T) {
 		)
 	})
 
-	curShellCommander := command.ShellCommander
-	defer func() { command.ShellCommander = curShellCommander }()
 	t.Run("drushError", func(t *testing.T) {
+		curShellCommander := command.ShellCommander
+		defer func() { command.ShellCommander = curShellCommander }()
 		sqlQueryFail := true
 		command.ShellCommander = func(name string, arg ...string) command.IShellCommand {
 			var stdout []byte
@@ -83,9 +82,8 @@ func TestFetchData(t *testing.T) {
 		}
 		c := UserRoleCheck{}
 		c.FetchData()
-		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "unable to run drush sql query",
 			}},
@@ -95,9 +93,8 @@ func TestFetchData(t *testing.T) {
 		sqlQueryFail = false
 		c = UserRoleCheck{}
 		c.FetchData()
-		assert.Equal(result.Fail, c.Result.Status)
 		assert.EqualValues(
-			[]result.Breach{result.ValueBreach{
+			[]result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				Value:      "unable to run drush command",
 			}},
@@ -120,15 +117,14 @@ func TestFetchData(t *testing.T) {
 	})
 }
 
-func TestUnmarshalData(t *testing.T) {
+func TestUserRoleCheckUnmarshalData(t *testing.T) {
 	assert := assert.New(t)
 
 	// Empty datamap.
 	c := UserRoleCheck{}
 	c.UnmarshalDataMap()
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.ValueBreach{
+		[]result.Breach{&result.ValueBreach{
 			BreachType: "value",
 			Value:      "no data provided",
 		}},
@@ -143,9 +139,8 @@ func TestUnmarshalData(t *testing.T) {
 		},
 	}
 	c.UnmarshalDataMap()
-	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.ValueBreach{
+		[]result.Breach{&result.ValueBreach{
 			BreachType: "value",
 			Value:      "invalid character ']' after object key:value pair",
 		}},
@@ -166,64 +161,58 @@ func TestUnmarshalData(t *testing.T) {
 	assert.Equal("map[int][]string{1:[]string{\"authenticated\"}}", fmt.Sprintf("%#v", userRolesVal))
 }
 
-func TestRunCheck(t *testing.T) {
-	assert := assert.New(t)
+func TestUserRoleCheckRunCheck(t *testing.T) {
+	tt := []internal.RunCheckTest{
+		{
+			Name: "noDisallowedRoleProvided",
+			Check: &UserRoleCheck{
+				CheckBase: config.CheckBase{
+					DataMap: map[string][]byte{
+						"user-info": []byte(`{"1":{"roles":["authenticated"]}}`)},
+				},
+			},
+			ExpectStatus: result.Fail,
+			ExpectFails: []result.Breach{&result.ValueBreach{
+				BreachType: "value",
+				Value:      "no disallowed role provided"}}},
 
-	// No disallowed roles provided.
-	c := UserRoleCheck{
-		CheckBase: config.CheckBase{
-			DataMap: map[string][]byte{
-				"user-info": []byte(`{"1":{"roles":["authenticated"]}}`)},
-		},
-	}
-	c.UnmarshalDataMap()
-	c.RunCheck()
-	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues(
-		[]result.Breach{result.ValueBreach{
-			BreachType: "value",
-			Value:      "no disallowed role provided",
-		}},
-		c.Result.Breaches,
-	)
+		{
+			Name: "userHasDisallowedRoles",
+			Check: &UserRoleCheck{
+				CheckBase: config.CheckBase{
+					DataMap: map[string][]byte{
+						"user-info": []byte(`{"1":{"roles":["authenticated","site-admin","content-admin"]}}`)},
+				},
+				Roles: []string{"site-admin", "content-admin"},
+			},
+			ExpectStatus: result.Fail,
+			ExpectFails: []result.Breach{&result.KeyValuesBreach{
+				BreachType: "key-values",
+				KeyLabel:   "user",
+				Key:        "1",
+				ValueLabel: "disallowed roles",
+				Values:     []string{"site-admin", "content-admin"}}}},
 
-	// User has disallowed roles.
-	c = UserRoleCheck{
-		CheckBase: config.CheckBase{
-			DataMap: map[string][]byte{
-				"user-info": []byte(`{"1":{"roles":["authenticated","site-admin","content-admin"]}}`)},
-		},
-		Roles: []string{"site-admin", "content-admin"},
-	}
-	c.UnmarshalDataMap()
-	c.RunCheck()
-	assert.Equal(result.Fail, c.Result.Status)
-	assert.EqualValues(
-		[]result.Breach{result.KeyValuesBreach{
-			BreachType: "key-values",
-			KeyLabel:   "user",
-			Key:        "1",
-			ValueLabel: "disallowed roles",
-			Values:     []string{"site-admin", "content-admin"},
-		}},
-		c.Result.Breaches,
-	)
-
-	// User allowed to have disallowed roles.
-	c = UserRoleCheck{
-		CheckBase: config.CheckBase{
-			DataMap: map[string][]byte{
-				"user-info": []byte(`
+		{
+			Name: "userAllowedToHaveDisallowedRoles",
+			Check: &UserRoleCheck{
+				CheckBase: config.CheckBase{
+					DataMap: map[string][]byte{
+						"user-info": []byte(`
 				{
 					"1":{"roles":["authenticated"]},
 					"2":{"roles":["authenticated","site-admin","content-admin"]}
 				}
 				`)},
-		},
-		Roles:        []string{"site-admin", "content-admin"},
-		AllowedUsers: []int{2},
+				},
+				Roles:        []string{"site-admin", "content-admin"},
+				AllowedUsers: []int{2},
+			},
+			ExpectStatus: result.Pass},
 	}
-	c.UnmarshalDataMap()
-	c.RunCheck()
-	assert.Equal(result.Pass, c.Result.Status)
+
+	for _, tc := range tt {
+		tc.Check.UnmarshalDataMap()
+		internal.TestRunCheck(t, tc)
+	}
 }

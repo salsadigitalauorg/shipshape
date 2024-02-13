@@ -7,11 +7,20 @@ import (
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestDrushYamlCheckInit(t *testing.T) {
+	assert := assert.New(t)
+
+	c := DrushYamlCheck{}
+	c.Init(DrushYaml)
+	assert.True(c.RequiresDb)
+}
 
 func TestDrushYamlMerge(t *testing.T) {
 	assert := assert.New(t)
@@ -59,81 +68,199 @@ func TestDrushYamlMerge(t *testing.T) {
 	}, c)
 }
 
-func TestDrushYamlCheck(t *testing.T) {
-	assert := assert.New(t)
-
-	t.Run("drushNotFound", func(t *testing.T) {
-		c := DrushYamlCheck{
-			Command:    "status",
-			ConfigName: "core.extension",
-		}
-
-		c.Init(DrushYaml)
-		assert.True(c.RequiresDb)
-
-		c.FetchData()
-		assert.Equal(result.Fail, c.Result.Status)
-		assert.Empty(c.Result.Passes)
-		assert.ElementsMatch(
-			[]result.Breach{result.ValueBreach{
+func TestDrushYamlCheckFetchData(t *testing.T) {
+	tt := []internal.FetchDataTest{
+		{
+			Name: "drushNotFound",
+			Check: &DrushYamlCheck{
+				Command:    "status",
+				ConfigName: "core.extension",
+			},
+			ExpectBreaches: []result.Breach{&result.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drush-yaml",
 				Severity:   "normal",
 				Value:      "vendor/drush/drush/drush: no such file or directory",
 			}},
-			c.Result.Breaches,
-		)
-	})
+		},
+
+		{
+			Name: "drushError",
+			Check: &DrushYamlCheck{
+				Command:    "status",
+				ConfigName: "core.extension",
+			},
+			PreFetch: func(t *testing.T) {
+				command.ShellCommander = internal.ShellCommanderMaker(
+					nil,
+					&exec.ExitError{Stderr: []byte("unable to run drush command")},
+					nil,
+				)
+			},
+			ExpectBreaches: []result.Breach{&result.ValueBreach{
+				BreachType: "value",
+				CheckType:  "drush-yaml",
+				Severity:   "normal",
+				ValueLabel: "core.extension",
+				Value:      "unable to run drush command",
+			}},
+		},
+
+		{
+			Name: "drushOK",
+			Check: &DrushYamlCheck{
+				Command:    "status",
+				ConfigName: "core.extension",
+			},
+			PreFetch: func(t *testing.T) {
+				stdout := `
+module:
+  block: 0
+	views_ui: 0
+
+`
+				command.ShellCommander = internal.ShellCommanderMaker(
+					&stdout,
+					nil,
+					nil,
+				)
+			},
+		},
+	}
 
 	curShellCommander := command.ShellCommander
 	defer func() { command.ShellCommander = curShellCommander }()
 
-	t.Run("drushError", func(t *testing.T) {
-		c := DrushYamlCheck{
-			Command:    "status",
-			ConfigName: "core.extension",
-		}
+	for _, test := range tt {
+		t.Run(test.Name, func(t *testing.T) {
+			test.Check.Init(DrushYaml)
+			internal.TestFetchData(t, test)
+		})
+	}
+}
 
-		command.ShellCommander = internal.ShellCommanderMaker(
-			nil,
-			&exec.ExitError{Stderr: []byte("unable to run drush command")},
-			nil,
-		)
-
-		c.FetchData()
-		assert.Equal(result.Fail, c.Result.Status)
-		assert.Empty(c.Result.Passes)
-		assert.ElementsMatch(
-			[]result.Breach{result.ValueBreach{
-				BreachType: "value",
-				ValueLabel: "core.extension",
-				Value:      "unable to run drush command",
+func TestDrushYamlCheckRunCheck(t *testing.T) {
+	tests := []internal.RunCheckTest{
+		{
+			Name: "pass",
+			Check: &DrushYamlCheck{
+				YamlBase: yaml.YamlBase{
+					CheckBase: config.CheckBase{
+						DataMap: map[string][]byte{
+							"core.extension": []byte(`{"profile":"standard"}`)},
+					},
+					Values: []yaml.KeyValue{
+						{Key: "profile", Value: "standard"},
+					},
+				},
+				ConfigName: "core.extension",
+			},
+			ExpectStatus: result.Pass,
+			ExpectPasses: []string{"[core.extension] 'profile' equals 'standard'"},
+		},
+		{
+			Name: "breach",
+			Check: &DrushYamlCheck{
+				YamlBase: yaml.YamlBase{
+					CheckBase: config.CheckBase{
+						DataMap: map[string][]byte{
+							"core.extension": []byte(`{"profile":"minimal"}`)},
+					},
+					Values: []yaml.KeyValue{
+						{Key: "profile", Value: "standard"},
+					},
+				},
+				ConfigName: "core.extension",
+			},
+			PreRun: func(t *testing.T) {
+				command.ShellCommander = internal.ShellCommanderMaker(nil, nil, nil)
+			},
+			ExpectFails: []result.Breach{&result.KeyValueBreach{
+				BreachType:    "key-value",
+				KeyLabel:      "core.extension",
+				Key:           "profile",
+				ValueLabel:    "actual",
+				Value:         "minimal",
+				ExpectedValue: "standard",
 			}},
-			c.Result.Breaches,
-		)
-	})
+			ExpectStatus: result.Fail,
+		},
+	}
 
-	t.Run("drushOK", func(t *testing.T) {
-		stdout := `
-module:
-  block: 0
-  views_ui: 0
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			curShellCommander := command.ShellCommander
+			defer func() { command.ShellCommander = curShellCommander }()
+			test.Check.UnmarshalDataMap()
+			internal.TestRunCheck(t, test)
+		})
+	}
+}
 
-`
+func TestDrushYamlCheckRemediate(t *testing.T) {
+	tt := []internal.RemediateTest{
+		{
+			Name: "noCommand",
+			Check: &DrushYamlCheck{
+				YamlBase: yaml.YamlBase{
+					CheckBase: config.CheckBase{
+						DataMap: map[string][]byte{
+							"core.extension": []byte(`{"profile":"minimal"}`)},
+						Result: result.Result{
+							Breaches: []result.Breach{&result.ValueBreach{}}}},
+					Values: []yaml.KeyValue{{Key: "profile", Value: "standard"}}},
+				RemediateCommand: "",
+				ConfigName:       "core.extension"},
+			ExpectGeneratedCommand: "",
+			ExpectBreaches: []result.Breach{&result.ValueBreach{
+				Remediation: result.Remediation{Status: "no-support"}}},
+			ExpectStatusFail:        true,
+			ExpectRemediationStatus: result.RemediationStatusNoSupport,
+		},
+		{
+			Name: "simpleCommand",
+			Check: &DrushYamlCheck{
+				YamlBase: yaml.YamlBase{
+					CheckBase: config.CheckBase{
+						Result: result.Result{
+							Breaches: []result.Breach{&result.ValueBreach{}}}}},
+				RemediateCommand: "drush config:set clamav.settings enabled 1"},
+			ExpectGeneratedCommand: "sh -c 'drush config:set clamav.settings enabled 1'",
+			ExpectBreaches: []result.Breach{&result.ValueBreach{
+				Remediation: result.Remediation{
+					Status: "success",
+					Messages: []string{
+						"remediation command for config '' ran successfully"}}}},
+			ExpectRemediationStatus: result.RemediationStatusSuccess,
+		},
+		{
+			Name: "multilineCommand",
+			Check: &DrushYamlCheck{
+				YamlBase: yaml.YamlBase{
+					CheckBase: config.CheckBase{
+						Result: result.Result{
+							Breaches: []result.Breach{&result.ValueBreach{}}}}},
+				RemediateCommand: `#!/bin/bash
+set -eu
+drush config:set clamav.settings enabled true
+`},
+			ExpectGeneratedCommand: `sh -c '#!/bin/bash
+set -eu
+drush config:set clamav.settings enabled true
+'`,
+			ExpectBreaches: []result.Breach{&result.ValueBreach{
+				Remediation: result.Remediation{
+					Status: "success",
+					Messages: []string{
+						"remediation command for config '' ran successfully"}}}},
+			ExpectRemediationStatus: result.RemediationStatusSuccess,
+		},
+	}
 
-		command.ShellCommander = internal.ShellCommanderMaker(
-			&stdout,
-			nil,
-			nil,
-		)
+	for _, tc := range tt {
+		t.Run(tc.Name, func(t *testing.T) {
+			internal.TestRemediate(t, tc)
+		})
+	}
 
-		c := DrushYamlCheck{
-			Command:    "status",
-			ConfigName: "core.extension",
-		}
-		c.FetchData()
-		assert.NotEqual(result.Fail, c.Result.Status)
-		assert.Empty(c.Result.Passes)
-		assert.Empty(c.Result.Breaches)
-	})
 }

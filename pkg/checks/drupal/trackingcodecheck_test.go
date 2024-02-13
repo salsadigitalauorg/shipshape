@@ -86,9 +86,10 @@ func TestTrackingCodeCheckFails(t *testing.T) {
 		Uri: "https://google.com",
 	}
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(
-		[]result.Breach{result.KeyValueBreach{
+		[]result.Breach{&result.KeyValueBreach{
 			BreachType: "key-value",
 			CheckType:  "drupal-tracking-code",
 			Severity:   "normal",
@@ -111,6 +112,7 @@ func TestTrackingCodeCheckPass(t *testing.T) {
 		Uri: "https://gist.github.com/Pominova/cf7884e7418f6ebfa412d2d3dc472a97",
 	}
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Pass, c.Result.Status)
 	assert.ElementsMatch(
 		[]string{"tracking code [UA-xxxxxx-1] present"},

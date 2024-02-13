@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type testCheckForCheckBaseInit struct{}
-
 const testCheckForCheckBaseInitType CheckType = "testCheckForCheckBaseInitType"
 
 func TestCheckBaseInit(t *testing.T) {
@@ -62,13 +60,25 @@ func TestHasData(t *testing.T) {
 
 	c := CheckBase{Name: "foo"}
 	assert.False(c.HasData(false))
+	assert.Empty(c.Result.Breaches)
+	c.Result.DetermineResultStatus(false)
 	assert.NotEqual(result.Fail, c.Result.Status)
 
 	assert.False(c.HasData(true))
+	assert.EqualValues([]result.Breach{
+		&result.ValueBreach{
+			BreachType: "value",
+			CheckName:  "foo",
+			Value:      "no data available",
+		},
+	}, c.Result.Breaches)
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 
 	c = CheckBase{Name: "foo", DataMap: map[string][]byte{"foo": []byte(`bar`)}}
 	assert.True(c.HasData(true))
+	assert.Empty(c.Result.Breaches)
+	c.Result.DetermineResultStatus(false)
 	assert.NotEqual(result.Fail, c.Result.Status)
 }
 
@@ -91,21 +101,21 @@ func TestAddBreach(t *testing.T) {
 			checkType: vbCheckType,
 			checkName: "vbCheck",
 			severity:  "high",
-			breach:    result.ValueBreach{},
+			breach:    &result.ValueBreach{},
 		},
 		{
 			name:      "KeyValueBreach",
 			checkType: kvbCheckType,
 			checkName: "kvbCheck",
 			severity:  "low",
-			breach:    result.KeyValueBreach{},
+			breach:    &result.KeyValueBreach{},
 		},
 		{
 			name:      "KeyValuesBreach",
 			checkType: kvsbCheckType,
 			checkName: "kvsbCheck",
 			severity:  "normal",
-			breach:    result.KeyValuesBreach{},
+			breach:    &result.KeyValuesBreach{},
 		},
 	}
 
@@ -114,9 +124,9 @@ func TestAddBreach(t *testing.T) {
 			c := CheckBase{Name: test.checkName, Severity: test.severity}
 			c.Init(test.checkType)
 			c.AddBreach(test.breach)
-			assert.Equal(string(test.checkType), result.BreachGetCheckType(c.Result.Breaches[0]))
-			assert.Equal(test.checkName, result.BreachGetCheckName(c.Result.Breaches[0]))
-			assert.Equal(string(test.severity), result.BreachGetSeverity(c.Result.Breaches[0]))
+			assert.Equal(string(test.checkType), c.Result.Breaches[0].GetCheckType())
+			assert.Equal(test.checkName, c.Result.Breaches[0].GetCheckName())
+			assert.Equal(string(test.severity), c.Result.Breaches[0].GetSeverity())
 		})
 	}
 }
@@ -143,9 +153,10 @@ func TestCheckBaseRunCheck(t *testing.T) {
 	c := CheckBase{}
 	c.FetchData()
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.ElementsMatch(
-		[]result.Breach{result.ValueBreach{
+	assert.EqualValues(
+		[]result.Breach{&result.ValueBreach{
 			BreachType: result.BreachTypeValue,
 			Value:      "not implemented",
 		}},
@@ -167,8 +178,7 @@ func TestRemediate(t *testing.T) {
 	t.Run("notSupported", func(t *testing.T) {
 		c := testCheckRemediationNotSupported{}
 
-		err := c.Remediate(nil)
-		assert.NoError(err)
+		c.Remediate()
 		assert.Empty(c.Result.Passes)
 		assert.Empty(c.Result.Breaches)
 	})

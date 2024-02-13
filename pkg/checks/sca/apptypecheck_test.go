@@ -24,9 +24,10 @@ func TestIsDrupalCheck(t *testing.T) {
 	c.Dependencies["drupal"] = []string{"drupal/core-recommended"}
 
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.KeyValueBreach{
+		[]result.Breach{&result.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "[./testdata/drupal] contains disallowed frameworks",
 			Value:      "[drupal]",
@@ -64,9 +65,10 @@ func TestIsWordpressCheck(t *testing.T) {
 	c.Dirs["wordpress"] = []string{"wp-admin", "wp-content", "wp-includes"}
 
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.KeyValueBreach{
+		[]result.Breach{&result.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "[./testdata/wordpress] contains disallowed frameworks",
 			Value:      "[wordpress]",
@@ -90,9 +92,10 @@ func TestIsSymfonyCheck(t *testing.T) {
 	c.Dependencies["symfony"] = []string{"symfony/runtime", "symfony/symfony", "symfony/framework"}
 
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.KeyValueBreach{
+		[]result.Breach{&result.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "[./testdata/symfony] contains disallowed frameworks",
 			Value:      "[symfony]",
@@ -116,9 +119,10 @@ func TestIsLaravelCheck(t *testing.T) {
 	c.Dependencies["laravel"] = []string{"laravel/framework", "laravel/tinker"}
 
 	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{result.KeyValueBreach{
+		[]result.Breach{&result.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "[./testdata/laravel] contains disallowed frameworks",
 			Value:      "[laravel]",

@@ -41,7 +41,7 @@ func (c *DbPermissionsCheck) Merge(mergeCheck config.Check) error {
 // type for further processing.
 func (c *DbPermissionsCheck) UnmarshalDataMap() {
 	if len(c.DataMap[c.ConfigName]) == 0 {
-		c.AddBreach(result.ValueBreach{Value: "no data provided"})
+		c.AddBreach(&result.ValueBreach{Value: "no data provided"})
 	}
 
 	c.Permissions = map[string]DrushRole{}
@@ -51,7 +51,7 @@ func (c *DbPermissionsCheck) UnmarshalDataMap() {
 // RunCheck implements the Check logic for Drupal Permissions in database config.
 func (c *DbPermissionsCheck) RunCheck() {
 	if len(c.Disallowed) == 0 {
-		c.AddBreach(result.ValueBreach{Value: "list of disallowed perms not provided"})
+		c.AddBreach(&result.ValueBreach{Value: "list of disallowed perms not provided"})
 	}
 
 	for r, perms := range c.Permissions {
@@ -70,40 +70,33 @@ func (c *DbPermissionsCheck) RunCheck() {
 			return fails[i] < fails[j]
 		})
 
-		if c.PerformRemediation {
-			if err := c.Remediate(DbPermissionsBreach{Role: r, Perms: strings.Join(fails, ",")}); err != nil {
-				c.AddBreach(result.KeyValueBreach{
-					KeyLabel:   "role",
-					Key:        r,
-					ValueLabel: "failed to fix disallowed permissions due to error",
-					Value:      command.GetMsgFromCommandError(err),
-				})
-			} else {
-				c.AddRemediation(fmt.Sprintf(
-					"[%s] fixed disallowed permissions: [%s]",
-					r, strings.Join(fails, ", ")))
-			}
-		} else {
-			c.AddBreach(result.KeyValuesBreach{
-				KeyLabel:   "role",
-				Key:        r,
-				ValueLabel: "permissions",
-				Values:     fails,
-			})
-		}
-	}
-
-	if len(c.Result.Breaches) == 0 {
-		c.Result.Status = result.Pass
+		c.AddBreach(&result.KeyValuesBreach{
+			KeyLabel:   "role",
+			Key:        r,
+			ValueLabel: "permissions",
+			Values:     fails,
+		})
 	}
 }
 
-// Remediate attempts to fix a breach.
-func (c *DbPermissionsCheck) Remediate(breachIfc interface{}) error {
-	b := breachIfc.(DbPermissionsBreach)
-	_, err := Drush(c.DrushPath, c.Alias, []string{"role:perm:remove", b.Role, b.Perms}).Exec()
-	if err != nil {
-		return err
+// Remediate attempts to remove any disallowed permissions detected.
+func (c *DbPermissionsCheck) Remediate() {
+	for _, b := range c.Result.Breaches {
+		b, ok := b.(*result.KeyValuesBreach)
+		if !ok {
+			continue
+		}
+		_, err := Drush(
+			c.DrushPath, c.Alias,
+			[]string{"role:perm:remove", b.Key, strings.Join(b.Values, ",")}).Exec()
+		if err != nil {
+			b.SetRemediation(result.RemediationStatusFailed, fmt.Sprintf(
+				"failed to fix disallowed permissions for role '%s' due to error: %s",
+				b.Key, command.GetMsgFromCommandError(err)))
+		} else {
+			b.SetRemediation(result.RemediationStatusSuccess, fmt.Sprintf(
+				"[%s] fixed disallowed permissions: [%s]",
+				b.Key, strings.Join(b.Values, ", ")))
+		}
 	}
-	return nil
 }

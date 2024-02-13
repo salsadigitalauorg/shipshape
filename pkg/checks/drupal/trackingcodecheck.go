@@ -35,14 +35,14 @@ func (c *TrackingCodeCheck) Merge(mergeCheck config.Check) error {
 // type for further processing.
 func (c *TrackingCodeCheck) UnmarshalDataMap() {
 	if len(c.DataMap[c.ConfigName]) == 0 {
-		c.AddBreach(result.ValueBreach{Value: "no data provided"})
+		c.AddBreach(&result.ValueBreach{Value: "no data provided"})
 	}
 
 	c.DrushStatus = DrushStatus{}
 	err := yaml.Unmarshal(c.DataMap[c.ConfigName], &c.DrushStatus)
 	if err != nil {
 		if _, ok := err.(*yaml.TypeError); !ok {
-			c.AddBreach(result.ValueBreach{Value: err.Error()})
+			c.AddBreach(&result.ValueBreach{Value: err.Error()})
 			return
 		}
 	}
@@ -52,7 +52,7 @@ func (c *TrackingCodeCheck) RunCheck() {
 	resp, err := http.Get(c.DrushStatus.Uri)
 
 	if err != nil {
-		c.AddBreach(result.ValueBreach{Value: "could not determine site uri"})
+		c.AddBreach(&result.ValueBreach{Value: "could not determine site uri"})
 		return
 	}
 
@@ -65,7 +65,7 @@ func (c *TrackingCodeCheck) RunCheck() {
 		c.AddPass(fmt.Sprintf("tracking code [%s] present", c.Code))
 		c.Result.Status = result.Pass
 	} else {
-		c.AddBreach(result.KeyValueBreach{
+		c.AddBreach(&result.KeyValueBreach{
 			Key:   "required tracking code not present",
 			Value: c.Code,
 		})

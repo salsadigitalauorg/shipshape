@@ -24,11 +24,11 @@ jobs:
       with:
         go-version: 1.21
 
-    - name: Vet
-      run: go vet ./...
-
     - name: Run generators
       run: go generate ./...
+
+    - name: Vet
+      run: go vet ./...
 
     - name: Build
       run: go build -ldflags="-s -w" -o build/shipshape . && ls -lh build/shipshape

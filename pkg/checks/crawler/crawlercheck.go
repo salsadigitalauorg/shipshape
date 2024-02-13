@@ -79,7 +79,7 @@ func (c *CrawlerCheck) RunCheck() {
 
 	crawler.OnError(func(r *colly.Response, err error) {
 		c.Result.Status = result.Fail
-		c.AddBreach(result.KeyValueBreach{
+		c.AddBreach(&result.KeyValueBreach{
 			Key:        fmt.Sprintf("%v", r.Request.URL),
 			ValueLabel: "invalid response",
 			Value:      fmt.Sprintf("%d", r.StatusCode),

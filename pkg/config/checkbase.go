@@ -63,7 +63,7 @@ func (c *CheckBase) FetchData() {}
 func (c *CheckBase) HasData(failCheck bool) bool {
 	if c.DataMap == nil {
 		if failCheck {
-			c.AddBreach(result.ValueBreach{Value: "no data available"})
+			c.AddBreach(&result.ValueBreach{Value: "no data available"})
 		}
 		return false
 	}
@@ -76,8 +76,7 @@ func (c *CheckBase) UnmarshalDataMap() {}
 
 // AddBreach appends a Breach to the Result and sets the Check as Fail.
 func (c *CheckBase) AddBreach(b result.Breach) {
-	c.Result.Status = result.Fail
-	result.BreachSetCommonValues(&b, string(c.cType), c.Name, string(c.Severity))
+	b.SetCommonValues(string(c.cType), c.Name, string(c.Severity))
 	c.Result.Breaches = append(
 		c.Result.Breaches,
 		b,
@@ -102,26 +101,28 @@ func (c *CheckBase) SetPerformRemediation(flag bool) {
 	c.PerformRemediation = flag
 }
 
-// AddWarning appends a Warning message to the result.
-func (c *CheckBase) AddRemediation(msg string) {
-	c.Result.Remediations = append(c.Result.Remediations, msg)
-}
-
 // RunCheck contains the core logic for running the check,
 // generating the result and remediating breaches.
 // This is where c.Result should be populated.
 func (c *CheckBase) RunCheck() {
-	c.AddBreach(result.ValueBreach{Value: "not implemented"})
+	c.AddBreach(&result.ValueBreach{Value: "not implemented"})
 }
 
-// GetResult returns a ref of the result.
-func (c *CheckBase) GetResult() *result.Result {
-	return &c.Result
+// ShouldPerformRemediation returns whether to remediate or not.
+func (c *CheckBase) ShouldPerformRemediation() bool {
+	return c.PerformRemediation
 }
 
 // Remediate should implement the logic to fix the breach(es).
 // Any type or custom struct can be used for the breach; it just needs to be
 // cast to the required type before being used.
-func (c *CheckBase) Remediate(breachIfc interface{}) error {
-	return nil
+func (c *CheckBase) Remediate() {
+	for _, b := range c.Result.Breaches {
+		b.SetRemediation(result.RemediationStatusNoSupport, "")
+	}
+}
+
+// GetResult returns a ref of the result.
+func (c *CheckBase) GetResult() *result.Result {
+	return &c.Result
 }
