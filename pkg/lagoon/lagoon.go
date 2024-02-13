@@ -126,30 +126,15 @@ func ProcessResultList(w *bufio.Writer, list result.ResultList) error {
 		return nil
 	}
 
-	for iR, r := range list.Results {
+	for _, r := range list.Results {
 		if len(r.Breaches) == 0 {
 			continue
 		}
 
 		// let's marshal the breaches, they can be attached to the problem in the data field
-		_, err := json.Marshal(r.Breaches)
+		breachMapJson, err := json.Marshal(r.Breaches)
 		if err != nil {
 			log.WithError(err).Fatal("Unable to marshal breach information")
-		}
-
-		breachMap := map[string]string{}
-		for iB, b := range r.Breaches {
-			breachName := fmt.Sprintf("[%d] %s", iR+iB+1, BreachFactName(b))
-			value := BreachFactValue(b)
-			if len(value) > FactMaxValueLength {
-				value = value[:FactMaxValueLength-12] + "...TRUNCATED"
-			}
-			breachMap[breachName] = value
-		}
-
-		breachMapJson, err := json.Marshal(breachMap)
-		if err != nil {
-			log.WithError(err).Fatal("Unable to write problems to Insights Remote")
 		}
 
 		problems = append(problems, Problem{
@@ -219,44 +204,6 @@ func DeleteProblems() error {
 		"service":    "",
 	}
 	return Client.Mutate(context.Background(), &m, variables)
-}
-
-func BreachFactName(b result.Breach) string {
-	var name string
-	if result.BreachGetKeyLabel(b) != "" {
-		name = fmt.Sprintf("%s: %s", result.BreachGetKeyLabel(b),
-			result.BreachGetKey(b))
-	} else if result.BreachGetKey(b) != "" {
-		name = result.BreachGetKey(b)
-	} else if result.BreachGetValueLabel(b) != "" {
-		name = result.BreachGetValueLabel(b)
-	} else {
-		name = b.GetCheckName() + " - " +
-			string(b.GetCheckType())
-	}
-	return name
-}
-
-func BreachFactValue(b result.Breach) string {
-	value := result.BreachGetValue(b)
-	if value == "" {
-		value = strings.Join(result.BreachGetValues(b), ", ")
-	}
-
-	label := result.BreachGetValueLabel(b)
-	if label == "" || BreachFactName(b) == label {
-		return value
-	} else {
-		value = fmt.Sprintf("%s: %s", label, value)
-	}
-
-	expected := result.BreachGetExpectedValue(b)
-	if expected == "" {
-		return value
-	} else {
-		value = fmt.Sprintf("expected: %s, %s", expected, value)
-	}
-	return value
 }
 
 // SeverityTranslation will convert a ShipShape severity rating to a Lagoon rating
