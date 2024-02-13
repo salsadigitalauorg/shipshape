@@ -65,8 +65,8 @@ func (c *FileCheck) RunCheck() {
 		c.AddPass("No illegal files")
 		return
 	}
-	c.AddBreach(&result.KeyValueBreach{
-		Key:   fmt.Sprintf("%s - illegal files found", c.Name),
-		Value: strings.Join(files, "\n"),
+	c.AddBreach(&result.ValueBreach{
+		ValueLabel: fmt.Sprintf("%s - illegal files found", c.Name),
+		Value:      strings.Join(files, "\n"),
 	})
 }
