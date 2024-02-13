@@ -22,6 +22,8 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
+//go:generate rm -f registry_gen.go
+
 // Version information.
 var (
 	version string
