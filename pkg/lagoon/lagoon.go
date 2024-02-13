@@ -6,13 +6,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"net/http"
 	"os"
 	"strings"
 
-	"github.com/hasura/go-graphql-client"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
+
+	"github.com/hasura/go-graphql-client"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
@@ -101,7 +102,7 @@ func GetBearerTokenFromDisk(tokenLocation string) (string, error) {
 	//first, we check that the token exists on disk
 	_, err := os.Stat(tokenLocation)
 	if err != nil {
-		return "", fmt.Errorf("Unable to load insights token from disk")
+		return "", fmt.Errorf("unable to load insights token from disk")
 	}
 
 	b, err := os.ReadFile(tokenLocation)
@@ -126,10 +127,14 @@ func ProcessResultList(w *bufio.Writer, list result.ResultList) error {
 	}
 
 	for iR, r := range list.Results {
-		// let's marshall the breaches, they can be attached to the problem in the data field
+		if len(r.Breaches) == 0 {
+			continue
+		}
+
+		// let's marshal the breaches, they can be attached to the problem in the data field
 		_, err := json.Marshal(r.Breaches)
 		if err != nil {
-			log.WithError(err).Fatal("Unable to marshall breach information")
+			log.WithError(err).Fatal("Unable to marshal breach information")
 		}
 
 		breachMap := map[string]string{}
@@ -195,7 +200,7 @@ func ProblemsToInsightsRemote(problems []Problem, serviceEndpoint string, bearer
 	}
 
 	if response.StatusCode != 200 {
-		return fmt.Errorf("There was an error sending the problems to '%s' : %s\n", serviceEndpoint, response.Body)
+		return fmt.Errorf("there was an error sending the problems to '%s' : %s", serviceEndpoint, response.Body)
 	}
 	return nil
 }
