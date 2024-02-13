@@ -10,6 +10,6 @@ const (
 )
 
 type Remediation struct {
-	Status   RemediationStatus
-	Messages []string
+	Status   RemediationStatus `json:",omitempty"`
+	Messages []string          `json:",omitempty"`
 }

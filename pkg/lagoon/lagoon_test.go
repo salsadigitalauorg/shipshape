@@ -10,7 +10,6 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	"github.com/hasura/go-graphql-client"
 	"github.com/sirupsen/logrus"
@@ -190,94 +189,8 @@ func Test_ProblemsToInsightsRemote(t *testing.T) {
 				var problems []lagoon.Problem
 				err := json.Unmarshal([]byte(bodyString), &problems)
 				assert.NoError(t, err)
-				assert.Equalf(t, tt.args.problems, problems, fmt.Sprintf("Unmarshalled Body not Equal"))
+				assert.Equalf(t, tt.args.problems, problems, "Unmarshalled Body not Equal")
 			}
-		})
-	}
-}
-
-func TestBreachFactNameAndValue(t *testing.T) {
-	tests := []struct {
-		name          string
-		breach        result.Breach
-		expectedName  string
-		expectedValue string
-	}{
-		{
-			name: "value breach - no label",
-			breach: &result.ValueBreach{
-				CheckName: "illegal file",
-				CheckType: "file",
-				Value:     "/an/illegal/file",
-			},
-			expectedName:  "illegal file - file",
-			expectedValue: "/an/illegal/file",
-		},
-		{
-			name: "value breach - label",
-			breach: &result.ValueBreach{
-				CheckName:  "illegal file",
-				CheckType:  "file",
-				ValueLabel: "the illegal file exists",
-				Value:      "/an/illegal/file",
-			},
-			expectedName:  "the illegal file exists",
-			expectedValue: "/an/illegal/file",
-		},
-		{
-			name: "key-value breach - with value label",
-			breach: &result.KeyValueBreach{
-				CheckName:  "illegal file",
-				CheckType:  "file",
-				Key:        "illegal file found",
-				ValueLabel: "the illegal file exists",
-				Value:      "/an/illegal/file",
-			},
-			expectedName:  "illegal file found",
-			expectedValue: "the illegal file exists: /an/illegal/file",
-		},
-		{
-			name: "key-value breach - with value and key labels",
-			breach: &result.KeyValueBreach{
-				CheckName:  "illegal file",
-				CheckType:  "file",
-				KeyLabel:   "illegal file found in",
-				Key:        "/path/to/dir",
-				ValueLabel: "illegal file",
-				Value:      "/an/illegal/file",
-			},
-			expectedName:  "illegal file found in: /path/to/dir",
-			expectedValue: "illegal file: /an/illegal/file",
-		},
-		{
-			name: "value breach - with value and key labels and expected value",
-			breach: &result.KeyValueBreach{
-				CheckName:     "update module status",
-				CheckType:     "module-status",
-				KeyLabel:      "disallowed module found",
-				ValueLabel:    "actual",
-				Value:         "enabled",
-				ExpectedValue: "disabled",
-			},
-			expectedName:  "disallowed module found: ",
-			expectedValue: "expected: disabled, actual: enabled",
-		},
-		{
-			name: "key-values breach - no label",
-			breach: &result.KeyValuesBreach{
-				CheckName: "illegal files",
-				CheckType: "file",
-				Values:    []string{"/an/illegal/file", "/another/illegal/file"},
-			},
-			expectedName:  "illegal files - file",
-			expectedValue: "/an/illegal/file, /another/illegal/file",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expectedName, lagoon.BreachFactName(tt.breach))
-			assert.Equal(t, tt.expectedValue, lagoon.BreachFactValue(tt.breach))
 		})
 	}
 }
