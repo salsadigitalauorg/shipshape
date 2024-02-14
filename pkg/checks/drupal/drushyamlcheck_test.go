@@ -177,7 +177,7 @@ func TestDrushYamlCheckRunCheck(t *testing.T) {
 			},
 			ExpectFails: []result.Breach{&result.KeyValueBreach{
 				BreachType:    "key-value",
-				KeyLabel:      "core.extension",
+				KeyLabel:      "config:core.extension",
 				Key:           "profile",
 				ValueLabel:    "actual",
 				Value:         "minimal",

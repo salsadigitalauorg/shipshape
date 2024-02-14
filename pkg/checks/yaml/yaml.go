@@ -76,7 +76,7 @@ func (c *YamlBase) determineBreaches(configName string) {
 			})
 		case KeyValueNotEqual:
 			c.AddBreach(&result.KeyValueBreach{
-				KeyLabel:      configName,
+				KeyLabel:      "config:" + configName,
 				Key:           kv.Key,
 				ValueLabel:    "actual",
 				ExpectedValue: kv.Value,

@@ -337,9 +337,9 @@ notification:
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.ElementsMatch([]result.Breach{&result.KeyValueBreach{
+	assert.EqualValues([]result.Breach{&result.KeyValueBreach{
 		BreachType:    result.BreachTypeKeyValue,
-		KeyLabel:      "data",
+		KeyLabel:      "config:data",
 		Key:           "check.interval_days",
 		ValueLabel:    "actual",
 		Value:         "7",
