@@ -86,7 +86,9 @@ func TestBreachKeyValuesBreachStringers(t *testing.T) {
 				ValueLabel: "disallowed permissions",
 				Values:     []string{"delete the site", "delete the world"},
 			},
-			expected: "[role:admin] disallowed permissions: [delete the site, delete the world]",
+			expected: `[role:admin] disallowed permissions:
+        - delete the site
+        - delete the world`,
 		},
 	}
 

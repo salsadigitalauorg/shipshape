@@ -190,18 +190,19 @@ func (c *PhpStanCheck) RunCheck() {
 	for file, errors := range c.phpstanResult.Files {
 		errLines := []string{}
 		for _, er := range errors.Messages {
-			errLines = append(errLines, fmt.Sprintf("line %d: %s", er.Line, er.Message))
-
+			errLines = append(errLines,
+				fmt.Sprintf("line %d: %s", er.Line,
+					strings.ReplaceAll(er.Message, "\n", "")))
 		}
-		c.AddBreach(&result.KeyValueBreach{
-			Key:   fmt.Sprintf("file contains banned functions: %s", file),
-			Value: strings.Join(errLines, "\n"),
+		c.AddBreach(&result.KeyValuesBreach{
+			Key:    fmt.Sprintf("file: %s", file),
+			Values: errLines,
 		})
 	}
 
 	if len(c.phpstanResult.Errors) > 0 {
-		c.AddBreach(&result.ValueBreach{
-			ValueLabel: "errors encountered when running phpstan",
-			Value:      strings.Join(c.phpstanResult.Errors, "\n")})
+		c.AddBreach(&result.KeyValuesBreach{
+			Key:    "errors encountered when running phpstan",
+			Values: c.phpstanResult.Errors})
 	}
 }

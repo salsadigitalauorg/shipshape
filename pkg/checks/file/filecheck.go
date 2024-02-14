@@ -2,7 +2,6 @@ package file
 
 import (
 	"path/filepath"
-	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -64,8 +63,8 @@ func (c *FileCheck) RunCheck() {
 		c.AddPass("No illegal files")
 		return
 	}
-	c.AddBreach(&result.ValueBreach{
-		ValueLabel: "illegal files found",
-		Value:      strings.Join(files, ","),
+	c.AddBreach(&result.KeyValuesBreach{
+		Key:    "illegal files found",
+		Values: files,
 	})
 }

@@ -81,13 +81,16 @@ func TestFileCheckRunCheck(t *testing.T) {
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(
 		[]result.Breach{
-			&result.ValueBreach{
-				BreachType: "value",
+			&result.KeyValuesBreach{
+				BreachType: "key-values",
 				CheckType:  "file",
 				CheckName:  "filecheck2",
 				Severity:   "normal",
-				ValueLabel: "illegal files found",
-				Value:      "testdata/adminer.php,testdata/sub/phpmyadmin.php",
+				Key:        "illegal files found",
+				Values: []string{
+					"testdata/adminer.php",
+					"testdata/sub/phpmyadmin.php",
+				},
 			},
 		},
 		c.Result.Breaches,

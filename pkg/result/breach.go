@@ -102,10 +102,10 @@ type KeyValuesBreach struct {
 
 func (b KeyValuesBreach) String() string {
 	if b.KeyLabel != "" && b.ValueLabel != "" {
-		return fmt.Sprintf("[%s:%s] %s: %s", b.KeyLabel, b.Key, b.ValueLabel,
-			"["+strings.Join(b.Values, ", ")+"]")
+		return fmt.Sprintf("[%s:%s] %s:\n        - %s", b.KeyLabel, b.Key, b.ValueLabel,
+			strings.Join(b.Values, "\n        - "))
 	}
-	return fmt.Sprintf("%s: %s", b.Key, "["+strings.Join(b.Values, ", ")+"]")
+	return fmt.Sprintf("%s:\n        - %s", b.Key, strings.Join(b.Values, "\n        - "))
 }
 
 func BreachGetKeyLabel(bIfc Breach) string {

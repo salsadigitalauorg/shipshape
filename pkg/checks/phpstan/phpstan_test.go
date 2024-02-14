@@ -268,10 +268,10 @@ func TestRunCheck(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.KeyValueBreach{
-			BreachType: "key-value",
-			Key:        "file contains banned functions: /app/web/themes/custom/custom/test-theme/info.php",
-			Value:      "line 3: Calling curl_exec() is forbidden, please change the code",
+		[]result.Breach{&result.KeyValuesBreach{
+			BreachType: "key-values",
+			Key:        "file: /app/web/themes/custom/custom/test-theme/info.php",
+			Values:     []string{"line 3: Calling curl_exec() is forbidden, please change the code"},
 		}},
 		c.Result.Breaches,
 	)
@@ -289,10 +289,10 @@ func TestRunCheck(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.ValueBreach{
-			BreachType: "value",
-			ValueLabel: "errors encountered when running phpstan",
-			Value:      "Error found in file foo",
+		[]result.Breach{&result.KeyValuesBreach{
+			BreachType: "key-values",
+			Key:        "errors encountered when running phpstan",
+			Values:     []string{"Error found in file foo"},
 		}},
 		c.Result.Breaches,
 	)
