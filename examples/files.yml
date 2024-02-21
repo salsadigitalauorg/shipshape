@@ -1,0 +1,24 @@
+gather:
+  illegal-files:
+    file.lookup:
+      path: web
+      pattern: '^(adminer|phpmyadmin|bigdump)?\.php$'
+      format: list
+  sensitive-public-files:
+    file.lookup:
+      path: web/sites/default/files
+      pattern: '.*\.(sql|php|sh|py|bz2|gz|tar|tgz|zip)?$'
+      exclude-pattern: '.*\.(css|js)\.gz?$'
+      skip-dir:
+        - private
+
+analyse:
+  illegal-files-found:
+    input: illegal-files
+    when:
+      - notEmpty
+    severity: high
+  sensitive-public-files-found:
+    input: sensitive-public-files
+    when:
+      - notEmpty

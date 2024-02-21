@@ -8,7 +8,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
-type Tables struct {
+type Query struct {
 	// Common fields.
 	Name       string          `yaml:"name"`
 	Format     fact.FactFormat `yaml:"format"`
@@ -17,15 +17,16 @@ type Tables struct {
 	data       interface{}
 
 	// Plugin fields.
+	Query string `yaml:"query"`
 }
 
-//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Tables --package=database
+//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Query --package=database
 
-func (p *Tables) PluginName() string {
-	return "database.tables"
+func (p *Query) PluginName() string {
+	return "database.query"
 }
 
-func (p *Tables) Gather() {
+func (p *Query) Gather() {
 	if p.Connection == "" {
 		p.errors = append(p.errors, errors.New("connection is required"))
 		return
@@ -43,7 +44,7 @@ func (p *Tables) Gather() {
 	}
 
 	mysqlConn := cn.(*connection.Mysql)
-	mysqlConn.Query = "SHOW TABLES"
+	mysqlConn.Query = p.Query
 	data, err := mysqlConn.Run()
 	if err != nil {
 		p.errors = append(p.errors, err)

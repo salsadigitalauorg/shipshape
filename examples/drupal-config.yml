@@ -1,0 +1,71 @@
+gather:
+  install-profile:
+    yaml.key:
+      file: config/default/core.extension.yml
+      key: profile
+      format: string
+  config-files-roles:
+    file.lookup:
+      path: config/default
+      pattern: user.role.*.yml
+      format: list
+  role-is-admin:
+    yaml.key:
+      input: config-files-roles
+      key: is_admin
+      format: string-map
+  role-permissions:
+    yaml.key:
+      input: config-files-roles
+      key: permissions
+      format: list-map
+
+analyse:
+  wrong-install-profile:
+    input: install-profile
+    when:
+      - notEqual: govcms
+  admin-role-found:
+    input: role-is-admin
+    severity: high
+    when:
+      - notEmpty
+  disallowed-permissions-found:
+    input: role-permissions
+    severity: high
+    when:
+      - notEmpty
+      - contains:
+        - administer config permissions
+        - administer modules
+        - administer permissions
+        - administer seckit
+        - administer site configuration
+        - administer software updates
+        - import configuration
+        - synchronize configuration
+        - use PHP for google analytics tracking visibility
+  anonymous-role-disallowed-permissions-found:
+    input: role-permissions
+    key: user.role.anonymous.yml
+    when:
+      - notEmpty
+      - contains:
+        - 'access administration pages'
+        - 'access content overview'
+        - 'access site reports'
+        - 'access user profiles'
+        - 'administer account settings'
+        - 'administer blocks'
+        - 'administer comment types'
+        - 'administer comments'
+        - 'administer contact forms'
+        - 'administer content types'
+        - 'administer filters'
+        - 'administer image styles'
+        - 'administer menu'
+        - 'administer nodes'
+        - 'administer search'
+        - 'administer shortcuts'
+        - 'administer taxonomy'
+        - 'administer themes'
