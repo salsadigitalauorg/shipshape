@@ -10,9 +10,10 @@ import (
 )
 
 var (
-	arg          string
-	checkpackage string
-	breachTypes  []string
+	arg         string
+	arg2        string
+	pkg         string
+	breachTypes []string
 )
 
 func main() {
@@ -21,10 +22,13 @@ func main() {
 
 	switch arg {
 	case "registry":
-		if checkpackage == "" {
-			log.Fatal("missing flags; checkpackage is required")
+		if arg2 == "" && pkg == "" {
+			log.Fatal("check registry missing flags; checkpackage is required")
+		} else if arg2 == "create" {
+			gen.RegistryCreateFile()
+			break
 		}
-		gen.Registry(checkpackage)
+		gen.Registry(pkg)
 		break
 	case "breach-type":
 		if len(breachTypes) == 0 {
@@ -36,16 +40,19 @@ func main() {
 }
 
 func parseFlags() {
-	pflag.StringVar(&checkpackage, "checkpackage", "", "The package to which the check belongs")
+	pflag.StringVar(&pkg, "checkpackage", "", "The package to which the check belongs")
 	pflag.StringSliceVar(&breachTypes, "type", []string{}, "The breach type")
 	pflag.Parse()
 }
 
 func parseArgs() {
 	args := pflag.Args()
-	if len(args) == 0 || len(args) > 1 {
-		log.Fatalf("1 argument expected, got '%+v'\n", args)
+	if len(args) == 0 {
+		log.Fatalf("at least 1 argument expected, got '%+v'\n", args)
 	} else {
 		arg = args[0]
+		if len(args) > 1 {
+			arg2 = args[1]
+		}
 	}
 }

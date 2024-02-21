@@ -22,7 +22,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
-//go:generate rm -f registry_gen.go
+//go:generate go run cmd/gen.go registry create
 
 // Version information.
 var (
