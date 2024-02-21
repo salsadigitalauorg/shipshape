@@ -14,6 +14,7 @@ var (
 	arg2        string
 	pkg         string
 	breachTypes []string
+	plugins     []string
 )
 
 func main() {
@@ -32,16 +33,33 @@ func main() {
 		break
 	case "breach-type":
 		if len(breachTypes) == 0 {
-			log.Fatal("missing flags; struct is required")
+			log.Fatal("breach-type missing flags; type is required")
 		}
 		gen.BreachType(breachTypes)
+		break
+	case "fact-plugin":
+		if len(plugins) == 0 {
+			log.Fatal("fact-plugin missing flags; plugin is required")
+		}
+		if pkg == "" {
+			log.Fatal("fact-plugin missing flags; package is required")
+		}
+		gen.FactPlugin(plugins, pkg)
+		break
+	case "connection-plugin":
+		if len(plugins) == 0 {
+			log.Fatal("connection-plugin missing flags; plugin is required")
+		}
+		gen.ConnectionPlugin(plugins)
 		break
 	}
 }
 
 func parseFlags() {
 	pflag.StringVar(&pkg, "checkpackage", "", "The package to which the check belongs")
+	pflag.StringVar(&pkg, "package", "", "The package to which the plugin belongs")
 	pflag.StringSliceVar(&breachTypes, "type", []string{}, "The breach type")
+	pflag.StringSliceVar(&plugins, "plugin", []string{}, "The plugin struct")
 	pflag.Parse()
 }
 

@@ -1,0 +1,24 @@
+connections:
+  docker_mariadb:
+    docker.exec:
+      container: mariadb
+  drupal_db:
+    mysql:
+      connection: docker_mariadb
+      username: drupal
+      password: drupal
+      database: drupal
+
+gather:
+  table_names:
+    database.tables:
+      connection: drupal_db
+      format: list
+  domain_in_tables:
+    database.col_scan:
+      connection: drupal_db
+      input: table_names
+      regex: "*.example.com"
+
+analyse:
+  domain_in_tables: {}
