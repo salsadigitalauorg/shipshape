@@ -1,6 +1,5 @@
 # Generated files
-registry_gen.go
-pkg/result/breach_gen.go
+*_gen.go
 
 build
 dist/
