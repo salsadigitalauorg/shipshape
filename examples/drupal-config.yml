@@ -29,7 +29,7 @@ analyse:
     input: role-is-admin
     severity: high
     when:
-      - notEmpty
+      - value: true
   disallowed-permissions-found:
     input: role-permissions
     severity: high
