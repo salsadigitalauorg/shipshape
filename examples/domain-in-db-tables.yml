@@ -24,3 +24,7 @@ gather:
 
 analyse:
   domain_in_tables: {}
+
+output:
+  stdout:
+    format: pretty
