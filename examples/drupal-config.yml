@@ -69,3 +69,13 @@ analyse:
         - 'administer shortcuts'
         - 'administer taxonomy'
         - 'administer themes'
+
+output:
+  stdout:
+    format: json
+  file:
+    path: /results.junit
+    format: junit
+  lagoon.problems:
+    api_key:
+    api_endpoint:
