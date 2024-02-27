@@ -8,8 +8,6 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
-//go:generate go run ../../../cmd/gen.go registry --checkpackage=file
-
 // FileCheck is a simple File absence check which can be for a single
 // file or a pattern.
 type FileCheck struct {
@@ -21,14 +19,6 @@ type FileCheck struct {
 }
 
 const File config.CheckType = "file"
-
-func RegisterChecks() {
-	config.ChecksRegistry[File] = func() config.Check { return &FileCheck{} }
-}
-
-func init() {
-	RegisterChecks()
-}
 
 // Merge implementation for file check.
 func (c *FileCheck) Merge(mergeCheck config.Check) error {
