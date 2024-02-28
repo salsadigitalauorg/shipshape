@@ -1,6 +1,8 @@
 package config
 
-import "github.com/salsadigitalauorg/shipshape/pkg/result"
+import (
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
+)
 
 type Config struct {
 	// The directory to audit.
@@ -13,6 +15,12 @@ type Config struct {
 	// If requesting LagoonFact output, the base url and token for the Lagoon
 	// api are required to infer environment IDs and the like.
 	LagoonApiBaseUrl string `yaml:"lagoon-api-base-url"`
+}
+
+type ConfigV2 struct {
+	Gather  map[string]map[string]interface{} `yaml:"gather"`
+	Analyse map[string]map[string]interface{} `yaml:"analyse"`
+	Output  map[string]map[string]interface{} `yaml:"output"`
 }
 
 type Severity string

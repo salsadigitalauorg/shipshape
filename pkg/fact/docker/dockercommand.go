@@ -10,11 +10,14 @@ import (
 
 type DockerCommand struct {
 	// Common fields.
-	Name       string          `yaml:"name"`
-	Format     fact.FactFormat `yaml:"format"`
-	Connection string          `yaml:"connection"`
-	errors     []error
-	data       interface{}
+	Name           string          `yaml:"name"`
+	Format         fact.FactFormat `yaml:"format"`
+	ConnectionName string          `yaml:"connection"`
+	InputName      string          `yaml:"input"`
+	connection     connection.Connectioner
+	input          fact.Facter
+	errors         []error
+	data           interface{}
 
 	// Plugin fields.
 	Command []string `yaml:"command"`
@@ -22,28 +25,24 @@ type DockerCommand struct {
 
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=DockerCommand --package=docker
 
+func init() {
+	fact.Registry["docker.command"] = func(n string) fact.Facter { return &DockerCommand{Name: n} }
+}
+
 func (p *DockerCommand) PluginName() string {
 	return "docker.command"
 }
 
+func (p *DockerCommand) SupportedConnections() (fact.SupportLevel, []string) {
+	return fact.SupportRequired, []string{"docker.exec"}
+}
+
+func (p *DockerCommand) SupportedInputs() (fact.SupportLevel, []string) {
+	return fact.SupportNone, []string{}
+}
+
 func (p *DockerCommand) Gather() {
-	if p.Connection == "" {
-		p.errors = append(p.errors, errors.New("connection is required"))
-		return
-	}
-
-	cn := connection.GetConnection(p.Connection)
-	if cn == nil {
-		p.errors = append(p.errors, errors.New("connection not found"))
-		return
-	}
-
-	if cn.PluginName() != "docker.exec" {
-		p.errors = append(p.errors, errors.New("unsupported connection"))
-		return
-	}
-
-	dockerConn := cn.(*connection.DockerExec)
+	dockerConn := p.connection.(*connection.DockerExec)
 	dockerConn.Command = p.Command
 	data, err := dockerConn.Run()
 	if err != nil {

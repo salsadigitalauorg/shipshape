@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -17,7 +18,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var IsV2 bool
 var RunConfig config.Config
+var RunConfigV2 config.ConfigV2
 var RunResultList result.ResultList
 var OutputFormats = []string{"json", "junit", "simple", "table"}
 
@@ -35,6 +38,10 @@ func Init(projectDir string, configFiles []string, checkTypesToRun []string, exc
 	err := ReadAndParseConfig(projectDir, configFiles)
 	if err != nil {
 		return err
+	}
+
+	if IsV2 {
+		return nil
 	}
 
 	config.ProjectDir = RunConfig.ProjectDir
@@ -91,6 +98,10 @@ func ReadAndParseConfig(projectDir string, files []string) error {
 		return err
 	}
 
+	if IsV2 {
+		return nil
+	}
+
 	if RunConfig.ProjectDir == "" && projectDir != "" {
 		RunConfig.ProjectDir = projectDir
 	} else {
@@ -133,6 +144,18 @@ func FetchConfigData(files []string) ([][]byte, error) {
 }
 
 func ParseConfigData(configData [][]byte) error {
+	cfgV2 := config.ConfigV2{}
+	data := configData[0]
+	if err := yaml.Unmarshal(data, &cfgV2); err != nil {
+		log.WithError(err).Debug("config not v2-compatible")
+		// return err
+	}
+	RunConfigV2 = cfgV2
+	if len(RunConfigV2.Gather) > 0 {
+		IsV2 = true
+		return nil
+	}
+
 	finalCfg := config.Config{}
 	for i, data := range configData {
 		log.Print("parsing config")
@@ -208,4 +231,10 @@ func ProcessCheck(rl *result.ResultList, c config.Check) {
 		WithFields(log.Fields{"result": c.GetResult()}).
 		Print("check processed")
 	rl.AddResult(*c.GetResult())
+}
+
+func GatherFacts() {
+	log.Print("parsing facts config")
+	fact.ParseFactsConfig(RunConfigV2.Gather)
+	fact.GatherAllFacts()
 }

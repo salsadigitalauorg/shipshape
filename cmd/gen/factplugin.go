@@ -13,7 +13,9 @@ import (
 func FactPlugin(plugins []string, pkg string) {
 	log.Printf("Generating fact plugin funcs for package %s: %s\n", pkg, strings.Join(plugins, ","))
 
-	importLine := "import \"github.com/salsadigitalauorg/shipshape/pkg/fact\"\n\n"
+	importLine := "import \"github.com/salsadigitalauorg/shipshape/pkg/connection\"\n"
+	importLine += "import \"github.com/salsadigitalauorg/shipshape/pkg/fact\"\n"
+	importLine += "import log \"github.com/sirupsen/logrus\"\n\n"
 
 	for _, p := range plugins {
 		pluginFile := strings.ToLower(p) + "_gen.go"
@@ -40,16 +42,88 @@ func (p *{{.Plugin}}) GetName() string {
 	return p.Name
 }
 
+func (p *{{.Plugin}}) GetData() interface{} {
+	return p.data
+}
+
 func (p *{{.Plugin}}) GetFormat() fact.FactFormat {
 	return p.Format
 }
 
-func (p *{{.Plugin}}) GetConnection() string {
-	return p.Connection
+func (p *{{.Plugin}}) GetConnectionName() string {
+	return p.ConnectionName
+}
+
+func (p *{{.Plugin}}) GetInputName() string {
+	return p.InputName
 }
 
 func (p *{{.Plugin}}) GetErrors() []error {
 	return p.errors
+}
+
+func (p *{{.Plugin}}) ValidateConnection() error {
+  connectionSupport, supportedConnections := p.SupportedConnections()
+	log.WithFields(log.Fields{
+		"fact": p.Name,
+		"connection-support": connectionSupport,
+		"supported-connections": supportedConnections,
+	}).Debug("validating connection")
+
+	if (connectionSupport == fact.SupportOptional ||
+			connectionSupport == fact.SupportNone) &&
+			len(supportedConnections) == 0 && p.ConnectionName == "" {
+		return nil
+	}
+
+	if connectionSupport == fact.SupportRequired && p.ConnectionName == "" {
+		return &fact.ErrSupportRequired{SupportType: "connection"}
+	}
+
+	plugin := connection.GetInstance(p.ConnectionName)
+	if plugin == nil {
+		return &fact.ErrSupportNotFound{SupportType: "connection"}
+	}
+
+	for _, s := range supportedConnections {
+		if plugin.PluginName() == s {
+			p.connection = plugin
+			return nil
+		}
+	}
+	return &fact.ErrSupportNone{SupportType: "connection"}
+}
+
+func (p *{{.Plugin}}) ValidateInput() error {
+	inputSupport, supportedInputs := p.SupportedInputs()
+	log.WithFields(log.Fields{
+		"fact": p.Name,
+		"input-support": inputSupport,
+		"supported-inputs": supportedInputs,
+	}).Debug("validating input")
+
+	if (inputSupport == fact.SupportOptional ||
+			inputSupport == fact.SupportNone) &&
+			len(supportedInputs) == 0 && p.ConnectionName == "" {
+		return nil
+	}
+
+	if inputSupport == fact.SupportRequired && p.InputName == "" {
+		return &fact.ErrSupportRequired{SupportType: "input"}
+	}
+
+	plugin := fact.GetInstance(p.InputName)
+	if plugin == nil {
+		return &fact.ErrSupportNotFound{SupportType: "input"}
+	}
+
+	for _, s := range supportedInputs {
+		if plugin.PluginName() == s {
+			p.input = plugin
+			return nil
+		}
+	}
+	return &fact.ErrSupportNone{SupportType: "input"}
 }
 `
 	tmpl, err := template.New("factPluginFuncs").Parse(tmplStr)
@@ -63,4 +137,18 @@ func (p *{{.Plugin}}) GetErrors() []error {
 		log.Fatalln(err)
 	}
 	return buf.String()
+}
+
+// FactRegistry adds the Facters for a package to the registry.
+func FactRegistry(pkg string) {
+	log.Println("Updating Fact plugins registry - adding", pkg)
+
+	pkgFullName := fmt.Sprintf("github.com/salsadigitalauorg/shipshape/pkg/fact/%s", pkg)
+
+	fileLines := getFileLines(registryFullFilePath)
+	if stringSliceMatch(fileLines, pkgFullName) {
+		return
+	}
+
+	appendFileContent(registryFullFilePath, fmt.Sprintf("import _ \"%s\"\n", pkgFullName))
 }

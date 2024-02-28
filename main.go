@@ -127,7 +127,11 @@ func main() {
 		os.Exit(0)
 	}
 
-	shipshape.RunChecks()
+	if shipshape.IsV2 {
+		shipshape.GatherFacts()
+	} else {
+		shipshape.RunChecks()
+	}
 
 	switch outputFormat {
 	case "json":
