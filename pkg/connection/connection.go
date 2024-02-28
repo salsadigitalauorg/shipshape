@@ -2,7 +2,7 @@ package connection
 
 var Connectioners = map[string]Connectioner{}
 
-func GetConnection(name string) Connectioner {
+func GetInstance(name string) Connectioner {
 	if c, ok := Connectioners[name]; !ok {
 		return nil
 	} else {

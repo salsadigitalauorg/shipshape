@@ -36,7 +36,7 @@ func (p *Mysql) Run() ([]byte, error) {
 		p.Query,
 	}
 
-	cn := GetConnection(p.Connection)
+	cn := GetInstance(p.Connection)
 	if cn != nil {
 		// We currently only support docker connections.
 		if cn.PluginName() != "docker.exec" {

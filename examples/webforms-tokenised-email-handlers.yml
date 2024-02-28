@@ -1,0 +1,51 @@
+gather:
+  webform-files:
+    file.lookup:
+      path: config
+      pattern: webform.webform.*.yml
+      format: list
+  to-mail:
+    yaml.lookup:
+      input: webform-files
+      path: handlers.*.settings.to_mail
+      regex: '\[(.*)\]'
+      format: map-string-list
+  cc-mail:
+    yaml.lookup:
+      input: webform-files
+      path: handlers.*.settings.cc_mail
+      regex: '\[(.*)\]'
+      format: map-string-list
+  bcc-mail:
+    yaml.lookup:
+      input: webform-files
+      path: handlers.*.settings.bcc_mail
+      regex: '\[(.*)\]'
+      format: map-string-list
+
+analyse:
+  wrong-to-mail:
+    input: to-mail
+    when:
+      - notEmpty
+      - notEqual: '[current-user]'
+  wrong-cc-mail:
+    input: cc-mail
+    when:
+      - notEmpty
+      - notEqual: '[current-user]'
+  wrong-bcc-mail:
+    input: bcc-mail
+    when:
+      - notEmpty
+      - notEqual: '[current-user]'
+
+output:
+  stdout:
+    format: json
+  file:
+    path: /results.junit
+    format: junit
+  lagoon.problems:
+    api_key:
+    api_endpoint:

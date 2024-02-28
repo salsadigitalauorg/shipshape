@@ -29,7 +29,7 @@ func main() {
 			gen.RegistryCreateFile()
 			break
 		}
-		gen.Registry(pkg)
+		gen.CheckRegistry(pkg)
 		break
 	case "breach-type":
 		if len(breachTypes) == 0 {
@@ -45,6 +45,7 @@ func main() {
 			log.Fatal("fact-plugin missing flags; package is required")
 		}
 		gen.FactPlugin(plugins, pkg)
+		gen.FactRegistry(pkg)
 		break
 	case "connection-plugin":
 		if len(plugins) == 0 {
