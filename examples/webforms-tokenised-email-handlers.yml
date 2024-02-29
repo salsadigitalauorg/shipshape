@@ -32,23 +32,20 @@ gather:
 
 analyse:
   wrong-to-mail:
-    input: to-mail
-    when:
-      - notEmpty
-      - regexMatch: '\[(.*)\]'
-      - notEqual: '[current-user]'
+    basic:
+      input: to-mail
+      regex-match: '\[(.*)\]'
+      skip: '[current-user]'
   wrong-cc-mail:
-    input: cc-mail
-    when:
-      - notEmpty
-      - regexMatch: '\[(.*)\]'
-      - notEqual: '[current-user]'
+    basic:
+      input: cc-mail
+      regex-match: '\[(.*)\]'
+      skip: '[current-user]'
   wrong-bcc-mail:
-    input: bcc-mail
-    when:
-      - notEmpty
-      - regexMatch: '\[(.*)\]'
-      - notEqual: '[current-user]'
+    basic:
+      input: bcc-mail
+      regex-match: '\[(.*)\]'
+      skip: '[current-user]'
 
 output:
   stdout:

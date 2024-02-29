@@ -61,14 +61,6 @@ func appendFileContent(fullpath string, content string) {
 	writeFileContent(fullpath, output)
 }
 
-func writeFileLines(fullpath string, lines []string) {
-	output := strings.Join(lines, "\n")
-	err := os.WriteFile(fullpath, []byte(output), 0644)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
 func stringSliceMatch(slice []string, item string) bool {
 	for _, s := range slice {
 		if strings.Contains(s, item) {
