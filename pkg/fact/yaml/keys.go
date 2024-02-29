@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 
 	log "github.com/sirupsen/logrus"
@@ -45,8 +46,8 @@ func (p *Keys) SupportedInputs() (fact.SupportLevel, []string) {
 }
 
 func (p *Keys) Gather() {
-	var lookupData fact.DataMapYamlNodes
-	var nestedLookupData map[string]fact.DataMapYamlNodes
+	var lookupData data.MapYamlNodes
+	var nestedLookupData map[string]data.MapYamlNodes
 	var nestedStringMap map[string]map[string]string
 	var errs []error
 
@@ -59,13 +60,13 @@ func (p *Keys) Gather() {
 
 	switch p.input.PluginName() {
 	case "file.lookup":
-		inputData := fact.DataAsMapStringBytes(p.input.GetData())
+		inputData := data.AsMapStringBytes(p.input.GetData())
 		if inputData == nil {
 			return
 		}
 		lookupData, errs = PathLookupFromBytes(inputData, p.Path)
 	case "yaml.keys":
-		inputData := fact.DataAsMapYamlNodes(p.input.GetData())
+		inputData := data.AsMapYamlNodes(p.input.GetData())
 		if inputData == nil {
 			return
 		}

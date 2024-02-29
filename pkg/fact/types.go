@@ -14,13 +14,16 @@ const (
 )
 
 type Facter interface {
+	// Common plugin methods.
 	PluginName() string
 	GetName() string
-	GetData() interface{}
-	GetFormat() FactFormat
+
+	// Fact methods.
+	GetErrors() []error
 	GetConnectionName() string
 	GetInputName() string
-	GetErrors() []error
+	GetData() interface{}
+	GetFormat() FactFormat
 	SupportedConnections() (SupportLevel, []string)
 	ValidateConnection() error
 	SupportedInputs() (SupportLevel, []string)

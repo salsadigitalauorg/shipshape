@@ -8,6 +8,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/analyse"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
@@ -235,9 +236,28 @@ func ProcessCheck(rl *result.ResultList, c config.Check) {
 }
 
 func RunV2() {
+	log.WithField("config", fmt.Sprintf("%+v", RunConfigV2)).Trace("running v2")
+
 	log.Print("parsing connections config")
 	connection.ParseConfig(RunConfigV2.Connections)
 	log.Print("parsing facts config")
 	fact.ParseConfig(RunConfigV2.Gather)
+	log.Print("parsing analysers config")
+	analyse.ParseConfig(RunConfigV2.Analyse)
+
+	log.Print("validating connection connections - TODO")
+	log.Print("validating fact connections - TODO")
+	log.Print("validating fact inputs - TODO")
+
+	log.Print("validating analyser inputs")
+	analyse.ValidateInputs()
+	if len(analyse.Errors) > 0 {
+		log.WithField("errors", analyse.Errors).Fatal("failed to validate analyser inputs")
+	}
+
+	log.Print("gathering facts")
 	fact.GatherAllFacts()
+
+	log.Print("analysing facts")
+	analyse.AnalyseAll()
 }

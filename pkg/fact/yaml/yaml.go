@@ -1,14 +1,14 @@
 package yaml
 
 import (
-	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
-func PathLookupFromBytes(filesData map[string][]byte, path string) (fact.DataMapYamlNodes, []error) {
-	data := fact.DataMapYamlNodes{}
+func PathLookupFromBytes(filesData map[string][]byte, path string) (data.MapYamlNodes, []error) {
+	result := data.MapYamlNodes{}
 	var errors []error
 	for f, fBytes := range filesData {
 		n := yaml.Node{}
@@ -24,17 +24,17 @@ func PathLookupFromBytes(filesData map[string][]byte, path string) (fact.DataMap
 			errors = append(errors, err)
 			continue
 		}
-		data[f] = foundNodes
+		result[f] = foundNodes
 	}
-	return data, errors
+	return result, errors
 }
 
-func PathLookupFromYamlNodes(filesNodes fact.DataMapYamlNodes, path string) (map[string]fact.DataMapYamlNodes, []error) {
-	data := map[string]fact.DataMapYamlNodes{}
+func PathLookupFromYamlNodes(filesNodes data.MapYamlNodes, path string) (map[string]data.MapYamlNodes, []error) {
+	result := map[string]data.MapYamlNodes{}
 	var errors []error
 	// Each top-level node is expected to be a key.
 	for f, nodes := range filesNodes {
-		data[f] = fact.DataMapYamlNodes{}
+		result[f] = data.MapYamlNodes{}
 		for _, n := range nodes {
 			foundNodes, err := utils.LookupYamlPath(n, path)
 			if err != nil {
@@ -42,14 +42,14 @@ func PathLookupFromYamlNodes(filesNodes fact.DataMapYamlNodes, path string) (map
 				log.WithError(err).Debug("failed to lookup yaml path from nodes")
 				continue
 			}
-			data[f][n.Value] = foundNodes
+			result[f][n.Value] = foundNodes
 		}
 	}
-	return data, errors
+	return result, errors
 }
 
 func YamlMapNodesToStringMapPathLookup(mapNodes []*yaml.Node, path string) (map[string]string, []error) {
-	data := map[string]string{}
+	result := map[string]string{}
 	var errs []error
 	log.WithFields(log.Fields{
 		"mapNodes": len(mapNodes),
@@ -64,18 +64,18 @@ func YamlMapNodesToStringMapPathLookup(mapNodes []*yaml.Node, path string) (map[
 				log.WithError(err).Debug("failed to lookup yaml path from nodes")
 				continue
 			}
-			data[mapKey] = foundNodes[0].Value
+			result[mapKey] = foundNodes[0].Value
 		}
 	}
-	return data, errs
+	return result, errs
 }
 
 func MappingNodeToKeyedMap(n *yaml.Node) map[string]*yaml.Node {
-	data := map[string]*yaml.Node{}
+	result := map[string]*yaml.Node{}
 	for i := 0; i < len(n.Content); i++ {
 		if i%2 == 0 {
-			data[n.Content[i].Value] = n.Content[i+1]
+			result[n.Content[i].Value] = n.Content[i+1]
 		}
 	}
-	return data
+	return result
 }

@@ -74,7 +74,7 @@ func (c *CheckBase) HasData(failCheck bool) bool {
 // can be used to execute the check. Any failure here should fail the check.
 func (c *CheckBase) UnmarshalDataMap() {}
 
-// AddBreach appends a Breach to the Result and sets the Check as Fail.
+// AddBreach appends a Breach to the Result.
 func (c *CheckBase) AddBreach(b result.Breach) {
 	b.SetCommonValues(string(c.cType), c.Name, string(c.Severity))
 	c.Result.Breaches = append(
