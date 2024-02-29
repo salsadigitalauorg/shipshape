@@ -3,6 +3,7 @@ package analyse
 import (
 	"fmt"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
@@ -48,9 +49,11 @@ func ValidateInputs() {
 	}
 }
 
-func AnalyseAll() {
+func AnalyseAll() map[string]result.Result {
+	results := map[string]result.Result{}
 	for _, p := range Analysers {
 		p.Analyse()
-		fmt.Printf("Result: %+v\n", p.GetResult())
+		results[p.GetName()] = p.GetResult()
 	}
+	return results
 }
