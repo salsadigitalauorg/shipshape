@@ -3,12 +3,14 @@ package fact
 type FactFormat string
 
 const (
-	FormatRaw           FactFormat = "raw"
-	FormatList          FactFormat = "list"
-	FormatMapBytes      FactFormat = "map-bytes"
-	FormatMapStringList FactFormat = "map-string-list"
-	FormatYaml          FactFormat = "yaml"
-	FormatJson          FactFormat = "json"
+	FormatRaw             FactFormat = "raw"
+	FormatList            FactFormat = "list"
+	FormatMapBytes        FactFormat = "map-bytes"
+	FormatMapString       FactFormat = "map-string"
+	FormatMapYamlNodes    FactFormat = "map-yaml-nodes"
+	FormatMapNestedString FactFormat = "map-nested-string"
+	FormatYaml            FactFormat = "yaml"
+	FormatJson            FactFormat = "json"
 )
 
 type Facter interface {
