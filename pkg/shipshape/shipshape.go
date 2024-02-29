@@ -252,12 +252,19 @@ func RunV2() {
 	log.Print("validating analyser inputs")
 	analyse.ValidateInputs()
 	if len(analyse.Errors) > 0 {
-		log.WithField("errors", analyse.Errors).Fatal("failed to validate analyser inputs")
+		log.WithField("errors", analyse.Errors).
+			Fatal("failed to validate analyser inputs")
 	}
 
 	log.Print("gathering facts")
 	fact.GatherAllFacts()
 
 	log.Print("analysing facts")
-	analyse.AnalyseAll()
+	results := analyse.AnalyseAll()
+
+	RunResultList = result.NewResultList(false)
+	for _, r := range results {
+		r.DetermineResultStatus(false)
+		RunResultList.AddResult(r)
+	}
 }
