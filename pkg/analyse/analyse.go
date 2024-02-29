@@ -50,7 +50,6 @@ func ValidateInputs() {
 
 func AnalyseAll() {
 	for _, p := range Analysers {
-		p.BuildConditionsResolver()
 		p.Analyse()
 		fmt.Printf("Result: %+v\n", p.GetResult())
 	}

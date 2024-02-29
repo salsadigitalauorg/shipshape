@@ -11,7 +11,6 @@ type Analyser interface {
 	GetInputName() string
 	GetResult() result.Result
 	ValidateInput() error
-	BuildConditionsResolver()
 	Analyse()
 	AddBreach(b result.Breach)
 }

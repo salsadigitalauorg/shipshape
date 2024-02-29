@@ -32,20 +32,26 @@ gather:
 
 analyse:
   wrong-to-mail:
-    basic:
+    regex-match:
       input: to-mail
-      regex-match: '\[(.*)\]'
-      skip: '[current-user]'
+      pattern: '\[(.*)\]'
+      ignore: '[current-user]'
+      breach-format:
+        type: key-value
+        key-label: webform
+        key: $input("webform-titles")
+        value-label: $inputName
+        value: $self
   wrong-cc-mail:
-    basic:
+    regex-match:
       input: cc-mail
-      regex-match: '\[(.*)\]'
-      skip: '[current-user]'
+      pattern: '\[(.*)\]'
+      ignore: '[current-user]'
   wrong-bcc-mail:
-    basic:
+    regex-match:
       input: bcc-mail
-      regex-match: '\[(.*)\]'
-      skip: '[current-user]'
+      pattern: '\[(.*)\]'
+      ignore: '[current-user]'
 
 output:
   stdout:
