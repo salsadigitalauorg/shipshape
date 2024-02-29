@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -16,8 +16,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"github.com/hashicorp/go-version"
+	log "github.com/sirupsen/logrus"
+	"github.com/vmware-labs/yaml-jsonpath/pkg/yamlpath"
 	"gopkg.in/yaml.v3"
 )
 
@@ -88,8 +89,10 @@ func IsFileInDirs(root string, file string, dirs []string) bool {
 // the found Node.
 // It uses the implemention by https://github.com/vmware-labs/yaml-jsonpath.
 func LookupYamlPath(n *yaml.Node, path string) ([]*yaml.Node, error) {
+	log.WithField("path", path).Debug("looking up yaml path")
 	p, err := yamlpath.NewPath(path)
 	if err != nil {
+		log.WithError(err).Debug("failed to lookup yaml path")
 		return nil, err
 	}
 	q, _ := p.Find(n)
@@ -306,31 +309,31 @@ func StringSliceMatch(slice []string, item string) bool {
 // Sift through a slice to determine if it contains eligible package
 // with optional version constrains.
 func PackageCheckString(slice []string, item string, item_version string) bool {
-  for _, s := range slice {
-    // Parse slice with regex to:
-    // 1 - package name (e.g. "bitnami/kubectl")
-    // 2 - version (e.g. "8.0")
-    service_regex := regexp.MustCompile("^(.[^:@]*)?[:@]?([^ latest$]*)")
-    service_match := service_regex.FindStringSubmatch(s)
-    // Only proceed if package names were parsed successfully.
-    if len(service_match[1]) > 0 && len(item) > 0 {
-      // Check if package name matches.
-      if service_match[1] == item {
-        // Package name matched.
-        // If service does not dictate version than assume any version is allowed.
-        if len(service_match[2]) < 1 {
-          return true
-        } else if len(item_version) > 0 {
-          // Ensure that item version is not less than slice version.
-          allowedVersion, err := version.NewVersion(service_match[2])
-          imageVersion, err := version.NewVersion(item_version)
-          // Run version comparison.
-          if err == nil && allowedVersion.LessThanOrEqual(imageVersion) {
-            return true
-          }
-        }
-      }
-    }
+	for _, s := range slice {
+		// Parse slice with regex to:
+		// 1 - package name (e.g. "bitnami/kubectl")
+		// 2 - version (e.g. "8.0")
+		service_regex := regexp.MustCompile("^(.[^:@]*)?[:@]?([^ latest$]*)")
+		service_match := service_regex.FindStringSubmatch(s)
+		// Only proceed if package names were parsed successfully.
+		if len(service_match[1]) > 0 && len(item) > 0 {
+			// Check if package name matches.
+			if service_match[1] == item {
+				// Package name matched.
+				// If service does not dictate version than assume any version is allowed.
+				if len(service_match[2]) < 1 {
+					return true
+				} else if len(item_version) > 0 {
+					// Ensure that item version is not less than slice version.
+					allowedVersion, err := version.NewVersion(service_match[2])
+					imageVersion, err := version.NewVersion(item_version)
+					// Run version comparison.
+					if err == nil && allowedVersion.LessThanOrEqual(imageVersion) {
+						return true
+					}
+				}
+			}
+		}
 	}
 	return false
 }
@@ -392,7 +395,7 @@ func HasComposerDependency(loc string, deps []string) (bool, error) {
 	}
 
 	defer cf.Close()
-	byteValue, _ := ioutil.ReadAll(cf)
+	byteValue, _ := io.ReadAll(cf)
 
 	json.Unmarshal([]byte(byteValue), &composer)
 

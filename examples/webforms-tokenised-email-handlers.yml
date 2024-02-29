@@ -3,41 +3,51 @@ gather:
     file.lookup:
       path: config
       pattern: webform.webform.*.yml
-      format: list
+      format: map-bytes
+  webform-titles:
+    yaml.keys:
+      input: webform-files
+      path: title
+      format: map-string
+  webform-handlers:
+    yaml.keys:
+      input: webform-files
+      path: handlers
+      format: map-yaml-nodes
   to-mail:
-    yaml.lookup:
-      input: webform-files
-      path: handlers.*.settings.to_mail
-      regex: '\[(.*)\]'
-      format: map-string-list
+    yaml.keys:
+      input: webform-handlers
+      path: settings.to_mail
+      format: map-nested-string
   cc-mail:
-    yaml.lookup:
-      input: webform-files
-      path: handlers.*.settings.cc_mail
-      regex: '\[(.*)\]'
-      format: map-string-list
+    yaml.keys:
+      input: webform-handlers
+      path: settings.cc_mail
+      format: map-nested-string
   bcc-mail:
-    yaml.lookup:
-      input: webform-files
-      path: handlers.*.settings.bcc_mail
-      regex: '\[(.*)\]'
-      format: map-string-list
+    yaml.keys:
+      input: webform-handlers
+      path: settings.bcc_mail
+      format: map-nested-string
 
 analyse:
   wrong-to-mail:
     input: to-mail
     when:
       - notEmpty
+      - regexMatch: '\[(.*)\]'
       - notEqual: '[current-user]'
   wrong-cc-mail:
     input: cc-mail
     when:
       - notEmpty
+      - regexMatch: '\[(.*)\]'
       - notEqual: '[current-user]'
   wrong-bcc-mail:
     input: bcc-mail
     when:
       - notEmpty
+      - regexMatch: '\[(.*)\]'
       - notEqual: '[current-user]'
 
 output:

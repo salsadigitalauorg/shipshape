@@ -233,7 +233,7 @@ func ProcessCheck(rl *result.ResultList, c config.Check) {
 	rl.AddResult(*c.GetResult())
 }
 
-func GatherFacts() {
+func RunV2() {
 	log.Print("parsing facts config")
 	fact.ParseFactsConfig(RunConfigV2.Gather)
 	fact.GatherAllFacts()

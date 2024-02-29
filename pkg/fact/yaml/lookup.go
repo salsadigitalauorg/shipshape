@@ -7,6 +7,8 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
+
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -22,8 +24,7 @@ type Lookup struct {
 	data           interface{}
 
 	// Plugin fields.
-	Path  string `yaml:"path"`
-	Regex string `yaml:"regex"`
+	Path string `yaml:"path"`
 }
 
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Lookup --package=yaml
@@ -41,7 +42,7 @@ func (p *Lookup) SupportedConnections() (fact.SupportLevel, []string) {
 }
 
 func (p *Lookup) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportRequired, []string{"file.lookup"}
+	return fact.SupportRequired, []string{"file.lookup", "yaml.keys"}
 }
 
 func (p *Lookup) Gather() {
@@ -61,25 +62,40 @@ func (p *Lookup) Gather() {
 		err := yaml.Unmarshal(fBytes, &n)
 		if err != nil {
 			p.errors = append(p.errors, err)
+			log.WithError(err).Error("failed to unmarshal yaml")
 			continue
 		}
 
 		data[f] = map[string]string{}
+		log.WithFields(log.Fields{
+			"fact": p.Name,
+			"file": f,
+			"path": p.Path,
+		}).Debug("looking up yaml path")
 		foundNodes, err := utils.LookupYamlPath(&n, p.Path)
 		if err != nil {
 			p.errors = append(p.errors, err)
+			log.WithError(err).Error("failed to lookup yaml path")
 			continue
 		}
 
+		log.Debugf("found %d nodes", len(foundNodes))
 		for _, node := range foundNodes {
-			fmt.Printf("node: %#v\n", node)
+			log.WithFields(log.Fields{
+				"content": node.Content,
+				"alias":   node.Alias,
+				"anchor":  node.Anchor,
+				"value":   node.Value,
+			}).Debugf("")
 			data[f][node.Anchor] = node.Value
+			fmt.Printf("node: %#v\n", node)
+			panic("stop")
 		}
 
 	}
 
 	switch p.Format {
-	case fact.FormatMapStringList:
+	case fact.FormatMapYamlNodes:
 		p.data = data
 	default:
 		p.errors = append(p.errors, errors.New("unsupported format"))

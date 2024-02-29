@@ -72,8 +72,8 @@ func GatherFact(name string, f Facter) {
 	f.Gather()
 	log.WithFields(log.Fields{
 		"fact": name,
-		"data": fmt.Sprintf("%#v", f.GetData()),
-	}).Debugf("gathered fact")
+		"data": f.GetData(),
+	}).Trace("gathered fact")
 	gathered = append(gathered, name)
 }
 

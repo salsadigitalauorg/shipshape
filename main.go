@@ -128,7 +128,7 @@ func main() {
 	}
 
 	if shipshape.IsV2 {
-		shipshape.GatherFacts()
+		shipshape.RunV2()
 	} else {
 		shipshape.RunChecks()
 	}
