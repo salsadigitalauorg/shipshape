@@ -13,7 +13,7 @@ var Facts = map[string]Facter{}
 var Errors = []error{}
 var gathered = []string{}
 
-func ParseFactsConfig(raw map[string]map[string]interface{}) {
+func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0
 	for name, pluginConf := range raw {
 		for pluginName, pluginMap := range pluginConf {

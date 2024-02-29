@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -234,7 +235,9 @@ func ProcessCheck(rl *result.ResultList, c config.Check) {
 }
 
 func RunV2() {
+	log.Print("parsing connections config")
+	connection.ParseConfig(RunConfigV2.Connections)
 	log.Print("parsing facts config")
-	fact.ParseFactsConfig(RunConfigV2.Gather)
+	fact.ParseConfig(RunConfigV2.Gather)
 	fact.GatherAllFacts()
 }

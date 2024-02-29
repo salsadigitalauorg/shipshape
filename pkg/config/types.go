@@ -18,9 +18,10 @@ type Config struct {
 }
 
 type ConfigV2 struct {
-	Gather  map[string]map[string]interface{} `yaml:"gather"`
-	Analyse map[string]map[string]interface{} `yaml:"analyse"`
-	Output  map[string]map[string]interface{} `yaml:"output"`
+	Connections map[string]map[string]interface{} `yaml:"connections"`
+	Gather      map[string]map[string]interface{} `yaml:"gather"`
+	Analyse     map[string]map[string]interface{} `yaml:"analyse"`
+	Output      map[string]map[string]interface{} `yaml:"output"`
 }
 
 type Severity string
