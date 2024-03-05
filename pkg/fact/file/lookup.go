@@ -47,7 +47,7 @@ func (p *Lookup) SupportedInputs() (fact.SupportLevel, []string) {
 	return fact.SupportNone, []string{}
 }
 
-func (p *Lookup) Gather() {
+func (p *Lookup) Collect() {
 	files, err := utils.FindFiles(filepath.Join(config.ProjectDir, p.Path), p.Pattern, p.ExcludePattern, p.SkipDirs)
 	if err != nil {
 		p.errors = append(p.errors, err)

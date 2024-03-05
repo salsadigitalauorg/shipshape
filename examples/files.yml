@@ -1,4 +1,4 @@
-gather:
+collect:
   illegal-files:
     file.lookup:
       path: web

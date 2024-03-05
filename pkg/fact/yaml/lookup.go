@@ -45,7 +45,7 @@ func (p *Lookup) SupportedInputs() (fact.SupportLevel, []string) {
 	return fact.SupportRequired, []string{"file.lookup", "yaml.keys"}
 }
 
-func (p *Lookup) Gather() {
+func (p *Lookup) Collect() {
 	inputData := p.input.GetData()
 	if inputData == nil {
 		return

@@ -9,7 +9,7 @@ connections:
       password: drupal
       database: drupal
 
-gather:
+collect:
   table_names:
     database.query:
       connection: drupal_db

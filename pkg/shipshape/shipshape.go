@@ -153,7 +153,7 @@ func ParseConfigData(configData [][]byte) error {
 		// return err
 	}
 	RunConfigV2 = cfgV2
-	if len(RunConfigV2.Gather) > 0 {
+	if len(RunConfigV2.Collect) > 0 {
 		IsV2 = true
 		return nil
 	}
@@ -241,7 +241,7 @@ func RunV2() {
 	log.Print("parsing connections config")
 	connection.ParseConfig(RunConfigV2.Connections)
 	log.Print("parsing facts config")
-	fact.ParseConfig(RunConfigV2.Gather)
+	fact.ParseConfig(RunConfigV2.Collect)
 	log.Print("parsing analysers config")
 	analyse.ParseConfig(RunConfigV2.Analyse)
 
@@ -256,8 +256,8 @@ func RunV2() {
 			Fatal("failed to validate analyser inputs")
 	}
 
-	log.Print("gathering facts")
-	fact.GatherAllFacts()
+	log.Print("collecting facts")
+	fact.CollectAllFacts()
 
 	log.Print("analysing facts")
 	results := analyse.AnalyseAll()

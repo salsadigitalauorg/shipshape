@@ -12,7 +12,7 @@ import (
 var Registry = map[string]func(string) Facter{}
 var Facts = map[string]Facter{}
 var Errors = []error{}
-var gathered = []string{}
+var collected = []string{}
 
 func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0
@@ -42,18 +42,18 @@ func ParseConfig(raw map[string]map[string]interface{}) {
 	log.Infof("parsed %d facts", count)
 }
 
-func GatherAllFacts() {
+func CollectAllFacts() {
 	for name, p := range Facts {
-		GatherFact(name, p)
+		CollectFact(name, p)
 	}
 }
 
-func GatherFact(name string, f Facter) {
+func CollectFact(name string, f Facter) {
 	if f.GetInputName() != "" {
-		GatherFact(f.GetInputName(), GetInstance(f.GetInputName()))
+		CollectFact(f.GetInputName(), GetInstance(f.GetInputName()))
 	}
 
-	if utils.StringSliceContains(gathered, name) {
+	if utils.StringSliceContains(collected, name) {
 		return
 	}
 
@@ -69,13 +69,13 @@ func GatherFact(name string, f Facter) {
 		return
 	}
 
-	log.WithField("fact", name).Infof("gathering fact")
-	f.Gather()
+	log.WithField("fact", name).Infof("collecting fact")
+	f.Collect()
 	log.WithFields(log.Fields{
 		"fact": name,
 		"data": f.GetData(),
-	}).Trace("gathered fact")
-	gathered = append(gathered, name)
+	}).Trace("collected fact")
+	collected = append(collected, name)
 }
 
 func GetInstance(name string) Facter {
