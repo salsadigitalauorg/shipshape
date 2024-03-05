@@ -45,7 +45,7 @@ func (p *Keys) SupportedInputs() (fact.SupportLevel, []string) {
 	return fact.SupportRequired, []string{"file.lookup", "yaml.keys"}
 }
 
-func (p *Keys) Gather() {
+func (p *Keys) Collect() {
 	var lookupData data.MapYamlNodes
 	var nestedLookupData map[string]data.MapYamlNodes
 	var nestedStringMap map[string]map[string]string
@@ -56,7 +56,7 @@ func (p *Keys) Gather() {
 		"fact":         p.Name,
 		"input":        p.GetInputName(),
 		"input-plugin": p.input.PluginName(),
-	}).Debug("gathering data")
+	}).Debug("collecting data")
 
 	switch p.input.PluginName() {
 	case "file.lookup":

@@ -41,7 +41,7 @@ func (p *Query) SupportedInputs() (fact.SupportLevel, []string) {
 	return fact.SupportNone, []string{}
 }
 
-func (p *Query) Gather() {
+func (p *Query) Collect() {
 	mysqlConn := p.connection.(*connection.Mysql)
 	mysqlConn.Query = p.Query
 	data, err := mysqlConn.Run()

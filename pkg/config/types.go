@@ -19,7 +19,7 @@ type Config struct {
 
 type ConfigV2 struct {
 	Connections map[string]map[string]interface{} `yaml:"connections"`
-	Gather      map[string]map[string]interface{} `yaml:"gather"`
+	Collect     map[string]map[string]interface{} `yaml:"collect"`
 	Analyse     map[string]map[string]interface{} `yaml:"analyse"`
 	Output      map[string]map[string]interface{} `yaml:"output"`
 }

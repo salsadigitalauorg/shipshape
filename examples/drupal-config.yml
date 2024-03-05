@@ -1,4 +1,4 @@
-gather:
+collect:
   install-profile:
     yaml.key:
       file: config/default/core.extension.yml

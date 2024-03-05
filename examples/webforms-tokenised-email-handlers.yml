@@ -1,4 +1,4 @@
-gather:
+collect:
   webform-files:
     file.lookup:
       path: config

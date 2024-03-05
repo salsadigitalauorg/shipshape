@@ -41,7 +41,7 @@ func (p *DockerCommand) SupportedInputs() (fact.SupportLevel, []string) {
 	return fact.SupportNone, []string{}
 }
 
-func (p *DockerCommand) Gather() {
+func (p *DockerCommand) Collect() {
 	dockerConn := p.connection.(*connection.DockerExec)
 	dockerConn.Command = p.Command
 	data, err := dockerConn.Run()
