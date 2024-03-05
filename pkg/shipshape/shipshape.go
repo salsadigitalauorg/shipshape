@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
@@ -21,7 +20,7 @@ var RunConfig config.Config
 var RunResultList result.ResultList
 var OutputFormats = []string{"json", "junit", "simple", "table"}
 
-func Init(projectDir string, configFiles []string, checkTypesToRun []string, excludeDb bool, remediate bool, logLevel string, lagoonApiBaseUrl string, lagoonApiToken string) error {
+func Init(projectDir string, configFiles []string, checkTypesToRun []string, excludeDb bool, remediate bool, logLevel string) error {
 	if logLevel == "" {
 		logLevel = "warn"
 	}
@@ -43,15 +42,6 @@ func Init(projectDir string, configFiles []string, checkTypesToRun []string, exc
 	// Remediate is a command-level flag, so we set the value outside of
 	// config parsing.
 	RunConfig.Remediate = remediate
-
-	// Base url can either be provided in the config file or in env var, the
-	// latter being final.
-	if lagoonApiBaseUrl != "" {
-		lagoon.ApiBaseUrl = lagoonApiBaseUrl
-	} else {
-		lagoon.ApiBaseUrl = RunConfig.LagoonApiBaseUrl
-	}
-	lagoon.ApiToken = lagoonApiToken
 
 	log.WithFields(log.Fields{
 		"ProjectDir":    RunConfig.ProjectDir,
