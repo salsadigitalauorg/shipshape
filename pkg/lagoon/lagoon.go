@@ -85,7 +85,7 @@ func ProcessResultList(w *bufio.Writer, list result.ResultList) error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprint(w, "no breach to push to Lagoon; only deleted previous problems")
+		fmt.Fprintln(w, "no breach to push to Lagoon; only deleted previous problems")
 		w.Flush()
 		return nil
 	}
@@ -96,13 +96,11 @@ func ProcessResultList(w *bufio.Writer, list result.ResultList) error {
 		}
 
 		// let's marshal the breaches, they can be attached to the problem in the data field
-		//breachToConvert = r.Breaches
-		//brea
 		breachMapJson, err := json.Marshal(r.Breaches)
 		if err != nil {
 			log.WithError(err).Fatal("Unable to marshal breach information")
 		}
-		fmt.Println(string(breachMapJson))
+
 		problems = append(problems, Problem{
 			Identifier:        r.Name,
 			Version:           "1",
