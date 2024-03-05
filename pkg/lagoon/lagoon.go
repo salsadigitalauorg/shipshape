@@ -96,8 +96,8 @@ func ProcessResultList(w *bufio.Writer, list result.ResultList) error {
 		}
 
 		// let's marshal the breaches, they can be attached to the problem in the data field
-		breachToConvert := r.Breaches
-		breachToConvert
+		//breachToConvert = r.Breaches
+		//brea
 		breachMapJson, err := json.Marshal(r.Breaches)
 		if err != nil {
 			log.WithError(err).Fatal("Unable to marshal breach information")
