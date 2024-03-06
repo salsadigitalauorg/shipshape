@@ -17,7 +17,7 @@ func BreachType(breachTypes []string) {
 	if err := os.Remove(breachTypeFullFilePath); err != nil && !os.IsNotExist(err) {
 		log.Fatalln(err)
 	}
-	createFile(breachTypeFullFilePath, "package result\n")
+	createFileWithString(breachTypeFullFilePath, "package result\n")
 
 	for _, bt := range breachTypes {
 		appendFileContent(breachTypeFullFilePath, breachTypeFuncs(bt))

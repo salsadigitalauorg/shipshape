@@ -1,11 +1,13 @@
 package gen
 
 import (
+	"bytes"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"text/template"
 )
 
 func getScriptPath() string {
@@ -13,7 +15,22 @@ func getScriptPath() string {
 	return filepath.Dir(b)
 }
 
-func createFile(fullpath string, firstTimeContent string) {
+func templateToFile(tmplPath string, data any, fullpath string) {
+	pluginTemplate, err := template.ParseFiles(filepath.Join(getScriptPath(), tmplPath))
+	if err != nil {
+		log.Fatalln(err)
+		return
+	}
+
+	pluginContent := &bytes.Buffer{}
+	if err := pluginTemplate.Execute(pluginContent, data); err != nil {
+		log.Fatalln(err)
+	}
+
+	createFile(fullpath, pluginContent.Bytes())
+}
+
+func createFile(fullpath string, firstTimeContent []byte) {
 	if f, err := os.Stat(fullpath); err == nil && !f.IsDir() {
 		return
 	} else if !os.IsNotExist(err) {
@@ -28,13 +45,21 @@ func createFile(fullpath string, firstTimeContent string) {
 		f.Close()
 	}()
 
+	if len(firstTimeContent) == 0 {
+		return
+	}
+
+	if _, err := f.Write(firstTimeContent); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func createFileWithString(fullpath string, firstTimeContent string) {
 	if firstTimeContent == "" {
 		return
 	}
 
-	if _, err := f.Write([]byte(firstTimeContent)); err != nil {
-		log.Fatal(err)
-	}
+	createFile(fullpath, []byte(firstTimeContent))
 }
 
 func getFileLines(fullpath string) []string {

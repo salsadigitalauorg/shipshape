@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
@@ -48,6 +50,12 @@ func (p *Lookup) SupportedInputs() (fact.SupportLevel, []string) {
 }
 
 func (p *Lookup) Collect() {
+	log.WithFields(log.Fields{
+		"fact":        p.Name,
+		"project-dir": config.ProjectDir,
+		"path":        p.Path,
+		"pattern":     p.Pattern,
+	}).Info("looking up files")
 	files, err := utils.FindFiles(filepath.Join(config.ProjectDir, p.Path), p.Pattern, p.ExcludePattern, p.SkipDirs)
 	if err != nil {
 		p.errors = append(p.errors, err)
