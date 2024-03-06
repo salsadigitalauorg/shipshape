@@ -71,6 +71,7 @@ func CollectFact(name string, f Facter) {
 
 	log.WithField("fact", name).Infof("collecting fact")
 	f.Collect()
+
 	log.WithFields(log.Fields{
 		"fact": name,
 		"data": f.GetData(),

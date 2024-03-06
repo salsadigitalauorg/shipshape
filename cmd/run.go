@@ -22,6 +22,8 @@ var runCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 
 	PreRun: func(cmd *cobra.Command, args []string) {
+		config.ProjectDir = args[0]
+
 		// Parse env vars, overriding flags.
 		errorCodeOnFailureEnv := os.Getenv("SHIPSHAPE_ERROR_ON_FAILURE")
 		if errorCodeOnFailureEnv != "" {
