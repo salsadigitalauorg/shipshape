@@ -32,7 +32,6 @@ var RunResultList result.ResultList
 
 func Init() error {
 	log.Print("initialising shipshape")
-	config.Files = []string{"testdata/shipshape.yml"}
 	isV2, cfg, cfgV2, err := config.ReadAndParseConfig()
 	if err != nil {
 		return err

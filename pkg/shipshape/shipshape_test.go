@@ -18,6 +18,7 @@ func TestInit(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("defaultValues", func(t *testing.T) {
+		config.Files = []string{"testdata/shipshape.yml"}
 		err := Init()
 		assert.NoError(err)
 		assert.Equal(config.Config{
