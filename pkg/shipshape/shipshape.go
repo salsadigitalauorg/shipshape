@@ -8,64 +8,50 @@ import (
 	"os"
 	"sync"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/analyse"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
-	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/salsadigitalauorg/shipshape/pkg/utils"
-
-	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 )
 
+// Flags & arg
+var ErrorCodeOnFailure bool
+var Remediate bool
+var FailSeverity string
+
+// Config
 var IsV2 bool
 var RunConfig config.Config
 var RunConfigV2 config.ConfigV2
+
+// Results
 var RunResultList result.ResultList
-var OutputFormats = []string{"json", "junit", "simple", "table"}
 
-func Init(projectDir string, configFiles []string, checkTypesToRun []string, excludeDb bool, remediate bool, logLevel string, lagoonApiBaseUrl string, lagoonApiToken string) error {
-	if logLevel == "" {
-		logLevel = "warn"
-	}
-	if logrusLevel, err := log.ParseLevel(logLevel); err != nil {
-		panic(err)
-	} else {
-		log.SetLevel(logrusLevel)
-	}
-
+func Init() error {
 	log.Print("initialising shipshape")
-	err := ReadAndParseConfig(projectDir, configFiles)
+	config.Files = []string{"testdata/shipshape.yml"}
+	isV2, cfg, cfgV2, err := config.ReadAndParseConfig()
 	if err != nil {
 		return err
 	}
+	IsV2 = isV2
 
 	if IsV2 {
+		RunConfigV2 = cfgV2
 		return nil
 	}
 
-	config.ProjectDir = RunConfig.ProjectDir
-	RunResultList = result.NewResultList(remediate)
+	RunConfig = cfg
 
-	// Remediate is a command-level flag, so we set the value outside of
-	// config parsing.
-	RunConfig.Remediate = remediate
-
-	// Base url can either be provided in the config file or in env var, the
-	// latter being final.
-	if lagoonApiBaseUrl != "" {
-		lagoon.ApiBaseUrl = lagoonApiBaseUrl
-	} else {
-		lagoon.ApiBaseUrl = RunConfig.LagoonApiBaseUrl
-	}
-	lagoon.ApiToken = lagoonApiToken
+	RunResultList = result.NewResultList(Remediate)
 
 	log.WithFields(log.Fields{
-		"ProjectDir":    RunConfig.ProjectDir,
-		"FailSeverity":  RunConfig.FailSeverity,
-		"Remediate":     RunConfig.Remediate,
+		"ProjectDir":    config.ProjectDir,
+		"FailSeverity":  FailSeverity,
+		"Remediate":     Remediate,
 		"RunResultList": fmt.Sprintf("%+v", RunResultList),
 	}).Debug("basic config")
 
@@ -74,13 +60,13 @@ func Init(projectDir string, configFiles []string, checkTypesToRun []string, exc
 	for ct, checks := range RunConfig.Checks {
 		for _, c := range checks {
 			c.Init(ct)
-			c.SetPerformRemediation(remediate)
+			c.SetPerformRemediation(Remediate)
 			checksCount++
 		}
 	}
 
 	log.Print("filtering checks")
-	RunConfig.FilterChecksToRun(checkTypesToRun, excludeDb)
+	RunConfig.FilterChecksToRun()
 	log.WithField("checksCount", checksCount).Print("checks filtered")
 	jsonChecks, _ := json.Marshal(RunConfig.Checks)
 	log.WithFields(log.Fields{
@@ -90,103 +76,7 @@ func Init(projectDir string, configFiles []string, checkTypesToRun []string, exc
 	return nil
 }
 
-func ReadAndParseConfig(projectDir string, files []string) error {
-	configData, err := FetchConfigData(files)
-	if err != nil {
-		return err
-	}
-	err = ParseConfigData(configData)
-	if err != nil {
-		return err
-	}
-
-	if IsV2 {
-		return nil
-	}
-
-	if RunConfig.ProjectDir == "" && projectDir != "" {
-		RunConfig.ProjectDir = projectDir
-	} else {
-		// Default project directory is current directory.
-		projectDir, _ = os.Getwd()
-		RunConfig.ProjectDir = projectDir
-	}
-
-	if RunConfig.FailSeverity == "" {
-		RunConfig.FailSeverity = config.HighSeverity
-	}
-
-	return nil
-}
-
-func FetchConfigData(files []string) ([][]byte, error) {
-	var err error
-	configData := [][]byte{}
-	for _, f := range files {
-		var data []byte
-		log.WithField("source", f).Info("fetching config")
-		if utils.StringIsUrl(f) {
-			data, err = utils.FetchContentFromUrl(f)
-			if err != nil {
-				log.WithField("url", f).WithError(
-					err).Error("could not fetch config from url")
-				return nil, err
-			}
-		} else {
-			data, err = os.ReadFile(f)
-			if err != nil {
-				log.WithField("file", f).WithError(
-					err).Error("could not fetch config from file")
-				return nil, err
-			}
-		}
-		configData = append(configData, data)
-	}
-	return configData, nil
-}
-
-func ParseConfigData(configData [][]byte) error {
-	cfgV2 := config.ConfigV2{}
-	data := configData[0]
-	if err := yaml.Unmarshal(data, &cfgV2); err != nil {
-		log.WithError(err).Debug("config not v2-compatible")
-		// return err
-	}
-	RunConfigV2 = cfgV2
-	if len(RunConfigV2.Collect) > 0 {
-		IsV2 = true
-		return nil
-	}
-
-	finalCfg := config.Config{}
-	for i, data := range configData {
-		log.Print("parsing config")
-		cfg := config.Config{}
-		if err := yaml.Unmarshal(data, &cfg); err != nil {
-			log.WithError(err).Error("could not parse config")
-			return err
-		}
-
-		if i == 0 {
-			finalCfg = cfg
-			if len(configData) == 1 {
-				RunConfig = finalCfg
-				return nil
-			}
-			continue
-		}
-
-		log.Print("merging into final config")
-		if err := finalCfg.Merge(cfg); err != nil {
-			log.WithError(err).Error("could not merge config")
-			panic(err)
-		}
-	}
-	RunConfig = finalCfg
-	return nil
-}
-
-func RunChecks() {
+func Run() {
 	log.Print("preparing concurrent check runs")
 	var wg sync.WaitGroup
 	for ct, checks := range RunConfig.Checks {
@@ -267,4 +157,11 @@ func RunV2() {
 		r.DetermineResultStatus(false)
 		RunResultList.AddResult(r)
 	}
+}
+
+func Exit(code int) {
+	if code > 0 && ErrorCodeOnFailure {
+		os.Exit(1)
+	}
+	os.Exit(0)
 }
