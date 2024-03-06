@@ -5,16 +5,7 @@ import (
 )
 
 type Config struct {
-	// The directory to audit.
-	ProjectDir string `yaml:"project-dir"`
-	// The severity level for which the program will exit with an error.
-	// Default is high.
-	FailSeverity Severity `yaml:"fail-severity"`
-	Checks       CheckMap `yaml:"checks"`
-	Remediate    bool     `yaml:"-"`
-	// If requesting LagoonFact output, the base url and token for the Lagoon
-	// api are required to infer environment IDs and the like.
-	LagoonApiBaseUrl string `yaml:"lagoon-api-base-url"`
+	Checks CheckMap `yaml:"checks"`
 }
 
 type ConfigV2 struct {

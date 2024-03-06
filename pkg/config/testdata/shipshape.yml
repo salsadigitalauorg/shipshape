@@ -1,0 +1,37 @@
+checks:
+  file:
+    - name: Illegal files
+      path: web
+      disallowed-pattern: '^(adminer|phpmyadmin|bigdump)?\.php$'
+  yaml:
+    - name: File config check
+      config-name: update.settings
+      path: config/default
+      values:
+        - key: check.interval_days
+          value: 7
+  drush-yaml:
+    - name: Ensure correct update settings.
+      config-name: update.settings
+      values:
+        - key: check.interval_days
+          value: 7
+  drupal-file-module:
+    - name: Modules audit
+      path: config/default
+      required:
+        - govcms_security
+        - tfa
+      disallowed:
+        - dblog
+        - module_permissions_ui
+        - update
+  drupal-db-module:
+    - name: Active modules audit
+      required:
+        - govcms_security
+        - tfa
+      disallowed:
+        - dblog
+        - module_permissions_ui
+        - update

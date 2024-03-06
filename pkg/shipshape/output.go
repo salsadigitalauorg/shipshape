@@ -2,12 +2,52 @@ package shipshape
 
 import (
 	"bufio"
+	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"log"
+	"os"
 	"text/tabwriter"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
+
+// Flag
+var OutputFormat string
+
+// Output
+var OutputFormats = []string{"json", "junit", "simple", "table"}
+
+func ValidateOutputFormat() bool {
+	valid := false
+	for _, fm := range OutputFormats {
+		if OutputFormat == fm {
+			valid = true
+			break
+		}
+	}
+	return valid
+}
+
+func Output() {
+	switch OutputFormat {
+	case "json":
+		data, err := json.Marshal(RunResultList)
+		if err != nil {
+			log.Fatalf("Unable to convert result to json: %+v\n", err)
+		}
+		fmt.Println(string(data))
+	case "junit":
+		w := bufio.NewWriter(os.Stdout)
+		JUnit(w)
+	case "table":
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+		TableDisplay(w)
+	case "simple":
+		w := bufio.NewWriter(os.Stdout)
+		SimpleDisplay(w)
+	}
+}
 
 // TableDisplay generates the tabular output for the ResultList.
 func TableDisplay(w *tabwriter.Writer) {

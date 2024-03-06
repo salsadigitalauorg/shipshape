@@ -2,7 +2,6 @@ package shipshape_test
 
 import (
 	"io"
-	"os"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
@@ -19,117 +18,11 @@ func TestInit(t *testing.T) {
 	assert := assert.New(t)
 
 	t.Run("defaultValues", func(t *testing.T) {
-		currDir, _ := os.Getwd()
-		err := Init("", []string{}, []string{}, false, false, "", "", "")
+		err := Init()
 		assert.NoError(err)
-		assert.Equal(currDir, config.ProjectDir)
 		assert.Equal(config.Config{
-			ProjectDir:   currDir,
-			Checks:       config.CheckMap{},
-			FailSeverity: config.HighSeverity,
+			Checks: config.CheckMap{},
 		}, RunConfig)
-		assert.Equal(logrus.WarnLevel, logrus.GetLevel())
-	})
-
-	t.Run("projectDirIsSet", func(t *testing.T) {
-		err := Init("foo", []string{}, []string{}, false, false, "warn", "", "")
-		assert.NoError(err)
-		assert.Equal("foo", config.ProjectDir)
-	})
-}
-
-func TestReadAndParseConfig(t *testing.T) {
-	assert := assert.New(t)
-
-	currLogOut := logrus.StandardLogger().Out
-	defer logrus.SetOutput(currLogOut)
-	logrus.SetOutput(io.Discard)
-
-	t.Run("nonExistentFile", func(t *testing.T) {
-		err := ReadAndParseConfig("", []string{"testdata/nonexistent.yml"})
-		assert.Error(err)
-		assert.Equal("open testdata/nonexistent.yml: no such file or directory", err.Error())
-	})
-
-	t.Run("existingFile", func(t *testing.T) {
-		err := ReadAndParseConfig("", []string{"testdata/shipshape.yml"})
-		assert.NoError(err)
-	})
-
-	t.Run("configFileMerge", func(t *testing.T) {
-		err := ReadAndParseConfig("", []string{
-			"testdata/merge/config-a.yml",
-			"testdata/merge/config-b.yml",
-		})
-		assert.NoError(err)
-		mergedCfg := RunConfig
-
-		RunConfig = config.Config{}
-		err = ReadAndParseConfig("", []string{
-			"testdata/merge/config-result.yml",
-		})
-		assert.NoError(err)
-		resultingCfg := RunConfig
-
-		assert.EqualValues(resultingCfg, mergedCfg)
-	})
-}
-
-func TestParseConfigData(t *testing.T) {
-	assert := assert.New(t)
-
-	currLogOut := logrus.StandardLogger().Out
-	defer logrus.SetOutput(currLogOut)
-
-	t.Run("invalidData", func(t *testing.T) {
-		testchecks.RegisterChecks()
-		logrus.SetOutput(io.Discard)
-		invalidData := `
-checks:
-  test-check-1: foo
-`
-		err := ParseConfigData([][]byte{[]byte(invalidData)})
-		assert.EqualError(err, "list required under check type 'test-check-1', got !!str instead")
-
-	})
-
-	t.Run("validData", func(t *testing.T) {
-		testchecks.RegisterChecks()
-		data := `
-checks:
-  test-check-1:
-    - name: My test check 1
-      foo: baz
-  test-check-2:
-    - name: My first test check 2
-      bar: zoom
-    - name: My second test check 2
-      bar: zap
-`
-		err := ParseConfigData([][]byte{[]byte(data)})
-		assert.NoError(err)
-
-		if !assert.Len(RunConfig.Checks[testchecks.TestCheck1], 1) {
-			t.FailNow()
-		}
-		if !assert.Len(RunConfig.Checks[testchecks.TestCheck2], 2) {
-			t.FailNow()
-		}
-
-		tc1, ok := RunConfig.Checks[testchecks.TestCheck1][0].(*testchecks.TestCheck1Check)
-		assert.True(ok)
-		assert.Equal("My test check 1", tc1.Name)
-		assert.Equal("baz", tc1.Foo)
-
-		tc2, ok := RunConfig.Checks[testchecks.TestCheck2][0].(*testchecks.TestCheck2Check)
-		assert.True(ok)
-		assert.Equal("My first test check 2", tc2.Name)
-		assert.Equal("zoom", tc2.Bar)
-
-		tc22, ok := RunConfig.Checks[testchecks.TestCheck2][1].(*testchecks.TestCheck2Check)
-		assert.True(ok)
-		assert.Equal("My second test check 2", tc22.Name)
-		assert.Equal("zap", tc22.Bar)
 	})
 }
 
@@ -154,7 +47,7 @@ func TestRunChecks(t *testing.T) {
 	}
 
 	RunResultList = result.NewResultList(false)
-	RunChecks()
+	Run()
 	assert.Equal(uint32(2), RunResultList.TotalChecks)
 	assert.Equal(uint32(2), RunResultList.TotalBreaches)
 	assert.EqualValues(map[string]int{

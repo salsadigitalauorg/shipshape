@@ -14,7 +14,8 @@ ARG TARGETOS TARGETARCH
 RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} && \
     go mod tidy && \
     go generate ./... && \
-    go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" -o build/shipshape
+    go build -ldflags="-s -w -X github.com/salsadigitalauorg/shipshape/cmd.version=${VERSION} \
+      -X github.com/salsadigitalauorg/shipshape/cmd.commit=${COMMIT}" -o build/shipshape
 
 FROM scratch
 
