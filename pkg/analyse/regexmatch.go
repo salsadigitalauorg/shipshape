@@ -3,6 +3,7 @@ package analyse
 import (
 	"regexp"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -10,11 +11,13 @@ import (
 
 type RegexMatch struct {
 	// Common fields.
-	Name      string `yaml:"name"`
-	InputName string `yaml:"input"`
-	Severity  string `yaml:"severity"`
-	Result    result.Result
-	input     fact.Facter
+	Id                    string `yaml:"name"`
+	Description           string `yaml:"description"`
+	InputName             string `yaml:"input"`
+	Severity              string `yaml:"severity"`
+	breach.BreachTemplate `yaml:"breach-format"`
+	Result                result.Result
+	input                 fact.Facter
 
 	// Plugin fields.
 	Pattern string `yaml:"pattern"`
@@ -24,7 +27,7 @@ type RegexMatch struct {
 //go:generate go run ../../cmd/gen.go analyse-plugin --plugin=RegexMatch --package=analyse
 
 func init() {
-	Registry["regex-match"] = func(n string) Analyser { return NewRegexMatch(n) }
+	Registry["regex-match"] = func(id string) Analyser { return NewRegexMatch(id) }
 }
 
 func (p *RegexMatch) PluginName() string {
@@ -32,13 +35,6 @@ func (p *RegexMatch) PluginName() string {
 }
 
 func (p *RegexMatch) Analyse() {
-	if p.input == nil {
-		p.AddBreach(&result.ValueBreach{
-			Value: "no input available to analyse",
-		})
-		return
-	}
-
 	switch p.input.GetFormat() {
 	case fact.FormatMapNestedString:
 		inputData := data.AsNestedStringMap(p.input.GetData())
@@ -46,7 +42,7 @@ func (p *RegexMatch) Analyse() {
 			for k2, v := range kvs {
 				match, _ := regexp.MatchString(p.Pattern, v)
 				if match {
-					p.AddBreach(&result.KeyValueBreach{
+					breach.EvaluateTemplate(p, &breach.KeyValueBreach{
 						Key:        k,
 						ValueLabel: k2,
 						Value:      v,

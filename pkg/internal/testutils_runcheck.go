@@ -4,6 +4,7 @@ import (
 	"io"
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/sirupsen/logrus"
@@ -27,7 +28,7 @@ type RunCheckTest struct {
 	ExpectNoPass bool
 	ExpectPasses []string
 	ExpectNoFail bool
-	ExpectFails  []result.Breach
+	ExpectFails  []breach.Breach
 }
 
 // TestRunCheck can be used to run test scenarios in test tables.

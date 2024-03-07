@@ -4,14 +4,15 @@ import (
 	"os/exec"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestDrushYamlCheckInit(t *testing.T) {
@@ -76,7 +77,7 @@ func TestDrushYamlCheckFetchData(t *testing.T) {
 				Command:    "status",
 				ConfigName: "core.extension",
 			},
-			ExpectBreaches: []result.Breach{&result.ValueBreach{
+			ExpectBreaches: []breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drush-yaml",
 				Severity:   "normal",
@@ -97,7 +98,7 @@ func TestDrushYamlCheckFetchData(t *testing.T) {
 					nil,
 				)
 			},
-			ExpectBreaches: []result.Breach{&result.ValueBreach{
+			ExpectBreaches: []breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drush-yaml",
 				Severity:   "normal",
@@ -175,7 +176,7 @@ func TestDrushYamlCheckRunCheck(t *testing.T) {
 			PreRun: func(t *testing.T) {
 				command.ShellCommander = internal.ShellCommanderMaker(nil, nil, nil)
 			},
-			ExpectFails: []result.Breach{&result.KeyValueBreach{
+			ExpectFails: []breach.Breach{&breach.KeyValueBreach{
 				BreachType:    "key-value",
 				KeyLabel:      "config:core.extension",
 				Key:           "profile",
@@ -207,15 +208,15 @@ func TestDrushYamlCheckRemediate(t *testing.T) {
 						DataMap: map[string][]byte{
 							"core.extension": []byte(`{"profile":"minimal"}`)},
 						Result: result.Result{
-							Breaches: []result.Breach{&result.ValueBreach{}}}},
+							Breaches: []breach.Breach{&breach.ValueBreach{}}}},
 					Values: []yaml.KeyValue{{Key: "profile", Value: "standard"}}},
 				RemediateCommand: "",
 				ConfigName:       "core.extension"},
 			ExpectGeneratedCommand: "",
-			ExpectBreaches: []result.Breach{&result.ValueBreach{
-				Remediation: result.Remediation{Status: "no-support"}}},
+			ExpectBreaches: []breach.Breach{&breach.ValueBreach{
+				Remediation: breach.Remediation{Status: "no-support"}}},
 			ExpectStatusFail:        true,
-			ExpectRemediationStatus: result.RemediationStatusNoSupport,
+			ExpectRemediationStatus: breach.RemediationStatusNoSupport,
 		},
 		{
 			Name: "simpleCommand",
@@ -223,15 +224,15 @@ func TestDrushYamlCheckRemediate(t *testing.T) {
 				YamlBase: yaml.YamlBase{
 					CheckBase: config.CheckBase{
 						Result: result.Result{
-							Breaches: []result.Breach{&result.ValueBreach{}}}}},
+							Breaches: []breach.Breach{&breach.ValueBreach{}}}}},
 				RemediateCommand: "drush config:set clamav.settings enabled 1"},
 			ExpectGeneratedCommand: "sh -c 'drush config:set clamav.settings enabled 1'",
-			ExpectBreaches: []result.Breach{&result.ValueBreach{
-				Remediation: result.Remediation{
+			ExpectBreaches: []breach.Breach{&breach.ValueBreach{
+				Remediation: breach.Remediation{
 					Status: "success",
 					Messages: []string{
 						"remediation command for config '' ran successfully"}}}},
-			ExpectRemediationStatus: result.RemediationStatusSuccess,
+			ExpectRemediationStatus: breach.RemediationStatusSuccess,
 		},
 		{
 			Name: "multilineCommand",
@@ -239,7 +240,7 @@ func TestDrushYamlCheckRemediate(t *testing.T) {
 				YamlBase: yaml.YamlBase{
 					CheckBase: config.CheckBase{
 						Result: result.Result{
-							Breaches: []result.Breach{&result.ValueBreach{}}}}},
+							Breaches: []breach.Breach{&breach.ValueBreach{}}}}},
 				RemediateCommand: `#!/bin/bash
 set -eu
 drush config:set clamav.settings enabled true
@@ -248,12 +249,12 @@ drush config:set clamav.settings enabled true
 set -eu
 drush config:set clamav.settings enabled true
 '`,
-			ExpectBreaches: []result.Breach{&result.ValueBreach{
-				Remediation: result.Remediation{
+			ExpectBreaches: []breach.Breach{&breach.ValueBreach{
+				Remediation: breach.Remediation{
 					Status: "success",
 					Messages: []string{
 						"remediation command for config '' ran successfully"}}}},
-			ExpectRemediationStatus: result.RemediationStatusSuccess,
+			ExpectRemediationStatus: breach.RemediationStatusSuccess,
 		},
 	}
 

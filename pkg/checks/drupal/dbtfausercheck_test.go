@@ -4,6 +4,7 @@ import (
 	"os/exec"
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
@@ -29,7 +30,7 @@ func TestDbTfaUserCheck(t *testing.T) {
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-db-user-tfa",
 				Severity:   "normal",
@@ -62,7 +63,7 @@ func TestDbTfaUserCheck(t *testing.T) {
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-db-user-tfa",
 				Severity:   "normal",
@@ -99,7 +100,7 @@ func TestDbTfaUserCheck(t *testing.T) {
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-db-user-tfa",
 				Severity:   "normal",

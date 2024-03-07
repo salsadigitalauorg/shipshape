@@ -4,14 +4,15 @@ import (
 	"io"
 	"testing"
 
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape/testdata/testchecks"
-
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
 )
 
 func TestInit(t *testing.T) {
@@ -62,7 +63,7 @@ func TestRunChecks(t *testing.T) {
 			CheckType: "test-check-1",
 			Status:    "Fail",
 			Passes:    []string(nil),
-			Breaches: []result.Breach{&result.ValueBreach{
+			Breaches: []breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "test-check-1",
 				CheckName:  "test1stcheck",
@@ -77,7 +78,7 @@ func TestRunChecks(t *testing.T) {
 			CheckType: "test-check-2",
 			Status:    "Fail",
 			Passes:    []string(nil),
-			Breaches: []result.Breach{&result.ValueBreach{
+			Breaches: []breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "test-check-2",
 				CheckName:  "test2ndcheck",

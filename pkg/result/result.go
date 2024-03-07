@@ -2,6 +2,8 @@ package result
 
 import (
 	"sort"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 )
 
 type Status string
@@ -13,14 +15,14 @@ const (
 
 // Result provides the structure for a Check's outcome.
 type Result struct {
-	Name              string            `json:"name"`
-	Severity          string            `json:"severity"`
-	CheckType         string            `json:"check-type"`
-	Passes            []string          `json:"passes"`
-	Breaches          []Breach          `json:"breaches"`
-	Warnings          []string          `json:"warnings"`
-	Status            Status            `json:"status"`
-	RemediationStatus RemediationStatus `json:"remediation-status"`
+	Name              string                   `json:"name"`
+	Severity          string                   `json:"severity"`
+	CheckType         string                   `json:"check-type"`
+	Passes            []string                 `json:"passes"`
+	Breaches          []breach.Breach          `json:"breaches"`
+	Warnings          []string                 `json:"warnings"`
+	Status            Status                   `json:"status"`
+	RemediationStatus breach.RemediationStatus `json:"remediation-status"`
 }
 
 // Sort reorders the Passes & Failures in order to get consistent output.
@@ -53,13 +55,13 @@ func (r *Result) RemediationsCount() (uint32, uint32, uint32, uint32) {
 	partial := uint32(0)
 	for _, b := range r.Breaches {
 		switch b.GetRemediation().Status {
-		case RemediationStatusNoSupport:
+		case breach.RemediationStatusNoSupport:
 			unsupported++
-		case RemediationStatusSuccess:
+		case breach.RemediationStatusSuccess:
 			successful++
-		case RemediationStatusFailed:
+		case breach.RemediationStatusFailed:
 			failed++
-		case RemediationStatusPartial:
+		case breach.RemediationStatusPartial:
 			partial++
 		}
 	}
@@ -75,21 +77,21 @@ func (r *Result) DetermineResultStatus(remediationPerformed bool) {
 	if remediationPerformed {
 		unsupported, success, failed, partial := r.RemediationsCount()
 		if partial > 0 || (success > 0 && (failed > 0 || unsupported > 0)) {
-			r.RemediationStatus = RemediationStatusPartial
+			r.RemediationStatus = breach.RemediationStatusPartial
 			r.Status = Fail
 			return
 		}
 		if unsupported > 0 && success == 0 && failed == 0 && partial == 0 {
-			r.RemediationStatus = RemediationStatusNoSupport
+			r.RemediationStatus = breach.RemediationStatusNoSupport
 			r.Status = Fail
 			return
 		}
 		if failed > 0 && success == 0 && unsupported == 0 && partial == 0 {
-			r.RemediationStatus = RemediationStatusFailed
+			r.RemediationStatus = breach.RemediationStatusFailed
 			r.Status = Fail
 			return
 		}
-		r.RemediationStatus = RemediationStatusSuccess
+		r.RemediationStatus = breach.RemediationStatusSuccess
 		r.Status = Pass
 		return
 	}

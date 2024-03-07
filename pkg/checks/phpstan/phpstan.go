@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -119,11 +120,11 @@ func (c *PhpStanCheck) FetchData() {
 	c.DataMap["phpstan"], err = command.ShellCommander(phpstanPath, args...).Output()
 	if err != nil {
 		if pathErr, ok := err.(*fs.PathError); ok {
-			c.AddBreach(&result.ValueBreach{
+			c.AddBreach(&breach.ValueBreach{
 				ValueLabel: pathErr.Path,
 				Value:      pathErr.Err.Error()})
 		} else if len(c.DataMap["phpstan"]) == 0 { // If errors were found, exit code will be 1.
-			c.AddBreach(&result.ValueBreach{
+			c.AddBreach(&breach.ValueBreach{
 				ValueLabel: "Phpstan failed to run",
 				Value:      string(err.(*exec.ExitError).Stderr)})
 		}
@@ -135,7 +136,7 @@ func (c *PhpStanCheck) FetchData() {
 func (c *PhpStanCheck) HasData(failCheck bool) bool {
 	if c.DataMap == nil && len(c.Result.Passes) == 0 {
 		if failCheck {
-			c.AddBreach(&result.ValueBreach{Value: "no data available"})
+			c.AddBreach(&breach.ValueBreach{Value: "no data available"})
 		}
 		return false
 	}
@@ -158,7 +159,7 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 	c.phpstanResult = PhpStanResult{}
 	err := json.Unmarshal(c.DataMap["phpstan"], &c.phpstanResult)
 	if err != nil {
-		c.AddBreach(&result.ValueBreach{
+		c.AddBreach(&breach.ValueBreach{
 			ValueLabel: "unable to parse phpstan result",
 			Value:      err.Error()})
 		return
@@ -172,7 +173,7 @@ func (c *PhpStanCheck) UnmarshalDataMap() {
 	// Unmarshal file errors.
 	err = json.Unmarshal(c.phpstanResult.FilesRaw, &c.phpstanResult.Files)
 	if err != nil {
-		c.AddBreach(&result.ValueBreach{
+		c.AddBreach(&breach.ValueBreach{
 			ValueLabel: "unable to parse phpstan file errors",
 			Value:      err.Error()})
 		return
@@ -194,14 +195,14 @@ func (c *PhpStanCheck) RunCheck() {
 				fmt.Sprintf("line %d: %s", er.Line,
 					strings.ReplaceAll(er.Message, "\n", "")))
 		}
-		c.AddBreach(&result.KeyValuesBreach{
+		c.AddBreach(&breach.KeyValuesBreach{
 			Key:    fmt.Sprintf("file: %s", file),
 			Values: errLines,
 		})
 	}
 
 	if len(c.phpstanResult.Errors) > 0 {
-		c.AddBreach(&result.KeyValuesBreach{
+		c.AddBreach(&breach.KeyValuesBreach{
 			Key:    "errors encountered when running phpstan",
 			Values: c.phpstanResult.Errors})
 	}

@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 
+	"gopkg.in/yaml.v3"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
-
-	"gopkg.in/yaml.v3"
 )
 
 //go:generate go run ../../../cmd/gen.go registry --checkpackage=yaml
@@ -52,7 +53,7 @@ func (c *YamlBase) UnmarshalDataMap() {
 		n := yaml.Node{}
 		err := yaml.Unmarshal([]byte(data), &n)
 		if err != nil {
-			c.AddBreach(&result.ValueBreach{Value: err.Error()})
+			c.AddBreach(&breach.ValueBreach{Value: err.Error()})
 			return
 		}
 		c.NodeMap[configName] = n
@@ -66,16 +67,16 @@ func (c *YamlBase) determineBreaches(configName string) {
 		kvr, fails, err := CheckKeyValue(c.NodeMap[configName], kv)
 		switch kvr {
 		case KeyValueError:
-			c.AddBreach(&result.ValueBreach{Value: err.Error()})
+			c.AddBreach(&breach.ValueBreach{Value: err.Error()})
 		case KeyValueNotFound:
-			c.AddBreach(&result.KeyValueBreach{
+			c.AddBreach(&breach.KeyValueBreach{
 				KeyLabel:   "config",
 				Key:        configName,
 				ValueLabel: "key not found",
 				Value:      kv.Key,
 			})
 		case KeyValueNotEqual:
-			c.AddBreach(&result.KeyValueBreach{
+			c.AddBreach(&breach.KeyValueBreach{
 				KeyLabel:      "config:" + configName,
 				Key:           kv.Key,
 				ValueLabel:    "actual",
@@ -83,7 +84,7 @@ func (c *YamlBase) determineBreaches(configName string) {
 				Value:         fails[0],
 			})
 		case KeyValueDisallowedFound:
-			c.AddBreach(&result.KeyValuesBreach{
+			c.AddBreach(&breach.KeyValuesBreach{
 				KeyLabel:   "config",
 				Key:        configName,
 				ValueLabel: fmt.Sprintf("disallowed %s", kv.Key),

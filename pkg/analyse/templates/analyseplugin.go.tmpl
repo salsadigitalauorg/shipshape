@@ -3,6 +3,7 @@ package analyse
 import (
 	log "github.com/sirupsen/logrus"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
@@ -28,7 +29,14 @@ func (p *{{ .Plugin }}) GetInputName() string {
 	return p.InputName
 }
 
+func (p *{{ .Plugin }}) GetBreachTemplate() breach.BreachTemplate {
+	return p.BreachTemplate
+}
+
 func (p *{{ .Plugin }}) GetResult() result.Result {
+	if p.Description != "" && p.Result.Name != p.Description {
+		p.Result.Name = p.Description
+	}
 	return p.Result
 }
 
@@ -52,7 +60,7 @@ func (p *{{ .Plugin }}) PreProcessInput() bool {
 		for _, e := range p.input.GetErrors() {
 			errs = append(errs, e.Error())
 		}
-		p.AddBreach(&result.KeyValuesBreach{
+		p.AddBreach(&breach.KeyValuesBreach{
 			Key: "input failure",
 			Values:      errs,
 		})
@@ -60,7 +68,7 @@ func (p *{{ .Plugin }}) PreProcessInput() bool {
 	}
 
 	if p.input == nil {
-		p.AddBreach(&result.ValueBreach{
+		p.AddBreach(&breach.ValueBreach{
 			Value: "no input available to analyse",
 		})
 		return false
@@ -69,7 +77,7 @@ func (p *{{ .Plugin }}) PreProcessInput() bool {
 }
 
 // AddBreach appends a Breach to the Result.
-func (p *{{ .Plugin }}) AddBreach(b result.Breach) {
+func (p *{{ .Plugin }}) AddBreach(b breach.Breach) {
 	b.SetCommonValues("", p.Id, p.Severity)
 	p.Result.Breaches = append(
 		p.Result.Breaches,

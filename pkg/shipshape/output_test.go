@@ -6,11 +6,12 @@ import (
 	"testing"
 	"text/tabwriter"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	. "github.com/salsadigitalauorg/shipshape/pkg/shipshape"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestTableDisplay(t *testing.T) {
@@ -61,18 +62,18 @@ func TestTableDisplay(t *testing.T) {
 			{
 				Name:   "c",
 				Status: result.Fail,
-				Breaches: []result.Breach{
-					&result.ValueBreach{Value: "Fail c"},
-					&result.ValueBreach{Value: "Fail cb"},
+				Breaches: []breach.Breach{
+					&breach.ValueBreach{Value: "Fail c"},
+					&breach.ValueBreach{Value: "Fail cb"},
 				},
 			},
 			{
 				Name:   "d",
 				Status: result.Fail,
 				Passes: []string{"Pass d", "Pass db"},
-				Breaches: []result.Breach{
-					&result.ValueBreach{Value: "Fail c"},
-					&result.ValueBreach{Value: "Fail cb"},
+				Breaches: []breach.Breach{
+					&breach.ValueBreach{Value: "Fail c"},
+					&breach.ValueBreach{Value: "Fail cb"},
 				},
 			},
 		},
@@ -120,8 +121,8 @@ func TestSimpleDisplay(t *testing.T) {
 		RunResultList.Results = append(RunResultList.Results, result.Result{
 			Name:   "b",
 			Status: result.Fail,
-			Breaches: []result.Breach{
-				&result.ValueBreach{Value: "Fail b"},
+			Breaches: []breach.Breach{
+				&breach.ValueBreach{Value: "Fail b"},
 			},
 		})
 		SimpleDisplay(w)
@@ -142,10 +143,10 @@ func TestSimpleDisplay(t *testing.T) {
 		RunResultList = result.ResultList{
 			Results: []result.Result{{
 				Name: "a",
-				Breaches: []result.Breach{
-					&result.ValueBreach{
-						Remediation: result.Remediation{
-							Status:   result.RemediationStatusSuccess,
+				Breaches: []breach.Breach{
+					&breach.ValueBreach{
+						Remediation: breach.Remediation{
+							Status:   breach.RemediationStatusSuccess,
 							Messages: []string{"fixed 1"},
 						},
 					},
@@ -166,18 +167,18 @@ func TestSimpleDisplay(t *testing.T) {
 		RunResultList = result.ResultList{
 			Results: []result.Result{{
 				Name: "a",
-				Breaches: []result.Breach{
-					&result.ValueBreach{
+				Breaches: []breach.Breach{
+					&breach.ValueBreach{
 						Value: "Fail a",
-						Remediation: result.Remediation{
-							Status:   result.RemediationStatusSuccess,
+						Remediation: breach.Remediation{
+							Status:   breach.RemediationStatusSuccess,
 							Messages: []string{"fixed 1"},
 						},
 					},
-					&result.ValueBreach{
+					&breach.ValueBreach{
 						Value: "Fail b",
-						Remediation: result.Remediation{
-							Status:   result.RemediationStatusFailed,
+						Remediation: breach.Remediation{
+							Status:   breach.RemediationStatusFailed,
 							Messages: []string{"not fixed 1"},
 						},
 					},
@@ -201,10 +202,10 @@ func TestSimpleDisplay(t *testing.T) {
 		RunResultList = result.ResultList{
 			Results: []result.Result{{
 				Name: "a",
-				Breaches: []result.Breach{
-					&result.ValueBreach{
-						Remediation: result.Remediation{
-							Status:   result.RemediationStatusFailed,
+				Breaches: []breach.Breach{
+					&breach.ValueBreach{
+						Remediation: breach.Remediation{
+							Status:   breach.RemediationStatusFailed,
 							Messages: []string{"failed 1"},
 						},
 					},
@@ -260,8 +261,8 @@ func TestJUnit(t *testing.T) {
 	RunResultList.Results = append(RunResultList.Results, result.Result{
 		Name:   "b",
 		Status: result.Fail,
-		Breaches: []result.Breach{
-			&result.ValueBreach{Value: "Fail b"},
+		Breaches: []breach.Breach{
+			&breach.ValueBreach{Value: "Fail b"},
 		},
 	})
 	buf = bytes.Buffer{}

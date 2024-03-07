@@ -3,9 +3,11 @@ package sca_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/sca"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestIsDrupalCheck(t *testing.T) {
@@ -27,7 +29,7 @@ func TestIsDrupalCheck(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.KeyValueBreach{
+		[]breach.Breach{&breach.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "[./testdata/drupal] contains disallowed frameworks",
 			Value:      "[drupal]",
@@ -68,7 +70,7 @@ func TestIsWordpressCheck(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.KeyValueBreach{
+		[]breach.Breach{&breach.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "[./testdata/wordpress] contains disallowed frameworks",
 			Value:      "[wordpress]",
@@ -95,7 +97,7 @@ func TestIsSymfonyCheck(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.KeyValueBreach{
+		[]breach.Breach{&breach.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "[./testdata/symfony] contains disallowed frameworks",
 			Value:      "[symfony]",
@@ -122,7 +124,7 @@ func TestIsLaravelCheck(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.KeyValueBreach{
+		[]breach.Breach{&breach.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "[./testdata/laravel] contains disallowed frameworks",
 			Value:      "[laravel]",

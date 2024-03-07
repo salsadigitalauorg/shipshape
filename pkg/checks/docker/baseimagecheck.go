@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -89,7 +90,7 @@ func (c *BaseImageCheck) RunCheck() {
 					}
 
 					if len(c.Allowed) > 0 && !utils.PackageCheckString(c.Allowed, match[1], match[2]) {
-						c.AddBreach(&result.KeyValueBreach{
+						c.AddBreach(&breach.KeyValueBreach{
 							KeyLabel:   "service",
 							Key:        name,
 							ValueLabel: "invalid base image",
@@ -111,7 +112,7 @@ func (c *BaseImageCheck) RunCheck() {
 				}
 
 				if !utils.PackageCheckString(c.Allowed, match[1], match[2]) {
-					c.AddBreach(&result.KeyValueBreach{
+					c.AddBreach(&breach.KeyValueBreach{
 						KeyLabel:   "service",
 						Key:        name,
 						ValueLabel: "invalid base image",

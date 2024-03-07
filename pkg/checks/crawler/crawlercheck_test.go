@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/crawler"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,8 +59,8 @@ func TestCrawlerCheck(t *testing.T) {
 	c.Init(Crawler)
 	c.RunCheck()
 	assert.ElementsMatch(
-		[]result.Breach{&result.KeyValueBreach{
-			BreachType: result.BreachTypeKeyValue,
+		[]breach.Breach{&breach.KeyValueBreach{
+			BreachType: breach.BreachTypeKeyValue,
 			CheckType:  "crawler",
 			Severity:   "normal",
 			Key:        fmt.Sprintf("%s/not-found", server.URL),

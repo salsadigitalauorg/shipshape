@@ -1,7 +1,6 @@
 collect:
   webform-files:
     file.lookup:
-      path: config
       pattern: webform.webform.*.yml
       format: map-bytes
   webform-titles:
@@ -33,25 +32,30 @@ collect:
 analyse:
   wrong-to-mail:
     regex-match:
+      description: Found token in webform handler 'to:' email field
       input: to-mail
       pattern: '\[(.*)\]'
       ignore: '[current-user]'
-      breach-format:
+      breach-format: &x-breach-format
         type: key-value
         key-label: webform
-        key: $input("webform-titles")
-        value-label: $inputName
-        value: $self
+        key: ' {{ lookupFactAsStringMap "webform-titles" .Breach.Key }}'
+        value-label: 'Handler "{{ .Breach.ValueLabel }}" has token'
+        value: '{{ .Breach.Value }}'
   wrong-cc-mail:
     regex-match:
+      description: Found token in webform handler 'cc:' email field
       input: cc-mail
       pattern: '\[(.*)\]'
       ignore: '[current-user]'
+      breach-format: *x-breach-format
   wrong-bcc-mail:
     regex-match:
+      description: Found token in webform handler 'bcc:' email field
       input: bcc-mail
       pattern: '\[(.*)\]'
       ignore: '[current-user]'
+      breach-format: *x-breach-format
 
 output:
   stdout:

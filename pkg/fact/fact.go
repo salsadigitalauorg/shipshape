@@ -3,16 +3,32 @@ package fact
 import (
 	"fmt"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/utils"
-
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 var Registry = map[string]func(string) Facter{}
 var Facts = map[string]Facter{}
 var Errors = []error{}
 var collected = []string{}
+
+func init() {
+	breach.TemplateFuncs["lookupFactAsStringMap"] = func(inputName string, key string) string {
+		input := GetInstance(inputName)
+		if input == nil {
+			return ""
+		}
+		strMap := input.GetData().(map[string]string)
+		val, ok := strMap[key]
+		if !ok {
+			return ""
+		}
+		return val
+	}
+}
 
 func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0

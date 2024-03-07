@@ -1,11 +1,11 @@
-package result_test
+package breach_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	. "github.com/salsadigitalauorg/shipshape/pkg/result"
+	. "github.com/salsadigitalauorg/shipshape/pkg/breach"
 )
 
 func TestBreachValueBreachStringer(t *testing.T) {

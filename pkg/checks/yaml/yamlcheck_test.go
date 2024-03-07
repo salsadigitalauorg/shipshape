@@ -3,11 +3,12 @@ package yaml_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/stretchr/testify/assert"
 )
 
 var cFalse = false
@@ -48,8 +49,8 @@ func TestYamlCheckFetchData(t *testing.T) {
 					},
 				},
 			},
-			ExpectBreaches: []result.Breach{
-				&result.ValueBreach{
+			ExpectBreaches: []breach.Breach{
+				&breach.ValueBreach{
 					BreachType: "value",
 					CheckType:  "yaml",
 					Severity:   "normal",
@@ -69,8 +70,8 @@ func TestYamlCheckFetchData(t *testing.T) {
 				},
 				File: "non-existent.yml",
 			},
-			ExpectBreaches: []result.Breach{
-				&result.ValueBreach{
+			ExpectBreaches: []breach.Breach{
+				&breach.ValueBreach{
 					BreachType: "value",
 					CheckType:  "yaml",
 					Severity:   "normal",
@@ -126,8 +127,8 @@ notification:
 				Pattern: "*.bar.yml",
 				Path:    "",
 			},
-			ExpectBreaches: []result.Breach{
-				&result.ValueBreach{
+			ExpectBreaches: []breach.Breach{
+				&breach.ValueBreach{
 					BreachType: "value",
 					CheckType:  "yaml",
 					Severity:   "normal",
@@ -147,8 +148,8 @@ notification:
 				},
 				Pattern: "bla.*.yml",
 			},
-			ExpectBreaches: []result.Breach{
-				&result.ValueBreach{
+			ExpectBreaches: []breach.Breach{
+				&breach.ValueBreach{
 					BreachType: "value",
 					CheckType:  "yaml",
 					Severity:   "normal",

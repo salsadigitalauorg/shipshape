@@ -1,23 +1,9 @@
-package result
+package breach
 
 import (
 	"fmt"
 	"strings"
 )
-
-// Breach provides a representation for different breach types.
-type Breach interface {
-	GetCheckName() string
-	GetCheckType() string
-	GetRemediation() *Remediation
-	GetSeverity() string
-	GetType() BreachType
-	SetCommonValues(checkType string, checkName string, severity string)
-	SetRemediation(status RemediationStatus, msg string)
-	String() string
-}
-
-type BreachType string
 
 const (
 	// BreachTypeValue is a breach with a value.

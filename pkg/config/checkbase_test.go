@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/config/testdata/testchecks"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -65,8 +66,8 @@ func TestHasData(t *testing.T) {
 	assert.NotEqual(result.Fail, c.Result.Status)
 
 	assert.False(c.HasData(true))
-	assert.EqualValues([]result.Breach{
-		&result.ValueBreach{
+	assert.EqualValues([]breach.Breach{
+		&breach.ValueBreach{
 			BreachType: "value",
 			CheckName:  "foo",
 			Value:      "no data available",
@@ -94,28 +95,28 @@ func TestAddBreach(t *testing.T) {
 		checkName string
 		checkType CheckType
 		severity  Severity
-		breach    result.Breach
+		breach    breach.Breach
 	}{
 		{
 			name:      "ValueBreach",
 			checkType: vbCheckType,
 			checkName: "vbCheck",
 			severity:  "high",
-			breach:    &result.ValueBreach{},
+			breach:    &breach.ValueBreach{},
 		},
 		{
 			name:      "KeyValueBreach",
 			checkType: kvbCheckType,
 			checkName: "kvbCheck",
 			severity:  "low",
-			breach:    &result.KeyValueBreach{},
+			breach:    &breach.KeyValueBreach{},
 		},
 		{
 			name:      "KeyValuesBreach",
 			checkType: kvsbCheckType,
 			checkName: "kvsbCheck",
 			severity:  "normal",
-			breach:    &result.KeyValuesBreach{},
+			breach:    &breach.KeyValuesBreach{},
 		},
 	}
 
@@ -156,8 +157,8 @@ func TestCheckBaseRunCheck(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.ValueBreach{
-			BreachType: result.BreachTypeValue,
+		[]breach.Breach{&breach.ValueBreach{
+			BreachType: breach.BreachTypeValue,
 			Value:      "not implemented",
 		}},
 		c.Result.Breaches)

@@ -4,9 +4,11 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	. "github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNewResultList(t *testing.T) {
@@ -80,15 +82,15 @@ func TestResultListAddResult(t *testing.T) {
 	rl.AddResult(Result{
 		Severity:  "high",
 		CheckType: string(testCheckType),
-		Breaches: []Breach{
-			&ValueBreach{Value: "fail1", Remediation: Remediation{
-				Status:   RemediationStatusSuccess,
+		Breaches: []breach.Breach{
+			&breach.ValueBreach{Value: "fail1", Remediation: breach.Remediation{
+				Status:   breach.RemediationStatusSuccess,
 				Messages: []string{"fixed1"},
 			}},
-			&ValueBreach{Value: "fail2"},
-			&ValueBreach{Value: "fail3"},
-			&ValueBreach{Value: "fail4"},
-			&ValueBreach{Value: "fail5"},
+			&breach.ValueBreach{Value: "fail2"},
+			&breach.ValueBreach{Value: "fail3"},
+			&breach.ValueBreach{Value: "fail4"},
+			&breach.ValueBreach{Value: "fail5"},
 		},
 	})
 	assert.Equal(5, int(rl.TotalBreaches))
@@ -98,12 +100,12 @@ func TestResultListAddResult(t *testing.T) {
 	rl.AddResult(Result{
 		Severity:  "critical",
 		CheckType: string(testCheck2Type),
-		Breaches: []Breach{
-			&ValueBreach{Value: "fail1"},
-			&ValueBreach{Value: "fail2"},
-			&ValueBreach{Value: "fail3"},
-			&ValueBreach{Value: "fail4"},
-			&ValueBreach{Value: "fail5"},
+		Breaches: []breach.Breach{
+			&breach.ValueBreach{Value: "fail1"},
+			&breach.ValueBreach{Value: "fail2"},
+			&breach.ValueBreach{Value: "fail3"},
+			&breach.ValueBreach{Value: "fail4"},
+			&breach.ValueBreach{Value: "fail5"},
 		},
 	})
 	assert.Equal(10, int(rl.TotalBreaches))
@@ -120,15 +122,15 @@ func TestResultListAddResult(t *testing.T) {
 			rl.AddResult(Result{
 				Severity:  "high",
 				CheckType: string(testCheckType),
-				Breaches:  []Breach{&ValueBreach{Value: "fail6"}},
+				Breaches:  []breach.Breach{&breach.ValueBreach{Value: "fail6"}},
 			})
 			rl.AddResult(Result{
 				Severity:  "critical",
 				CheckType: string(testCheck2Type),
-				Breaches: []Breach{&ValueBreach{
+				Breaches: []breach.Breach{&breach.ValueBreach{
 					Value: "fail7",
-					Remediation: Remediation{
-						Status:   RemediationStatusSuccess,
+					Remediation: breach.Remediation{
+						Status:   breach.RemediationStatusSuccess,
 						Messages: []string{"fixed2", "fixed3"},
 					},
 				}},
@@ -168,12 +170,12 @@ func TestResultListRemediationTotalsCount(t *testing.T) {
 		{
 			name: "allSuccess",
 			results: []Result{
-				{Breaches: []Breach{
-					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
-					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
+				{Breaches: []breach.Breach{
+					&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess}},
+					&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess}},
 				}},
-				{Breaches: []Breach{
-					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
+				{Breaches: []breach.Breach{
+					&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess}},
 				}},
 			},
 			expected: map[string]uint32{
@@ -186,18 +188,18 @@ func TestResultListRemediationTotalsCount(t *testing.T) {
 		{
 			name: "countingWorks",
 			results: []Result{
-				{Breaches: []Breach{
-					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
-					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
-					&ValueBreach{Remediation: Remediation{Status: RemediationStatusFailed}},
+				{Breaches: []breach.Breach{
+					&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess}},
+					&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess}},
+					&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusFailed}},
 				}},
-				{Breaches: []Breach{
-					&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}},
-					&ValueBreach{Remediation: Remediation{Status: RemediationStatusPartial}},
+				{Breaches: []breach.Breach{
+					&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess}},
+					&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusPartial}},
 				}},
-				{Breaches: []Breach{
-					&ValueBreach{Remediation: Remediation{Status: RemediationStatusFailed}},
-					&ValueBreach{Remediation: Remediation{Status: RemediationStatusNoSupport}},
+				{Breaches: []breach.Breach{
+					&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusFailed}},
+					&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusNoSupport}},
 				}},
 			},
 			expected: map[string]uint32{
@@ -226,12 +228,12 @@ func TestResultListRemediationStatus(t *testing.T) {
 		name                 string
 		remediationPerformed bool
 		results              []Result
-		expected             RemediationStatus
+		expected             breach.RemediationStatus
 	}{
 		{
 			name:                 "noRemediation",
 			remediationPerformed: false,
-			results:              []Result{{Breaches: []Breach{&ValueBreach{}}}},
+			results:              []Result{{Breaches: []breach.Breach{&breach.ValueBreach{}}}},
 			expected:             "",
 		},
 		{
@@ -239,55 +241,55 @@ func TestResultListRemediationStatus(t *testing.T) {
 			remediationPerformed: true,
 			results: []Result{
 				{
-					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess}}},
 				},
 				{
-					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess}}},
 				},
 				{
-					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusSuccess}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess}}},
 				},
 			},
-			expected: RemediationStatusSuccess,
+			expected: breach.RemediationStatusSuccess,
 		},
 		{
 			name:                 "partial",
 			remediationPerformed: true,
 			results: []Result{
 				{
-					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusPartial}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusPartial}}},
 				},
 				{
-					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusFailed}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusFailed}}},
 				},
 			},
-			expected: RemediationStatusPartial,
+			expected: breach.RemediationStatusPartial,
 		},
 		{
 			name:                 "fail",
 			remediationPerformed: true,
 			results: []Result{
 				{
-					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusFailed}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusFailed}}},
 				},
 				{
-					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusFailed}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusFailed}}},
 				},
 			},
-			expected: RemediationStatusFailed,
+			expected: breach.RemediationStatusFailed,
 		},
 		{
 			name:                 "unsupported",
 			remediationPerformed: true,
 			results: []Result{
 				{
-					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusNoSupport}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusNoSupport}}},
 				},
 				{
-					Breaches: []Breach{&ValueBreach{Remediation: Remediation{Status: RemediationStatusNoSupport}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{Remediation: breach.Remediation{Status: breach.RemediationStatusNoSupport}}},
 				},
 			},
-			expected: RemediationStatusNoSupport,
+			expected: breach.RemediationStatusNoSupport,
 		},
 	}
 
@@ -311,30 +313,30 @@ func TestResultListGetBreachesByCheckName(t *testing.T) {
 		Results: []Result{
 			{
 				Name: "check1",
-				Breaches: []Breach{
-					&ValueBreach{Value: "failure1"},
-					&ValueBreach{Value: "failure 2"},
+				Breaches: []breach.Breach{
+					&breach.ValueBreach{Value: "failure1"},
+					&breach.ValueBreach{Value: "failure 2"},
 				},
 			},
 			{
 				Name: "check2",
-				Breaches: []Breach{
-					&ValueBreach{Value: "failure3"},
-					&ValueBreach{Value: "failure 4"},
+				Breaches: []breach.Breach{
+					&breach.ValueBreach{Value: "failure3"},
+					&breach.ValueBreach{Value: "failure 4"},
 				},
 			},
 		},
 	}
 	assert.EqualValues(
-		[]Breach{
-			&ValueBreach{Value: "failure1"},
-			&ValueBreach{Value: "failure 2"},
+		[]breach.Breach{
+			&breach.ValueBreach{Value: "failure1"},
+			&breach.ValueBreach{Value: "failure 2"},
 		},
 		rl.GetBreachesByCheckName("check1"))
 	assert.EqualValues(
-		[]Breach{
-			&ValueBreach{Value: "failure3"},
-			&ValueBreach{Value: "failure 4"},
+		[]breach.Breach{
+			&breach.ValueBreach{Value: "failure3"},
+			&breach.ValueBreach{Value: "failure 4"},
 		},
 		rl.GetBreachesByCheckName("check2"))
 }
@@ -346,30 +348,30 @@ func TestResultListGetBreachesBySeverity(t *testing.T) {
 		Results: []Result{
 			{
 				Severity: "high",
-				Breaches: []Breach{
-					&ValueBreach{Value: "failure1"},
-					&ValueBreach{Value: "failure 2"},
+				Breaches: []breach.Breach{
+					&breach.ValueBreach{Value: "failure1"},
+					&breach.ValueBreach{Value: "failure 2"},
 				},
 			},
 			{
 				Severity: "normal",
-				Breaches: []Breach{
-					&ValueBreach{Value: "failure3"},
-					&ValueBreach{Value: "failure 4"},
+				Breaches: []breach.Breach{
+					&breach.ValueBreach{Value: "failure3"},
+					&breach.ValueBreach{Value: "failure 4"},
 				},
 			},
 		},
 	}
 	assert.EqualValues(
-		[]Breach{
-			&ValueBreach{Value: "failure1"},
-			&ValueBreach{Value: "failure 2"},
+		[]breach.Breach{
+			&breach.ValueBreach{Value: "failure1"},
+			&breach.ValueBreach{Value: "failure 2"},
 		},
 		rl.GetBreachesBySeverity("high"))
 	assert.EqualValues(
-		[]Breach{
-			&ValueBreach{Value: "failure3"},
-			&ValueBreach{Value: "failure 4"},
+		[]breach.Breach{
+			&breach.ValueBreach{Value: "failure3"},
+			&breach.ValueBreach{Value: "failure 4"},
 		},
 		rl.GetBreachesBySeverity("normal"))
 }

@@ -6,6 +6,7 @@ import (
 
 	yamlv3 "gopkg.in/yaml.v3"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -73,12 +74,12 @@ func CheckModulesInYaml(c *yaml.YamlBase, ct config.CheckType, configName string
 		required_errored,
 		required_disabled := DetermineModuleStatus(c.NodeMap[configName], ct, required)
 	if len(required_errored) > 0 {
-		c.AddBreach(&result.KeyValuesBreach{
+		c.AddBreach(&breach.KeyValuesBreach{
 			Key:    "error verifying status for required modules",
 			Values: required_errored})
 	}
 	if len(required_disabled) > 0 {
-		c.AddBreach(&result.KeyValuesBreach{
+		c.AddBreach(&breach.KeyValuesBreach{
 			Key:    "required modules are not enabled",
 			Values: required_disabled})
 	}
@@ -94,12 +95,12 @@ func CheckModulesInYaml(c *yaml.YamlBase, ct config.CheckType, configName string
 		disallowed_errored,
 		disallowed_disabled := DetermineModuleStatus(c.NodeMap[configName], ct, disallowed)
 	if len(disallowed_errored) > 0 {
-		c.AddBreach(&result.KeyValuesBreach{
+		c.AddBreach(&breach.KeyValuesBreach{
 			Key:    "error verifying status for disallowed modules",
 			Values: disallowed_errored})
 	}
 	if len(disallowed_enabled) > 0 {
-		c.AddBreach(&result.KeyValuesBreach{
+		c.AddBreach(&breach.KeyValuesBreach{
 			Key:    "disallowed modules are enabled",
 			Values: disallowed_enabled})
 	}

@@ -6,13 +6,14 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestUserRoleCheckInit(t *testing.T) {
@@ -54,7 +55,7 @@ func TestUserRoleCheckFetchData(t *testing.T) {
 		c := UserRoleCheck{}
 		c.FetchData()
 		assert.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				Value:      "vendor/drush/drush/drush: no such file or directory",
 			}},
@@ -83,7 +84,7 @@ func TestUserRoleCheckFetchData(t *testing.T) {
 		c := UserRoleCheck{}
 		c.FetchData()
 		assert.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				Value:      "unable to run drush sql query",
 			}},
@@ -94,7 +95,7 @@ func TestUserRoleCheckFetchData(t *testing.T) {
 		c = UserRoleCheck{}
 		c.FetchData()
 		assert.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				Value:      "unable to run drush command",
 			}},
@@ -124,7 +125,7 @@ func TestUserRoleCheckUnmarshalData(t *testing.T) {
 	c := UserRoleCheck{}
 	c.UnmarshalDataMap()
 	assert.EqualValues(
-		[]result.Breach{&result.ValueBreach{
+		[]breach.Breach{&breach.ValueBreach{
 			BreachType: "value",
 			Value:      "no data provided",
 		}},
@@ -140,7 +141,7 @@ func TestUserRoleCheckUnmarshalData(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	assert.EqualValues(
-		[]result.Breach{&result.ValueBreach{
+		[]breach.Breach{&breach.ValueBreach{
 			BreachType: "value",
 			Value:      "invalid character ']' after object key:value pair",
 		}},
@@ -172,7 +173,7 @@ func TestUserRoleCheckRunCheck(t *testing.T) {
 				},
 			},
 			ExpectStatus: result.Fail,
-			ExpectFails: []result.Breach{&result.ValueBreach{
+			ExpectFails: []breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				Value:      "no disallowed role provided"}}},
 
@@ -186,7 +187,7 @@ func TestUserRoleCheckRunCheck(t *testing.T) {
 				Roles: []string{"site-admin", "content-admin"},
 			},
 			ExpectStatus: result.Fail,
-			ExpectFails: []result.Breach{&result.KeyValuesBreach{
+			ExpectFails: []breach.Breach{&breach.KeyValuesBreach{
 				BreachType: "key-values",
 				KeyLabel:   "user",
 				Key:        "1",

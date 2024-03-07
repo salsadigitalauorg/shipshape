@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -42,7 +43,7 @@ type Check interface {
 	HasData(failCheck bool) bool
 	FetchData()
 	UnmarshalDataMap()
-	AddBreach(result.Breach)
+	AddBreach(breach.Breach)
 	AddPass(msg string)
 	AddWarning(msg string)
 	SetPerformRemediation(flag bool)

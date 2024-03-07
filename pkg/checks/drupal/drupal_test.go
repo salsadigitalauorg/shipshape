@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	yamlv3 "gopkg.in/yaml.v3"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
@@ -241,7 +242,7 @@ module:
 		"all disallowed modules are disabled",
 	})
 	assert.EqualValues(
-		[]result.Breach{&result.KeyValuesBreach{
+		[]breach.Breach{&breach.KeyValuesBreach{
 			BreachType: "key-values",
 			Key:        "disallowed modules are enabled",
 			Values:     []string{"dblog"},
@@ -270,13 +271,13 @@ func TestCheckModulesInYaml(t *testing.T) {
 		"some disallowed modules are disabled: views_ui",
 	})
 	assert.ElementsMatch(
-		[]result.Breach{
-			&result.KeyValuesBreach{
+		[]breach.Breach{
+			&breach.KeyValuesBreach{
 				BreachType: "key-values",
 				Key:        "error verifying status for required modules",
 				Values:     []string{"invalid character '&' at position 11, following \".node\""},
 			},
-			&result.KeyValuesBreach{
+			&breach.KeyValuesBreach{
 				BreachType: "key-values",
 				Key:        "error verifying status for disallowed modules",
 				Values:     []string{"invalid character '&' at position 15, following \".field_ui\""},
@@ -308,13 +309,13 @@ module:
 		"some disallowed modules are disabled: field_ui",
 	})
 	assert.ElementsMatch(
-		[]result.Breach{
-			&result.KeyValuesBreach{
+		[]breach.Breach{
+			&breach.KeyValuesBreach{
 				BreachType: "key-values",
 				Key:        "required modules are not enabled",
 				Values:     []string{"node"},
 			},
-			&result.KeyValuesBreach{
+			&breach.KeyValuesBreach{
 				BreachType: "key-values",
 				Key:        "disallowed modules are enabled",
 				Values:     []string{"views_ui"},

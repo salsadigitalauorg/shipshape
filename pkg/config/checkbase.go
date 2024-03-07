@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -63,7 +64,7 @@ func (c *CheckBase) FetchData() {}
 func (c *CheckBase) HasData(failCheck bool) bool {
 	if c.DataMap == nil {
 		if failCheck {
-			c.AddBreach(&result.ValueBreach{Value: "no data available"})
+			c.AddBreach(&breach.ValueBreach{Value: "no data available"})
 		}
 		return false
 	}
@@ -75,7 +76,7 @@ func (c *CheckBase) HasData(failCheck bool) bool {
 func (c *CheckBase) UnmarshalDataMap() {}
 
 // AddBreach appends a Breach to the Result.
-func (c *CheckBase) AddBreach(b result.Breach) {
+func (c *CheckBase) AddBreach(b breach.Breach) {
 	b.SetCommonValues(string(c.cType), c.Name, string(c.Severity))
 	c.Result.Breaches = append(
 		c.Result.Breaches,
@@ -105,7 +106,7 @@ func (c *CheckBase) SetPerformRemediation(flag bool) {
 // generating the result and remediating breaches.
 // This is where c.Result should be populated.
 func (c *CheckBase) RunCheck() {
-	c.AddBreach(&result.ValueBreach{Value: "not implemented"})
+	c.AddBreach(&breach.ValueBreach{Value: "not implemented"})
 }
 
 // ShouldPerformRemediation returns whether to remediate or not.
@@ -118,7 +119,7 @@ func (c *CheckBase) ShouldPerformRemediation() bool {
 // cast to the required type before being used.
 func (c *CheckBase) Remediate() {
 	for _, b := range c.Result.Breaches {
-		b.SetRemediation(result.RemediationStatusNoSupport, "")
+		b.SetRemediation(breach.RemediationStatusNoSupport, "")
 	}
 }
 
