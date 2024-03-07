@@ -4,11 +4,13 @@ import (
 	"os/exec"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestRolePermissionsCheck_Init(t *testing.T) {
@@ -45,8 +47,8 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		c.Result.DetermineResultStatus(false)
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.ElementsMatch(
-			[]result.Breach{&result.ValueBreach{
-				BreachType: result.BreachTypeValue,
+			[]breach.Breach{&breach.ValueBreach{
+				BreachType: breach.BreachTypeValue,
 				Value:      "no role ID provided"}},
 			c.Result.Breaches,
 		)
@@ -60,8 +62,8 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		c.Result.DetermineResultStatus(false)
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.ElementsMatch(
-			[]result.Breach{&result.ValueBreach{
-				BreachType: result.BreachTypeValue,
+			[]breach.Breach{&breach.ValueBreach{
+				BreachType: breach.BreachTypeValue,
 				Value:      "vendor/drush/drush/drush: no such file or directory"}},
 			c.Result.Breaches)
 	})
@@ -82,8 +84,8 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		c.Result.DetermineResultStatus(false)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{&result.ValueBreach{
-				BreachType: result.BreachTypeValue,
+			[]breach.Breach{&breach.ValueBreach{
+				BreachType: breach.BreachTypeValue,
 				CheckType:  "drupal-role-permissions",
 				Severity:   "normal",
 				Value:      "Unexpected error"}},
@@ -108,8 +110,8 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{&result.ValueBreach{
-				BreachType: result.BreachTypeValue,
+			[]breach.Breach{&breach.ValueBreach{
+				BreachType: breach.BreachTypeValue,
 				CheckType:  "drupal-role-permissions",
 				Severity:   "normal",
 				Value:      "invalid character 'U' looking for beginning of value"}},
@@ -150,9 +152,9 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{
-				&result.KeyValueBreach{
-					BreachType: result.BreachTypeKeyValue,
+			[]breach.Breach{
+				&breach.KeyValueBreach{
+					BreachType: breach.BreachTypeKeyValue,
 					CheckType:  "drupal-role-permissions",
 					Severity:   "normal",
 					KeyLabel:   "role",
@@ -160,8 +162,8 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 					ValueLabel: "missing permissions",
 					Value:      "[setup own tfa]",
 				},
-				&result.KeyValueBreach{
-					BreachType: result.BreachTypeKeyValue,
+				&breach.KeyValueBreach{
+					BreachType: breach.BreachTypeKeyValue,
 					CheckType:  "drupal-role-permissions",
 					Severity:   "normal",
 					KeyLabel:   "role",

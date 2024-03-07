@@ -6,13 +6,14 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestAdminUserInit(t *testing.T) {
@@ -51,7 +52,7 @@ func TestAdminUserFetchData(t *testing.T) {
 		c := AdminUserCheck{}
 		c.FetchData()
 		assert.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				Value:      "vendor/drush/drush/drush: no such file or directory",
 			}},
@@ -70,7 +71,7 @@ func TestAdminUserFetchData(t *testing.T) {
 		c := AdminUserCheck{}
 		c.FetchData()
 		assert.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				Value:      "unable to run drush command",
 			}},
@@ -102,7 +103,7 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 	t.Run("emptyDataMap", func(t *testing.T) {
 		c.UnmarshalDataMap()
 		assert.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				Value:      "no data provided",
 			}},
@@ -120,7 +121,7 @@ func TestAdminUserUnmarshalData(t *testing.T) {
 		}
 		c.UnmarshalDataMap()
 		assert.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				Value:      "invalid character ']' after object key:value pair",
 			}},
@@ -171,7 +172,7 @@ func TestAdminUserRunCheck(t *testing.T) {
 				AllowedRoles: []string{"content-admin"},
 			},
 			ExpectStatus: result.Fail,
-			ExpectFails: []result.Breach{&result.KeyValueBreach{
+			ExpectFails: []breach.Breach{&breach.KeyValueBreach{
 				BreachType: "key-value",
 				Key:        "is_admin: true",
 				ValueLabel: "role",
@@ -218,18 +219,18 @@ func TestAdminUserRemediate(t *testing.T) {
 			nil)
 
 		c := AdminUserCheck{}
-		c.AddBreach(&result.KeyValueBreach{
+		c.AddBreach(&breach.KeyValueBreach{
 			Key:        "is_admin: true",
 			ValueLabel: "role",
 			Value:      "foo",
 		})
 		c.Remediate()
-		assert.EqualValues([]result.Breach{&result.KeyValueBreach{
+		assert.EqualValues([]breach.Breach{&breach.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "is_admin: true",
 			ValueLabel: "role",
 			Value:      "foo",
-			Remediation: result.Remediation{
+			Remediation: breach.Remediation{
 				Status: "failed",
 				Messages: []string{"failed to set is_admin to false for role 'foo' " +
 					"due to error: unable to run drush command"},
@@ -242,7 +243,7 @@ func TestAdminUserRemediate(t *testing.T) {
 		command.ShellCommander = internal.ShellCommanderMaker(nil, nil, &generatedCommand)
 
 		c := AdminUserCheck{}
-		c.AddBreach(&result.KeyValueBreach{
+		c.AddBreach(&breach.KeyValueBreach{
 			Key:        "is_admin: true",
 			ValueLabel: "role",
 			Value:      "foo",

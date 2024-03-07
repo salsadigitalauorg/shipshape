@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"gopkg.in/yaml.v3"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"gopkg.in/yaml.v3"
 )
 
 // Merge implementation for Yaml check.
@@ -26,11 +28,11 @@ func (c *YamlLintCheck) UnmarshalDataMap() {
 		err := yaml.Unmarshal([]byte(data), &ifc)
 		if err != nil {
 			if typeErr, ok := err.(*yaml.TypeError); ok {
-				c.AddBreach(&result.ValueBreach{
+				c.AddBreach(&breach.ValueBreach{
 					ValueLabel: "cannot decode yaml: " + f,
 					Value:      strings.Join(typeErr.Errors, "\n")})
 			} else {
-				c.AddBreach(&result.ValueBreach{
+				c.AddBreach(&breach.ValueBreach{
 					ValueLabel: "yaml error: " + f,
 					Value:      err.Error()})
 			}

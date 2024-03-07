@@ -1,4 +1,4 @@
-package result
+package breach
 
 type RemediationStatus string
 

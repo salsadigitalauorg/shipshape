@@ -3,9 +3,10 @@ package analyse
 import (
 	"fmt"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
 var Registry = map[string]func(string) Analyser{}
@@ -52,8 +53,10 @@ func ValidateInputs() {
 func AnalyseAll() map[string]result.Result {
 	results := map[string]result.Result{}
 	for _, p := range Analysers {
-		p.Analyse()
-		results[p.GetName()] = p.GetResult()
+		if p.PreProcessInput() {
+			p.Analyse()
+		}
+		results[p.GetId()] = p.GetResult()
 	}
 	return results
 }

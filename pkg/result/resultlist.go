@@ -4,6 +4,8 @@ import (
 	"sort"
 	"sync"
 	"sync/atomic"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 )
 
 // ResultList is a wrapper around a list of results, providing some useful
@@ -84,7 +86,7 @@ func (rl *ResultList) RemediationTotalsCount() {
 
 // RemediationStatus calculates and returns the overall result of
 // remediation for all breaches.
-func (rl *ResultList) RemediationStatus() RemediationStatus {
+func (rl *ResultList) RemediationStatus() breach.RemediationStatus {
 	if !rl.RemediationPerformed {
 		return ""
 	}
@@ -93,26 +95,26 @@ func (rl *ResultList) RemediationStatus() RemediationStatus {
 		(rl.RemediationTotals["successful"] > 0 &&
 			(rl.RemediationTotals["failed"] > 0 ||
 				rl.RemediationTotals["unsupported"] > 0)) {
-		return RemediationStatusPartial
+		return breach.RemediationStatusPartial
 	}
 	if rl.RemediationTotals["unsupported"] > 0 &&
 		rl.RemediationTotals["successful"] == 0 &&
 		rl.RemediationTotals["failed"] == 0 &&
 		rl.RemediationTotals["partial"] == 0 {
-		return RemediationStatusNoSupport
+		return breach.RemediationStatusNoSupport
 	}
 	if rl.RemediationTotals["failed"] > 0 &&
 		rl.RemediationTotals["successful"] == 0 &&
 		rl.RemediationTotals["unsupported"] == 0 &&
 		rl.RemediationTotals["partial"] == 0 {
-		return RemediationStatusFailed
+		return breach.RemediationStatusFailed
 	}
-	return RemediationStatusSuccess
+	return breach.RemediationStatusSuccess
 }
 
 // GetBreachesByCheckName fetches the list of failures by check name.
-func (rl *ResultList) GetBreachesByCheckName(cn string) []Breach {
-	var breaches []Breach
+func (rl *ResultList) GetBreachesByCheckName(cn string) []breach.Breach {
+	var breaches []breach.Breach
 	for _, r := range rl.Results {
 		if r.Name == cn {
 			breaches = append(breaches, r.Breaches...)
@@ -122,8 +124,8 @@ func (rl *ResultList) GetBreachesByCheckName(cn string) []Breach {
 }
 
 // GetBreachesBySeverity fetches the list of failures by severity.
-func (rl *ResultList) GetBreachesBySeverity(s string) []Breach {
-	var breaches []Breach
+func (rl *ResultList) GetBreachesBySeverity(s string) []breach.Breach {
+	var breaches []breach.Breach
 
 	for _, r := range rl.Results {
 		if r.Severity == s {

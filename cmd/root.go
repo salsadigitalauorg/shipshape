@@ -28,13 +28,11 @@ var rootCmd = &cobra.Command{
 	Short: "shipshape is a tool for identifying breaches from data",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		// Determine log level.
-		if debug {
-			logLevel = "debug"
-			return
-		}
 		if verbose {
 			logLevel = "info"
-			return
+		}
+		if debug {
+			logLevel = "debug"
 		}
 		initLogger(logLevel)
 	},

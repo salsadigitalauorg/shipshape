@@ -9,6 +9,7 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -113,7 +114,7 @@ func SimpleDisplay(w *bufio.Writer) {
 			}
 			fmt.Fprintf(w, "  ### %s\n", r.Name)
 			for _, b := range r.Breaches {
-				if b.GetRemediation().Status != result.RemediationStatusSuccess {
+				if b.GetRemediation().Status != breach.RemediationStatusSuccess {
 					continue
 				}
 				for _, msg := range b.GetRemediation().Messages {
@@ -126,22 +127,22 @@ func SimpleDisplay(w *bufio.Writer) {
 
 	if RunResultList.RemediationPerformed && RunResultList.TotalBreaches > 0 {
 		switch RunResultList.RemediationStatus() {
-		case result.RemediationStatusNoSupport:
+		case breach.RemediationStatusNoSupport:
 			fmt.Fprint(w, "Breaches were detected but none of them could be "+
 				"fixed as remediation is not supported for them yet.\n\n")
 			fmt.Fprint(w, "# Non-remediated breaches\n\n")
-		case result.RemediationStatusFailed:
+		case breach.RemediationStatusFailed:
 			fmt.Fprint(w, "Breaches were detected but none of them could "+
 				"be fixed as there were errors when trying to remediate.\n\n")
 			fmt.Fprint(w, "# Non-remediated breaches\n\n")
-		case result.RemediationStatusPartial:
+		case breach.RemediationStatusPartial:
 			fmt.Fprint(w, "Breaches were detected but not all of them could "+
 				"be fixed as they are either not supported yet or there were "+
 				"errors when trying to remediate.\n\n")
 			fmt.Fprint(w, "# Remediations\n\n")
 			printRemediations()
 			fmt.Fprint(w, "# Non-remediated breaches\n\n")
-		case result.RemediationStatusSuccess:
+		case breach.RemediationStatusSuccess:
 			fmt.Fprintf(w, "Breaches were detected but were all fixed successfully!\n\n")
 			printRemediations()
 			w.Flush()
@@ -158,12 +159,12 @@ func SimpleDisplay(w *bufio.Writer) {
 	}
 
 	for _, r := range RunResultList.Results {
-		if len(r.Breaches) == 0 || r.RemediationStatus == result.RemediationStatusSuccess {
+		if len(r.Breaches) == 0 || r.RemediationStatus == breach.RemediationStatusSuccess {
 			continue
 		}
 		fmt.Fprintf(w, "  ### %s\n", r.Name)
 		for _, b := range r.Breaches {
-			if b.GetRemediation().Status == result.RemediationStatusSuccess {
+			if b.GetRemediation().Status == breach.RemediationStatusSuccess {
 				continue
 			}
 			fmt.Fprintf(w, "     -- %s\n", b)

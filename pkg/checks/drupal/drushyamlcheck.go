@@ -6,9 +6,9 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	log "github.com/sirupsen/logrus"
@@ -43,11 +43,11 @@ func (c *DrushYamlCheck) FetchData() {
 	c.DataMap[c.ConfigName], err = Drush(c.DrushPath, c.Alias, c.DrushCommand.Args).Exec()
 	if err != nil {
 		if pathErr, ok := err.(*fs.PathError); ok {
-			c.AddBreach(&result.ValueBreach{
+			c.AddBreach(&breach.ValueBreach{
 				Value: pathErr.Path + ": " + pathErr.Err.Error()})
 		} else {
 			msg := string(err.(*exec.ExitError).Stderr)
-			c.AddBreach(&result.ValueBreach{
+			c.AddBreach(&breach.ValueBreach{
 				ValueLabel: c.ConfigName,
 				Value:      strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 		}
@@ -65,14 +65,14 @@ func (c *DrushYamlCheck) Remediate() {
 		})
 		if c.RemediateCommand == "" {
 			contextLogger.Print("no remediation command specified - failing")
-			b.SetRemediation(result.RemediationStatusNoSupport, "")
+			b.SetRemediation(breach.RemediationStatusNoSupport, "")
 			return
 		}
 
 		contextLogger.Print("running remediation command")
 		_, err := command.ShellCommander("sh", "-c", c.RemediateCommand).Output()
 		if err != nil {
-			b.SetRemediation(result.RemediationStatusFailed, fmt.Sprintf(
+			b.SetRemediation(breach.RemediationStatusFailed, fmt.Sprintf(
 				"error running remediation command for config '%s' due to error: %s",
 				c.ConfigName, command.GetMsgFromCommandError(err)))
 		} else {
@@ -80,7 +80,7 @@ func (c *DrushYamlCheck) Remediate() {
 				c.RemediateMsg = fmt.Sprintf(
 					"remediation command for config '%s' ran successfully", c.ConfigName)
 			}
-			b.SetRemediation(result.RemediationStatusSuccess, c.RemediateMsg)
+			b.SetRemediation(breach.RemediationStatusSuccess, c.RemediateMsg)
 		}
 	}
 }

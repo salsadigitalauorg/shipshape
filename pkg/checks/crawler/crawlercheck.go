@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/gocolly/colly"
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -79,7 +80,7 @@ func (c *CrawlerCheck) RunCheck() {
 
 	crawler.OnError(func(r *colly.Response, err error) {
 		c.Result.Status = result.Fail
-		c.AddBreach(&result.KeyValueBreach{
+		c.AddBreach(&breach.KeyValueBreach{
 			Key:        fmt.Sprintf("%v", r.Request.URL),
 			ValueLabel: "invalid response",
 			Value:      fmt.Sprintf("%d", r.StatusCode),

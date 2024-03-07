@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
@@ -41,7 +41,7 @@ func (c *DbPermissionsCheck) Merge(mergeCheck config.Check) error {
 // type for further processing.
 func (c *DbPermissionsCheck) UnmarshalDataMap() {
 	if len(c.DataMap[c.ConfigName]) == 0 {
-		c.AddBreach(&result.ValueBreach{Value: "no data provided"})
+		c.AddBreach(&breach.ValueBreach{Value: "no data provided"})
 	}
 
 	c.Permissions = map[string]DrushRole{}
@@ -51,7 +51,7 @@ func (c *DbPermissionsCheck) UnmarshalDataMap() {
 // RunCheck implements the Check logic for Drupal Permissions in database config.
 func (c *DbPermissionsCheck) RunCheck() {
 	if len(c.Disallowed) == 0 {
-		c.AddBreach(&result.ValueBreach{Value: "list of disallowed perms not provided"})
+		c.AddBreach(&breach.ValueBreach{Value: "list of disallowed perms not provided"})
 	}
 
 	for r, perms := range c.Permissions {
@@ -70,7 +70,7 @@ func (c *DbPermissionsCheck) RunCheck() {
 			return fails[i] < fails[j]
 		})
 
-		c.AddBreach(&result.KeyValuesBreach{
+		c.AddBreach(&breach.KeyValuesBreach{
 			KeyLabel:   "role",
 			Key:        r,
 			ValueLabel: "permissions",
@@ -82,7 +82,7 @@ func (c *DbPermissionsCheck) RunCheck() {
 // Remediate attempts to remove any disallowed permissions detected.
 func (c *DbPermissionsCheck) Remediate() {
 	for _, b := range c.Result.Breaches {
-		b, ok := b.(*result.KeyValuesBreach)
+		b, ok := b.(*breach.KeyValuesBreach)
 		if !ok {
 			continue
 		}
@@ -90,11 +90,11 @@ func (c *DbPermissionsCheck) Remediate() {
 			c.DrushPath, c.Alias,
 			[]string{"role:perm:remove", b.Key, strings.Join(b.Values, ",")}).Exec()
 		if err != nil {
-			b.SetRemediation(result.RemediationStatusFailed, fmt.Sprintf(
+			b.SetRemediation(breach.RemediationStatusFailed, fmt.Sprintf(
 				"failed to fix disallowed permissions for role '%s' due to error: %s",
 				b.Key, command.GetMsgFromCommandError(err)))
 		} else {
-			b.SetRemediation(result.RemediationStatusSuccess, fmt.Sprintf(
+			b.SetRemediation(breach.RemediationStatusSuccess, fmt.Sprintf(
 				"[%s] fixed disallowed permissions: [%s]",
 				b.Key, strings.Join(b.Values, ", ")))
 		}

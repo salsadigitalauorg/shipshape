@@ -4,12 +4,13 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	yamlv3 "gopkg.in/yaml.v3"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestYamlBaseMerge(t *testing.T) {
@@ -53,8 +54,8 @@ foo:
 	}
 	c.UnmarshalDataMap()
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.ElementsMatch([]result.Breach{&result.ValueBreach{
-		BreachType: result.BreachTypeValue,
+	assert.ElementsMatch([]breach.Breach{&breach.ValueBreach{
+		BreachType: breach.BreachTypeValue,
 		Value:      "yaml: line 4: found character that cannot start any token"}},
 		c.Result.Breaches)
 
@@ -93,8 +94,8 @@ foo:
 	c.Result.DetermineResultStatus(false)
 
 	assert.Equal(result.Fail, c.Result.Status)
-	assert.ElementsMatch([]result.Breach{&result.ValueBreach{
-		BreachType: result.BreachTypeValue,
+	assert.ElementsMatch([]breach.Breach{&breach.ValueBreach{
+		BreachType: breach.BreachTypeValue,
 		Value:      "invalid character '&' at position 3, following \"baz\""}},
 		c.Result.Breaches)
 }
@@ -270,8 +271,8 @@ func TestYamlBase(t *testing.T) {
 
 	c := YamlBase{}
 	c.HasData(true)
-	assert.ElementsMatch([]result.Breach{&result.ValueBreach{
-		BreachType: result.BreachTypeValue,
+	assert.ElementsMatch([]breach.Breach{&breach.ValueBreach{
+		BreachType: breach.BreachTypeValue,
 		Value:      "no data available"}},
 		c.Result.Breaches)
 
@@ -316,8 +317,8 @@ notification:
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.ElementsMatch([]result.Breach{&result.KeyValueBreach{
-		BreachType: result.BreachTypeKeyValue,
+	assert.ElementsMatch([]breach.Breach{&breach.KeyValueBreach{
+		BreachType: breach.BreachTypeKeyValue,
 		KeyLabel:   "config",
 		Key:        "data",
 		ValueLabel: "key not found",
@@ -337,8 +338,8 @@ notification:
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.EqualValues([]result.Breach{&result.KeyValueBreach{
-		BreachType:    result.BreachTypeKeyValue,
+	assert.EqualValues([]breach.Breach{&breach.KeyValueBreach{
+		BreachType:    breach.BreachTypeKeyValue,
 		KeyLabel:      "config:data",
 		Key:           "check.interval_days",
 		ValueLabel:    "actual",
@@ -398,8 +399,8 @@ efgh:
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.ElementsMatch([]result.Breach{&result.KeyValuesBreach{
-		BreachType: result.BreachTypeKeyValues,
+	assert.ElementsMatch([]breach.Breach{&breach.KeyValuesBreach{
+		BreachType: breach.BreachTypeKeyValues,
 		KeyLabel:   "config",
 		Key:        "data",
 		ValueLabel: "disallowed *.some",
@@ -438,8 +439,8 @@ foo:
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(0, len(c.Result.Passes))
-	assert.ElementsMatch([]result.Breach{&result.KeyValuesBreach{
-		BreachType: result.BreachTypeKeyValues,
+	assert.ElementsMatch([]breach.Breach{&breach.KeyValuesBreach{
+		BreachType: breach.BreachTypeKeyValues,
 		KeyLabel:   "config",
 		Key:        "data",
 		ValueLabel: "disallowed foo",

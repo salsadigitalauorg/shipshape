@@ -3,6 +3,7 @@ package docker_test
 import (
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/docker"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
@@ -56,8 +57,8 @@ func TestInvalidDockerfileCheck(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.KeyValueBreach{
-			BreachType: result.BreachTypeKeyValue,
+		[]breach.Breach{&breach.KeyValueBreach{
+			BreachType: breach.BreachTypeKeyValue,
 			KeyLabel:   "service",
 			Key:        "service1",
 			ValueLabel: "invalid base image",
@@ -91,8 +92,8 @@ func TestInvalidDockerfileImageVersion(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.KeyValueBreach{
-			BreachType: result.BreachTypeKeyValue,
+		[]breach.Breach{&breach.KeyValueBreach{
+			BreachType: breach.BreachTypeKeyValue,
 			KeyLabel:   "service",
 			Key:        "service1",
 			ValueLabel: "invalid base image",
@@ -164,8 +165,8 @@ func TestInvalidImageCheck(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.KeyValueBreach{
-			BreachType: result.BreachTypeKeyValue,
+		[]breach.Breach{&breach.KeyValueBreach{
+			BreachType: breach.BreachTypeKeyValue,
 			KeyLabel:   "service",
 			Key:        "service4",
 			ValueLabel: "invalid base image",
@@ -189,16 +190,16 @@ func TestInvalidImageVersions(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.ElementsMatch(
-		[]result.Breach{
-			&result.KeyValueBreach{
-				BreachType: result.BreachTypeKeyValue,
+		[]breach.Breach{
+			&breach.KeyValueBreach{
+				BreachType: breach.BreachTypeKeyValue,
 				KeyLabel:   "service",
 				Key:        "service2",
 				ValueLabel: "invalid base image",
 				Value:      "bitnami/postgresql@16",
 			},
-			&result.KeyValueBreach{
-				BreachType: result.BreachTypeKeyValue,
+			&breach.KeyValueBreach{
+				BreachType: breach.BreachTypeKeyValue,
 				KeyLabel:   "service",
 				Key:        "service4",
 				ValueLabel: "invalid base image",

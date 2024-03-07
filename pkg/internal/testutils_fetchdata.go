@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,7 +21,7 @@ type FetchDataTest struct {
 	PreFetch func(t *testing.T)
 	// Expected values after running the check.
 	ExpectPasses   []string
-	ExpectBreaches []result.Breach
+	ExpectBreaches []breach.Breach
 	ExpectDataMap  map[string][]byte
 }
 

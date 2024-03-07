@@ -3,10 +3,12 @@ package yaml_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestYamlLintMerge(t *testing.T) {
@@ -53,8 +55,8 @@ func TestYamlLintCheckFetchData(t *testing.T) {
 	c.FetchData()
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
-		[]result.Breach{
-			&result.ValueBreach{
+		[]breach.Breach{
+			&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "yamllint",
 				CheckName:  "Test yaml lint",
@@ -89,8 +91,8 @@ func TestYamlLintCheckFetchData(t *testing.T) {
 	c.FetchData()
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
-		[]result.Breach{
-			&result.ValueBreach{
+		[]breach.Breach{
+			&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "yamllint",
 				CheckName:  "Test yaml lint",
@@ -107,8 +109,8 @@ func TestYamlLintCheckFetchData(t *testing.T) {
 	c.FetchData()
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
-		[]result.Breach{
-			&result.ValueBreach{
+		[]breach.Breach{
+			&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "yamllint",
 				CheckName:  "Test yaml lint",
@@ -135,8 +137,8 @@ this: yaml
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Empty(c.Result.Passes)
 	assert.ElementsMatch(
-		[]result.Breach{
-			&result.ValueBreach{
+		[]breach.Breach{
+			&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "yamllint",
 				CheckName:  "Test yaml lint",
@@ -175,8 +177,8 @@ foo: bar
 		assert.Equal(result.Fail, c.Result.Status)
 		assert.Empty(c.Result.Passes)
 		assert.ElementsMatch(
-			[]result.Breach{
-				&result.ValueBreach{
+			[]breach.Breach{
+				&breach.ValueBreach{
 					BreachType: "value",
 					ValueLabel: "yaml error: yaml-invalid-root.yml",
 					Value:      "yaml: line 1: did not find expected key",

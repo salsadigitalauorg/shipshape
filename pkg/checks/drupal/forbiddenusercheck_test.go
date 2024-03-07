@@ -4,11 +4,13 @@ import (
 	"os/exec"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestForbiddenUserCheck_Init(t *testing.T) {
@@ -48,7 +50,7 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		c.Result.DetermineResultStatus(false)
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				Value:      "vendor/drush/drush/drush: no such file or directory",
 			}},
@@ -68,7 +70,7 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		c.RunCheck()
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-user-forbidden",
 				Severity:   "normal",
@@ -94,7 +96,7 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				CheckType:  "drupal-user-forbidden",
 				Severity:   "normal",
@@ -125,7 +127,7 @@ func TestForbiddenUserCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Empty(c.Result.Passes)
 		assertions.ElementsMatch(
-			[]result.Breach{&result.KeyValueBreach{
+			[]breach.Breach{&breach.KeyValueBreach{
 				BreachType: "key-value",
 				CheckType:  "drupal-user-forbidden",
 				Severity:   "normal",
@@ -169,7 +171,7 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 
 	t.Run("failOnDrushError", func(t *testing.T) {
 		c := drupal.ForbiddenUserCheck{UserId: "1"}
-		c.AddBreach(&result.KeyValueBreach{
+		c.AddBreach(&breach.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "forbidden user is active",
 			Value:      c.UserId,
@@ -181,12 +183,12 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 			nil,
 		)
 		c.Remediate()
-		assertions.EqualValues([]result.Breach{&result.KeyValueBreach{
+		assertions.EqualValues([]breach.Breach{&breach.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "forbidden user is active",
 			Value:      c.UserId,
-			Remediation: result.Remediation{
-				Status: result.RemediationStatusFailed,
+			Remediation: breach.Remediation{
+				Status: breach.RemediationStatusFailed,
 				Messages: []string{"error blocking forbidden user '1' due to error: " +
 					"Unable to find a matching user"}}},
 		}, c.Result.Breaches)
@@ -195,7 +197,7 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 
 	t.Run("passOnBlockingInactiveUser", func(t *testing.T) {
 		c := drupal.ForbiddenUserCheck{UserId: "1"}
-		c.AddBreach(&result.KeyValueBreach{
+		c.AddBreach(&breach.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "forbidden user is active",
 			Value:      c.UserId,
@@ -214,12 +216,12 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 			nil,
 		)
 		c.Remediate()
-		assertions.EqualValues([]result.Breach{&result.KeyValueBreach{
+		assertions.EqualValues([]breach.Breach{&breach.KeyValueBreach{
 			BreachType: "key-value",
 			Key:        "forbidden user is active",
 			Value:      c.UserId,
-			Remediation: result.Remediation{
-				Status:   result.RemediationStatusSuccess,
+			Remediation: breach.Remediation{
+				Status:   breach.RemediationStatusSuccess,
 				Messages: []string{"Blocked the forbidden user [1]"}}},
 		}, c.Result.Breaches)
 		c.Result.DetermineResultStatus(true)

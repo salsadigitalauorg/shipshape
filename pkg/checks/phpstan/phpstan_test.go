@@ -6,12 +6,14 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/phpstan"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestRegisterChecks(t *testing.T) {
@@ -129,7 +131,7 @@ func TestFetchDataBinNotExists(t *testing.T) {
 	}
 	c.FetchData()
 	assert.EqualValues(
-		[]result.Breach{&result.ValueBreach{
+		[]breach.Breach{&breach.ValueBreach{
 			BreachType: "value",
 			ValueLabel: "Phpstan failed to run",
 			Value:      "/my/custom/path/phpstan: no such file or directory",
@@ -174,7 +176,7 @@ func TestHasData(t *testing.T) {
 		c := PhpStanCheck{}
 		assert.False(c.HasData(true))
 		assert.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
 				Value:      "no data available",
 			}},
@@ -225,7 +227,7 @@ func TestUnmarshalDataMap(t *testing.T) {
 	}
 	c.UnmarshalDataMap()
 	assert.EqualValues(
-		[]result.Breach{&result.ValueBreach{
+		[]breach.Breach{&breach.ValueBreach{
 			BreachType: "value",
 			ValueLabel: "unable to parse phpstan file errors",
 			Value: "json: cannot unmarshal array into Go value of type " +
@@ -268,7 +270,7 @@ func TestRunCheck(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.KeyValuesBreach{
+		[]breach.Breach{&breach.KeyValuesBreach{
 			BreachType: "key-values",
 			Key:        "file: /app/web/themes/custom/custom/test-theme/info.php",
 			Values:     []string{"line 3: Calling curl_exec() is forbidden, please change the code"},
@@ -289,7 +291,7 @@ func TestRunCheck(t *testing.T) {
 	c.Result.DetermineResultStatus(false)
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.EqualValues(
-		[]result.Breach{&result.KeyValuesBreach{
+		[]breach.Breach{&breach.KeyValuesBreach{
 			BreachType: "key-values",
 			Key:        "errors encountered when running phpstan",
 			Values:     []string{"Error found in file foo"},

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -48,7 +49,7 @@ func (c *DbUserTfaCheck) FetchData() {
 	res, err := Drush(c.DrushPath, c.Alias, cmd).Exec()
 	if err != nil {
 		c.Result.Status = result.Fail
-		c.AddBreach(&result.ValueBreach{
+		c.AddBreach(&breach.ValueBreach{
 			ValueLabel: "error fetching drush user info",
 			Value:      command.GetMsgFromCommandError(err),
 		})
@@ -73,7 +74,7 @@ func (c *DbUserTfaCheck) RunCheck() {
 		for _, user := range users {
 			tfaDisabled = append(tfaDisabled, fmt.Sprintf("%s:%s", user.Name, user.UID))
 		}
-		c.AddBreach(&result.ValueBreach{
+		c.AddBreach(&breach.ValueBreach{
 			ValueLabel: "users with TFA disabled",
 			Value:      strings.Join(tfaDisabled, ", "),
 		})

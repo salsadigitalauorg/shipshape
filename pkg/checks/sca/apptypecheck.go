@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -105,7 +106,7 @@ func (c *AppTypeCheck) RunCheck() {
 			}
 		}
 		if len(disallowedFound) > 0 {
-			c.AddBreach(&result.KeyValueBreach{
+			c.AddBreach(&breach.KeyValueBreach{
 				Key:   fmt.Sprintf("[%s] contains disallowed frameworks", path),
 				Value: "[" + strings.Join(disallowedFound, ", ") + "]",
 			})

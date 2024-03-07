@@ -3,6 +3,7 @@ package file
 import (
 	"path/filepath"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -43,7 +44,7 @@ func (c *FileCheck) RequiresData() bool { return false }
 func (c *FileCheck) RunCheck() {
 	files, err := utils.FindFiles(filepath.Join(config.ProjectDir, c.Path), c.DisallowedPattern, c.ExcludePattern, c.SkipDir)
 	if err != nil {
-		c.AddBreach(&result.ValueBreach{
+		c.AddBreach(&breach.ValueBreach{
 			ValueLabel: "error finding files",
 			Value:      err.Error()})
 		return
@@ -53,7 +54,7 @@ func (c *FileCheck) RunCheck() {
 		c.AddPass("No illegal files")
 		return
 	}
-	c.AddBreach(&result.KeyValuesBreach{
+	c.AddBreach(&breach.KeyValuesBreach{
 		Key:    "illegal files found",
 		Values: files,
 	})

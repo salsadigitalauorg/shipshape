@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -40,11 +41,11 @@ func (c *ForbiddenUserCheck) CheckUserStatus() bool {
 	userStatus, err := Drush(c.DrushPath, c.Alias, cmd).Exec()
 	var pathError *fs.PathError
 	if err != nil && errors.As(err, &pathError) {
-		c.AddBreach(&result.ValueBreach{
+		c.AddBreach(&breach.ValueBreach{
 			Value: pathError.Path + ": " + pathError.Err.Error()})
 	} else if err != nil {
 		msg := string(err.(*exec.ExitError).Stderr)
-		c.AddBreach(&result.ValueBreach{
+		c.AddBreach(&breach.ValueBreach{
 			Value: strings.ReplaceAll(strings.TrimSpace(msg), "  \n  ", "")})
 	} else {
 		// Unmarshal user:info JSON.
@@ -57,7 +58,7 @@ func (c *ForbiddenUserCheck) CheckUserStatus() bool {
 		err = json.Unmarshal(userStatus, &userStatusMap)
 		var syntaxError *json.SyntaxError
 		if err != nil && errors.As(err, &syntaxError) {
-			c.AddBreach(&result.ValueBreach{Value: err.Error()})
+			c.AddBreach(&breach.ValueBreach{Value: err.Error()})
 		}
 
 		if userStatusMap[c.UserId]["user_status"] == "1" {
@@ -71,17 +72,17 @@ func (c *ForbiddenUserCheck) CheckUserStatus() bool {
 // Remediate attempts to block an active forbidden user.
 func (c *ForbiddenUserCheck) Remediate() {
 	for _, b := range c.Result.Breaches {
-		if _, ok := b.(*result.KeyValueBreach); !ok {
+		if _, ok := b.(*breach.KeyValueBreach); !ok {
 			continue
 		}
 
 		_, err := Drush(c.DrushPath, c.Alias, []string{"user:block", "--uid=" + c.UserId}).Exec()
 		if err != nil {
-			b.SetRemediation(result.RemediationStatusFailed, fmt.Sprintf(
+			b.SetRemediation(breach.RemediationStatusFailed, fmt.Sprintf(
 				"error blocking forbidden user '%s' due to error: %s",
 				c.UserId, command.GetMsgFromCommandError(err)))
 		} else {
-			b.SetRemediation(result.RemediationStatusSuccess, fmt.Sprintf(
+			b.SetRemediation(breach.RemediationStatusSuccess, fmt.Sprintf(
 				"Blocked the forbidden user [%s]", c.UserId))
 		}
 	}
@@ -102,7 +103,7 @@ func (c *ForbiddenUserCheck) HasData(failCheck bool) bool {
 func (c *ForbiddenUserCheck) RunCheck() {
 	userActive := c.CheckUserStatus()
 	if userActive {
-		c.AddBreach(&result.KeyValueBreach{
+		c.AddBreach(&breach.KeyValueBreach{
 			Key:   "forbidden user is active",
 			Value: c.UserId,
 		})

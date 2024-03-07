@@ -3,10 +3,12 @@ package file_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/file"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestFileCheckMerge(t *testing.T) {
@@ -59,10 +61,10 @@ func TestFileCheckRunCheck(t *testing.T) {
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(
-		[]result.Breach{&result.ValueBreach{
+		[]breach.Breach{&breach.ValueBreach{
 			CheckType:  "file",
 			CheckName:  "filecheck1",
-			BreachType: result.BreachTypeValue,
+			BreachType: breach.BreachTypeValue,
 			Severity:   "normal",
 			ValueLabel: "error finding files",
 			Value:      "lstat testdata/file-non-existent: no such file or directory",
@@ -80,8 +82,8 @@ func TestFileCheckRunCheck(t *testing.T) {
 	assert.Equal(result.Fail, c.Result.Status)
 	assert.Equal(0, len(c.Result.Passes))
 	assert.EqualValues(
-		[]result.Breach{
-			&result.KeyValuesBreach{
+		[]breach.Breach{
+			&breach.KeyValuesBreach{
 				BreachType: "key-values",
 				CheckType:  "file",
 				CheckName:  "filecheck2",

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -49,7 +50,7 @@ func (c *RolePermissionsCheck) GetRolePermissions() []string {
 	drushOutput, err := Drush(c.DrushPath, c.Alias, cmd).Exec()
 
 	if err != nil {
-		c.AddBreach(&result.ValueBreach{Value: command.GetMsgFromCommandError(err)})
+		c.AddBreach(&breach.ValueBreach{Value: command.GetMsgFromCommandError(err)})
 	} else {
 		// Unmarshal role:list JSON.
 		// {
@@ -66,7 +67,7 @@ func (c *RolePermissionsCheck) GetRolePermissions() []string {
 		err = json.Unmarshal(drushOutput, &rolePermissionsMap)
 		var syntaxError *json.SyntaxError
 		if err != nil && errors.As(err, &syntaxError) {
-			c.AddBreach(&result.ValueBreach{Value: err.Error()})
+			c.AddBreach(&breach.ValueBreach{Value: err.Error()})
 		}
 
 		if len(rolePermissionsMap[c.RoleId]["perms"]) > 0 {
@@ -80,7 +81,7 @@ func (c *RolePermissionsCheck) GetRolePermissions() []string {
 // RunCheck implements the Check logic for role permissions.
 func (c *RolePermissionsCheck) RunCheck() {
 	if c.RoleId == "" {
-		c.AddBreach(&result.ValueBreach{Value: "no role ID provided"})
+		c.AddBreach(&breach.ValueBreach{Value: "no role ID provided"})
 		return
 	}
 
@@ -88,7 +89,7 @@ func (c *RolePermissionsCheck) RunCheck() {
 	// Check for required permissions.
 	diff := utils.StringSlicesInterdiffUnique(rolePermissions, c.RequiredPermissions)
 	if len(diff) > 0 {
-		c.AddBreach(&result.KeyValueBreach{
+		c.AddBreach(&breach.KeyValueBreach{
 			KeyLabel:   "role",
 			Key:        c.RoleId,
 			ValueLabel: "missing permissions",
@@ -99,7 +100,7 @@ func (c *RolePermissionsCheck) RunCheck() {
 	// Check for disallowed permissions.
 	diff = utils.StringSlicesIntersectUnique(rolePermissions, c.DisallowedPermissions)
 	if len(diff) > 0 {
-		c.AddBreach(&result.KeyValueBreach{
+		c.AddBreach(&breach.KeyValueBreach{
 			KeyLabel:   "role",
 			Key:        c.RoleId,
 			ValueLabel: "disallowed permissions",

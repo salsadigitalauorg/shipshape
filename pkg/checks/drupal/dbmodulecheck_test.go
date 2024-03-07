@@ -3,6 +3,7 @@ package drupal_test
 import (
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
@@ -109,15 +110,15 @@ views_ui:
 		"some disallowed modules are disabled: field_ui",
 	})
 	assert.ElementsMatch(
-		[]result.Breach{
-			&result.KeyValuesBreach{
+		[]breach.Breach{
+			&breach.KeyValuesBreach{
 				BreachType: "key-values",
 				CheckType:  "drupal-db-module",
 				Severity:   "normal",
 				Key:        "required modules are not enabled",
 				Values:     []string{"block"},
 			},
-			&result.KeyValuesBreach{
+			&breach.KeyValuesBreach{
 				BreachType: "key-values",
 				CheckType:  "drupal-db-module",
 				Severity:   "normal",

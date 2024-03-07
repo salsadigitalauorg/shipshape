@@ -4,6 +4,7 @@ import (
 	"io"
 	"testing"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
@@ -17,15 +18,15 @@ type RemediateTest struct {
 	// Name of the test.
 	Name     string
 	Check    config.Check
-	Breaches []result.Breach
+	Breaches []breach.Breach
 	// Func to run before running Remediate
 	PreRun func(t *testing.T)
 	// Expected values after running Remediate.
 	ExpectGeneratedCommand  string
 	ExpectStatusFail        bool
 	ExpectNoBreach          bool
-	ExpectBreaches          []result.Breach
-	ExpectRemediationStatus result.RemediationStatus
+	ExpectBreaches          []breach.Breach
+	ExpectRemediationStatus breach.RemediationStatus
 	ExpectNoRemediations    bool
 	ExpectRemediations      []string
 }
