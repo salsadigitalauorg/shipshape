@@ -59,10 +59,7 @@ analyse:
 
 output:
   stdout:
-    format: json
-  file:
-    path: /results.junit
-    format: junit
+    format: pretty
   lagoon.problems:
     api_key:
     api_endpoint:

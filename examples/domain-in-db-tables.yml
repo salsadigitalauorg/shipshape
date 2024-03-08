@@ -1,29 +1,32 @@
 connections:
-  docker_mariadb:
+  docker-mariadb:
     docker.exec:
       container: mariadb
-  drupal_db:
+  drupal-db:
     mysql:
-      connection: docker_mariadb
+      connection: docker-mariadb
       username: drupal
       password: drupal
       database: drupal
 
 collect:
-  table_names:
+  table-names:
     database.query:
-      connection: drupal_db
+      connection: drupal-db
       query: "SHOW TABLES"
       format: list
-  domain_in_tables:
+  domain-in-tables:
     database.query:
-      connection: drupal_db
+      connection: drupal-db
       input: table_names
       query: "SELECT domain FROM {{ .Item }} WHERE domain LIKE %.example.com%"
-      format: list
+      format: map-list
 
 analyse:
-  domain_in_tables: {}
+  domain-found-in-tables:
+    not-empty:
+      description: Domain found in table
+      input: domain-in-tables
 
 output:
   stdout:

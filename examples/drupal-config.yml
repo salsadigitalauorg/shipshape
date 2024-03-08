@@ -13,29 +13,31 @@ collect:
     yaml.key:
       input: config-files-roles
       key: is_admin
-      format: string-map
+      format: map-string
   role-permissions:
     yaml.key:
       input: config-files-roles
       key: permissions
-      format: list-map
+      format: map-list
 
 analyse:
   wrong-install-profile:
-    input: install-profile
-    when:
-      - notEqual: govcms
+    not-equal:
+      description: Wrong install profile found
+      input: install-profile
+      value: govcms
   admin-role-found:
-    input: role-is-admin
-    severity: high
-    when:
-      - value: true
+    equal:
+      description: Admin role found
+      input: role-is-admin
+      value: true
+      severity: high
   disallowed-permissions-found:
-    input: role-permissions
-    severity: high
-    when:
-      - notEmpty
-      - contains:
+    map-list-contain:
+      description: Disallowed permissions found
+      input: role-permissions
+      severity: high
+      values:
         - administer config permissions
         - administer modules
         - administer permissions
@@ -46,11 +48,11 @@ analyse:
         - synchronize configuration
         - use PHP for google analytics tracking visibility
   anonymous-role-disallowed-permissions-found:
-    input: role-permissions
-    key: user.role.anonymous.yml
-    when:
-      - notEmpty
-      - contains:
+    map-list-contain:
+      description: Disallowed permissions found for anonymous role
+      input: role-permissions
+      key: user.role.anonymous.yml
+      values:
         - 'access administration pages'
         - 'access content overview'
         - 'access site reports'
