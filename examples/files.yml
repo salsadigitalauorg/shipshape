@@ -1,9 +1,8 @@
 collect:
-  illegal-files:
+  disallowed-php-scripts:
     file.lookup:
       path: web
       pattern: '^(adminer|phpmyadmin|bigdump)?\.php$'
-      format: list
   sensitive-public-files:
     file.lookup:
       path: web/sites/default/files
@@ -13,12 +12,13 @@ collect:
         - private
 
 analyse:
-  illegal-files-found:
-    input: illegal-files
-    when:
-      - notEmpty
-    severity: high
+  disallowed-php-scripts-found:
+    not-empty:
+      description: 'Disallowed php scripts found'
+      input: disallowed-php-scripts
+      severity: high
   sensitive-public-files-found:
-    input: sensitive-public-files
-    when:
-      - notEmpty
+    not-empty:
+      description: 'Sensitive files found in public directory'
+      input: sensitive-public-files
+      severity: high
