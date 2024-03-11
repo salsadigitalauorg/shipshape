@@ -28,6 +28,7 @@ checks:
 
 The following check types are available:
   - [file](#file)
+  - [filediff](#filediff)
   - [yaml](#yaml)
   - [yamllint](#yamllint)
   - [json](#json)
@@ -62,6 +63,51 @@ file:
   - name: Illegal files
     path: web
     disallowed-pattern: '^(adminer|phpmyadmin|bigdump)?\.php$'
+```
+
+### filediff
+Checks for content changes in a file.
+
+| Field          | Default | Required | Description                                                                                           |
+|----------------|:-------:|:--------:|-------------------------------------------------------------------------------------------------------|
+| target-file    |    -    |   Yes    | The file to check for content changes                                                                 |
+| source-file    |    -    |   Yes    | The file with the original content used for checking. Source file can be either remote or local file. |
+| source-context |    -    |    No    | The key-value mapping to compile the source file if it is a Jinja2 template                           |
+| context-lines |    0    |    No    | Specify the number context lines around the line changes in the diff                                  |
+| ignore-missing  |  false  |    No    | Specify whether a missing target file is a fail                                                       |
+
+#### Example
+`https://github.com/test/repo/raw/master/source-file.txt`:
+```
+This is file #{{ VERSION }}.
+```
+`target-file.txt`:
+```
+This is file #2.
+```
+Shipshape check:
+```yaml
+filediff:
+  - name: "Validate against source file"
+    source: https://github.com/test/repo/raw/master/source-file.txt
+    target: target-file.txt
+    ignore-missing: true
+    context-lines: 0
+    severity: low
+    source-context:
+      VERSION: 1
+```
+Result:
+```
+# Breaches were detected
+
+  ### Validate against source file
+     -- [Target file target-file.txt is different from Source file https://github.com/test/repo/raw/master/source-file.txt] diff: 
+--- https://github.com/test/repo/raw/master/source-file.txt
++++ target-file.txt
+@@ -1 +1 @@
+-This is file #1.
++This is file #2.
 ```
 
 ### yaml
