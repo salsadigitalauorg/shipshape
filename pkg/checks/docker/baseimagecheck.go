@@ -50,6 +50,8 @@ func (c *BaseImageCheck) Merge(mergeCheck config.Check) error {
 	return nil
 }
 
+func (c *BaseImageCheck) RequiresData() bool { return false }
+
 func (c *BaseImageCheck) RunCheck() {
 	for _, path := range c.Paths {
 		composeFile := path + string(os.PathSeparator) + "docker-compose.yml"
@@ -88,6 +90,7 @@ func (c *BaseImageCheck) RunCheck() {
 
 					if len(c.Allowed) > 0 && !utils.PackageCheckString(c.Allowed, match[1], match[2]) {
 						c.AddBreach(&result.KeyValueBreach{
+							KeyLabel:   "service",
 							Key:        name,
 							ValueLabel: "invalid base image",
 							Value:      match[1],
@@ -109,6 +112,7 @@ func (c *BaseImageCheck) RunCheck() {
 
 				if !utils.PackageCheckString(c.Allowed, match[1], match[2]) {
 					c.AddBreach(&result.KeyValueBreach{
+						KeyLabel:   "service",
 						Key:        name,
 						ValueLabel: "invalid base image",
 						Value:      def.Image,

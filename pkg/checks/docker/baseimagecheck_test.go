@@ -58,6 +58,7 @@ func TestInvalidDockerfileCheck(t *testing.T) {
 	assert.EqualValues(
 		[]result.Breach{&result.KeyValueBreach{
 			BreachType: result.BreachTypeKeyValue,
+			KeyLabel:   "service",
 			Key:        "service1",
 			ValueLabel: "invalid base image",
 			Value:      "bitnami/kubectl"},
@@ -92,6 +93,7 @@ func TestInvalidDockerfileImageVersion(t *testing.T) {
 	assert.EqualValues(
 		[]result.Breach{&result.KeyValueBreach{
 			BreachType: result.BreachTypeKeyValue,
+			KeyLabel:   "service",
 			Key:        "service1",
 			ValueLabel: "invalid base image",
 			Value:      "bitnami/kubectl"},
@@ -164,6 +166,7 @@ func TestInvalidImageCheck(t *testing.T) {
 	assert.EqualValues(
 		[]result.Breach{&result.KeyValueBreach{
 			BreachType: result.BreachTypeKeyValue,
+			KeyLabel:   "service",
 			Key:        "service4",
 			ValueLabel: "invalid base image",
 			Value:      "bitnami/mongodb:5.0.19-debian-11-r11"},
@@ -189,12 +192,14 @@ func TestInvalidImageVersions(t *testing.T) {
 		[]result.Breach{
 			&result.KeyValueBreach{
 				BreachType: result.BreachTypeKeyValue,
+				KeyLabel:   "service",
 				Key:        "service2",
 				ValueLabel: "invalid base image",
 				Value:      "bitnami/postgresql@16",
 			},
 			&result.KeyValueBreach{
 				BreachType: result.BreachTypeKeyValue,
+				KeyLabel:   "service",
 				Key:        "service4",
 				ValueLabel: "invalid base image",
 				Value:      "bitnami/mongodb:5.0.19-debian-11-r11",
