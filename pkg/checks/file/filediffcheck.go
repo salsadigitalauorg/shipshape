@@ -3,15 +3,17 @@ package file
 import (
 	"errors"
 	"fmt"
-	"github.com/nikolalohinski/gonja/v2"
-	"github.com/nikolalohinski/gonja/v2/exec"
-	"github.com/pmezard/go-difflib/difflib"
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
-	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/nikolalohinski/gonja/v2"
+	"github.com/nikolalohinski/gonja/v2/exec"
+	"github.com/pmezard/go-difflib/difflib"
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/result"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 type FileDiffCheck struct {
@@ -38,12 +40,12 @@ func (c *FileDiffCheck) RequiresData() bool { return true }
 // FetchData implementation for FileDiffCheck
 func (c *FileDiffCheck) FetchData() {
 	if len(c.SourceFile) == 0 {
-		c.AddBreach(&result.ValueBreach{Value: "no source file provided"})
+		c.AddBreach(&breach.ValueBreach{Value: "no source file provided"})
 		return
 	}
 
 	if len(c.TargetFile) == 0 {
-		c.AddBreach(&result.ValueBreach{Value: "no target file provided"})
+		c.AddBreach(&breach.ValueBreach{Value: "no target file provided"})
 		return
 	}
 
@@ -59,7 +61,7 @@ func (c *FileDiffCheck) FetchData() {
 			c.Result.Status = result.Pass
 			return
 		} else {
-			c.AddBreach(&result.ValueBreach{
+			c.AddBreach(&breach.ValueBreach{
 				ValueLabel: "error reading target file: " + c.TargetFile,
 				Value:      err.Error()})
 			return
@@ -74,7 +76,7 @@ func (c *FileDiffCheck) FetchData() {
 	}
 
 	if err != nil {
-		c.AddBreach(&result.ValueBreach{
+		c.AddBreach(&breach.ValueBreach{
 			ValueLabel: "error fetching source file: " + c.SourceFile,
 			Value:      err.Error()})
 		return
@@ -84,7 +86,7 @@ func (c *FileDiffCheck) FetchData() {
 	if c.SourceContext != nil && len(c.SourceContext) > 0 {
 		jinjaTemplate, jinjaErr := gonja.FromBytes(c.DataMap["source"])
 		if jinjaErr != nil {
-			c.AddBreach(&result.ValueBreach{
+			c.AddBreach(&breach.ValueBreach{
 				ValueLabel: "error parsing source file: " + c.SourceFile,
 				Value:      jinjaErr.Error()})
 			return
@@ -93,14 +95,12 @@ func (c *FileDiffCheck) FetchData() {
 		jinjaContext := exec.NewContext(c.SourceContext)
 		c.DataMap["source"], jinjaErr = jinjaTemplate.ExecuteToBytes(jinjaContext)
 		if jinjaErr != nil {
-			c.AddBreach(&result.ValueBreach{
+			c.AddBreach(&breach.ValueBreach{
 				ValueLabel: "error compiling source file with source context: " + c.SourceFile,
 				Value:      jinjaErr.Error()})
 			return
 		}
 	}
-
-	return
 }
 
 // Merge implementation for FileDiffCheck check.
@@ -141,7 +141,7 @@ func (c *FileDiffCheck) RunCheck() {
 		c.AddPass(fmt.Sprintf("Target file %s is identical to Source file %s", c.TargetFile, c.SourceFile))
 		c.Result.Status = result.Pass
 	} else {
-		c.AddBreach(&result.ValueBreach{
+		c.AddBreach(&breach.ValueBreach{
 			ValueLabel: fmt.Sprintf("Target file %s is different from Source file %s", c.TargetFile, c.SourceFile),
 			Value:      fmt.Sprintf("diff: \n%s", diff)})
 	}

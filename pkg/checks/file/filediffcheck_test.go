@@ -1,11 +1,13 @@
 package file_test
 
 import (
+	"testing"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/file"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var cTrue = true
@@ -80,10 +82,10 @@ func TestFileDiffCheck_FetchData(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Equal(0, len(c.Result.Passes))
 		assertions.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				CheckType:  "filediff",
 				CheckName:  "filediffcheck",
-				BreachType: result.BreachTypeValue,
+				BreachType: breach.BreachTypeValue,
 				Severity:   "normal",
 				Value:      "no source file provided",
 			}},
@@ -102,10 +104,10 @@ func TestFileDiffCheck_FetchData(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Equal(0, len(c.Result.Passes))
 		assertions.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				CheckType:  "filediff",
 				CheckName:  "filediffcheck",
-				BreachType: result.BreachTypeValue,
+				BreachType: breach.BreachTypeValue,
 				Severity:   "normal",
 				Value:      "no target file provided",
 			}},
@@ -125,10 +127,10 @@ func TestFileDiffCheck_FetchData(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Equal(0, len(c.Result.Passes))
 		assertions.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				CheckType:  "filediff",
 				CheckName:  "filediffcheck1",
-				BreachType: result.BreachTypeValue,
+				BreachType: breach.BreachTypeValue,
 				Severity:   "normal",
 				ValueLabel: "error fetching source file: file0.txt",
 				Value:      "open testdata/filediff/file0.txt: no such file or directory",
@@ -149,10 +151,10 @@ func TestFileDiffCheck_FetchData(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Equal(0, len(c.Result.Passes))
 		assertions.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				CheckType:  "filediff",
 				CheckName:  "filediffcheck1",
-				BreachType: result.BreachTypeValue,
+				BreachType: breach.BreachTypeValue,
 				Severity:   "normal",
 				ValueLabel: "error reading target file: file0.txt",
 				Value:      "open testdata/filediff/file0.txt: no such file or directory",
@@ -189,10 +191,10 @@ func TestFileDiffCheck_FetchData(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Equal(0, len(c.Result.Passes))
 		assertions.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				CheckType:  "filediff",
 				CheckName:  "filediffcheck1",
-				BreachType: result.BreachTypeValue,
+				BreachType: breach.BreachTypeValue,
 				Severity:   "normal",
 				ValueLabel: "error parsing source file: file3.txt",
 				Value:      "failed to parse template 'This is file #{{ VERSION }.\n': '}}' expected here (Line: 0 Col: 0, near \"Unexpected delimiter \"}\"\")",
@@ -235,10 +237,10 @@ func TestFileDiffCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Equal(0, len(c.Result.Passes))
 		assertions.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				CheckType:  "filediff",
 				CheckName:  "filediffcheck",
-				BreachType: result.BreachTypeValue,
+				BreachType: breach.BreachTypeValue,
 				Severity:   "normal",
 				ValueLabel: "Target file file2.txt is different from Source file file1.txt",
 				Value:      "diff: \n--- file1.txt\n+++ file2.txt\n@@ -1 +1 @@\n-This is file #1.\n+This is file #2.\n",
@@ -277,10 +279,10 @@ func TestFileDiffCheck_RunCheck(t *testing.T) {
 		assertions.Equal(result.Fail, c.Result.Status)
 		assertions.Equal(0, len(c.Result.Passes))
 		assertions.EqualValues(
-			[]result.Breach{&result.ValueBreach{
+			[]breach.Breach{&breach.ValueBreach{
 				CheckType:  "filediff",
 				CheckName:  "filediffcheck",
-				BreachType: result.BreachTypeValue,
+				BreachType: breach.BreachTypeValue,
 				Severity:   "normal",
 				ValueLabel: "Target file file2.txt is different from Source file file4.txt",
 				Value:      "diff: \n--- file4.txt\n+++ file2.txt\n@@ -1 +1 @@\n-This is file #1.\n+This is file #2.\n",
