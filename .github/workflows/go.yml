@@ -2,12 +2,12 @@ name: Go
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 1.x ]
     tags: [ 'v*.*.*' ]
     paths-ignore:
       - 'docs/**'
   pull_request:
-    branches: [ main ]
+    branches: [ main, 1.x ]
     paths-ignore:
       - 'docs/**'
 
