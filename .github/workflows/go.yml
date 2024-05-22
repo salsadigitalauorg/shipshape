@@ -34,7 +34,7 @@ jobs:
       run: go build -ldflags="-s -w" -o build/shipshape . && ls -lh build/shipshape
 
     - name: List check types
-      run: ./build/shipshape --list-checks
+      run: ./build/shipshape config list-checks
 
     - name: Test
       run: go test -v -race ./... -coverprofile=build/coverage.out
