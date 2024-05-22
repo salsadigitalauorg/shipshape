@@ -13,6 +13,7 @@ var Registry = map[string]func(string) Analyser{}
 var Analysers = map[string]Analyser{}
 var Errors = []error{}
 
+// ParseConfig parses the raw config and creates the analysers.
 func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0
 	log.WithField("registry", Registry).Debug("analysers")
@@ -23,16 +24,11 @@ func ParseConfig(raw map[string]map[string]interface{}) {
 				continue
 			}
 
+			// Convert the map to yaml, then parse it into the plugin.
+			// Not catching any errors here since the yaml content is known.
+			pluginYaml, _ := yaml.Marshal(pluginMap)
 			p := f(name)
-			pluginYaml, err := yaml.Marshal(pluginMap)
-			if err != nil {
-				panic(err)
-			}
-
-			err = yaml.Unmarshal(pluginYaml, p)
-			if err != nil {
-				panic(err)
-			}
+			yaml.Unmarshal(pluginYaml, p)
 
 			log.WithField("analyser", fmt.Sprintf("%#v", p)).Debug("parsed analyser")
 			Analysers[name] = p
