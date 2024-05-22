@@ -4,18 +4,18 @@ testcases:
 - name: permissions
   steps:
   - script: cd /app && drush si --db-url=mysql://drupal:drupal@mariadb:3306/drupal --yes
-  - script: cd /app && shipshape -f /shipshape/tests/e2e/suites/shipshape/drupal-permissions.yml
+  - script: cd /app && shipshape run -f /shipshape/tests/e2e/suites/shipshape/drupal-permissions.yml
     assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldEqual Ship is in top shape; no breach detected!
   - script: cd /app && drush role:perm:add content_editor "synchronize configuration"
-  - script: cd /app && shipshape -f /shipshape/tests/e2e/suites/shipshape/drupal-permissions.yml
+  - script: cd /app && shipshape run -f /shipshape/tests/e2e/suites/shipshape/drupal-permissions.yml
     assertions:
     - result.code ShouldEqual 0
     - "result.systemout ShouldContainSubstring # Breaches were detected"
     - "result.systemout ShouldContainSubstring ### Disallowed permissions"
     - "result.systemout ShouldContainSubstring -- [content_editor] disallowed permissions: [synchronize configuration]"
-  - script: cd /app && shipshape -f /shipshape/tests/e2e/suites/shipshape/drupal-permissions.yml --remediate
+  - script: cd /app && shipshape run -f /shipshape/tests/e2e/suites/shipshape/drupal-permissions.yml --remediate
     assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldContainSubstring Breaches were detected but were all fixed successfully!
@@ -25,18 +25,18 @@ testcases:
 - name: role-isadmin
   steps:
   - script: cd /app && drush si --db-url=mysql://drupal:drupal@mariadb:3306/drupal --yes
-  - script: cd /app && shipshape -f /shipshape/tests/e2e/suites/shipshape/drupal-role-isadmin.yml
+  - script: cd /app && shipshape run -f /shipshape/tests/e2e/suites/shipshape/drupal-role-isadmin.yml
     assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldEqual Ship is in top shape; no breach detected!
   - script: cd /app && drush config:set --yes user.role.anonymous is_admin 1
-  - script: cd /app && shipshape -f /shipshape/tests/e2e/suites/shipshape/drupal-role-isadmin.yml
+  - script: cd /app && shipshape run -f /shipshape/tests/e2e/suites/shipshape/drupal-role-isadmin.yml
     assertions:
     - result.code ShouldEqual 0
     - "result.systemout ShouldContainSubstring # Breaches were detected"
     - "result.systemout ShouldContainSubstring ### Roles admin check"
     - "result.systemout ShouldContainSubstring -- Role [anonymous] has `is_admin: true`"
-  - script: cd /app && shipshape -f /shipshape/tests/e2e/suites/shipshape/drupal-role-isadmin.yml --remediate
+  - script: cd /app && shipshape run -f /shipshape/tests/e2e/suites/shipshape/drupal-role-isadmin.yml --remediate
     assertions:
     - result.code ShouldEqual 0
     - result.systemout ShouldContainSubstring Breaches were detected but were all fixed successfully!
