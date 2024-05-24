@@ -7,8 +7,13 @@ import (
 )
 
 func EvaluateTemplate(bt BreachTemplater, b Breach) {
-
 	t := bt.GetBreachTemplate()
+
+	if t.Type == "" {
+		bt.AddBreach(b)
+		return
+	}
+
 	rendered := BreachTemplate{
 		Type:       b.GetType(),
 		ValueLabel: BreachGetValueLabel(b),

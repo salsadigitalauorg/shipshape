@@ -1,32 +1,43 @@
 connections:
-  docker-mariadb:
-    docker.exec:
-      container: mariadb
   drupal-db:
     mysql:
-      connection: docker-mariadb
-      username: drupal
+      host: mariadb
+      user: drupal
       password: drupal
       database: drupal
 
 collect:
-  table-names:
-    database.query:
-      connection: drupal-db
-      query: "SHOW TABLES"
-      format: list
   domain-in-tables:
-    database.query:
+    database.db-search:
       connection: drupal-db
-      input: table_names
-      query: "SELECT domain FROM {{ .Item }} WHERE domain LIKE %.example.com%"
-      format: map-list
+      search: "%.example.com%"
+      id-field: entity_id
+      # Not specifying any tables might be very time-consuming, depending on
+      # the database being scanned. Uncomment below to limit to specific tables
+      # and fields.
+      # tables:
+      #   block_content__body:
+      #     - body_value
+      #   block_content_revision__body:
+      #     - body_value
 
 analyse:
   domain-found-in-tables:
     not-empty:
       description: Domain found in table
       input: domain-in-tables
+      # We want a result in the following format:
+      # # Breaches were detected
+      #
+      #   ### Domain found in table
+      #     -- [Table: block_content__body] [Column: body_value]: Entity IDs: 40,41,48,62
+      #     -- [Table: block_content_revision__body] [Column: body_value]: Entity IDs: 1,40,41,44,45,48,62
+      breach-format:
+        type: key-value
+        key-label: Table
+        key: ' {{ .Breach.Key }}'
+        value-label: '[Column: {{ .Breach.ValueLabel }}]'
+        value: 'Entity IDs: {{ .Breach.Value }}'
 
 output:
   stdout:

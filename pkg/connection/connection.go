@@ -13,6 +13,7 @@ var Errors = []error{}
 
 func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0
+	log.WithField("registry", Registry).Debug("available connections")
 	for name, pluginConf := range raw {
 		for pluginName, pluginMap := range pluginConf {
 			f, ok := Registry[pluginName]

@@ -78,7 +78,7 @@ func (p *{{ .Plugin }}) ValidateInput() error {
 
 	if (inputSupport == fact.SupportOptional ||
 			inputSupport == fact.SupportNone) &&
-			len(supportedInputs) == 0 && p.ConnectionName == "" {
+			len(supportedInputs) == 0 && p.InputName == "" {
 		return nil
 	}
 

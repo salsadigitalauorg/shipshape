@@ -15,6 +15,10 @@ type DockerExec struct {
 
 //go:generate go run ../../cmd/gen.go connection-plugin --plugin=DockerExec
 
+func init() {
+	Registry["docker.exec"] = func(n string) Connectioner { return &DockerExec{Name: n} }
+}
+
 func (p *DockerExec) PluginName() string {
 	return "docker.exec"
 }
