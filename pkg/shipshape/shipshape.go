@@ -134,10 +134,6 @@ func RunV2() {
 	log.Print("parsing analysers config")
 	analyse.ParseConfig(RunConfigV2.Analyse)
 
-	log.Print("validating connection connections - TODO")
-	log.Print("validating fact connections - TODO")
-	log.Print("validating fact inputs - TODO")
-
 	log.Print("validating analyser inputs")
 	analyse.ValidateInputs()
 	if len(analyse.Errors) > 0 {
@@ -154,6 +150,7 @@ func RunV2() {
 
 	log.Print("analysing facts")
 	results := analyse.AnalyseAll()
+	log.WithField("results", fmt.Sprintf("%#v", results)).Debug("analysed facts")
 
 	RunResultList = result.NewResultList(false)
 	for _, r := range results {

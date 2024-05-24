@@ -1,9 +1,12 @@
 package connection
 
 import (
-	"errors"
+	"database/sql"
+	"fmt"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/command"
+	"github.com/doug-martin/goqu/v9"
+	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
+	"github.com/go-sql-driver/mysql"
 )
 
 type Mysql struct {
@@ -11,42 +14,41 @@ type Mysql struct {
 	Name string `yaml:"name"`
 
 	// Plugin fields.
-	Connection string `yaml:"connection"`
-	DbHost     string `yaml:"db-host"`
-	DbPort     string `yaml:"db-port"`
-	DbUser     string `yaml:"db-user"`
-	DbPass     string `yaml:"db-pass"`
-	DbName     string `yaml:"db-name"`
-	Query      string `yaml:"query"`
+	Host     string `yaml:"host"`
+	Port     string `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Database string `yaml:"database"`
+	Db       *goqu.Database
 }
 
 //go:generate go run ../../cmd/gen.go connection-plugin --plugin=Mysql
+
+func init() {
+	Registry["mysql"] = func(n string) Connectioner { return &Mysql{Name: n} }
+}
 
 func (p *Mysql) PluginName() string {
 	return "mysql"
 }
 
 func (p *Mysql) Run() ([]byte, error) {
-	cmdArgs := []string{
-		"-h", p.DbHost,
-		"-P", p.DbPort,
-		"-u", p.DbUser,
-		"-p" + p.DbPass,
-		p.DbName,
-		p.Query,
+	if p.Port == "" {
+		p.Port = "3306"
 	}
 
-	cn := GetInstance(p.Connection)
-	if cn != nil {
-		// We currently only support docker connections.
-		if cn.PluginName() != "docker.exec" {
-			return nil, errors.New("unsupported connection")
-		}
+	cfg := mysql.NewConfig()
+	cfg.User = p.User
+	cfg.Passwd = p.Password
+	cfg.Net = "tcp"
+	cfg.Addr = fmt.Sprintf("%s:%s", p.Host, p.Port)
+	cfg.DBName = p.Database
 
-		dockerConn := cn.(*DockerExec)
-		dockerConn.Command = append([]string{"mysql"}, cmdArgs...)
-		return dockerConn.Run()
+	mysqlDb, err := sql.Open("mysql", cfg.FormatDSN())
+	if err != nil {
+		return nil, err
 	}
-
-	return command.ShellCommander("mysql", cmdArgs...).Output()
+	dialect := goqu.Dialect("mysql")
+	p.Db = dialect.DB(mysqlDb)
+	return nil, nil
 }

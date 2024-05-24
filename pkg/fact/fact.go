@@ -32,6 +32,7 @@ func init() {
 
 func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0
+	log.WithField("registry", Registry).Debug("available facts")
 	for name, pluginConf := range raw {
 		for pluginName, pluginMap := range pluginConf {
 			f, ok := Registry[pluginName]
@@ -65,6 +66,7 @@ func CollectAllFacts() {
 }
 
 func CollectFact(name string, f Facter) {
+	log.WithField("fact", f).Debug("collecting fact")
 	if f.GetInputName() != "" {
 		CollectFact(f.GetInputName(), GetInstance(f.GetInputName()))
 	}
