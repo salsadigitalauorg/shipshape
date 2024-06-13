@@ -32,7 +32,7 @@ func (p *NotEmpty) PluginName() string {
 func (p *NotEmpty) Analyse() {
 	log.WithField("input-format", p.input.GetFormat()).Debug("analysing")
 	switch p.input.GetFormat() {
-	case fact.FormatMapNestedString:
+	case data.FormatMapNestedString:
 		inputData := data.AsNestedStringMap(p.input.GetData())
 		log.WithField("inputData", inputData).Debug("analysing")
 		if len(inputData) == 0 {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
@@ -16,7 +17,7 @@ import (
 type Lookup struct {
 	// Common fields.
 	Name           string          `yaml:"name"`
-	Format         fact.FactFormat `yaml:"format"`
+	Format         data.DataFormat `yaml:"format"`
 	ConnectionName string          `yaml:"connection"`
 	InputName      string          `yaml:"input"`
 	connection     connection.Connectioner
@@ -63,9 +64,9 @@ func (p *Lookup) Collect() {
 	}
 
 	switch p.Format {
-	case fact.FormatList:
+	case data.FormatList:
 		p.data = files
-	case fact.FormatMapBytes:
+	case data.FormatMapBytes:
 		data := map[string][]byte{}
 		for _, f := range files {
 			fData, err := os.ReadFile(f)

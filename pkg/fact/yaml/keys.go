@@ -15,7 +15,7 @@ import (
 type Keys struct {
 	// Common fields.
 	Name           string          `yaml:"name"`
-	Format         fact.FactFormat `yaml:"format"`
+	Format         data.DataFormat `yaml:"format"`
 	ConnectionName string          `yaml:"connection"`
 	InputName      string          `yaml:"input"`
 	connection     connection.Connectioner
@@ -71,9 +71,9 @@ func (p *Keys) Collect() {
 			return
 		}
 
-		if p.Format == fact.FormatMapYamlNodes {
+		if p.Format == data.FormatMapYamlNodes {
 			nestedLookupData, errs = PathLookupFromYamlNodes(inputData, p.Path)
-		} else if p.Format == fact.FormatMapNestedString {
+		} else if p.Format == data.FormatMapNestedString {
 			nestedStringMap = map[string]map[string]string{}
 			for f, mapNodes := range inputData {
 				// Ensure the map is initialised.
@@ -97,19 +97,19 @@ func (p *Keys) Collect() {
 	}
 
 	switch p.Format {
-	case fact.FormatMapString:
+	case data.FormatMapString:
 		if lookupData != nil {
 			p.data = lookupData.AsMapString()
 		} else {
 			p.errors = append(p.errors, errors.New("unsupported format for nested lookup"))
 		}
-	case fact.FormatMapYamlNodes:
+	case data.FormatMapYamlNodes:
 		if lookupData != nil {
 			p.data = lookupData
 		} else {
 			p.errors = append(p.errors, errors.New("unsupported format for nested lookup"))
 		}
-	case fact.FormatMapNestedString:
+	case data.FormatMapNestedString:
 		if nestedStringMap != nil {
 			p.data = nestedStringMap
 		} else {

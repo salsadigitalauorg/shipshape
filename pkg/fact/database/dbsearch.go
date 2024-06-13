@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 )
 
@@ -18,7 +19,7 @@ import (
 type DbSearch struct {
 	// Common fields.
 	Name           string          `yaml:"name"`
-	Format         fact.FactFormat `yaml:"format"`
+	Format         data.DataFormat `yaml:"format"`
 	ConnectionName string          `yaml:"connection"`
 	InputName      string          `yaml:"input"`
 	connection     connection.Connectioner
@@ -52,8 +53,8 @@ func (p *DbSearch) SupportedInputs() (fact.SupportLevel, []string) {
 
 func (p *DbSearch) Collect() {
 	if p.Format == "" {
-		p.Format = fact.FormatMapNestedString
-	} else if p.Format != fact.FormatMapNestedString {
+		p.Format = data.FormatMapNestedString
+	} else if p.Format != data.FormatMapNestedString {
 		p.errors = append(p.errors, fmt.Errorf("format '%s' not supported", p.Format))
 		return
 	}

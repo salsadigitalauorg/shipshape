@@ -4,6 +4,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 )
 
@@ -17,7 +18,7 @@ func (p *{{ .Plugin }}) GetData() interface{} {
 	return p.data
 }
 
-func (p *{{ .Plugin }}) GetFormat() fact.FactFormat {
+func (p *{{ .Plugin }}) GetFormat() data.DataFormat {
 	return p.Format
 }
 

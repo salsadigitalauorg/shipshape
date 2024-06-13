@@ -2,6 +2,19 @@ package data
 
 import "gopkg.in/yaml.v3"
 
+type DataFormat string
+
+const (
+	FormatRaw             DataFormat = "raw"
+	FormatList            DataFormat = "list"
+	FormatMapBytes        DataFormat = "map-bytes"
+	FormatMapString       DataFormat = "map-string"
+	FormatMapYamlNodes    DataFormat = "map-yaml-nodes"
+	FormatMapNestedString DataFormat = "map-nested-string"
+	FormatYaml            DataFormat = "yaml"
+	FormatJson            DataFormat = "json"
+)
+
 type MapYamlNodes map[string][]*yaml.Node
 
 func (m MapYamlNodes) AsMapString() map[string]string {

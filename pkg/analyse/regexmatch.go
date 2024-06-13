@@ -36,7 +36,7 @@ func (p *RegexMatch) PluginName() string {
 
 func (p *RegexMatch) Analyse() {
 	switch p.input.GetFormat() {
-	case fact.FormatMapNestedString:
+	case data.FormatMapNestedString:
 		inputData := data.AsNestedStringMap(p.input.GetData())
 		for k, kvs := range inputData {
 			for k2, v := range kvs {

@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
@@ -11,7 +12,7 @@ import (
 type DockerCommand struct {
 	// Common fields.
 	Name           string          `yaml:"name"`
-	Format         fact.FactFormat `yaml:"format"`
+	Format         data.DataFormat `yaml:"format"`
 	ConnectionName string          `yaml:"connection"`
 	InputName      string          `yaml:"input"`
 	connection     connection.Connectioner
@@ -44,17 +45,17 @@ func (p *DockerCommand) SupportedInputs() (fact.SupportLevel, []string) {
 func (p *DockerCommand) Collect() {
 	dockerConn := p.connection.(*connection.DockerExec)
 	dockerConn.Command = p.Command
-	data, err := dockerConn.Run()
+	rawData, err := dockerConn.Run()
 	if err != nil {
 		p.errors = append(p.errors, err)
 		return
 	}
 
 	switch p.Format {
-	case fact.FormatRaw:
-		p.data = data
-	case fact.FormatList:
-		p.data = utils.MultilineOutputToSlice(data)
+	case data.FormatRaw:
+		p.data = rawData
+	case data.FormatList:
+		p.data = utils.MultilineOutputToSlice(rawData)
 	default:
 		p.errors = append(p.errors, errors.New("unsupported format"))
 	}

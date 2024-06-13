@@ -1,17 +1,6 @@
 package fact
 
-type FactFormat string
-
-const (
-	FormatRaw             FactFormat = "raw"
-	FormatList            FactFormat = "list"
-	FormatMapBytes        FactFormat = "map-bytes"
-	FormatMapString       FactFormat = "map-string"
-	FormatMapYamlNodes    FactFormat = "map-yaml-nodes"
-	FormatMapNestedString FactFormat = "map-nested-string"
-	FormatYaml            FactFormat = "yaml"
-	FormatJson            FactFormat = "json"
-)
+import "github.com/salsadigitalauorg/shipshape/pkg/data"
 
 type Facter interface {
 	// Common plugin methods.
@@ -23,7 +12,7 @@ type Facter interface {
 	GetConnectionName() string
 	GetInputName() string
 	GetData() interface{}
-	GetFormat() FactFormat
+	GetFormat() data.DataFormat
 	SupportedConnections() (SupportLevel, []string)
 	ValidateConnection() error
 	SupportedInputs() (SupportLevel, []string)

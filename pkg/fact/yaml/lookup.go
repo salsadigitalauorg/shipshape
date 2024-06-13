@@ -4,18 +4,19 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/connection"
-	"github.com/salsadigitalauorg/shipshape/pkg/fact"
-	"github.com/salsadigitalauorg/shipshape/pkg/utils"
-
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/connection"
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
+	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 type Lookup struct {
 	// Common fields.
 	Name           string          `yaml:"name"`
-	Format         fact.FactFormat `yaml:"format"`
+	Format         data.DataFormat `yaml:"format"`
 	ConnectionName string          `yaml:"connection"`
 	InputName      string          `yaml:"input"`
 	connection     connection.Connectioner
@@ -56,7 +57,7 @@ func (p *Lookup) Collect() {
 		return
 	}
 
-	data := map[string]map[string]string{}
+	rawData := map[string]map[string]string{}
 	for f, fBytes := range filesData {
 		n := yaml.Node{}
 		err := yaml.Unmarshal(fBytes, &n)
@@ -66,7 +67,7 @@ func (p *Lookup) Collect() {
 			continue
 		}
 
-		data[f] = map[string]string{}
+		rawData[f] = map[string]string{}
 		log.WithFields(log.Fields{
 			"fact": p.Name,
 			"file": f,
@@ -87,7 +88,7 @@ func (p *Lookup) Collect() {
 				"anchor":  node.Anchor,
 				"value":   node.Value,
 			}).Debugf("")
-			data[f][node.Anchor] = node.Value
+			rawData[f][node.Anchor] = node.Value
 			fmt.Printf("node: %#v\n", node)
 			panic("stop")
 		}
@@ -95,8 +96,8 @@ func (p *Lookup) Collect() {
 	}
 
 	switch p.Format {
-	case fact.FormatMapYamlNodes:
-		p.data = data
+	case data.FormatMapYamlNodes:
+		p.data = rawData
 	default:
 		p.errors = append(p.errors, errors.New("unsupported format"))
 	}
