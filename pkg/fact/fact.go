@@ -89,6 +89,9 @@ func CollectFact(name string, f Facter) {
 
 	log.WithField("fact", name).Infof("collecting fact")
 	f.Collect()
+	if len(f.GetErrors()) > 0 {
+		Errors = append(Errors, f.GetErrors()...)
+	}
 
 	log.WithFields(log.Fields{
 		"fact": name,

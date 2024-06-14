@@ -43,7 +43,7 @@ func (p *Lookup) SupportedConnections() (fact.SupportLevel, []string) {
 }
 
 func (p *Lookup) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportRequired, []string{"file.lookup", "yaml.keys"}
+	return fact.SupportRequired, []string{"file.lookup", "yaml.key"}
 }
 
 func (p *Lookup) Collect() {
@@ -96,7 +96,7 @@ func (p *Lookup) Collect() {
 	}
 
 	switch p.Format {
-	case data.FormatMapYamlNodes:
+	case FormatMapYamlNodes:
 		p.data = rawData
 	default:
 		p.errors = append(p.errors, errors.New("unsupported format"))
