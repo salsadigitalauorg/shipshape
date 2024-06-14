@@ -1,30 +1,35 @@
 collect:
+  # Lookup all webform files.
   webform-files:
     file.lookup:
       pattern: webform.webform.*.yml
       format: map-bytes
+
+  # Extract the titles and handlers from the webform files.
   webform-titles:
-    yaml.keys:
+    yaml.key:
       input: webform-files
       path: title
       format: map-string
   webform-handlers:
-    yaml.keys:
+    yaml.key:
       input: webform-files
       path: handlers
       format: map-yaml-nodes
+
+  # Extract the email settings from the webform handlers.
   to-mail:
-    yaml.keys:
+    yaml.key:
       input: webform-handlers
       path: settings.to_mail
       format: map-nested-string
   cc-mail:
-    yaml.keys:
+    yaml.key:
       input: webform-handlers
       path: settings.cc_mail
       format: map-nested-string
   bcc-mail:
-    yaml.keys:
+    yaml.key:
       input: webform-handlers
       path: settings.bcc_mail
       format: map-nested-string
