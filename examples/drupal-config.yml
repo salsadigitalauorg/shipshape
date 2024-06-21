@@ -2,23 +2,19 @@ collect:
   install-profile:
     yaml.key:
       file: config/default/core.extension.yml
-      key: profile
-      format: string
+      path: profile
   config-files-roles:
     file.lookup:
       path: config/default
       pattern: user.role.*.yml
-      format: list
   role-is-admin:
     yaml.key:
       input: config-files-roles
-      key: is_admin
-      format: map-string
+      path: is_admin
   role-permissions:
     yaml.key:
       input: config-files-roles
-      key: permissions
-      format: map-list
+      path: permissions
 
 analyse:
   wrong-install-profile:

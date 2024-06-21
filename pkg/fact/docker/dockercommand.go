@@ -1,8 +1,6 @@
 package docker
 
 import (
-	"errors"
-
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
@@ -22,6 +20,7 @@ type DockerCommand struct {
 
 	// Plugin fields.
 	Command []string `yaml:"command"`
+	AsList  bool     `yaml:"as-list"`
 }
 
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=DockerCommand --package=docker
@@ -51,12 +50,12 @@ func (p *DockerCommand) Collect() {
 		return
 	}
 
-	switch p.Format {
-	case data.FormatRaw:
+	if !p.AsList {
+		p.Format = data.FormatRaw
 		p.data = rawData
-	case data.FormatList:
-		p.data = utils.MultilineOutputToSlice(rawData)
-	default:
-		p.errors = append(p.errors, errors.New("unsupported format"))
+		return
 	}
+
+	p.Format = data.FormatListString
+	p.data = utils.MultilineOutputToSlice(rawData)
 }

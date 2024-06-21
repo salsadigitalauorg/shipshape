@@ -12,4 +12,18 @@ const (
 	FormatMapYamlNodes data.DataFormat = "map-yaml-nodes"
 )
 
-type MapYamlNodes map[string][]*yaml.Node
+type YamlLookup struct {
+	Nodes  []*yaml.Node
+	Path   string
+	Kind   yaml.Kind
+	Format data.DataFormat
+	Data   interface{}
+}
+
+type MapYamlLookup struct {
+	LookupMap map[string]*YamlLookup
+	Path      string
+	Format    data.DataFormat
+	Kind      yaml.Kind
+	DataMap   map[string]interface{}
+}

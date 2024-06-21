@@ -1,0 +1,22 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Launch delve debug",
+      "type": "shell",
+      "command": "dlv debug --headless --listen=:2345 --log --api-version=2 -- run -f ${VSCODE_DELVE_CONFIG_FILE:-examples/yaml-lookup.yml} ${VSCODE_DELVE_AUDIT_DIR:-.}",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "go",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "API server listening",
+          "endsPattern": "debug layer=debugger detaching"
+        }
+      },
+    }
+  ]
+}
