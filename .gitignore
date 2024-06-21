@@ -6,3 +6,5 @@ dist/
 docker-compose.override.yml
 node_modules
 venom-output
+
+__debug_bin*

@@ -36,7 +36,9 @@ type DbSearch struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=DbSearch --package=database
 
 func init() {
-	fact.Registry["database.db-search"] = func(n string) fact.Facter { return &DbSearch{Name: n} }
+	fact.Registry["database.db-search"] = func(n string) fact.Facter {
+		return &DbSearch{Name: n, Format: data.FormatMapNestedString}
+	}
 }
 
 func (p *DbSearch) PluginName() string {
@@ -52,13 +54,6 @@ func (p *DbSearch) SupportedInputs() (fact.SupportLevel, []string) {
 }
 
 func (p *DbSearch) Collect() {
-	if p.Format == "" {
-		p.Format = data.FormatMapNestedString
-	} else if p.Format != data.FormatMapNestedString {
-		p.errors = append(p.errors, fmt.Errorf("format '%s' not supported", p.Format))
-		return
-	}
-
 	if p.IdField == "" {
 		p.errors = append(p.errors, fmt.Errorf("id-field is required"))
 		return

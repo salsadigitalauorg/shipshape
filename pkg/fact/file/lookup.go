@@ -1,7 +1,6 @@
 package file
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 
@@ -27,6 +26,7 @@ type Lookup struct {
 
 	// Plugin fields.
 	Path           string   `yaml:"path"`
+	FileNamesOnly  bool     `yaml:"file-names-only"`
 	Pattern        string   `yaml:"pattern"`
 	ExcludePattern string   `yaml:"exclude-pattern"`
 	SkipDirs       []string `yaml:"skip-dirs"`
@@ -35,7 +35,9 @@ type Lookup struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Lookup --package=file
 
 func init() {
-	fact.Registry["file.lookup"] = func(n string) fact.Facter { return &Lookup{Name: n} }
+	fact.Registry["file.lookup"] = func(n string) fact.Facter {
+		return &Lookup{Name: n, FileNamesOnly: true}
+	}
 }
 
 func (p *Lookup) PluginName() string {
@@ -63,21 +65,21 @@ func (p *Lookup) Collect() {
 		return
 	}
 
-	switch p.Format {
-	case data.FormatList:
+	if p.FileNamesOnly {
+		p.Format = data.FormatListString
 		p.data = files
-	case data.FormatMapBytes:
-		data := map[string][]byte{}
-		for _, f := range files {
-			fData, err := os.ReadFile(f)
-			if err != nil {
-				p.errors = append(p.errors, err)
-				continue
-			}
-			data[f] = fData
-		}
-		p.data = data
-	default:
-		p.errors = append(p.errors, errors.New("unsupported format"))
+		return
 	}
+
+	filesDataMap := map[string][]byte{}
+	for _, f := range files {
+		fData, err := os.ReadFile(f)
+		if err != nil {
+			p.errors = append(p.errors, err)
+			continue
+		}
+		filesDataMap[f] = fData
+	}
+	p.Format = data.FormatMapBytes
+	p.data = filesDataMap
 }

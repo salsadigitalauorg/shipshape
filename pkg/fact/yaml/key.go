@@ -26,6 +26,10 @@ type Key struct {
 
 	// Plugin fields.
 	Path string `yaml:"path"`
+	// Only return the Yaml nodes found at the path.
+	NodesOnly bool `yaml:"nodes-only"`
+	// Only return the keys found at the path, if it's a map.
+	KeysOnly bool `yaml:"keys-only"`
 }
 
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Key --package=yaml
@@ -47,8 +51,9 @@ func (p *Key) SupportedInputs() (fact.SupportLevel, []string) {
 }
 
 func (p *Key) Collect() {
-	var yamlNodes []*yaml.Node
-	var mapYamlNodes MapYamlNodes
+	var lookup *YamlLookup
+	var lookupMap *MapYamlLookup
+	var nestedLookupMap map[string]*MapYamlLookup
 
 	log.WithFields(log.Fields{
 		"fact-plugin":  p.PluginName(),
@@ -57,107 +62,115 @@ func (p *Key) Collect() {
 		"input-plugin": p.input.PluginName(),
 	}).Debug("collecting data")
 
-	switch p.input.PluginName() {
-	case "file.read":
+	switch p.input.GetFormat() {
+
+	// The file.read plugin is used to read the file content.
+	case data.FormatRaw:
 		inputData := data.AsBytes(p.input.GetData())
 		if inputData == nil {
 			return
 		}
 
 		var err error
-		yamlNodes, err = PathLookupFromBytes(inputData, p.Path)
+		lookup, err = NewYamlLookup(inputData, p.Path)
 		if err != nil {
 			p.errors = append(p.errors, err)
 			return
 		}
-	case "file.lookup":
+
+	// The file.lookup plugin is used to lookup files.
+	case data.FormatMapBytes:
 		inputData := data.AsMapStringBytes(p.input.GetData())
 		if inputData == nil {
 			return
 		}
 
 		var errs []error
-		mapYamlNodes, errs = PathLookupFromMapBytes(inputData, p.Path)
+		lookupMap, errs = NewMapYamlLookup(inputData, p.Path)
 		if len(errs) > 0 {
 			p.errors = append(p.errors, errs...)
 			return
 		}
-	case "yaml.key":
-		switch p.input.GetFormat() {
-		case FormatYamlNodes:
-			yamlNodes = DataAsYamlNodes(p.input.GetData())
-		case FormatMapYamlNodes:
-			mapYamlNodes = DataAsMapYamlNodes(p.input.GetData())
+
+	// The yaml.key plugin is used to lookup keys in a single YAML file.
+	case FormatYamlNodes:
+		yamlNodes := DataAsYamlNodes(p.input.GetData())
+		lookup = &YamlLookup{Nodes: yamlNodes, Kind: yamlNodes[0].Kind}
+
+	// The yaml.lookup plugin is used to lookup keys in multiple YAML files.
+	case FormatMapYamlNodes:
+		mapYamlNodes := DataAsMapYamlNodes(p.input.GetData())
+
+		nestedLookupMap = map[string]*MapYamlLookup{}
+		for f, nodes := range mapYamlNodes {
+			lookupMap, errs := NewMapYamlLookupFromNodes(nodes, p.Path)
+			if len(errs) > 0 {
+				p.errors = append(p.errors, errs...)
+				return
+			}
+			nestedLookupMap[f] = lookupMap
 		}
 	}
 
-	if yamlNodes == nil && mapYamlNodes == nil {
+	if lookup == nil && lookupMap == nil && nestedLookupMap == nil {
 		return
 	}
 
-	switch p.Format {
-	case FormatYamlNodes:
-		if yamlNodes != nil {
-			p.data = yamlNodes
-		} else {
-			p.errors = append(p.errors, errors.New("unsupported format for yaml-nodes key lookup"))
+	if p.NodesOnly {
+		if lookup != nil {
+			p.Format = FormatYamlNodes
+			p.data = lookup.Nodes
+		} else if lookupMap != nil {
+			p.Format = FormatMapYamlNodes
+			p.data = lookupMap.GetMapNodes()
 		}
-	case FormatMapYamlKeys:
-		if yamlNodes != nil {
-			mappedData := MappingNodeToKeyedMap(yamlNodes[0])
+		return
+	}
+
+	if p.KeysOnly {
+		if lookup != nil {
+			if lookup.Kind != yaml.MappingNode {
+				p.errors = append(p.errors, errors.New("keys-only lookup only supports a single mapping node"))
+				return
+			}
+			mappedData := MappingNodeToKeyedMap(lookup.Nodes[0])
 			keys := make([]string, 0, len(mappedData))
 			for k := range mappedData {
 				keys = append(keys, k)
 			}
 			p.data = keys
 		} else {
-			p.errors = append(p.errors, errors.New("unsupported format for key lookup"))
+			p.errors = append(p.errors, errors.New("yaml-nodes-map unsupported format for keys-only lookup"))
 		}
-	case data.FormatMapString:
-		if yamlNodes != nil {
-			if len(yamlNodes) == 1 && yamlNodes[0].Kind == yaml.MappingNode {
-				strMap, errs := YamlNodesToStringMapPathLookup(yamlNodes, p.Path)
-				if len(errs) > 0 {
-					p.errors = append(p.errors, errs...)
-				}
-				p.data = strMap
+		return
+	}
+
+	if lookup != nil {
+		lookup.ProcessNodes()
+		p.Format = lookup.Format
+		p.data = lookup.Data
+	} else if lookupMap != nil {
+		lookupMap.ProcessMap()
+		p.Format = lookupMap.Format
+		p.data = lookupMap.DataMap
+	} else {
+		res := map[string]map[string]string{}
+		for f, m := range nestedLookupMap {
+			m.ProcessMap()
+			if len(m.DataMap) == 0 {
+				continue
 			}
-		} else if mapYamlNodes != nil {
-			p.data = mapYamlNodes.AsMapString()
-		} else {
-			p.errors = append(p.errors, errors.New("unsupported format for string key lookup"))
-		}
-	case FormatMapYamlNodes:
-		if mapYamlNodes != nil {
-			p.data = mapYamlNodes
-		} else {
-			p.errors = append(p.errors, errors.New("unsupported format for yaml-nodes-map key lookup"))
-		}
-	case data.FormatMapNestedString:
-		if yamlNodes != nil {
-			if len(yamlNodes) == 1 && yamlNodes[0].Kind == yaml.MappingNode {
-				nestedStringMap, errs := YamlNodesToNestedStringMapPathLookup(yamlNodes, p.Path)
-				if len(errs) > 0 {
-					p.errors = append(p.errors, errs...)
-				}
-				p.data = nestedStringMap
-			}
-		} else if mapYamlNodes != nil {
-			nestedStringMap := map[string]map[string]string{}
-			for f, mapNodes := range mapYamlNodes {
-				// Ensure the map is initialised.
-				nestedStringMap[f] = nil
-				if keyValue, errs := YamlNodesToStringMapPathLookup(mapNodes, p.Path); len(errs) > 0 {
-					p.errors = append(p.errors, errs...)
-				} else if len(keyValue) > 0 {
-					nestedStringMap[f] = keyValue
+			res[f] = m.DataMapAsMapString()
+			if p.Format == "" {
+				switch m.Format {
+				case data.FormatMapString:
+					p.Format = data.FormatMapNestedString
+				default:
+					p.errors = append(p.errors, errors.New("unsupported format for nested lookup"))
+					return
 				}
 			}
-			p.data = nestedStringMap
-		} else {
-			p.errors = append(p.errors, errors.New("unsupported format for nested-string-map key lookup"))
 		}
-	default:
-		p.errors = append(p.errors, errors.New("unsupported format"))
+		p.data = res
 	}
 }

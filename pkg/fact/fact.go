@@ -21,12 +21,12 @@ func init() {
 		if input == nil {
 			return ""
 		}
-		strMap := input.GetData().(map[string]string)
-		val, ok := strMap[key]
+		ifcMap := input.GetData().(map[string]interface{})
+		val, ok := ifcMap[key]
 		if !ok {
 			return ""
 		}
-		return val
+		return val.(string)
 	}
 }
 

@@ -1,132 +1,141 @@
 package yaml
 
 import (
+	"errors"
+
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
-func (m MapYamlNodes) AsMapString() map[string]string {
-	newM := map[string]string{}
-	for f, nodes := range m {
-		for _, n := range nodes {
-			newM[f] = n.Value
-		}
-	}
-	return newM
-}
-
-func PathLookupFromBytes(fileData []byte, path string) ([]*yaml.Node, error) {
+func NewYamlLookup(src []byte, path string) (*YamlLookup, error) {
 	n := yaml.Node{}
-	err := yaml.Unmarshal(fileData, &n)
+	err := yaml.Unmarshal(src, &n)
 	if err != nil {
 		log.WithError(err).Debug("failed to unmarshal yaml")
 		return nil, err
 	}
-
 	foundNodes, err := utils.LookupYamlPath(&n, path)
 	if err != nil {
+		log.WithError(err).Debug("failed to lookup yaml path")
 		return nil, err
 	}
-	return foundNodes, nil
+	return &YamlLookup{Path: path, Nodes: foundNodes, Kind: foundNodes[0].Kind}, nil
 }
 
-func PathLookupFromMapBytes(filesData map[string][]byte, path string) (MapYamlNodes, []error) {
-	result := MapYamlNodes{}
+func NewMapYamlLookup(src map[string][]byte, path string) (*MapYamlLookup, []error) {
+	res := MapYamlLookup{Path: path, LookupMap: map[string]*YamlLookup{}}
 	var errors []error
-	for f, fBytes := range filesData {
-		n := yaml.Node{}
-		err := yaml.Unmarshal(fBytes, &n)
-		if err != nil {
-			errors = append(errors, err)
-			log.WithError(err).Debug("failed to unmarshal yaml")
-			continue
-		}
-
-		foundNodes, err := utils.LookupYamlPath(&n, path)
+	for f, fBytes := range src {
+		lookup, err := NewYamlLookup(fBytes, path)
 		if err != nil {
 			errors = append(errors, err)
 			continue
 		}
-		result[f] = foundNodes
+		if res.Kind == 0 {
+			res.Kind = lookup.Kind
+		}
+		res.LookupMap[f] = lookup
 	}
-	return result, errors
+	return &res, errors
 }
 
-func PathLookupFromYamlNodes(filesNodes MapYamlNodes, path string) (map[string]MapYamlNodes, []error) {
-	result := map[string]MapYamlNodes{}
-	var errors []error
-	// Each top-level node is expected to be a key.
-	for f, nodes := range filesNodes {
-		result[f] = MapYamlNodes{}
-		for _, n := range nodes {
+func NewMapYamlLookupFromNodes(nodes []*yaml.Node, path string) (*MapYamlLookup, []error) {
+	res := MapYamlLookup{Path: path, LookupMap: map[string]*YamlLookup{}}
+	var errs []error
+	for _, n := range nodes {
+		if n.Kind != yaml.MappingNode {
+			errs = append(errs, errors.New("map-yaml-nodes lookup only supports mapping nodes"))
+			continue
+		}
+		mappedNodes := MappingNodeToKeyedMap(n)
+		for mapK, n := range mappedNodes {
 			foundNodes, err := utils.LookupYamlPath(n, path)
 			if err != nil {
-				errors = append(errors, err)
-				log.WithError(err).Debug("failed to lookup yaml path from nodes")
+				errs = append(errs, err)
 				continue
 			}
-			result[f][n.Value] = foundNodes
+
+			res.LookupMap[mapK] = &YamlLookup{
+				Path:  path,
+				Nodes: foundNodes,
+				Kind:  foundNodes[0].Kind,
+			}
+			if res.Kind == 0 {
+				res.Kind = foundNodes[0].Kind
+			}
 		}
 	}
-	return result, errors
+	return &res, errs
 }
 
-func YamlNodesToStringMapPathLookup(nodes []*yaml.Node, path string) (map[string]string, []error) {
+func (y *YamlLookup) ProcessNodes() {
+	switch y.Kind {
+
+	case yaml.ScalarNode:
+		if y.Nodes[0].Value == "" {
+			return
+		}
+		y.Format = data.FormatString
+		y.Data = y.Nodes[0].Value
+
+	case yaml.SequenceNode:
+		if y.Nodes[0].Content[0].Kind == yaml.ScalarNode {
+			y.Format = data.FormatListString
+			result := []string{}
+			for _, n := range y.Nodes[0].Content {
+				result = append(result, n.Value)
+			}
+			y.Data = result
+		} else if y.Nodes[0].Content[0].Kind == yaml.MappingNode {
+			y.Format = data.FormatListMapString
+			result := []map[string]string{}
+			for _, n := range y.Nodes[0].Content {
+				result = append(result, MappingNodeToMapString(n))
+			}
+			y.Data = result
+		}
+
+	case yaml.MappingNode:
+		y.Format = data.FormatMapBytes
+		y.Data = MappingNodeToMapString(y.Nodes[0])
+	}
+}
+
+func (m *MapYamlLookup) GetMapNodes() map[string][]*yaml.Node {
+	result := map[string][]*yaml.Node{}
+	for f, lookup := range m.LookupMap {
+		result[f] = lookup.Nodes
+	}
+	return result
+}
+
+func (m *MapYamlLookup) ProcessMap() {
+	m.DataMap = map[string]interface{}{}
+	for f, lookup := range m.LookupMap {
+		lookup.ProcessNodes()
+		if lookup.Data == nil {
+			continue
+		}
+
+		m.DataMap[f] = lookup.Data
+		if m.Format == "" {
+			switch lookup.Format {
+			case data.FormatString:
+				m.Format = data.FormatMapString
+			}
+		}
+	}
+}
+
+func (m *MapYamlLookup) DataMapAsMapString() map[string]string {
 	result := map[string]string{}
-	var errs []error
-	log.WithFields(log.Fields{
-		"nodes": len(nodes),
-		"path":  path,
-	}).Debug("looking up yaml path from nodes")
-	for _, mn := range nodes {
-		mappedData := MappingNodeToKeyedMap(mn)
-		for mapKey, n := range mappedData {
-			foundNodes, err := utils.LookupYamlPath(n, path)
-			if errs != nil {
-				errs = append(errs, err)
-				log.WithError(err).Debug("failed to lookup yaml path from nodes")
-				continue
-			}
-			if len(foundNodes) == 0 {
-				continue
-			}
-			result[mapKey] = foundNodes[0].Value
-		}
+	for k, v := range m.DataMap {
+		result[k] = v.(string)
 	}
-	return result, errs
-}
-
-func YamlNodesToNestedStringMapPathLookup(nodes []*yaml.Node, path string) (map[string]map[string]string, []error) {
-	result := map[string]map[string]string{}
-	var errs []error
-	log.WithFields(log.Fields{
-		"nodes": len(nodes),
-		"path":  path,
-	}).Debug("looking up yaml path from nodes")
-	for _, mn := range nodes {
-		mappedData := MappingNodeToKeyedMap(mn)
-		for mapKey, n := range mappedData {
-			foundNodes, err := utils.LookupYamlPath(n, path)
-			if errs != nil {
-				errs = append(errs, err)
-				log.WithError(err).Debug("failed to lookup yaml path from nodes")
-				continue
-			}
-			if len(foundNodes) == 0 {
-				continue
-			}
-			for _, fn := range foundNodes {
-				if fn.Kind != yaml.MappingNode {
-					continue
-				}
-				result[mapKey] = MappingNodeToMapString(fn)
-			}
-		}
-	}
-	return result, errs
-
+	return result
 }
 
 // MappingNodeToKeyedMap converts a "mapping" yaml.Node to a keyed map.
@@ -158,9 +167,9 @@ func DataAsYamlNodes(data interface{}) []*yaml.Node {
 	return data.([]*yaml.Node)
 }
 
-func DataAsMapYamlNodes(data interface{}) MapYamlNodes {
+func DataAsMapYamlNodes(data interface{}) map[string][]*yaml.Node {
 	if data == nil {
 		return nil
 	}
-	return data.(MapYamlNodes)
+	return data.(map[string][]*yaml.Node)
 }

@@ -1,0 +1,23 @@
+scalar: drupal
+
+list-string:
+  - drupal
+  - nginx
+  - varnish
+  - mariadb
+
+list-map:
+  - name: drupal
+    image: drupal:latest
+  - name: nginx
+    image: nginx:latest
+  - name: varnish
+    image: varnish:latest
+  - name: mariadb
+    image: mariadb:latest
+
+map:
+  drupal: drupal:latest
+  nginx: nginx:latest
+  varnish: varnish:latest
+  mariadb: mariadb:latest
