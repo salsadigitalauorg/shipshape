@@ -95,7 +95,12 @@ func (p *Key) Collect() {
 	// The yaml.key plugin is used to lookup keys in a single YAML file.
 	case FormatYamlNodes:
 		yamlNodes := DataAsYamlNodes(p.input.GetData())
-		lookup = &YamlLookup{Nodes: yamlNodes, Kind: yamlNodes[0].Kind}
+		var errs []error
+		lookupMap, errs = NewMapYamlLookupFromNodes(yamlNodes, p.Path)
+		if len(errs) > 0 {
+			p.errors = append(p.errors, errs...)
+			return
+		}
 
 	// The yaml.lookup plugin is used to lookup keys in multiple YAML files.
 	case FormatMapYamlNodes:

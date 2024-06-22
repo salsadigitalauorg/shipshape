@@ -58,6 +58,10 @@ func NewMapYamlLookupFromNodes(nodes []*yaml.Node, path string) (*MapYamlLookup,
 				continue
 			}
 
+			if foundNodes == nil {
+				continue
+			}
+
 			res.LookupMap[mapK] = &YamlLookup{
 				Path:  path,
 				Nodes: foundNodes,
@@ -99,7 +103,7 @@ func (y *YamlLookup) ProcessNodes() {
 		}
 
 	case yaml.MappingNode:
-		y.Format = data.FormatMapBytes
+		y.Format = data.FormatMapString
 		y.Data = MappingNodeToMapString(y.Nodes[0])
 	}
 }
