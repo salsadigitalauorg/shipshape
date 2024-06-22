@@ -33,12 +33,12 @@ collect:
 
   # Read the dockerfiles.
   dockerfiles:
-    file.read-from-map:
+    file:read:multiple:
       input: dockerfile-paths
 
   # Extract the base image for each dockerfile.
   base-images:
-    regex-match:
+    regex:
       input: dockerfiles
       pattern: '^FROM (.[^:@]*)?[:@]?([^ latest$]*)'
 
