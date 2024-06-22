@@ -48,6 +48,20 @@ func AsMapStringBytes(data interface{}) map[string][]byte {
 	return data.(map[string][]byte)
 }
 
+func AsMapString(data interface{}) map[string]string {
+	if data == nil {
+		return nil
+	}
+
+	ifcMap := data.(map[string]interface{})
+	strMap := map[string]string{}
+	for k, v := range ifcMap {
+		strMap[k] = v.(string)
+	}
+
+	return strMap
+}
+
 func AsNestedStringMap(data interface{}) map[string]map[string]string {
 	if data == nil {
 		return nil

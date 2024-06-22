@@ -2,39 +2,81 @@ collect:
   compose-file:
     file.read:
       path: docker-compose.yml
+
   # Extract the services nodes from the compose file.
   compose-services-nodes:
     yaml.key:
       input: compose-file
       path: services
-      format: yaml-nodes
-  # Extract the service names from the compose file.
-  services:
-    yaml.key:
-      input: compose-file
-      path: services
-      format: map-yaml-keys
-  # # Extract the image for each service.
+      nodes-only: true
+
+  # Extract the image for each service.
   images:
     yaml.key:
       input: compose-services-nodes
       path: image
-      format: map-string
   # Extract the Dockerfile for each service.
-  dockerfiles:
+  dockerfile-paths:
     yaml.key:
       input: compose-services-nodes
       path: build.dockerfile
-      format: map-string
   # Extract the build arguments for each service.
   buildargs:
     yaml.key:
       input: compose-services-nodes
       path: build.args
-      format: map-nested-string
   # Extract the environment variables for each service.
   envvars:
     yaml.key:
       input: compose-services-nodes
       path: environment
-      format: map-nested-string
+
+  # Read the dockerfiles.
+  dockerfiles:
+    file.read-from-map:
+      input: dockerfile-paths
+
+  # Extract the base image for each dockerfile.
+  base-images:
+    regex-match:
+      input: dockerfiles
+      pattern: '^FROM (.[^:@]*)?[:@]?([^ latest$]*)'
+
+analyse:
+  disallowed-service-image:
+    allowed-list:
+      description: Disallowed image found in Docker Compose file.
+      input: images
+      # Extract the image name and tag.
+      package-match: '^(.[^:@]*)?[:@]?([^ latest$]*)'
+      allowed:
+        - govcms/govcms
+        - govcms/php
+        - govcms/test
+        - govcms/nginx-drupal
+        - govcms/redis
+        - govcms/solr
+        - govcms/varnish-drupal
+        - govcms/mariadb-drupal
+        - govcms/av
+        - uselagoon/php-8.1-cli-drupal
+        - uselagoon/nginx-drupal
+        - uselagoon/php-8.1-fpm
+        - uselagoon/solr-7.7-drupal
+        - uselagoon/varnish-drupal
+        - uselagoon/redis-5
+        - uselagoon/mariadb-drupal
+      deprecated:
+        - govcms8lagoon/govcms
+        - govcms8lagoon/php
+        - govcms8lagoon/test
+        - govcms8lagoon/nginx-drupal
+        - govcms8lagoon/redis
+        - govcms8lagoon/solr
+        - govcms8lagoon/varnish-drupal
+        - govcms8lagoon/mariadb-drupal
+        - uselagoon/php-7.4-cli-drupal
+        - uselagoon/php-7.4-fpm
+      exclude-keys:
+        - mariadb
+        - chrome
