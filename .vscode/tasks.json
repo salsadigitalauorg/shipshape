@@ -4,19 +4,40 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Launch delve debug",
+      "label": "generate",
       "type": "shell",
-      "command": "dlv debug --headless --listen=:2345 --log --api-version=2 -- run -f ${VSCODE_DELVE_CONFIG_FILE:-examples/yaml-lookup.yml} ${VSCODE_DELVE_AUDIT_DIR:-.}",
-      "isBackground": true,
-      "problemMatcher": {
-        "owner": "go",
-        "fileLocation": ["relative", "${workspaceFolder}"],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "API server listening",
-          "endsPattern": "debug layer=debugger detaching"
-        }
-      },
-    }
+      "command": "go",
+      "args": ["generate", "./..."],
+      "group": "build",
+    },
+    {
+      "label": "test",
+      "command": "go",
+      "args": ["test", "-v", "-race", "./..."],
+      "group": "test",
+      "type": "shell",
+      "dependsOn": ["generate"],
+    },
+    // {
+    //   "label": "Launch delve debug",
+    //   "type": "shell",
+    //   "command": "dlv",
+    //   "args": ["debug", "--headless", "--listen=:2345", "--log",
+    //     "--api-version=2", "--", "run", "-f",
+    //     "${VSCODE_DELVE_CONFIG_FILE:-examples/yaml-lookup.yml}",
+    //     "${VSCODE_DELVE_AUDIT_DIR:-.}",
+    //   ],
+    //   "group": "test",
+    //   "isBackground": true,
+    //   "problemMatcher": {
+    //     "owner": "go",
+    //     "fileLocation": ["relative", "${workspaceFolder}"],
+    //     "background": {
+    //       "activeOnStart": true,
+    //       "beginsPattern": "API server listening",
+    //       "endsPattern": "debug layer=debugger detaching"
+    //     }
+    //   },
+    // }
   ]
 }
