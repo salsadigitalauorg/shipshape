@@ -45,14 +45,14 @@ func (p *ReadMultiple) SupportedConnections() (fact.SupportLevel, []string) {
 }
 
 func (p *ReadMultiple) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportOptional, []string{"yaml.key"}
+	return fact.SupportOptional, []string{"yaml:key"}
 }
 
 func (p *ReadMultiple) Collect() {
 	log.WithFields(log.Fields{
 		"fact":        p.Name,
 		"project-dir": config.ProjectDir,
-	}).Info("verifying file existence")
+	}).Info("collecting files data")
 
 	if p.input == nil && len(p.Files) == 0 {
 		p.errors = append(p.errors, errors.New("no files specified"))

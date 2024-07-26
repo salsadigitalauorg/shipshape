@@ -1,27 +1,27 @@
 collect:
   test-file:
-    file.read:
+    file:read:
       path: pkg/fact/yaml/testdata/yaml-lookup.yml
 
   scalar-nodes:
-    yaml.key:
+    yaml:key:
       input: test-file
       path: scalar
       nodes-only: true
 
   list-string-nodes:
-    yaml.key:
+    yaml:key:
       input: test-file
       path: list-string
       nodes-only: true
   list-map-nodes:
-    yaml.key:
+    yaml:key:
       input: test-file
       path: list-map
       nodes-only: true
 
   map-nodes:
-    yaml.key:
+    yaml:key:
       input: test-file
       path: map
       nodes-only: true

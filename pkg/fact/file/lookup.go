@@ -35,13 +35,13 @@ type Lookup struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Lookup --package=file
 
 func init() {
-	fact.Registry["file.lookup"] = func(n string) fact.Facter {
+	fact.Registry["file:lookup"] = func(n string) fact.Facter {
 		return &Lookup{Name: n, FileNamesOnly: true}
 	}
 }
 
 func (p *Lookup) PluginName() string {
-	return "file.lookup"
+	return "file:lookup"
 }
 
 func (p *Lookup) SupportedConnections() (fact.SupportLevel, []string) {

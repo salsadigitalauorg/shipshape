@@ -1,10 +1,10 @@
 collect:
   disallowed-php-scripts:
-    file.lookup:
+    file:lookup:
       path: web
       pattern: '^(adminer|phpmyadmin|bigdump)?\.php$'
   sensitive-public-files:
-    file.lookup:
+    file:lookup:
       path: web/sites/default/files
       pattern: '.*\.(sql|php|sh|py|bz2|gz|tar|tgz|zip)?$'
       exclude-pattern: '.*\.(css|js)\.gz?$'
