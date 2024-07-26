@@ -8,7 +8,7 @@ connections:
 
 collect:
   domain-in-tables:
-    database.db-search:
+    database:search:
       connection: drupal-db
       search: "%.example.com%"
       id-field: entity_id

@@ -7,7 +7,6 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
 	"github.com/go-sql-driver/mysql"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
@@ -15,8 +14,8 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 )
 
-// DbSearch searches the provided text from all tables of a database.
-type DbSearch struct {
+// Search searches the provided text from all tables of a database.
+type Search struct {
 	// Common fields.
 	Name           string          `yaml:"name"`
 	Format         data.DataFormat `yaml:"format"`
@@ -33,27 +32,27 @@ type DbSearch struct {
 	IdField string              `yaml:"id-field"`
 }
 
-//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=DbSearch --package=database
+//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Search --package=database
 
 func init() {
-	fact.Registry["database.db-search"] = func(n string) fact.Facter {
-		return &DbSearch{Name: n, Format: data.FormatMapNestedString}
+	fact.Registry["database:search"] = func(n string) fact.Facter {
+		return &Search{Name: n, Format: data.FormatMapNestedString}
 	}
 }
 
-func (p *DbSearch) PluginName() string {
-	return "database.db-search"
+func (p *Search) PluginName() string {
+	return "database:search"
 }
 
-func (p *DbSearch) SupportedConnections() (fact.SupportLevel, []string) {
+func (p *Search) SupportedConnections() (fact.SupportLevel, []string) {
 	return fact.SupportRequired, []string{"mysql"}
 }
 
-func (p *DbSearch) SupportedInputs() (fact.SupportLevel, []string) {
+func (p *Search) SupportedInputs() (fact.SupportLevel, []string) {
 	return fact.SupportNone, []string{}
 }
 
-func (p *DbSearch) Collect() {
+func (p *Search) Collect() {
 	if p.IdField == "" {
 		p.errors = append(p.errors, fmt.Errorf("id-field is required"))
 		return
@@ -109,7 +108,7 @@ func (p *DbSearch) Collect() {
 }
 
 // fetchTablesColumns fetches list of tables and columns from the information_schema db.
-func (p *DbSearch) fetchTablesColumns(conn connection.Mysql) error {
+func (p *Search) fetchTablesColumns(conn connection.Mysql) error {
 	origDb := conn.Database
 	conn.Database = "information_schema"
 

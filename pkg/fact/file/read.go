@@ -31,13 +31,13 @@ type Read struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Read --package=file
 
 func init() {
-	fact.Registry["file.read"] = func(n string) fact.Facter {
+	fact.Registry["file:read"] = func(n string) fact.Facter {
 		return &Read{Name: n, Format: data.FormatRaw}
 	}
 }
 
 func (p *Read) PluginName() string {
-	return "file.read"
+	return "file:read"
 }
 
 func (p *Read) SupportedConnections() (fact.SupportLevel, []string) {

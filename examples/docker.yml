@@ -1,33 +1,33 @@
 collect:
   compose-file:
-    file.read:
+    file:read:
       path: docker-compose.yml
 
   # Extract the services nodes from the compose file.
   compose-services-nodes:
-    yaml.key:
+    yaml:key:
       input: compose-file
       path: services
       nodes-only: true
 
   # Extract the image for each service.
   images:
-    yaml.key:
+    yaml:key:
       input: compose-services-nodes
       path: image
   # Extract the Dockerfile for each service.
   dockerfile-paths:
-    yaml.key:
+    yaml:key:
       input: compose-services-nodes
       path: build.dockerfile
   # Extract the build arguments for each service.
   buildargs:
-    yaml.key:
+    yaml:key:
       input: compose-services-nodes
       path: build.args
   # Extract the environment variables for each service.
   envvars:
-    yaml.key:
+    yaml:key:
       input: compose-services-nodes
       path: environment
 

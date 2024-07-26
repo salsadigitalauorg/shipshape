@@ -11,8 +11,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Key looks up a key in a YAML file using the file.lookup or
-// yaml.key input plugins.
+// Key looks up a key in a YAML file using the file:lookup or
+// yaml:key input plugins.
 type Key struct {
 	// Common fields.
 	Name           string          `yaml:"name"`
@@ -35,11 +35,11 @@ type Key struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Key --package=yaml
 
 func init() {
-	fact.Registry["yaml.key"] = func(n string) fact.Facter { return &Key{Name: n} }
+	fact.Registry["yaml:key"] = func(n string) fact.Facter { return &Key{Name: n} }
 }
 
 func (p *Key) PluginName() string {
-	return "yaml.key"
+	return "yaml:key"
 }
 
 func (p *Key) SupportedConnections() (fact.SupportLevel, []string) {
@@ -47,7 +47,7 @@ func (p *Key) SupportedConnections() (fact.SupportLevel, []string) {
 }
 
 func (p *Key) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportRequired, []string{"file.read", "file.lookup", "yaml.key"}
+	return fact.SupportRequired, []string{"file:read", "file:lookup", "yaml:key"}
 }
 
 func (p *Key) Collect() {
@@ -64,7 +64,7 @@ func (p *Key) Collect() {
 
 	switch p.input.GetFormat() {
 
-	// The file.read plugin is used to read the file content.
+	// The file:read plugin is used to read the file content.
 	case data.FormatRaw:
 		inputData := data.AsBytes(p.input.GetData())
 		if inputData == nil {
@@ -78,7 +78,7 @@ func (p *Key) Collect() {
 			return
 		}
 
-	// The file.lookup plugin is used to lookup files.
+	// The file:lookup plugin is used to lookup files.
 	case data.FormatMapBytes:
 		inputData := data.AsMapStringBytes(p.input.GetData())
 		if inputData == nil {
@@ -92,7 +92,7 @@ func (p *Key) Collect() {
 			return
 		}
 
-	// The yaml.key plugin is used to lookup keys in a single YAML file.
+	// The yaml:key plugin is used to lookup keys in a single YAML file.
 	case FormatYamlNodes:
 		yamlNodes := DataAsYamlNodes(p.input.GetData())
 		var errs []error
