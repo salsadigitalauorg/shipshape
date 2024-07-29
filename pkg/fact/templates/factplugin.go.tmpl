@@ -1,9 +1,6 @@
 package {{ .Package }}
 
 import (
-	log "github.com/sirupsen/logrus"
-
-	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 )
@@ -30,6 +27,10 @@ func (p *{{ .Plugin }}) GetInputName() string {
 	return p.InputName
 }
 
+func (p *{{ .Plugin }}) GetAdditionalInputNames() []string {
+	return p.AdditionalInputNames
+}
+
 func (p *{{ .Plugin }}) GetErrors() []error {
 	if p.input != nil {
 		return append(p.errors, p.input.GetErrors()...)
@@ -38,93 +39,30 @@ func (p *{{ .Plugin }}) GetErrors() []error {
 }
 
 func (p *{{ .Plugin }}) ValidateConnection() error {
-  connectionSupport, supportedConnections := p.SupportedConnections()
-	log.WithFields(log.Fields{
-		"fact": p.Name,
-		"connection-support": connectionSupport,
-		"supported-connections": supportedConnections,
-	}).Debug("validating connection")
-
-	if (connectionSupport == fact.SupportOptional ||
-			connectionSupport == fact.SupportNone) &&
-			len(supportedConnections) == 0 && p.ConnectionName == "" {
-		return nil
+	connPlugin, err := fact.ValidatePluginConnection(p)
+	if err != nil {
+		return err
 	}
-
-	if connectionSupport == fact.SupportRequired && p.ConnectionName == "" {
-		return &fact.ErrSupportRequired{SupportType: "connection"}
-	}
-
-	plugin := connection.GetInstance(p.ConnectionName)
-	if plugin == nil {
-		return &fact.ErrSupportNotFound{SupportType: "connection"}
-	}
-
-	for _, s := range supportedConnections {
-		if plugin.PluginName() == s {
-			p.connection = plugin
-			return nil
-		}
-	}
-	return &fact.ErrSupportNone{SupportType: "connection"}
+	p.connection = connPlugin
+	return nil
 }
 
-func (p *{{ .Plugin }}) ValidateInput() []error {
-	inputSupport, supportedInputs := p.SupportedInputs()
-	log.WithFields(log.Fields{
-		"fact": p.Name,
-		"input-support": inputSupport,
-		"supported-inputs": supportedInputs,
-	}).Debug("validating input")
-
-	if (inputSupport == fact.SupportOptional ||
-			inputSupport == fact.SupportNone) &&
-			len(supportedInputs) == 0 && p.InputName == "" &&
-			len(p.InputNames) == 0 {
-		return nil
+func (p *{{ .Plugin }}) ValidateInput() error {
+	inputPlugin, err := fact.ValidatePluginInput(p)
+	if err != nil {
+		return err
 	}
 
-	if inputSupport == fact.SupportRequired && p.InputName == "" &&
-		len(p.InputNames) == 0 {
-		return []error{&fact.ErrSupportRequired{SupportType: "input"}}
+	p.input = inputPlugin
+	return nil
+}
+
+func (p *{{ .Plugin }}) LoadAdditionalInputs() error {
+	additionalInputs, err := fact.LoadPluginAdditionalInputs(p)
+	if err != nil {
+		return err
 	}
 
-	var errs []error
-	if p.InputName != "" {
-		plugin := fact.GetInstance(p.InputName)
-		if plugin == nil {
-			return []error{&fact.ErrSupportNotFound{SupportType: "input"}}
-		}
-
-		for _, s := range supportedInputs {
-			if plugin.PluginName() == s {
-				p.input = plugin
-				return nil
-			}
-		}
-	} else if len(p.InputNames) > 0 {
-		for _, in := range p.InputNames {
-			plugin := fact.GetInstance(in)
-			if plugin == nil {
-				return []error{&fact.ErrSupportNotFound{SupportType: "input"}}
-			}
-			p.inputs = append(p.inputs, plugin)
-		}
-
-		for _, in := range p.inputs {
-			supported := false
-			for _, s := range supportedInputs {
-				if in.PluginName() == s {
-					supported = true
-					break
-				}
-			}
-			if !supported {
-				errs = append(errs, &fact.ErrSupportNone{SupportType: "input"})
-			}
-		}
-		return errs
-	}
-
-	return []error{&fact.ErrSupportNone{SupportType: "input"}}
+	p.additionalInputs = additionalInputs
+	return nil
 }

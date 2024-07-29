@@ -115,10 +115,9 @@ func TestValidateInputs(t *testing.T) {
 
 func TestAnalyseAll(t *testing.T) {
 	tt := []struct {
-		name           string
-		generatePlugin string
-		analysers      map[string]Analyser
-		expectResults  map[string]result.Result
+		name          string
+		analysers     map[string]Analyser
+		expectResults map[string]result.Result
 	}{
 		{
 			name:          "noAnalyser",
@@ -126,8 +125,7 @@ func TestAnalyseAll(t *testing.T) {
 			expectResults: map[string]result.Result{},
 		},
 		{
-			name:           "analyserWithPreProcessInputFail",
-			generatePlugin: "TestAnalyserPreprocessInputFail",
+			name: "analyserWithPreProcessInputFail",
 			analysers: map[string]Analyser{
 				"test": &testdata.TestAnalyserPreprocessInputFail{Id: "test"},
 			},
@@ -143,8 +141,7 @@ func TestAnalyseAll(t *testing.T) {
 			},
 		},
 		{
-			name:           "analyserPass",
-			generatePlugin: "TestAnalyserPass",
+			name: "analyserPass",
 			analysers: map[string]Analyser{
 				"test": &testdata.TestAnalyserPass{Id: "test"},
 			},

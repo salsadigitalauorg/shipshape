@@ -17,16 +17,16 @@ import (
 // Search searches the provided text from all tables of a database.
 type Search struct {
 	// Common fields.
-	Name           string          `yaml:"name"`
-	Format         data.DataFormat `yaml:"format"`
-	ConnectionName string          `yaml:"connection"`
-	InputName      string          `yaml:"input"`
-	InputNames     []string        `yaml:"inputs"`
-	connection     connection.Connectioner
-	input          fact.Facter
-	inputs         []fact.Facter
-	errors         []error
-	data           interface{}
+	Name                 string          `yaml:"name"`
+	Format               data.DataFormat `yaml:"format"`
+	ConnectionName       string          `yaml:"connection"`
+	InputName            string          `yaml:"input"`
+	AdditionalInputNames []string        `yaml:"additional-inputs"`
+	connection           connection.Connectioner
+	input                fact.Facter
+	additionalInputs     []fact.Facter
+	errors               []error
+	data                 interface{}
 
 	// Plugin fields.
 	Tables  map[string][]string `yaml:"tables"`
