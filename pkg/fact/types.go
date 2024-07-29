@@ -11,12 +11,13 @@ type Facter interface {
 	GetErrors() []error
 	GetConnectionName() string
 	GetInputName() string
+	GetAdditionalInputNames() []string
 	GetData() interface{}
 	GetFormat() data.DataFormat
 	SupportedConnections() (SupportLevel, []string)
 	ValidateConnection() error
 	SupportedInputs() (SupportLevel, []string)
-	ValidateInput() []error
+	ValidateInput() error
 	Collect()
 }
 
