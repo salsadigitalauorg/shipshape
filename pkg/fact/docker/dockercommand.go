@@ -13,8 +13,10 @@ type DockerCommand struct {
 	Format         data.DataFormat `yaml:"format"`
 	ConnectionName string          `yaml:"connection"`
 	InputName      string          `yaml:"input"`
+	InputNames     []string        `yaml:"inputs"`
 	connection     connection.Connectioner
 	input          fact.Facter
+	inputs         []fact.Facter
 	errors         []error
 	data           interface{}
 

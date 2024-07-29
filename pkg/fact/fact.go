@@ -11,6 +11,11 @@ import (
 )
 
 var Registry = map[string]func(string) Facter{}
+
+// OnlyFactNames is a list of fact names to collect.
+// If empty, all facts are collected.
+var OnlyFactNames = []string{}
+
 var Facts = map[string]Facter{}
 var Errors = []error{}
 var collected = []string{}
@@ -61,6 +66,10 @@ func ParseConfig(raw map[string]map[string]interface{}) {
 
 func CollectAllFacts() {
 	for name, p := range Facts {
+		if len(OnlyFactNames) > 0 &&
+			!utils.StringSliceContains(OnlyFactNames, name) {
+			continue
+		}
 		CollectFact(name, p)
 	}
 }
@@ -81,9 +90,12 @@ func CollectFact(name string, f Facter) {
 		return
 	}
 
-	if err := f.ValidateInput(); err != nil {
-		Errors = append(Errors, err)
-		log.WithField("fact", name).WithError(err).Error("failed to validate input")
+	if errs := f.ValidateInput(); len(errs) != 0 {
+		Errors = append(Errors, errs...)
+
+		log.WithField("fact", name).
+			WithField("errors", errs).
+			Error("failed to validate input")
 		return
 	}
 

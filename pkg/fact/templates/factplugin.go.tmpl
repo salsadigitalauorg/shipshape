@@ -69,7 +69,7 @@ func (p *{{ .Plugin }}) ValidateConnection() error {
 	return &fact.ErrSupportNone{SupportType: "connection"}
 }
 
-func (p *{{ .Plugin }}) ValidateInput() error {
+func (p *{{ .Plugin }}) ValidateInput() []error {
 	inputSupport, supportedInputs := p.SupportedInputs()
 	log.WithFields(log.Fields{
 		"fact": p.Name,
@@ -79,24 +79,52 @@ func (p *{{ .Plugin }}) ValidateInput() error {
 
 	if (inputSupport == fact.SupportOptional ||
 			inputSupport == fact.SupportNone) &&
-			len(supportedInputs) == 0 && p.InputName == "" {
+			len(supportedInputs) == 0 && p.InputName == "" &&
+			len(p.InputNames) == 0 {
 		return nil
 	}
 
-	if inputSupport == fact.SupportRequired && p.InputName == "" {
-		return &fact.ErrSupportRequired{SupportType: "input"}
+	if inputSupport == fact.SupportRequired && p.InputName == "" &&
+		len(p.InputNames) == 0 {
+		return []error{&fact.ErrSupportRequired{SupportType: "input"}}
 	}
 
-	plugin := fact.GetInstance(p.InputName)
-	if plugin == nil {
-		return &fact.ErrSupportNotFound{SupportType: "input"}
-	}
-
-	for _, s := range supportedInputs {
-		if plugin.PluginName() == s {
-			p.input = plugin
-			return nil
+	var errs []error
+	if p.InputName != "" {
+		plugin := fact.GetInstance(p.InputName)
+		if plugin == nil {
+			return []error{&fact.ErrSupportNotFound{SupportType: "input"}}
 		}
+
+		for _, s := range supportedInputs {
+			if plugin.PluginName() == s {
+				p.input = plugin
+				return nil
+			}
+		}
+	} else if len(p.InputNames) > 0 {
+		for _, in := range p.InputNames {
+			plugin := fact.GetInstance(in)
+			if plugin == nil {
+				return []error{&fact.ErrSupportNotFound{SupportType: "input"}}
+			}
+			p.inputs = append(p.inputs, plugin)
+		}
+
+		for _, in := range p.inputs {
+			supported := false
+			for _, s := range supportedInputs {
+				if in.PluginName() == s {
+					supported = true
+					break
+				}
+			}
+			if !supported {
+				errs = append(errs, &fact.ErrSupportNone{SupportType: "input"})
+			}
+		}
+		return errs
 	}
-	return &fact.ErrSupportNone{SupportType: "input"}
+
+	return []error{&fact.ErrSupportNone{SupportType: "input"}}
 }

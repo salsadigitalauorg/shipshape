@@ -16,7 +16,7 @@ type Facter interface {
 	SupportedConnections() (SupportLevel, []string)
 	ValidateConnection() error
 	SupportedInputs() (SupportLevel, []string)
-	ValidateInput() error
+	ValidateInput() []error
 	Collect()
 }
 
