@@ -100,6 +100,15 @@ func CollectFact(name string, f Facter) {
 		CollectFact(f.GetInputName(), GetInstance(f.GetInputName()))
 	}
 
+	if len(f.GetAdditionalInputNames()) > 0 {
+		for _, n := range f.GetAdditionalInputNames() {
+			log.WithField("fact", name).
+				WithField("additionalInputName", n).
+				Debug("collect additional input")
+			CollectFact(n, GetInstance(n))
+		}
+	}
+
 	if utils.StringSliceContains(collected, name) {
 		return
 	}
