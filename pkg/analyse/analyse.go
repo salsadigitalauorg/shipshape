@@ -1,8 +1,6 @@
 package analyse
 
 import (
-	"fmt"
-
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
@@ -13,10 +11,18 @@ var Registry = map[string]func(string) Analyser{}
 var Analysers = map[string]Analyser{}
 var Errors = []error{}
 
+func registryKeys() []string {
+	keys := []string{}
+	for k := range Registry {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 // ParseConfig parses the raw config and creates the analysers.
 func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0
-	log.WithField("registry", Registry).Debug("analysers")
+	log.WithField("registry", registryKeys()).Debug("analysers")
 	for name, pluginConf := range raw {
 		for pluginName, pluginMap := range pluginConf {
 			f, ok := Registry[pluginName]
@@ -30,7 +36,12 @@ func ParseConfig(raw map[string]map[string]interface{}) {
 			p := f(name)
 			yaml.Unmarshal(pluginYaml, p)
 
-			log.WithField("analyser", fmt.Sprintf("%#v", p)).Debug("parsed analyser")
+			log.WithFields(log.Fields{
+				"check":       name,
+				"plugin":      pluginName,
+				"description": p.GetDescription(),
+				"input":       p.GetInputName(),
+			}).Debug("parsed analyser")
 			Analysers[name] = p
 			count++
 		}

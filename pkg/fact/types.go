@@ -1,6 +1,10 @@
 package fact
 
-import "github.com/salsadigitalauorg/shipshape/pkg/data"
+import (
+	"fmt"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
+)
 
 type Facter interface {
 	// Common plugin methods.
@@ -30,20 +34,36 @@ const (
 	SupportNone     SupportLevel = "not-supported"
 )
 
-type ErrSupportRequired struct{ SupportType string }
+type ErrSupportRequired struct {
+	Plugin      string
+	SupportType string
+}
 
 func (m *ErrSupportRequired) Error() string {
-	return m.SupportType + " is required"
+	return fmt.Sprintf("%s required for '%s'", m.SupportType, m.Plugin)
 }
 
-type ErrSupportNotFound struct{ SupportType string }
+type ErrSupportNotFound struct {
+	Plugin        string
+	SupportType   string
+	SupportPlugin string
+}
 
 func (m *ErrSupportNotFound) Error() string {
-	return m.SupportType + " not found"
+	return fmt.Sprintf("%s '%s' not found for '%s'",
+		m.SupportType, m.SupportPlugin, m.Plugin)
 }
 
-type ErrSupportNone struct{ SupportType string }
+type ErrSupportNone struct {
+	Plugin        string
+	SupportType   string
+	SupportPlugin string
+}
 
 func (m *ErrSupportNone) Error() string {
-	return m.SupportType + " not supported"
+	if m.SupportPlugin == "" {
+		return fmt.Sprintf("%s not supported for '%s'", m.SupportType, m.Plugin)
+	}
+	return fmt.Sprintf("%s '%s' not supported for '%s'",
+		m.SupportType, m.SupportPlugin, m.Plugin)
 }

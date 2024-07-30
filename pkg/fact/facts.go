@@ -1,8 +1,6 @@
 package fact
 
 import (
-	"fmt"
-
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
@@ -43,9 +41,17 @@ func GetInstance(name string) Facter {
 	}
 }
 
+func registryKeys() []string {
+	keys := []string{}
+	for k := range Registry {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0
-	log.WithField("registry", Registry).Debug("available facts")
+	log.WithField("registry", registryKeys()).Debug("available fact plugins")
 	for name, pluginConf := range raw {
 		for pluginName, pluginMap := range pluginConf {
 			f, ok := Registry[pluginName]
@@ -64,7 +70,10 @@ func ParseConfig(raw map[string]map[string]interface{}) {
 				panic(err)
 			}
 
-			log.WithField("fact", fmt.Sprintf("%#v", p)).Debug("parsed fact")
+			log.WithFields(log.Fields{
+				"fact":   p.GetName(),
+				"plugin": pluginName,
+			}).Debug("parsed fact config")
 			Facts[name] = p
 			count++
 		}
@@ -83,8 +92,11 @@ func CollectAllFacts() {
 }
 
 func CollectFact(name string, f Facter) {
-	log.WithField("fact", f).Debug("collecting fact")
+	log.WithField("fact", name).Debug("starting CollectFact process")
 	if f.GetInputName() != "" {
+		log.WithField("fact", name).
+			WithField("inputName", f.GetInputName()).
+			Debug("collect input")
 		CollectFact(f.GetInputName(), GetInstance(f.GetInputName()))
 	}
 
@@ -113,7 +125,7 @@ func CollectFact(name string, f Facter) {
 		return
 	}
 
-	log.WithField("fact", name).Infof("collecting fact")
+	log.WithField("fact", name).Info("collecting fact")
 	f.Collect()
 	if len(f.GetErrors()) > 0 {
 		Errors = append(Errors, f.GetErrors()...)

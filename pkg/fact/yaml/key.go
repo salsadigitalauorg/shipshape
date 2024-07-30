@@ -145,6 +145,7 @@ func (p *Key) Collect() {
 			for k := range mappedData {
 				keys = append(keys, k)
 			}
+			p.Format = data.FormatListString
 			p.data = keys
 		} else {
 			p.errors = append(p.errors, errors.New("yaml-nodes-map unsupported format for keys-only lookup"))

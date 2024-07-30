@@ -11,9 +11,17 @@ var Registry = map[string]func(string) Connectioner{}
 var Connections = map[string]Connectioner{}
 var Errors = []error{}
 
+func registryKeys() []string {
+	keys := []string{}
+	for k := range Registry {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
 func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0
-	log.WithField("registry", Registry).Debug("available connections")
+	log.WithField("registry", registryKeys()).Debug("available connections")
 	for name, pluginConf := range raw {
 		for pluginName, pluginMap := range pluginConf {
 			f, ok := Registry[pluginName]

@@ -21,12 +21,16 @@ func ValidatePluginConnection(p Facter) (connection.Connectioner, error) {
 	}
 
 	if connectionSupport == SupportRequired && p.GetConnectionName() == "" {
-		return nil, &ErrSupportRequired{SupportType: "connection"}
+		return nil, &ErrSupportRequired{
+			Plugin: p.GetName(), SupportType: "connection"}
 	}
 
 	plugin := connection.GetInstance(p.GetConnectionName())
 	if plugin == nil {
-		return nil, &ErrSupportNotFound{SupportType: "connection"}
+		return nil, &ErrSupportNotFound{
+			Plugin:        p.GetName(),
+			SupportType:   "connection",
+			SupportPlugin: p.GetConnectionName()}
 	}
 
 	for _, s := range supportedConnections {
@@ -34,7 +38,10 @@ func ValidatePluginConnection(p Facter) (connection.Connectioner, error) {
 			return plugin, nil
 		}
 	}
-	return nil, &ErrSupportNone{SupportType: "connection"}
+	return nil, &ErrSupportNone{
+		Plugin:        p.GetName(),
+		SupportType:   "connection",
+		SupportPlugin: p.GetConnectionName()}
 }
 
 func ValidatePluginInput(p Facter) (Facter, error) {
@@ -52,17 +59,21 @@ func ValidatePluginInput(p Facter) (Facter, error) {
 	}
 
 	if inputSupport == SupportRequired && p.GetInputName() == "" {
-		return nil, &ErrSupportRequired{SupportType: "input"}
+		return nil, &ErrSupportRequired{Plugin: p.GetName(), SupportType: "input"}
 	}
 
 	if p.GetInputName() != "" {
 		plugin := GetInstance(p.GetInputName())
 		if plugin == nil {
-			return nil, &ErrSupportNotFound{SupportType: "input"}
+			return nil, &ErrSupportNotFound{
+				Plugin:        p.GetName(),
+				SupportType:   "input",
+				SupportPlugin: p.GetInputName()}
 		}
 
 		if plugin.GetFormat() == "" {
-			return nil, &ErrSupportRequired{SupportType: "input data format"}
+			return nil, &ErrSupportRequired{
+				Plugin: plugin.GetName(), SupportType: "input data format"}
 		}
 
 		for _, s := range supportedInputs {
@@ -72,7 +83,7 @@ func ValidatePluginInput(p Facter) (Facter, error) {
 		}
 	}
 
-	return nil, &ErrSupportNone{SupportType: "input"}
+	return nil, &ErrSupportNone{Plugin: p.GetName(), SupportType: "input"}
 }
 
 func LoadPluginAdditionalInputs(p Facter) ([]Facter, []error) {
@@ -88,12 +99,18 @@ func LoadPluginAdditionalInputs(p Facter) ([]Facter, []error) {
 	for _, n := range p.GetAdditionalInputNames() {
 		plugin := GetInstance(n)
 		if plugin == nil {
-			errs = append(errs, &ErrSupportNotFound{SupportType: "additional input"})
+			errs = append(errs, &ErrSupportNotFound{
+				Plugin:        p.GetName(),
+				SupportType:   "additional input",
+				SupportPlugin: n,
+			})
 			continue
 		}
 
 		if plugin.GetFormat() == "" {
-			errs = append(errs, &ErrSupportRequired{SupportType: "additional input data format"})
+			errs = append(errs, &ErrSupportRequired{
+				Plugin:      plugin.GetName(),
+				SupportType: "additional input data format"})
 			continue
 		}
 

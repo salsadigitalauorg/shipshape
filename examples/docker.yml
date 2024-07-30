@@ -50,7 +50,7 @@ analyse:
       input: images
       # Extract the image name and tag.
       package-match: '^(.[^:@]*)?[:@]?([^ latest$]*)'
-      allowed:
+      allowed: &allowed-images
         - govcms/govcms
         - govcms/php
         - govcms/test
@@ -67,7 +67,7 @@ analyse:
         - uselagoon/varnish-drupal
         - uselagoon/redis-5
         - uselagoon/mariadb-drupal
-      deprecated:
+      deprecated: &deprecated-images
         - govcms8lagoon/govcms
         - govcms8lagoon/php
         - govcms8lagoon/test
@@ -81,3 +81,10 @@ analyse:
       exclude-keys:
         - mariadb
         - chrome
+  disallowed-base-image:
+    allowed-list:
+      description: Disallowed base image found in services' Dockerfiles.
+      input: base-images
+      allowed: *allowed-images
+      deprecated: *deprecated-images
+
