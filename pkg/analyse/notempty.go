@@ -33,7 +33,7 @@ func (p *NotEmpty) Analyse() {
 	log.WithField("input-format", p.input.GetFormat()).Debug("analysing")
 	switch p.input.GetFormat() {
 	case data.FormatMapNestedString:
-		inputData := data.AsNestedStringMap(p.input.GetData())
+		inputData := data.AsMapNestedString(p.input.GetData())
 		log.WithField("inputData", inputData).Debug("analysing")
 		if len(inputData) == 0 {
 			return

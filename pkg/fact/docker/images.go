@@ -62,7 +62,7 @@ func (p *Images) Collect() {
 
 	switch p.input.GetFormat() {
 	case data.FormatMapBytes:
-		inputData := data.AsMapStringBytes(p.input.GetData())
+		inputData := data.AsMapBytes(p.input.GetData())
 		if inputData == nil {
 			return
 		}
@@ -85,7 +85,7 @@ func (p *Images) Collect() {
 
 		for _, i := range p.additionalInputs {
 			if i.GetName() == p.ArgsFrom {
-				envMap = data.AsNestedStringMap(i.GetData())
+				envMap = data.AsMapNestedString(i.GetData())
 				break
 			}
 		}
