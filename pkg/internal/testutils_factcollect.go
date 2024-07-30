@@ -2,6 +2,7 @@ package internal
 
 import (
 	"io"
+	"reflect"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -15,6 +16,7 @@ import (
 type FactInputTest struct {
 	DataFormat data.DataFormat
 	Data       any
+	DataFn     func() any
 }
 
 type FactCollectTest struct {
@@ -28,6 +30,7 @@ type FactCollectTest struct {
 	ExpectedAdditionalInputsErrs []error
 
 	ExpectedErrors []error
+	ExpectedFormat data.DataFormat
 	ExpectedData   interface{}
 }
 
@@ -43,6 +46,10 @@ func TestFactCollect(t *testing.T, fct FactCollectTest) {
 	fact.Facts = map[string]fact.Facter{}
 
 	// Load input plugin.
+	if fct.TestInput.DataFn != nil {
+		fct.TestInput.Data = fct.TestInput.DataFn()
+	}
+
 	if fct.TestInput.Data != nil {
 		testP := testdata.TestFacter{
 			Name:                "test-input",
@@ -85,5 +92,15 @@ func TestFactCollect(t *testing.T, fct FactCollectTest) {
 	// Collect data.
 	fct.Facter.Collect()
 	assert.ElementsMatch(fct.ExpectedErrors, fct.Facter.GetErrors())
-	assert.Equal(fct.ExpectedData, fct.Facter.GetData())
+	assert.Equal(fct.ExpectedFormat, fct.Facter.GetFormat())
+
+	if fct.ExpectedData == nil {
+		return
+	}
+	kindData := reflect.TypeOf(fct.ExpectedData).Kind()
+	if kindData == reflect.Slice {
+		assert.ElementsMatch(fct.ExpectedData, fct.Facter.GetData())
+	} else {
+		assert.Equal(fct.ExpectedData, fct.Facter.GetData())
+	}
 }

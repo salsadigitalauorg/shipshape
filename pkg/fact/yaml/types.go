@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	FormatYamlNodes    data.DataFormat = "yaml-nodes"
-	FormatMapYamlKeys  data.DataFormat = "map-yaml-keys"
+	// FormatYamlNodes is used to represent []*yaml.Node.
+	FormatYamlNodes data.DataFormat = "yaml-nodes"
+	// FormatMapYamlNodes is used to represent map[string][]*yaml.Node.
 	FormatMapYamlNodes data.DataFormat = "map-yaml-nodes"
 )
 

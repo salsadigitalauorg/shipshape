@@ -3,13 +3,21 @@ package data
 type DataFormat string
 
 const (
-	FormatRaw             DataFormat = "raw"
-	FormatString          DataFormat = "string"
-	FormatListString      DataFormat = "list-string"
-	FormatListMapString   DataFormat = "list-map-string"
-	FormatMapBytes        DataFormat = "map-bytes"
-	FormatMapString       DataFormat = "map-string"
-	FormatMapListString   DataFormat = "map-list-string"
+	// FormatRaw is used to represent []byte.
+	FormatRaw DataFormat = "raw"
+	// FormatString is used to represent string.
+	FormatString DataFormat = "string"
+	// FormatListString is used to represent []string.
+	FormatListString DataFormat = "list-string"
+	// FormatListMapString is used to represent []map[string]string.
+	FormatListMapString DataFormat = "list-map-string"
+	// FormatMapBytes is used to represent map[string][]byte.
+	FormatMapBytes DataFormat = "map-bytes"
+	// FormatMapString is used to represent map[string]string.
+	FormatMapString DataFormat = "map-string"
+	// FormatMapListString is used to represent map[string][]string.
+	FormatMapListString DataFormat = "map-list-string"
+	// FormatMapNestedString is used to represent map[string]map[string]string.
 	FormatMapNestedString DataFormat = "map-nested-string"
 )
 

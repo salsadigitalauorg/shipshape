@@ -31,7 +31,8 @@ func TestImagesCollect(t *testing.T) {
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,
 				Data:       map[string][]byte{"foo": []byte("bar")}},
-			ExpectedData: map[string][]string{"foo": {}},
+			ExpectedFormat: data.FormatMapListString,
+			ExpectedData:   map[string][]string{"foo": {}},
 		},
 		{
 			Name:   "dockerfile/simple",
@@ -40,7 +41,8 @@ func TestImagesCollect(t *testing.T) {
 				DataFormat: data.FormatMapBytes,
 				Data:       map[string][]byte{"Dockerfile": []byte("FROM scratch\n")},
 			},
-			ExpectedData: map[string][]string{"Dockerfile": {"scratch:latest"}},
+			ExpectedFormat: data.FormatMapListString,
+			ExpectedData:   map[string][]string{"Dockerfile": {"scratch:latest"}},
 		},
 		{
 			Name:   "dockerfile/withArgs",
@@ -53,7 +55,8 @@ ARG PHP_IMAGE_VERSION=8.3
 FROM ${CLI_IMAGE} as cli
 FROM php:${PHP_IMAGE_VERSION}
 `)}},
-			ExpectedData: map[string][]string{"php": {":latest", "php:8.3"}},
+			ExpectedFormat: data.FormatMapListString,
+			ExpectedData:   map[string][]string{"php": {":latest", "php:8.3"}},
 		},
 		{
 			Name: "dockerfile/withArgsWithArgsInput/NoDataFormat",
@@ -104,7 +107,8 @@ FROM php:${PHP_IMAGE_VERSION}
 					Data:       map[string]map[string]string{"php": {"CLI_IMAGE": "myapp"}},
 				},
 			},
-			ExpectedData: map[string][]string{"php": {"myapp:latest", "php:8.3"}},
+			ExpectedFormat: data.FormatMapListString,
+			ExpectedData:   map[string][]string{"php": {"myapp:latest", "php:8.3"}},
 		},
 	}
 
