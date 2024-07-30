@@ -23,7 +23,8 @@ type BaseImage struct {
 	Tag         string `json:"tag"`
 	ResolvedTag string `json:"resolvedTag"`
 
-	args map[string]string
+	args  map[string]string
+	noTag bool
 }
 
 func (a *arg) resolve(envMap map[string]string) {
@@ -57,10 +58,13 @@ func (b *BaseImage) resolve() error {
 }
 
 func (b BaseImage) String() string {
+	if b.noTag {
+		return b.ResolvedImage
+	}
 	return b.ResolvedImage + ":" + b.ResolvedTag
 }
 
-func Parse(file []byte, envMap map[string]string) ([]BaseImage, error) {
+func Parse(file []byte, envMap map[string]string, noTag bool) ([]BaseImage, error) {
 	dockerfile, err := parser.Parse(bytes.NewBuffer(file))
 	if err != nil {
 		log.WithError(err).Error("could not parse Dockerfile")
@@ -95,7 +99,7 @@ func Parse(file []byte, envMap map[string]string) ([]BaseImage, error) {
 				image = strings.Split(rawVal, ":")[0]
 				tag = strings.Split(rawVal, ":")[1]
 			}
-			i := BaseImage{Image: image, Tag: tag, args: argsMap}
+			i := BaseImage{Image: image, Tag: tag, args: argsMap, noTag: noTag}
 			err := i.resolve()
 			if err != nil {
 				return nil, err

@@ -25,7 +25,8 @@ type Images struct {
 	data                 interface{}
 
 	// Plugin fields.
-	ArgsFrom string `yaml:"argsFrom"`
+	NoTag    bool   `yaml:"no-tag"`
+	ArgsFrom string `yaml:"args-from"`
 }
 
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Images --package=docker
@@ -97,7 +98,7 @@ func (p *Images) Collect() {
 
 	baseImagesMap := map[string][]string{}
 	for fn, fBytes := range fileBytesMap {
-		baseImages, err := docker.Parse(fBytes, envMap[fn])
+		baseImages, err := docker.Parse(fBytes, envMap[fn], p.NoTag)
 		if err != nil {
 			log.WithField("error", err).Error("could not parse Dockerfile")
 			p.errors = append(p.errors, err)
