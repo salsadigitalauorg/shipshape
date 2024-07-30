@@ -61,6 +61,10 @@ func ValidatePluginInput(p Facter) (Facter, error) {
 			return nil, &ErrSupportNotFound{SupportType: "input"}
 		}
 
+		if plugin.GetFormat() == "" {
+			return nil, &ErrSupportRequired{SupportType: "input data format"}
+		}
+
 		for _, s := range supportedInputs {
 			if plugin.PluginName() == s {
 				return plugin, nil
@@ -87,6 +91,12 @@ func LoadPluginAdditionalInputs(p Facter) ([]Facter, []error) {
 			errs = append(errs, &ErrSupportNotFound{SupportType: "additional input"})
 			continue
 		}
+
+		if plugin.GetFormat() == "" {
+			errs = append(errs, &ErrSupportRequired{SupportType: "additional input data format"})
+			continue
+		}
+
 		plugins = append(plugins, plugin)
 	}
 

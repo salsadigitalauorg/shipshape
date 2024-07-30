@@ -73,5 +73,15 @@ func AsMapNestedString(data interface{}) map[string]map[string]string {
 	if data == nil {
 		return nil
 	}
-	return data.(map[string]map[string]string)
+
+	if parsedData, ok := data.(map[string]map[string]string); ok {
+		return parsedData
+	} else if parsedData, ok := data.(map[string]interface{}); ok {
+		strStrMap := map[string]map[string]string{}
+		for k, v := range parsedData {
+			strStrMap[k] = v.(map[string]string)
+		}
+		return strStrMap
+	}
+	panic("unexpected data type when converting to MapNestedString")
 }
