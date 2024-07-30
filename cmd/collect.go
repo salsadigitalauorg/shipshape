@@ -41,8 +41,16 @@ output them in the format specified`,
 				for k, v := range loadedData {
 					fmt.Printf("  %s: %s\n", k, v)
 				}
+			case data.FormatMapNestedString:
+				loadedData := data.AsMapNestedString(f.GetData())
+				for k, vMap := range loadedData {
+					fmt.Printf("  %s:\n", k)
+					for k2, v := range vMap {
+						fmt.Printf("    %s: %s\n", k2, v)
+					}
+				}
 			default:
-				fmt.Println("Not yet implemented for", f.GetFormat())
+				fmt.Println("collect not yet implemented for", f.GetFormat())
 			}
 		}
 	},

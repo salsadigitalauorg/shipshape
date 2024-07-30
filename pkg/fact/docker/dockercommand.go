@@ -28,11 +28,11 @@ type DockerCommand struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=DockerCommand --package=docker
 
 func init() {
-	fact.Registry["docker.command"] = func(n string) fact.Facter { return &DockerCommand{Name: n} }
+	fact.Registry["docker:command"] = func(n string) fact.Facter { return &DockerCommand{Name: n} }
 }
 
 func (p *DockerCommand) PluginName() string {
-	return "docker.command"
+	return "docker:command"
 }
 
 func (p *DockerCommand) SupportedConnections() (fact.SupportLevel, []string) {

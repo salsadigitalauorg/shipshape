@@ -69,7 +69,10 @@ func (p *Images) Collect() {
 
 		fileBytesMap = inputData
 	default:
-		p.errors = append(p.errors, &fact.ErrSupportNone{SupportType: "input data format"})
+		p.errors = append(p.errors, &fact.ErrSupportNone{
+			Plugin:        p.Name,
+			SupportType:   "input data format",
+			SupportPlugin: string(p.input.GetFormat())})
 	}
 
 	if fileBytesMap == nil {
@@ -79,7 +82,8 @@ func (p *Images) Collect() {
 	envMap := map[string]map[string]string{}
 	if p.ArgsFrom != "" {
 		if p.additionalInputs == nil {
-			p.errors = append(p.errors, &fact.ErrSupportRequired{SupportType: "additional inputs"})
+			p.errors = append(p.errors, &fact.ErrSupportRequired{
+				Plugin: p.Name, SupportType: "additional inputs"})
 			return
 		}
 

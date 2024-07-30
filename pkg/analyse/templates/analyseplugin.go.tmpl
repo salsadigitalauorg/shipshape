@@ -47,7 +47,8 @@ func (p *{{ .Plugin }}) ValidateInput() error {
 
 	plugin := fact.GetInstance(p.InputName)
 	if plugin == nil {
-		return &fact.ErrSupportNotFound{SupportType: "input"}
+		return &fact.ErrSupportNotFound{
+			Plugin: p.GetId(), SupportType: "input", SupportPlugin: p.InputName}
 	}
 
 	p.input = plugin

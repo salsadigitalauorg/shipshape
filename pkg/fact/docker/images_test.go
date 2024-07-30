@@ -17,10 +17,13 @@ func TestImagesCollect(t *testing.T) {
 			ExpectedInputError: &fact.ErrSupportRequired{SupportType: "input"},
 		},
 		{
-			Name:           "inputFormatUnsupported",
-			Facter:         &Images{Name: "base-images", InputName: "test-input"},
-			TestInput:      internal.FactInputTest{DataFormat: data.FormatRaw, Data: []byte("foo")},
-			ExpectedErrors: []error{&fact.ErrSupportNone{SupportType: "input data format"}},
+			Name:      "inputFormatUnsupported",
+			Facter:    &Images{Name: "base-images", InputName: "test-input"},
+			TestInput: internal.FactInputTest{DataFormat: data.FormatRaw, Data: []byte("foo")},
+			ExpectedErrors: []error{&fact.ErrSupportNone{
+				Plugin:        "base-images",
+				SupportType:   "input data format",
+				SupportPlugin: "raw"}},
 		},
 		{
 			Name:   "bogusData",
@@ -74,7 +77,9 @@ FROM php:${PHP_IMAGE_VERSION}
 					Data: map[string]map[string]string{"php": {"CLI_IMAGE": "myapp"}},
 				},
 			},
-			ExpectedAdditionalInputsErrs: []error{&fact.ErrSupportRequired{SupportType: "additional input data format"}},
+			ExpectedAdditionalInputsErrs: []error{&fact.ErrSupportRequired{
+				Plugin:      "args-input",
+				SupportType: "additional input data format"}},
 		},
 		{
 			Name: "dockerfile/withArgsWithArgsInput",

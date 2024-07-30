@@ -76,7 +76,9 @@ func ParseConfigData(configData [][]byte) (bool, Config, ConfigV2, error) {
 	}
 
 	if len(cfgV2.Collect) > 0 {
-		log.WithField("config", cfgV2).Debug("v2-config parsed")
+		log.WithField("fact plugins", len(cfgV2.Collect)).
+			WithField("analyse plugins", len(cfgV2.Analyse)).
+			Debug("v2-config parsed")
 		return true, Config{}, cfgV2, nil
 	}
 
