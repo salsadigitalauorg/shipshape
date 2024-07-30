@@ -136,6 +136,8 @@ func (m *MapYamlLookup) ProcessMap() {
 			switch lookup.Format {
 			case data.FormatString:
 				m.Format = data.FormatMapString
+			case data.FormatListString:
+				m.Format = data.FormatMapListString
 			case data.FormatMapString:
 				m.Format = data.FormatMapNestedString
 			default:
@@ -148,7 +150,9 @@ func (m *MapYamlLookup) ProcessMap() {
 func (m *MapYamlLookup) DataMapAsMapString() map[string]string {
 	result := map[string]string{}
 	for k, v := range m.DataMap {
-		result[k] = v.(string)
+		if vStr, ok := v.(string); ok {
+			result[k] = vStr
+		}
 	}
 	return result
 }
