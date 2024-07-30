@@ -8,6 +8,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
+	"github.com/salsadigitalauorg/shipshape/pkg/env"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -76,39 +77,57 @@ func NewMapYamlLookupFromNodes(nodes []*yaml.Node, path string) (*MapYamlLookup,
 	return &res, errs
 }
 
-func (y *YamlLookup) ProcessNodes() {
+func (y *YamlLookup) ProcessNodes(envMap map[string]string) {
 	switch y.Kind {
 
 	case yaml.ScalarNode:
 		if y.Nodes[0].Value == "" {
 			return
 		}
+
 		y.Format = data.FormatString
-		y.Data = y.Nodes[0].Value
+		resVal, err := env.ResolveValue(envMap, y.Nodes[0].Value)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"yaml-format": y.Format,
+				"yaml-value":  y.Nodes[0].Value,
+				"env-map":     envMap,
+			}).WithError(err).Error("unable to resolve env var")
+		}
+		y.Data = resVal
 
 	case yaml.SequenceNode:
 		if y.Nodes[0].Content[0].Kind == yaml.ScalarNode {
 			y.Format = data.FormatListString
 			result := []string{}
 			for _, n := range y.Nodes[0].Content {
-				result = append(result, n.Value)
+				resVal, err := env.ResolveValue(envMap, n.Value)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"yaml-format": y.Format,
+						"yaml-value":  n.Value,
+						"env-map":     envMap,
+					}).WithError(err).Error("unable to resolve env var")
+					continue
+				}
+				result = append(result, resVal)
 			}
 			y.Data = result
 		} else if y.Nodes[0].Content[0].Kind == yaml.MappingNode {
 			y.Format = data.FormatListMapString
 			result := []map[string]string{}
 			for _, n := range y.Nodes[0].Content {
-				result = append(result, MappingNodeToMapString(n))
+				result = append(result, MappingNodeToMapString(n, envMap))
 			}
 			y.Data = result
 		}
 
 	case yaml.MappingNode:
 		y.Format = data.FormatMapString
-		y.Data = MappingNodeToMapString(y.Nodes[0])
+		y.Data = MappingNodeToMapString(y.Nodes[0], envMap)
 
 	case yaml.AliasNode:
-		y.Format, y.Data = AliasNodeToData(y.Nodes[0].Alias)
+		y.Format, y.Data = AliasNodeToData(y.Nodes[0].Alias, envMap)
 
 	default:
 		panic(fmt.Sprintf("unsupported kind '%d' in ProcessNodes", y.Kind))
@@ -123,10 +142,10 @@ func (m *MapYamlLookup) GetMapNodes() map[string][]*yaml.Node {
 	return result
 }
 
-func (m *MapYamlLookup) ProcessMap() {
+func (m *MapYamlLookup) ProcessMap(envMap map[string]string) {
 	m.DataMap = map[string]interface{}{}
 	for f, lookup := range m.LookupMap {
-		lookup.ProcessNodes()
+		lookup.ProcessNodes(envMap)
 		if lookup.Data == nil {
 			continue
 		}
@@ -169,41 +188,72 @@ func MappingNodeToKeyedMap(n *yaml.Node) map[string]*yaml.Node {
 }
 
 // MappingNodeToMapString converts a "mapping" yaml.Node to a map[string]string.
-func MappingNodeToMapString(n *yaml.Node) map[string]string {
+func MappingNodeToMapString(n *yaml.Node, envMap map[string]string) map[string]string {
 	result := map[string]string{}
 	for i := 0; i < len(n.Content); i++ {
 		if i%2 == 0 {
 			kNode := n.Content[i]
 			vNode := n.Content[i+1]
-			result[kNode.Value] = vNode.Value
+			rawVal := vNode.Value
 			if vNode.Kind == yaml.AliasNode {
-				result[kNode.Value] = vNode.Alias.Value
+				rawVal = vNode.Alias.Value
 			}
+
+			resVal, err := env.ResolveValue(envMap, rawVal)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"yaml-key":   kNode.Value,
+					"yaml-value": rawVal,
+					"env-map":    envMap,
+				}).WithError(err).Error("unable to resolve env var")
+				result[kNode.Value] = rawVal
+				continue
+			}
+			result[kNode.Value] = resVal
 		}
 	}
 	return result
 }
 
-func AliasNodeToData(n *yaml.Node) (data.DataFormat, interface{}) {
+func AliasNodeToData(n *yaml.Node, envMap map[string]string) (data.DataFormat, interface{}) {
 	switch n.Kind {
 	case yaml.ScalarNode:
-		return data.FormatString, n.Value
+		resVal, err := env.ResolveValue(envMap, n.Value)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"yaml-format": data.FormatString,
+				"yaml-value":  n.Value,
+				"env-map":     envMap,
+			}).WithError(err).Warn("unable to resolve env var")
+			return data.FormatString, n.Value
+		}
+		return data.FormatString, resVal
 	case yaml.SequenceNode:
 		if n.Content[0].Kind == yaml.ScalarNode {
 			result := []string{}
 			for _, n := range n.Content {
-				result = append(result, n.Value)
+				resVal, err := env.ResolveValue(envMap, n.Value)
+				if err != nil {
+					log.WithFields(log.Fields{
+						"yaml-format": data.FormatListString,
+						"yaml-value":  n.Value,
+						"env-map":     envMap,
+					}).WithError(err).Warn("unable to resolve env var")
+					result = append(result, n.Value)
+					continue
+				}
+				result = append(result, resVal)
 			}
 			return data.FormatListString, result
 		} else if n.Content[0].Kind == yaml.MappingNode {
 			result := []map[string]string{}
 			for _, n := range n.Content {
-				result = append(result, MappingNodeToMapString(n))
+				result = append(result, MappingNodeToMapString(n, envMap))
 			}
 			return data.FormatListMapString, result
 		}
 	case yaml.MappingNode:
-		return data.FormatMapString, MappingNodeToMapString(n)
+		return data.FormatMapString, MappingNodeToMapString(n, envMap)
 	}
 	panic(fmt.Sprintf("unsupported kind '%d' in AliasNodeToData", n.Kind))
 }

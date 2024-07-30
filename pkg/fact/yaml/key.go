@@ -32,9 +32,13 @@ type Key struct {
 	NodesOnly bool `yaml:"nodes-only"`
 	// Only return the keys found at the path, if it's a map.
 	KeysOnly bool `yaml:"keys-only"`
+
+	// Resolve env vars.
+	ResolveEnv bool   `yaml:"resolve-env"`
+	EnvFile    string `yaml:"env-file"`
 }
 
-//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Key --package=yaml
+//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Key --package=yaml --envresolver
 
 func init() {
 	fact.Registry["yaml:key"] = func(n string) fact.Facter { return &Key{Name: n} }
@@ -153,18 +157,29 @@ func (p *Key) Collect() {
 		return
 	}
 
+	envMap, err := p.GetEnvMap()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"fact-plugin": p.PluginName(),
+			"fact":        p.Name,
+			"input":       p.GetInputName(),
+		}).WithError(err).Error("unable to read env file")
+		p.errors = append(p.errors, err)
+		return
+	}
+
 	if lookup != nil {
-		lookup.ProcessNodes()
+		lookup.ProcessNodes(envMap)
 		p.Format = lookup.Format
 		p.data = lookup.Data
 	} else if lookupMap != nil {
-		lookupMap.ProcessMap()
+		lookupMap.ProcessMap(envMap)
 		p.Format = lookupMap.Format
 		p.data = lookupMap.DataMap
 	} else {
 		res := map[string]map[string]string{}
 		for f, m := range nestedLookupMap {
-			m.ProcessMap()
+			m.ProcessMap(envMap)
 			if len(m.DataMap) == 0 {
 				continue
 			}
