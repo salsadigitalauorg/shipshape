@@ -169,7 +169,8 @@ FROM php:${PHP_IMAGE_VERSION}`,
 ARG PHP_IMAGE_VERSION=8.3
 
 FROM ${CLI_IMAGE} as cli
-FROM php:${PHP_IMAGE_VERSION}`,
+FROM php:${PHP_IMAGE_VERSION}
+`,
 			envMap: map[string]string{"CLI_IMAGE": "myproject-cli"},
 			expectedBaseImages: []BaseImage{
 				{

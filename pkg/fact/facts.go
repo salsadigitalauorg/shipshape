@@ -7,7 +7,6 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
-	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -33,6 +32,14 @@ func init() {
 			return ""
 		}
 		return val.(string)
+	}
+}
+
+func GetInstance(name string) Facter {
+	if p, ok := Facts[name]; !ok {
+		return nil
+	} else {
+		return p
 	}
 }
 
@@ -63,78 +70,6 @@ func ParseConfig(raw map[string]map[string]interface{}) {
 		}
 	}
 	log.Infof("parsed %d facts", count)
-}
-
-func ValidatePluginConnection(p Facter) (connection.Connectioner, error) {
-	connectionSupport, supportedConnections := p.SupportedConnections()
-	log.WithFields(log.Fields{
-		"fact":                  p.GetName(),
-		"connection-support":    connectionSupport,
-		"supported-connections": supportedConnections,
-	}).Debug("validating connection")
-
-	if (connectionSupport == SupportOptional ||
-		connectionSupport == SupportNone) &&
-		len(supportedConnections) == 0 && p.GetConnectionName() == "" {
-		return nil, nil
-	}
-
-	if connectionSupport == SupportRequired && p.GetConnectionName() == "" {
-		return nil, &ErrSupportRequired{SupportType: "connection"}
-	}
-
-	plugin := connection.GetInstance(p.GetConnectionName())
-	if plugin == nil {
-		return nil, &ErrSupportNotFound{SupportType: "connection"}
-	}
-
-	for _, s := range supportedConnections {
-		if plugin.PluginName() == s {
-			return plugin, nil
-		}
-	}
-	return nil, &ErrSupportNone{SupportType: "connection"}
-}
-
-func ValidatePluginInput(p Facter) (Facter, error) {
-	inputSupport, supportedInputs := p.SupportedInputs()
-	log.WithFields(log.Fields{
-		"fact":             p.GetName(),
-		"input-support":    inputSupport,
-		"supported-inputs": supportedInputs,
-	}).Debug("validating input")
-
-	if (inputSupport == SupportOptional ||
-		inputSupport == SupportNone) &&
-		len(supportedInputs) == 0 && p.GetInputName() == "" {
-		return nil, nil
-	}
-
-	if inputSupport == SupportRequired && p.GetInputName() == "" {
-		return nil, &ErrSupportRequired{SupportType: "input"}
-	}
-
-	if p.GetInputName() != "" {
-		plugin := GetInstance(p.GetInputName())
-		if plugin == nil {
-			return nil, &ErrSupportNotFound{SupportType: "input"}
-		}
-
-		for _, s := range supportedInputs {
-			if plugin.PluginName() == s {
-				return plugin, nil
-			}
-		}
-	}
-
-	return nil, &ErrSupportNone{SupportType: "input"}
-}
-
-func LoadPluginAdditionalInputs(p Facter) ([]Facter, error) {
-	log.WithFields(log.Fields{"fact": p.GetName()}).
-		Debug("validating additional inputs")
-
-	return nil, &ErrSupportNone{SupportType: "input"}
 }
 
 func CollectAllFacts() {
@@ -182,12 +117,4 @@ func CollectFact(name string, f Facter) {
 		"data": f.GetData(),
 	}).Trace("collected fact")
 	collected = append(collected, name)
-}
-
-func GetInstance(name string) Facter {
-	if p, ok := Facts[name]; !ok {
-		return nil
-	} else {
-		return p
-	}
 }

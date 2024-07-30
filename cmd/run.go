@@ -38,12 +38,12 @@ var runCmd = &cobra.Command{
 		}
 
 		lagoonApiBaseUrlEnv := os.Getenv("LAGOON_API_BASE_URL")
-		if outputFormatEnv != "" {
+		if lagoonApiBaseUrlEnv != "" {
 			lagoon.ApiBaseUrl = lagoonApiBaseUrlEnv
 		}
 
 		lagoonApiTokenEnv := os.Getenv("LAGOON_API_TOKEN")
-		if outputFormatEnv != "" {
+		if lagoonApiTokenEnv != "" {
 			lagoon.ApiToken = lagoonApiTokenEnv
 		}
 
@@ -77,6 +77,13 @@ var runCmd = &cobra.Command{
 			shipshape.RunV2()
 		} else {
 			shipshape.Run()
+		}
+
+		// If we're only collecting facts, we don't need to output anything,
+		// but not exit either, since it is then assumed this command was called
+		// from collectCmd.
+		if shipshape.FactsOnly {
+			return
 		}
 
 		shipshape.Output()

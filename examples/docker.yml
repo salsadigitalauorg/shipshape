@@ -38,9 +38,10 @@ collect:
 
   # Extract the base image for each dockerfile.
   base-images:
-    regex:
+    docker:images:
       input: dockerfiles
-      pattern: '^FROM (.[^:@]*)?[:@]?([^ latest$]*)'
+      additional-inputs: [buildargs]
+      argsFrom: buildargs
 
 analyse:
   disallowed-service-image:

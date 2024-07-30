@@ -57,10 +57,10 @@ func (p *{{ .Plugin }}) ValidateInput() error {
 	return nil
 }
 
-func (p *{{ .Plugin }}) LoadAdditionalInputs() error {
-	additionalInputs, err := fact.LoadPluginAdditionalInputs(p)
-	if err != nil {
-		return err
+func (p *{{ .Plugin }}) LoadAdditionalInputs() []error {
+	additionalInputs, errs := fact.LoadPluginAdditionalInputs(p)
+	if len(errs) > 0 {
+		return errs
 	}
 
 	p.additionalInputs = additionalInputs
