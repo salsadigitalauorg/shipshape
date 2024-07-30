@@ -37,7 +37,8 @@ collect:
     docker:images:
       input: dockerfiles
       additional-inputs: [buildargs]
-      argsFrom: buildargs
+      no-tag: true
+      args-from: buildargs
 
 analyse:
   disallowed-service-image:
