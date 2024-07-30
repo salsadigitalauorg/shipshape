@@ -106,6 +106,13 @@ func CollectFact(name string, f Facter) {
 		return
 	}
 
+	if errs := f.LoadAdditionalInputs(); len(errs) != 0 {
+		Errors = append(Errors, errs...)
+		log.WithField("fact", name).WithField("errors", errs).
+			Error("failed to load additional input")
+		return
+	}
+
 	log.WithField("fact", name).Infof("collecting fact")
 	f.Collect()
 	if len(f.GetErrors()) > 0 {

@@ -82,7 +82,7 @@ func (p *Key) Collect() {
 
 	// The file:lookup plugin is used to lookup files.
 	case data.FormatMapBytes:
-		inputData := data.AsMapStringBytes(p.input.GetData())
+		inputData := data.AsMapBytes(p.input.GetData())
 		if inputData == nil {
 			return
 		}

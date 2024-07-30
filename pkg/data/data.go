@@ -41,7 +41,7 @@ func AsListMapString(data interface{}) []map[string]string {
 	return data.([]map[string]string)
 }
 
-func AsMapStringBytes(data interface{}) map[string][]byte {
+func AsMapBytes(data interface{}) map[string][]byte {
 	if data == nil {
 		return nil
 	}
@@ -62,7 +62,14 @@ func AsMapString(data interface{}) map[string]string {
 	return strMap
 }
 
-func AsNestedStringMap(data interface{}) map[string]map[string]string {
+func AsMapListString(data interface{}) map[string][]string {
+	if data == nil {
+		return nil
+	}
+	return data.(map[string][]string)
+}
+
+func AsMapNestedString(data interface{}) map[string]map[string]string {
 	if data == nil {
 		return nil
 	}

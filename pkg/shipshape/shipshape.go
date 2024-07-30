@@ -26,6 +26,7 @@ var FailSeverity string
 var IsV2 bool
 var RunConfig config.Config
 var RunConfigV2 config.ConfigV2
+var FactsOnly bool
 
 // Results
 var RunResultList result.ResultList
@@ -134,18 +135,22 @@ func RunV2() {
 	log.Print("parsing analysers config")
 	analyse.ParseConfig(RunConfigV2.Analyse)
 
-	log.Print("validating analyser inputs")
-	analyse.ValidateInputs()
-	if len(analyse.Errors) > 0 {
-		log.WithField("errors", analyse.Errors).
-			Fatal("failed to validate analyser inputs")
-	}
-
 	log.Print("collecting facts")
 	fact.CollectAllFacts()
 	if len(fact.Errors) > 0 {
 		log.WithField("errors", fact.Errors).
 			Fatal("failed to collect facts")
+	}
+
+	if FactsOnly {
+		return
+	}
+
+	log.Print("validating analyser inputs")
+	analyse.ValidateInputs()
+	if len(analyse.Errors) > 0 {
+		log.WithField("errors", analyse.Errors).
+			Fatal("failed to validate analyser inputs")
 	}
 
 	log.Print("analysing facts")
