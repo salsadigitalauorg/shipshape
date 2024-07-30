@@ -10,11 +10,12 @@ import (
 )
 
 var (
-	arg         string
-	arg2        string
-	pkg         string
-	breachTypes []string
-	plugins     []string
+	arg               string
+	arg2              string
+	pkg               string
+	enableEnvResolver bool
+	breachTypes       []string
+	plugins           []string
 )
 
 func main() {
@@ -50,7 +51,7 @@ func main() {
 		if pkg == "" {
 			log.Fatal("fact-plugin missing flags; package is required")
 		}
-		gen.FactPlugin(plugins, pkg)
+		gen.FactPlugin(plugins, pkg, enableEnvResolver)
 		gen.FactRegistry(pkg)
 		break
 	case "analyse-plugin":
@@ -65,6 +66,7 @@ func main() {
 func parseFlags() {
 	pflag.StringVar(&pkg, "checkpackage", "", "The package to which the check belongs")
 	pflag.StringVar(&pkg, "package", "", "The package to which the plugin belongs")
+	pflag.BoolVar(&enableEnvResolver, "envresolver", false, "Add envResolver methods to the plugin")
 	pflag.StringSliceVar(&breachTypes, "type", []string{}, "The breach type")
 	pflag.StringSliceVar(&plugins, "plugin", []string{}, "The plugin struct")
 	pflag.Parse()

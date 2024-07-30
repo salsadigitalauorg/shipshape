@@ -25,11 +25,7 @@ collect:
     yaml:key:
       input: compose-services-nodes
       path: build.args
-  # Extract the environment variables for each service.
-  envvars:
-    yaml:key:
-      input: compose-services-nodes
-      path: environment
+      resolve-env: true
 
   # Read the dockerfiles.
   dockerfiles:
@@ -87,4 +83,5 @@ analyse:
       input: base-images
       allowed: *allowed-images
       deprecated: *deprecated-images
-
+      exclude-keys:
+        - test

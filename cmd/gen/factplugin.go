@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func FactPlugin(plugins []string, pkg string) {
+func FactPlugin(plugins []string, pkg string, envResolver bool) {
 	log.Printf("Generating fact plugin funcs for package %s: %s\n", pkg, strings.Join(plugins, ","))
 
 	tmplPath := filepath.Join("..", "..", "pkg", "fact", "templates", "factplugin.go.tmpl")
@@ -25,9 +25,10 @@ func FactPlugin(plugins []string, pkg string) {
 		}
 
 		templateToFile(tmplPath, struct {
-			Package string
-			Plugin  string
-		}{Package: pkg, Plugin: p}, pluginFullFilePath)
+			Package     string
+			Plugin      string
+			EnvResolver bool
+		}{Package: pkg, Plugin: p, EnvResolver: envResolver}, pluginFullFilePath)
 	}
 }
 

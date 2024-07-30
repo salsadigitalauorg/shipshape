@@ -2,6 +2,9 @@ package {{ .Package }}
 
 import (
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
+	{{ if .EnvResolver -}}
+	"github.com/salsadigitalauorg/shipshape/pkg/env"
+	{{ end -}}
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 )
 
@@ -66,3 +69,17 @@ func (p *{{ .Plugin }}) LoadAdditionalInputs() []error {
 	p.additionalInputs = additionalInputs
 	return nil
 }
+
+{{ if .EnvResolver -}}
+func (p *{{ .Plugin }}) ShouldResolveEnv() bool {
+	return p.ResolveEnv
+}
+
+func (p *{{ .Plugin }}) GetEnvFile() string {
+	return p.EnvFile
+}
+
+func (p *{{ .Plugin }}) GetEnvMap() (map[string]string, error) {
+	return env.ReadEnvFile(p)
+}
+{{ end -}}

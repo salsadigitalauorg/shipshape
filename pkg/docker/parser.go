@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/drone/envsubst"
 	"github.com/moby/buildkit/frontend/dockerfile/parser"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/env"
 )
 
 type arg struct {
@@ -34,35 +35,14 @@ func (a *arg) resolve(envMap map[string]string) {
 }
 
 func (b *BaseImage) resolve() error {
-	resolveWithArgs := func(key string) (string, error) {
-		evaled, err := envsubst.Eval(key, func(s string) string {
-			if val, ok := b.args[s]; ok {
-				return val
-			}
-			return s
-		})
-		if err != nil {
-			return "", nil
-		}
-
-		// Deal with the case `$varname` which is not supported by envsubst.
-		if len(evaled) > 1 && evaled[0] == '$' && evaled[1] != '{' {
-			if val, ok := b.args[evaled[1:]]; ok {
-				return val, nil
-			}
-		}
-
-		return evaled, err
-	}
-
-	resI, err := resolveWithArgs(b.Image)
+	resI, err := env.ResolveValue(b.args, b.Image)
 	if err != nil {
 		log.WithError(err).Error("could not resolve image name")
 		return err
 	}
 	b.ResolvedImage = resI
 
-	resT, err := resolveWithArgs(b.Tag)
+	resT, err := env.ResolveValue(b.args, b.Tag)
 	if err != nil {
 		log.WithError(err).Error("could not resolve image tag")
 		return err
