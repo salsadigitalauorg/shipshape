@@ -76,6 +76,10 @@ func (b *BaseImage) resolve() error {
 	return nil
 }
 
+func (b BaseImage) String() string {
+	return b.ResolvedImage + ":" + b.ResolvedTag
+}
+
 func Parse(file []byte, envMap map[string]string) ([]BaseImage, error) {
 	dockerfile, err := parser.Parse(bytes.NewBuffer(file))
 	if err != nil {
