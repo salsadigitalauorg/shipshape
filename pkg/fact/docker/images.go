@@ -8,6 +8,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/docker"
+	"github.com/salsadigitalauorg/shipshape/pkg/env"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 )
 
@@ -27,6 +28,10 @@ type Images struct {
 	// Plugin fields.
 	NoTag    bool   `yaml:"no-tag"`
 	ArgsFrom string `yaml:"args-from"`
+	// Ignore is a list of Docker images to ignore.
+	// Env vars can be provided and will be resolved
+	// against args if ArgsFrom is set.
+	Ignore []string `yaml:"ignore"`
 }
 
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Images --package=docker
@@ -49,6 +54,36 @@ func (p *Images) SupportedInputs() (fact.SupportLevel, []string) {
 		"file:lookup",
 		"file:read:multiple",
 	}
+}
+
+func (p *Images) resolveIgnore(envMapMap map[string]map[string]string) {
+	if p.ArgsFrom == "" || envMapMap == nil {
+		return
+	}
+
+	newIgnore := []string{}
+
+	for _, i := range p.Ignore {
+		resI := i
+		for _, envMap := range envMapMap {
+			var err error
+			resI, err = env.ResolveValue(envMap, i)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"fact-plugin": p.PluginName(),
+					"fact":        p.Name,
+					"error":       err,
+				}).Error("could not resolve ignore value")
+				p.errors = append(p.errors, err)
+				return
+			}
+			if resI != i {
+				break
+			}
+		}
+		newIgnore = append(newIgnore, resI)
+	}
+	p.Ignore = newIgnore
 }
 
 func (p *Images) Collect() {
@@ -96,9 +131,11 @@ func (p *Images) Collect() {
 		}
 	}
 
+	p.resolveIgnore(envMap)
+
 	baseImagesMap := map[string][]string{}
 	for fn, fBytes := range fileBytesMap {
-		baseImages, err := docker.Parse(fBytes, envMap[fn], p.NoTag)
+		baseImages, err := docker.Parse(fBytes, envMap[fn], p.NoTag, p.Ignore)
 		if err != nil {
 			log.WithField("error", err).Error("could not parse Dockerfile")
 			p.errors = append(p.errors, err)
