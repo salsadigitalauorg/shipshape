@@ -220,7 +220,7 @@ FROM php:${PHP_VERSION}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			baseImages, err := Parse([]byte(test.fileStr), test.envMap, false)
+			baseImages, err := Parse([]byte(test.fileStr), test.envMap, false, nil)
 			if test.expectedError == "" {
 				assert.Nil(err)
 			} else {
