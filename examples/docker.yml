@@ -39,6 +39,8 @@ collect:
       additional-inputs: [buildargs]
       no-tag: true
       args-from: buildargs
+      ignore:
+        - $CLI_IMAGE
 
 analyse:
   disallowed-service-image:
@@ -76,6 +78,7 @@ analyse:
         - uselagoon/php-7.4-cli-drupal
         - uselagoon/php-7.4-fpm
       exclude-keys:
+        - cli
         - mariadb
         - chrome
   disallowed-base-image:

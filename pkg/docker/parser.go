@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/env"
+	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 type arg struct {
@@ -64,7 +65,7 @@ func (b BaseImage) String() string {
 	return b.ResolvedImage + ":" + b.ResolvedTag
 }
 
-func Parse(file []byte, envMap map[string]string, noTag bool) ([]BaseImage, error) {
+func Parse(file []byte, envMap map[string]string, noTag bool, ignore []string) ([]BaseImage, error) {
 	dockerfile, err := parser.Parse(bytes.NewBuffer(file))
 	if err != nil {
 		log.WithError(err).Error("could not parse Dockerfile")
@@ -99,10 +100,15 @@ func Parse(file []byte, envMap map[string]string, noTag bool) ([]BaseImage, erro
 				image = strings.Split(rawVal, ":")[0]
 				tag = strings.Split(rawVal, ":")[1]
 			}
+
 			i := BaseImage{Image: image, Tag: tag, args: argsMap, noTag: noTag}
 			err := i.resolve()
 			if err != nil {
 				return nil, err
+			}
+
+			if utils.StringSliceContains(ignore, i.ResolvedImage) {
+				continue
 			}
 			baseImages = append(baseImages, i)
 		}

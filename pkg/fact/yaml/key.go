@@ -26,16 +26,16 @@ type Key struct {
 	errors               []error
 	data                 interface{}
 
+	// Resolve env vars.
+	ResolveEnv bool   `yaml:"resolve-env"`
+	EnvFile    string `yaml:"env-file"`
+
 	// Plugin fields.
 	Path string `yaml:"path"`
 	// Only return the Yaml nodes found at the path.
 	NodesOnly bool `yaml:"nodes-only"`
 	// Only return the keys found at the path, if it's a map.
 	KeysOnly bool `yaml:"keys-only"`
-
-	// Resolve env vars.
-	ResolveEnv bool   `yaml:"resolve-env"`
-	EnvFile    string `yaml:"env-file"`
 }
 
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Key --package=yaml --envresolver
