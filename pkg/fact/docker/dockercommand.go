@@ -36,7 +36,7 @@ func (p *DockerCommand) PluginName() string {
 }
 
 func (p *DockerCommand) SupportedConnections() (fact.SupportLevel, []string) {
-	return fact.SupportRequired, []string{"docker.exec"}
+	return fact.SupportRequired, []string{"docker:exec"}
 }
 
 func (p *DockerCommand) SupportedInputs() (fact.SupportLevel, []string) {
