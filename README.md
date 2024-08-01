@@ -33,39 +33,6 @@ Or add to your docker image:
 COPY --from=ghcr.io/salsadigitalauorg/shipshape:latest /usr/local/bin/shipshape /usr/local/bin/shipshape
 ```
 
-## Usage
-Create a config file. Can be as simple as:
-```yaml
-# shipshape.yml
-checks:
-  file:
-    - name: Illegal files
-      path: web
-      disallowed-pattern: '^(adminer|phpmyadmin|bigdump)?\.php$'
-```
-See the [configuration](https://salsadigitalauorg.github.io/shipshape/config) documentation for more information.
-
-```
-$ shipshape -h
-Shipshape
-
-Run checks quickly on your project.
-
-Usage:
-  shipshape [dir]
-
-Flags:
-      --dump-config     Dump the final config - useful to make sure multiple config files are being merged as expected
-  -e, --error-code      Exit with error code if a failure is detected (env: SHIPSHAPE_ERROR_ON_FAILURE)
-  -d, --exclude-db      Exclude checks requiring a database; overrides any db checks specified by '--types'
-  -f, --file strings    Path to the file containing the checks. Can be specified as comma-separated single argument or using --types multiple times (default [shipshape.yml])
-  -h, --help            Displays usage information
-      --list-checks     List available checks
-  -o, --output string   Output format [json|junit|simple|table] (env: SHIPSHAPE_OUTPUT_FORMAT) (default "simple")
-  -t, --types strings   List of checks to run; default is empty, which will run all checks. Can be specified as comma-separated single argument or using --types multiple times
-  -v, --version         Displays the application version
-```
-
 ## Documentation
 Check out our documentation at https://salsadigitalauorg.github.io/shipshape/. Keep in mind that this is still a work in progress, so please go easy.
 
