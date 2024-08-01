@@ -40,10 +40,6 @@ module.exports = {
         link: '/guide/',
       },
       {
-        text: 'Config',
-        link: '/config/'
-      },
-      {
         text: 'GitHub',
         link: 'https://github.com/salsadigitalauorg/shipshape'
       }
@@ -52,10 +48,10 @@ module.exports = {
       '/guide/': [
         {
           title: 'Guide',
-          collapsable: false,
+          collapsable: true,
           children: [
             '',
-            // 'using-vue',
+            'configuration',
           ]
         }
       ],

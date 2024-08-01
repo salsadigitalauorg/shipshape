@@ -16,9 +16,9 @@ import (
 )
 
 var runCmd = &cobra.Command{
-	Use:   "run",
-	Short: "Run checks",
-	Long:  `Run checks against the specified directory`,
+	Use:   "run [dir|.]",
+	Short: "Execute policies",
+	Long:  `Execute policies against the specified directory`,
 	Args:  cobra.ExactArgs(1),
 
 	PreRun: func(cmd *cobra.Command, args []string) {
