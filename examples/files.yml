@@ -13,12 +13,12 @@ collect:
 
 analyse:
   disallowed-php-scripts-found:
-    not-empty:
+    not:empty:
       description: 'Disallowed php scripts found'
       input: disallowed-php-scripts
       severity: high
   sensitive-public-files-found:
-    not-empty:
+    not:empty:
       description: 'Sensitive files found in public directory'
       input: sensitive-public-files
       severity: high

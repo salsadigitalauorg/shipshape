@@ -4,7 +4,7 @@ module.exports = {
   /**
    * Ref：https://v1.vuepress.vuejs.org/config/#title
    */
-  title: 'ShipShape',
+  title: 'Shipshape',
   /**
    * Ref：https://v1.vuepress.vuejs.org/config/#description
    */
@@ -31,8 +31,8 @@ module.exports = {
   themeConfig: {
     repo: '',
     editLinks: false,
-    docsDir: '',
     editLinkText: '',
+    docsDir: '',
     lastUpdated: false,
     nav: [
       {
@@ -40,8 +40,8 @@ module.exports = {
         link: '/guide/',
       },
       {
-        text: 'Config',
-        link: '/config/'
+        text: 'Reference',
+        link: '/reference/',
       },
       {
         text: 'GitHub',
@@ -55,11 +55,54 @@ module.exports = {
           collapsable: false,
           children: [
             '',
-            // 'using-vue',
+            'configuration',
           ]
         }
       ],
-    }
+      '/reference/': [
+        {
+          title: 'Reference',
+          collapsable: false,
+          children: [
+            '',
+            {
+              title: 'Connection',
+              path: '/reference/connection',
+              collapsable: false,
+              children: [
+                '/reference/connection/mysql',
+                ['/reference/connection/docker-exec', 'docker-exec'],
+              ]
+            },
+            {
+              title: 'Collect',
+              path: '/reference/collect',
+              collapsable: false,
+              children: [
+                ['/reference/collect/database-search', 'database:search'],
+                ['/reference/collect/docker-command', 'docker:command'],
+                ['/reference/collect/docker-images', 'docker:images'],
+                ['/reference/collect/file-lookup', 'file:lookup'],
+                ['/reference/collect/file-read', 'file:read'],
+                ['/reference/collect/file-read-multiple', 'file:read:multiple'],
+                ['/reference/collect/yaml-key', 'yaml:key'],
+              ]
+            },
+            {
+              title: 'Analyse',
+              path: '/reference/analyse',
+              collapsable: false,
+              children: [
+                ['/reference/analyse/allowed-list', 'allowed:list'],
+                ['/reference/analyse/not-empty', 'not:empty'],
+                ['/reference/analyse/regex-match', 'regex:match'],
+              ]
+            },
+          ]
+        }
+      ],
+    },
+    sidebarDepth: 2,
   },
 
   /**

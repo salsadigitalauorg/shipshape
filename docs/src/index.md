@@ -1,6 +1,6 @@
 ---
 home: true
-tagline: Quickly and simply audit your project based on a set of pre-defined rules.
+tagline: Go cli that reads yaml-based policies and runs them against a directory.
 actionText: Quick Start →
 actionLink: /guide/
 features:

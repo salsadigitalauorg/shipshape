@@ -15,6 +15,11 @@ collect:
     yaml:key:
       input: compose-services-nodes
       path: image
+  # Extract the Lagoon service type for each service.
+  lagoon-type:
+    yaml:key:
+      input: compose-services-nodes
+      path: labels['lagoon.type']
   # Extract the Dockerfile for each service.
   dockerfile-paths:
     yaml:key:
@@ -44,7 +49,7 @@ collect:
 
 analyse:
   disallowed-service-image:
-    allowed-list:
+    allowed:list:
       description: Disallowed image found in Docker Compose file.
       input: images
       # Extract the image name and tag.
@@ -81,8 +86,28 @@ analyse:
         - cli
         - mariadb
         - chrome
+
+  disallowed-lagoon-service:
+    allowed:list:
+      description: Disallowed Lagoon service type found in Docker Compose file.
+      input: lagoon-type
+      allowed:
+        - none
+        - cli
+        - cli-persistent
+        - mariadb
+        - mariadb-dbaas
+        - nginx
+        - nginx-php
+        - nginx-php-persistent
+        - redis
+        - redis-persistent
+        - solr
+        - varnish
+        - varnish-persistent
+
   disallowed-base-image:
-    allowed-list:
+    allowed:list:
       description: Disallowed base image found in services' Dockerfiles.
       input: base-images
       allowed: *allowed-images

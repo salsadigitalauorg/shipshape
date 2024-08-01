@@ -32,11 +32,11 @@ type AllowedList struct {
 //go:generate go run ../../cmd/gen.go analyse-plugin --plugin=AllowedList --package=analyse
 
 func init() {
-	Registry["allowed-list"] = func(id string) Analyser { return NewAllowedList(id) }
+	Registry["allowed:list"] = func(id string) Analyser { return NewAllowedList(id) }
 }
 
 func (p *AllowedList) PluginName() string {
-	return "allowed-list"
+	return "allowed:list"
 }
 
 func (p *AllowedList) Analyse() {

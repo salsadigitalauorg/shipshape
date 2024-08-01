@@ -1,7 +1,7 @@
 {
   "name": "shipshape",
-  "version": "v0.1.5",
-  "description": "Quickly and simply audit your project based on a set of pre-defined rules.",
+  "version": "v1.0.0",
+  "description": "Go cli that reads yaml-based policies and runs them against a directory",
   "main": "index.js",
   "authors": {
     "name": "Yusuf Hasan Miyan",
@@ -14,6 +14,6 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "vuepress": "^1.5.3"
+    "vuepress": "^1.9.10"
   }
 }
