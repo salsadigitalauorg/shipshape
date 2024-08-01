@@ -27,11 +27,11 @@ type RegexMatch struct {
 //go:generate go run ../../cmd/gen.go analyse-plugin --plugin=RegexMatch --package=analyse
 
 func init() {
-	Registry["regex-match"] = func(id string) Analyser { return NewRegexMatch(id) }
+	Registry["regex:match"] = func(id string) Analyser { return NewRegexMatch(id) }
 }
 
 func (p *RegexMatch) PluginName() string {
-	return "regex-match"
+	return "regex:match"
 }
 
 func (p *RegexMatch) Analyse() {

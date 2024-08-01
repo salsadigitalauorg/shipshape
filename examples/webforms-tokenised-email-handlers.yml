@@ -32,7 +32,7 @@ collect:
 
 analyse:
   wrong-to-mail:
-    regex-match:
+    regex:match:
       description: Found token in webform handler 'to:' email field
       input: to-mail
       pattern: '\[(.*)\]'
@@ -44,14 +44,14 @@ analyse:
         value-label: 'Handler "{{ .Breach.ValueLabel }}" has token'
         value: '{{ .Breach.Value }}'
   wrong-cc-mail:
-    regex-match:
+    regex:match:
       description: Found token in webform handler 'cc:' email field
       input: cc-mail
       pattern: '\[(.*)\]'
       ignore: '[current-user]'
       breach-format: *x-breach-format
   wrong-bcc-mail:
-    regex-match:
+    regex:match:
       description: Found token in webform handler 'bcc:' email field
       input: bcc-mail
       pattern: '\[(.*)\]'

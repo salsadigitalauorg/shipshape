@@ -44,7 +44,7 @@ collect:
 
 analyse:
   disallowed-service-image:
-    allowed-list:
+    allowed:list:
       description: Disallowed image found in Docker Compose file.
       input: images
       # Extract the image name and tag.
@@ -82,7 +82,7 @@ analyse:
         - mariadb
         - chrome
   disallowed-base-image:
-    allowed-list:
+    allowed:list:
       description: Disallowed base image found in services' Dockerfiles.
       input: base-images
       allowed: *allowed-images

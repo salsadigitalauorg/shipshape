@@ -21,6 +21,6 @@ The following Collect/Fact plugins are available:
 ## Analyse plugins
 
 The following Analyse plugins are available:
-  - [allowed-list](../reference/analyse/allowed-list)
-  - [not-empty](../reference/analyse/not-empty)
-  - [regex-match](../reference/analyse/regex-match)
+  - [allowed:list](../reference/analyse/allowed-list)
+  - [not:empty](../reference/analyse/not-empty)
+  - [regex:match](../reference/analyse/regex-match)

@@ -23,7 +23,7 @@ collect:
 
 analyse:
   domain-found-in-tables:
-    not-empty:
+    not:empty:
       description: Domain found in table
       input: domain-in-tables
       # We want a result in the following format:

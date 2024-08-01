@@ -22,11 +22,11 @@ type NotEmpty struct {
 //go:generate go run ../../cmd/gen.go analyse-plugin --plugin=NotEmpty --package=analyse
 
 func init() {
-	Registry["not-empty"] = func(id string) Analyser { return NewNotEmpty(id) }
+	Registry["not:empty"] = func(id string) Analyser { return NewNotEmpty(id) }
 }
 
 func (p *NotEmpty) PluginName() string {
-	return "not-empty"
+	return "not:empty"
 }
 
 func (p *NotEmpty) Analyse() {
