@@ -3,7 +3,6 @@ package lagoon
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,9 +12,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
-	"github.com/hasura/go-graphql-client"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
 type Fact struct {
@@ -46,26 +43,11 @@ type Problem struct {
 const SourceName string = "Shipshape"
 const FactMaxValueLength int = 300
 
-var ApiBaseUrl string
-var ApiToken string
 var PushProblemsToInsightRemote bool
 var LagoonInsightsRemoteEndpoint string
 
 var project string
 var environment string
-
-var Client *graphql.Client
-
-func InitClient() {
-	if Client != nil {
-		return
-	}
-	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: ApiToken},
-	)
-	httpClient := oauth2.NewClient(context.Background(), src)
-	Client = graphql.NewClient(ApiBaseUrl+"/graphql", httpClient)
-}
 
 func MustHaveEnvVars() {
 	project = os.Getenv("LAGOON_PROJECT")
@@ -74,26 +56,6 @@ func MustHaveEnvVars() {
 		log.Fatal("project & environment name required; please ensure both " +
 			"LAGOON_PROJECT & LAGOON_ENVIRONMENT are set")
 	}
-}
-
-// GetEnvironmentIdFromEnvVars derives the environment id from shell variables
-// LAGOON_PROJECT & LAGOON_ENVIRONMENT.
-func GetEnvironmentIdFromEnvVars() (int, error) {
-	MustHaveEnvVars()
-
-	ns := project + "-" + environment
-	log.WithField("namespace", ns).Info("fetching environment id")
-	var q struct {
-		EnvironmentByKubernetesNamespaceName struct {
-			Id int
-		} `graphql:"environmentByKubernetesNamespaceName(kubernetesNamespaceName: $ns)"`
-	}
-	variables := map[string]interface{}{"ns": ns}
-	err := Client.Query(context.Background(), &q, variables)
-	if err != nil {
-		return 0, err
-	}
-	return q.EnvironmentByKubernetesNamespaceName.Id, nil
 }
 
 const DefaultLagoonInsightsTokenLocation = "/var/run/secrets/lagoon/dynamic/insights-token/INSIGHTS_TOKEN"
@@ -115,13 +77,15 @@ func GetBearerTokenFromDisk(tokenLocation string) (string, error) {
 func ProcessResultList(w *bufio.Writer, list result.ResultList) error {
 	problems := []Problem{}
 
+	// first, let's try doing this via in-cluster functionality
+	bearerToken, err := GetBearerTokenFromDisk(DefaultLagoonInsightsTokenLocation)
+
 	if list.TotalBreaches == 0 {
-		InitClient()
-		err := DeleteProblems()
+		err := DeleteProblems(LagoonInsightsRemoteEndpoint, bearerToken)
 		if err != nil {
 			return err
 		}
-		fmt.Fprint(w, "no breach to push to Lagoon; only deleted previous problems")
+		fmt.Fprintln(w, "no breach to push to Lagoon; only deleted previous problems")
 		w.Flush()
 		return nil
 	}
@@ -152,9 +116,6 @@ func ProcessResultList(w *bufio.Writer, list result.ResultList) error {
 		})
 	}
 
-	InitClient()
-	// first, let's try doing this via in-cluster functionality
-	bearerToken, err := GetBearerTokenFromDisk(DefaultLagoonInsightsTokenLocation)
 	if err == nil { // we have a token, and so we can proceed via the internal service call
 		err = ProblemsToInsightsRemote(problems, LagoonInsightsRemoteEndpoint, bearerToken)
 		if err != nil {
@@ -190,20 +151,29 @@ func ProblemsToInsightsRemote(problems []Problem, serviceEndpoint string, bearer
 	return nil
 }
 
-func DeleteProblems() error {
-	envId, err := GetEnvironmentIdFromEnvVars()
+func DeleteProblems(serviceEndpoint string, bearerToken string) error {
+
+	deleteEndpoint := fmt.Sprintf("%v/%v", serviceEndpoint, SourceName)
+
+	bodyString, err := json.Marshal("{}")
 	if err != nil {
 		return err
 	}
-	var m struct {
-		DeleteFactsFromSource string `graphql:"deleteProblemsFromSource(input: {environment: $envId, source: $sourceName, service:$service})"`
+
+	req, _ := http.NewRequest(http.MethodDelete, deleteEndpoint, bytes.NewBuffer(bodyString))
+	req.Header.Set("Authorization", bearerToken)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	response, err := client.Do(req)
+
+	if err != nil {
+		return err
 	}
-	variables := map[string]interface{}{
-		"envId":      envId,
-		"sourceName": SourceName,
-		"service":    "",
+
+	if response.StatusCode != 200 {
+		return fmt.Errorf("there was an error deleting the problems at '%s' : %s", deleteEndpoint, response.Body)
 	}
-	return Client.Mutate(context.Background(), &m, variables)
+	return nil
 }
 
 // SeverityTranslation will convert a ShipShape severity rating to a Lagoon rating
