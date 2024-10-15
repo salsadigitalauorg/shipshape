@@ -34,7 +34,7 @@ COPY --from=ghcr.io/salsadigitalauorg/shipshape:latest /usr/local/bin/shipshape 
 ```
 
 ## Documentation
-Check out our documentation at https://salsadigitalauorg.github.io/shipshape/. Keep in mind that this is still a work in progress, so please go easy.
+Check out our documentation at https://salsadigitalauorg.github.io/shipshape/.
 
 ## Local development
 

@@ -1,5 +1,6 @@
 # Generated files
 *_gen.go
+*_gen_test.go
 
 build
 dist/

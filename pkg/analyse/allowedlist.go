@@ -52,16 +52,6 @@ func (p *AllowedList) Analyse() {
 				continue
 			}
 
-			if !p.isAllowed(v) {
-				breach.EvaluateTemplate(p, &breach.KeyValueBreach{
-					KeyLabel:   "key",
-					Key:        k,
-					ValueLabel: "disallowed",
-					Value:      v,
-				})
-				continue
-			}
-
 			if p.isDeprecated(v) {
 				breach.EvaluateTemplate(p, &breach.KeyValueBreach{
 					KeyLabel:   "key",
@@ -71,22 +61,26 @@ func (p *AllowedList) Analyse() {
 				})
 				continue
 			}
+
+			if !p.isAllowed(v) {
+				breach.EvaluateTemplate(p, &breach.KeyValueBreach{
+					KeyLabel:   "key",
+					Key:        k,
+					ValueLabel: "disallowed",
+					Value:      v,
+				})
+				continue
+			}
 		}
 	case data.FormatMapListString:
 		inputData := data.AsMapListString(p.input.GetData())
 		for k, listV := range inputData {
-			if p.isExcludedKey(k) || p.isIgnored(k) {
+			if p.isExcludedKey(k) {
 				continue
 			}
 
 			for _, v := range listV {
-				if !p.isAllowed(v) {
-					breach.EvaluateTemplate(p, &breach.KeyValueBreach{
-						KeyLabel:   "key",
-						Key:        k,
-						ValueLabel: "disallowed",
-						Value:      v,
-					})
+				if p.isIgnored(v) {
 					continue
 				}
 
@@ -95,6 +89,16 @@ func (p *AllowedList) Analyse() {
 						KeyLabel:   "key",
 						Key:        k,
 						ValueLabel: "deprecated",
+						Value:      v,
+					})
+					continue
+				}
+
+				if !p.isAllowed(v) {
+					breach.EvaluateTemplate(p, &breach.KeyValueBreach{
+						KeyLabel:   "key",
+						Key:        k,
+						ValueLabel: "disallowed",
 						Value:      v,
 					})
 					continue
