@@ -70,36 +70,34 @@ func (p *Stdout) EnvironmentOverrides() {
 
 func (p *Stdout) Output(w io.Writer) error {
 	switch p.Format {
+	case "pretty":
+		p.Pretty(w)
+	case "table":
+		p.Table(w)
 	case "json":
 		data, err := json.Marshal(p.ResultList)
 		if err != nil {
 			return fmt.Errorf("unable to convert result to json: %+v", err)
 		}
-		fmt.Fprint(w, string(data)+"\n")
+		fmt.Fprintln(w, string(data))
 	case "junit":
-		w := bufio.NewWriter(os.Stdout)
 		p.JUnit(w)
-	case "table":
-		tw := tabwriter.NewWriter(w, 0, 0, 3, ' ', 0)
-		p.Table(tw)
-	case "pretty":
-		w := bufio.NewWriter(os.Stdout)
-		p.Pretty(w)
 	}
 	return nil
 }
 
 // TableDisplay generates the tabular output for the ResultList.
-func (p *Stdout) Table(w *tabwriter.Writer) {
+func (p *Stdout) Table(w io.Writer) {
+	tw := tabwriter.NewWriter(w, 0, 0, 3, ' ', 0)
 	var linePass, lineFail string
 
 	if len(p.ResultList.Results) == 0 {
-		fmt.Fprint(w, "No result available; ensure your shipshape.yml is configured correctly.\n")
-		w.Flush()
+		fmt.Fprint(tw, "No result available; ensure your shipshape.yml is configured correctly.\n")
+		tw.Flush()
 		return
 	}
 
-	fmt.Fprintf(w, "NAME\tSTATUS\tPASSES\tFAILS\n")
+	fmt.Fprintf(tw, "NAME\tSTATUS\tPASSES\tFAILS\n")
 	for _, r := range p.ResultList.Results {
 		linePass = ""
 		lineFail = ""
@@ -109,7 +107,7 @@ func (p *Stdout) Table(w *tabwriter.Writer) {
 		if len(r.Breaches) > 0 {
 			lineFail = r.Breaches[0].String()
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", r.Name, r.Status, linePass, lineFail)
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", r.Name, r.Status, linePass, lineFail)
 
 		if len(r.Passes) > 1 || len(r.Breaches) > 1 {
 			numPasses := len(r.Passes)
@@ -130,18 +128,19 @@ func (p *Stdout) Table(w *tabwriter.Writer) {
 				if numFailures > i {
 					lineFail = r.Breaches[i].String()
 				}
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", "", "", linePass, lineFail)
+				fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", "", "", linePass, lineFail)
 			}
 		}
 	}
-	w.Flush()
+	tw.Flush()
 }
 
 // Pretty outputs only failures to the writer.
-func (p *Stdout) Pretty(w *bufio.Writer) {
+func (p *Stdout) Pretty(w io.Writer) {
+	buf := bufio.NewWriter(w)
 	if len(p.ResultList.Results) == 0 {
-		fmt.Fprint(w, "No result available; ensure your shipshape.yml is configured correctly.\n")
-		w.Flush()
+		fmt.Fprint(buf, "No result available; ensure your shipshape.yml is configured correctly.\n")
+		buf.Flush()
 		return
 	}
 
@@ -151,70 +150,71 @@ func (p *Stdout) Pretty(w *bufio.Writer) {
 			if successful == 0 {
 				continue
 			}
-			fmt.Fprintf(w, "  ### %s\n", r.Name)
+			fmt.Fprintf(buf, "  ### %s\n", r.Name)
 			for _, b := range r.Breaches {
 				if b.GetRemediation().Status != breach.RemediationStatusSuccess {
 					continue
 				}
 				for _, msg := range b.GetRemediation().Messages {
-					fmt.Fprintf(w, "     -- %s\n", msg)
+					fmt.Fprintf(buf, "     -- %s\n", msg)
 				}
 			}
-			fmt.Fprintln(w)
+			fmt.Fprintln(buf)
 		}
 	}
 
 	if p.ResultList.RemediationPerformed && p.ResultList.TotalBreaches > 0 {
 		switch p.ResultList.RemediationStatus() {
 		case breach.RemediationStatusNoSupport:
-			fmt.Fprint(w, "Breaches were detected but none of them could be "+
+			fmt.Fprint(buf, "Breaches were detected but none of them could be "+
 				"fixed as remediation is not supported for them yet.\n\n")
-			fmt.Fprint(w, "# Non-remediated breaches\n\n")
+			fmt.Fprint(buf, "# Non-remediated breaches\n\n")
 		case breach.RemediationStatusFailed:
-			fmt.Fprint(w, "Breaches were detected but none of them could "+
+			fmt.Fprint(buf, "Breaches were detected but none of them could "+
 				"be fixed as there were errors when trying to remediate.\n\n")
-			fmt.Fprint(w, "# Non-remediated breaches\n\n")
+			fmt.Fprint(buf, "# Non-remediated breaches\n\n")
 		case breach.RemediationStatusPartial:
-			fmt.Fprint(w, "Breaches were detected but not all of them could "+
+			fmt.Fprint(buf, "Breaches were detected but not all of them could "+
 				"be fixed as they are either not supported yet or there were "+
 				"errors when trying to remediate.\n\n")
-			fmt.Fprint(w, "# Remediations\n\n")
+			fmt.Fprint(buf, "# Remediations\n\n")
 			printRemediations()
-			fmt.Fprint(w, "# Non-remediated breaches\n\n")
+			fmt.Fprint(buf, "# Non-remediated breaches\n\n")
 		case breach.RemediationStatusSuccess:
-			fmt.Fprintf(w, "Breaches were detected but were all fixed successfully!\n\n")
+			fmt.Fprintf(buf, "Breaches were detected but were all fixed successfully!\n\n")
 			printRemediations()
-			w.Flush()
+			buf.Flush()
 			return
 		}
 	} else if p.ResultList.Status() == result.Pass {
-		fmt.Fprint(w, "Ship is in top shape; no breach detected!\n")
-		w.Flush()
+		fmt.Fprint(buf, "Ship is in top shape; no breach detected!\n")
+		buf.Flush()
 		return
 	}
 
 	if !p.ResultList.RemediationPerformed {
-		fmt.Fprint(w, "# Breaches were detected\n\n")
+		fmt.Fprint(buf, "# Breaches were detected\n\n")
 	}
 
 	for _, r := range p.ResultList.Results {
 		if len(r.Breaches) == 0 || r.RemediationStatus == breach.RemediationStatusSuccess {
 			continue
 		}
-		fmt.Fprintf(w, "  ### %s\n", r.Name)
+		fmt.Fprintf(buf, "  ### %s\n", r.Name)
 		for _, b := range r.Breaches {
 			if b.GetRemediation().Status == breach.RemediationStatusSuccess {
 				continue
 			}
-			fmt.Fprintf(w, "     -- %s\n", b)
+			fmt.Fprintf(buf, "     -- %s\n", b)
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintln(buf)
 	}
-	w.Flush()
+	buf.Flush()
 }
 
 // JUnit outputs the checks results in the JUnit XML format.
-func (p *Stdout) JUnit(w *bufio.Writer) {
+func (p *Stdout) JUnit(w io.Writer) {
+	buf := bufio.NewWriter(w)
 	tss := JUnitTestSuites{
 		Tests:      p.ResultList.TotalChecks,
 		Errors:     p.ResultList.TotalBreaches,
@@ -224,9 +224,9 @@ func (p *Stdout) JUnit(w *bufio.Writer) {
 	// Create a JUnitTestSuite for each CheckType.
 	for pplugin, policies := range p.ResultList.Policies {
 		ts := JUnitTestSuite{
-			Name:      string(pplugin),
-			Tests:     p.ResultList.CheckCountByType[string(pplugin)],
-			Errors:    p.ResultList.BreachCountByType[string(pplugin)],
+			Name:      pplugin,
+			Tests:     p.ResultList.CheckCountByType[pplugin],
+			Errors:    p.ResultList.BreachCountByType[pplugin],
 			TestCases: []JUnitTestCase{},
 		}
 
@@ -248,12 +248,12 @@ func (p *Stdout) JUnit(w *bufio.Writer) {
 
 	xmlBytes, err := xml.MarshalIndent(tss, "", "    ")
 	if err != nil {
-		fmt.Fprintf(w, "error occurred while converting to XML: %s\n", err.Error())
-		w.Flush()
+		fmt.Fprintf(buf, "error occurred while converting to XML: %s\n", err.Error())
+		buf.Flush()
 		return
 	}
-	fmt.Fprint(w, xml.Header)
-	fmt.Fprint(w, string(xmlBytes))
-	fmt.Fprintln(w)
-	w.Flush()
+	fmt.Fprint(buf, xml.Header)
+	fmt.Fprint(buf, string(xmlBytes))
+	fmt.Fprintln(buf)
+	buf.Flush()
 }

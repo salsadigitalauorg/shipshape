@@ -135,7 +135,7 @@ func (p *Lagoon) Output(w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		fmt.Fprint(w, "no breach to push to Lagoon; only deleted previous problems")
+		fmt.Fprint(buf, "no breach to push to Lagoon; only deleted previous problems")
 		buf.Flush()
 		return nil
 	}
@@ -177,7 +177,7 @@ func (p *Lagoon) Output(w io.Writer) error {
 	} else {
 		return err
 	}
-	fmt.Fprintln(w, "successfully pushed problems to Lagoon Remote")
+	fmt.Fprintln(buf, "successfully pushed problems to Lagoon Remote")
 	buf.Flush()
 	return nil
 }
