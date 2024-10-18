@@ -1,16 +1,15 @@
 package cmd
 
 import (
-	"bufio"
 	"os"
 	"strconv"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
+	"github.com/salsadigitalauorg/shipshape/pkg/flagsprovider"
+	"github.com/salsadigitalauorg/shipshape/pkg/output"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
@@ -32,35 +31,7 @@ var runCmd = &cobra.Command{
 			}
 		}
 
-		outputFormatEnv := os.Getenv("SHIPSHAPE_OUTPUT_FORMAT")
-		if outputFormatEnv != "" {
-			shipshape.OutputFormat = outputFormatEnv
-		}
-
-		lagoonApiBaseUrlEnv := os.Getenv("LAGOON_API_BASE_URL")
-		if lagoonApiBaseUrlEnv != "" {
-			lagoon.ApiBaseUrl = lagoonApiBaseUrlEnv
-		}
-
-		lagoonApiTokenEnv := os.Getenv("LAGOON_API_TOKEN")
-		if lagoonApiTokenEnv != "" {
-			lagoon.ApiToken = lagoonApiTokenEnv
-		}
-
-		if !shipshape.ValidateOutputFormat() {
-			log.Fatalf("Invalid output format; needs to be one of: %s.",
-				strings.Join(shipshape.OutputFormats, "|"))
-		}
-
-		// simple check to ensure we have everything we need to write to the API if required.
-		if lagoon.PushProblemsToInsightRemote {
-			if lagoon.ApiBaseUrl == "" {
-				log.Fatal("lagoon api base url not provided")
-			}
-			if lagoon.ApiToken == "" {
-				log.Fatal("lagoon api token not provided")
-			}
-		}
+		flagsprovider.ApplyEnvironmentOverridesAll()
 	},
 
 	Run: func(cmd *cobra.Command, args []string) {
@@ -75,25 +46,20 @@ var runCmd = &cobra.Command{
 
 		if shipshape.IsV2 {
 			shipshape.RunV2()
+
+			// If we're only collecting facts, we don't need to output anything,
+			// but not exit either, since it is then assumed this command was called
+			// from collectCmd.
+			if shipshape.FactsOnly {
+				return
+			}
 		} else {
 			shipshape.Run()
 		}
 
-		// If we're only collecting facts, we don't need to output anything,
-		// but not exit either, since it is then assumed this command was called
-		// from collectCmd.
-		if shipshape.FactsOnly {
-			return
-		}
-
-		shipshape.Output()
-
-		if lagoon.PushProblemsToInsightRemote {
-			w := bufio.NewWriter(os.Stdout)
-			err := lagoon.ProcessResultList(w, shipshape.RunResultList)
-			if err != nil {
-				log.Fatal(err)
-			}
+		log.Print("outputting results")
+		if err := output.OutputAll(os.Stdout); err != nil {
+			log.Fatal(err)
 		}
 
 		if shipshape.RunResultList.Status() == result.Fail &&
@@ -118,25 +84,7 @@ should exit with an error`)
 		"error-code", "e", false, `Exit with error code if a failure is
 detected (env: SHIPSHAPE_ERROR_ON_FAILURE)`)
 
-	// Output.
-	runCmd.Flags().StringVarP(&shipshape.OutputFormat, "output",
-		"o", "simple", `Output format [json|junit|simple|table]
-(env: SHIPSHAPE_OUTPUT_FORMAT)`)
-
-	// Lagoon.
-	runCmd.Flags().StringVar(&lagoon.ApiBaseUrl, "lagoon-api-base-url",
-		"", `Base url for the Lagoon API when pushing
-problems to API (env: LAGOON_API_BASE_URL)`)
-	runCmd.Flags().StringVar(&lagoon.ApiToken, "lagoon-api-token", "",
-		`Lagoon API token when pushing problems
-to API (env: LAGOON_API_TOKEN)`)
-	runCmd.Flags().BoolVar(&lagoon.PushProblemsToInsightRemote,
-		"lagoon-push-problems-to-insights", false,
-		"Push audit facts to Lagoon via Insights Remote")
-	runCmd.Flags().StringVar(&lagoon.LagoonInsightsRemoteEndpoint,
-		"lagoon-insights-remote-endpoint",
-		"http://lagoon-remote-insights-remote.lagoon.svc/problems",
-		"Insights Remote Problems endpoint\n")
+	flagsprovider.AddFlagsAll(runCmd)
 
 	rootCmd.AddCommand(runCmd)
 }

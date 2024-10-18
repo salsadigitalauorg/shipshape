@@ -14,7 +14,12 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/output"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
+
+	// Importing lagoon package to use the lagoon output plugin.
+	// TODO: Add a generator for output plugins so we won't need this.
+	_ "github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 )
 
 // Flags & arg
@@ -47,6 +52,10 @@ func Init() error {
 	RunConfig = cfg
 
 	RunResultList = result.NewResultList(Remediate)
+	// Register output plugins.
+	for n, o := range output.Registry {
+		output.Outputters[n] = o(&RunResultList)
+	}
 
 	log.WithFields(log.Fields{
 		"ProjectDir":    config.ProjectDir,
@@ -135,6 +144,10 @@ func RunV2() {
 	log.Print("parsing analysers config")
 	analyse.ParseConfig(RunConfigV2.Analyse)
 
+	RunResultList = result.NewResultList(false)
+	log.Print("parsing output config")
+	output.ParseConfig(RunConfigV2.Output, &RunResultList)
+
 	log.Print("collecting facts")
 	fact.CollectAllFacts()
 	if len(fact.Errors) > 0 {
@@ -156,8 +169,6 @@ func RunV2() {
 	log.Print("analysing facts")
 	results := analyse.AnalyseAll()
 	log.WithField("results", fmt.Sprintf("%#v", results)).Debug("analysed facts")
-
-	RunResultList = result.NewResultList(false)
 	for _, r := range results {
 		r.DetermineResultStatus(false)
 		RunResultList.AddResult(r)
