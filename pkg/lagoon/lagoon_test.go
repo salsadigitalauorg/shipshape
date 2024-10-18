@@ -20,7 +20,7 @@ func TestInitClient(t *testing.T) {
 	assert := assert.New(t)
 
 	assert.Nil(lagoon.Client)
-	lagoon.InitClient()
+	lagoon.InitClient("", "")
 	assert.NotNil(lagoon.Client)
 }
 
@@ -49,12 +49,15 @@ func TestMustHaveEnvVars(t *testing.T) {
 			os.Unsetenv("LAGOON_ENVIRONMENT")
 		}()
 
-		lagoon.MustHaveEnvVars()
-		assert.False(fatal)
+		o := lagoon.Lagoon{Source: "Shipshape"}
+		o.EnvironmentOverrides()
+		o.MustHaveEnvVars()
+		assert.False(fatal, "Got this fatal: "+buf.String())
 	})
 
 	t.Run("varsUnset", func(t *testing.T) {
-		lagoon.MustHaveEnvVars()
+		o := lagoon.Lagoon{}
+		o.MustHaveEnvVars()
 		assert.True(fatal)
 		assert.Contains(buf.String(), "project & environment name required; please ensure both LAGOON_PROJECT & LAGOON_ENVIRONMENT are set")
 	})
@@ -66,20 +69,16 @@ func TestGetEnvironmentIdFromEnvVars(t *testing.T) {
 	svr := internal.MockLagoonServer()
 	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
 	origOutput := logrus.StandardLogger().Out
-	os.Setenv("LAGOON_PROJECT", "foo")
-	os.Setenv("LAGOON_ENVIRONMENT", "bar")
 	var buf bytes.Buffer
 	logrus.SetOutput(&buf)
 	defer func() {
 		svr.Close()
 		internal.MockLagoonReset()
 		lagoon.Client = nil
-		os.Unsetenv("LAGOON_PROJECT")
-		os.Unsetenv("LAGOON_ENVIRONMENT")
 		logrus.SetOutput(origOutput)
 	}()
 
-	_, err := lagoon.GetEnvironmentIdFromEnvVars()
+	_, err := lagoon.GetEnvironmentId("foo", "bar")
 	assert.NoError(err)
 	assert.Equal(1, internal.MockLagoonNumCalls)
 	assert.Equal("{\"query\":\"query ($ns:String!){"+
@@ -93,20 +92,17 @@ func TestDeleteProblems(t *testing.T) {
 	svr := internal.MockLagoonServer()
 	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
 	origOutput := logrus.StandardLogger().Out
-	os.Setenv("LAGOON_PROJECT", "foo")
-	os.Setenv("LAGOON_ENVIRONMENT", "bar")
 	var buf bytes.Buffer
 	logrus.SetOutput(&buf)
 	defer func() {
 		svr.Close()
 		internal.MockLagoonReset()
 		lagoon.Client = nil
-		os.Unsetenv("LAGOON_PROJECT")
-		os.Unsetenv("LAGOON_ENVIRONMENT")
 		logrus.SetOutput(origOutput)
 	}()
 
-	err := lagoon.DeleteProblems()
+	o := lagoon.Lagoon{Project: "foo", Environment: "bar", Source: "Shipshape"}
+	err := o.DeleteProblems()
 	assert.NoError(err)
 	assert.Equal(2, internal.MockLagoonNumCalls)
 	assert.Equal("{\"query\":\"query ($ns:String!){"+

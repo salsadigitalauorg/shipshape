@@ -1,4 +1,4 @@
-package shipshape
+package output
 
 import (
 	"encoding/xml"
