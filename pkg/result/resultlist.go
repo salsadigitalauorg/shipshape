@@ -11,14 +11,16 @@ import (
 // ResultList is a wrapper around a list of results, providing some useful
 // methods to manipulate and use it.
 type ResultList struct {
-	RemediationPerformed  bool              `json:"remediation-performed"`
-	TotalChecks           uint32            `json:"total-checks"`
-	TotalBreaches         uint32            `json:"total-breaches"`
-	RemediationTotals     map[string]uint32 `json:"remediation-totals"`
-	CheckCountByType      map[string]int    `json:"check-count-by-type"`
-	BreachCountByType     map[string]int    `json:"breach-count-by-type"`
-	BreachCountBySeverity map[string]int    `json:"breach-count-by-severity"`
-	Results               []Result          `json:"results"`
+	// Policies is a map of policy plugins to the policy names.
+	Policies              map[string][]string `json:"policies"`
+	RemediationPerformed  bool                `json:"remediation-performed"`
+	TotalChecks           uint32              `json:"total-checks"`
+	TotalBreaches         uint32              `json:"total-breaches"`
+	RemediationTotals     map[string]uint32   `json:"remediation-totals"`
+	CheckCountByType      map[string]int      `json:"check-count-by-type"`
+	BreachCountByType     map[string]int      `json:"breach-count-by-type"`
+	BreachCountBySeverity map[string]int      `json:"breach-count-by-severity"`
+	Results               []Result            `json:"results"`
 }
 
 // Use locks to make map mutations concurrency-safe.

@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	log "github.com/sirupsen/logrus"
-
 	"github.com/spf13/cobra"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/flagsprovider"
 )
 
 // Version information.
@@ -55,6 +56,11 @@ func Execute() {
 }
 
 func init() {
+	// Register all flags providers.
+	for pluginName, fp := range flagsprovider.Registry {
+		flagsprovider.FlagProviders[pluginName] = fp()
+	}
+
 	// Initial config.
 	rootCmd.PersistentFlags().StringSliceVarP(&config.Files, "file", "f",
 		[]string{"shipshape.yml"}, `Path to the file containing the checks.

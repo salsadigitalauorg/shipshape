@@ -1,28 +1,49 @@
-package shipshape
+package output
 
 import (
 	"bufio"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"strings"
 	"text/tabwriter"
 
+	"github.com/spf13/cobra"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/flagsprovider"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
-// Flag
-var OutputFormat string
+type Stdout struct {
+	// Common fields.
+	ResultList *result.ResultList `yaml:"-"`
 
-// Output
-var OutputFormats = []string{"json", "junit", "simple", "table"}
+	// Plugin-specific fields.
+	// Format is the output format. One of "pretty", "table", "json".
+	Format string `yaml:"format"`
+}
 
-func ValidateOutputFormat() bool {
+var OutputFormats = []string{"json", "pretty", "table"}
+var s = &Stdout{Format: "pretty"}
+
+func init() {
+	Registry["stdout"] = func(rl *result.ResultList) Outputter {
+		s.ResultList = rl
+		return s
+	}
+	flagsprovider.Registry["stdout"] = func() flagsprovider.FlagsProvider {
+		return s
+	}
+}
+
+func (p *Stdout) ValidateOutputFormat() bool {
 	valid := false
 	for _, fm := range OutputFormats {
-		if OutputFormat == fm {
+		if p.Format == fm {
 			valid = true
 			break
 		}
@@ -30,38 +51,56 @@ func ValidateOutputFormat() bool {
 	return valid
 }
 
-func Output() {
-	switch OutputFormat {
-	case "json":
-		data, err := json.Marshal(RunResultList)
-		if err != nil {
-			log.Fatalf("Unable to convert result to json: %+v\n", err)
-		}
-		fmt.Println(string(data))
-	case "junit":
-		w := bufio.NewWriter(os.Stdout)
-		JUnit(w)
-	case "table":
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		TableDisplay(w)
-	case "simple":
-		w := bufio.NewWriter(os.Stdout)
-		SimpleDisplay(w)
+func (p *Stdout) AddFlags(c *cobra.Command) {
+	c.Flags().StringVarP(&p.Format, "output-format",
+		"o", "pretty", `Output format [pretty|table|json|junit]
+(env: SHIPSHAPE_OUTPUT_FORMAT)`)
+}
+
+func (p *Stdout) EnvironmentOverrides() {
+	if outputFormatEnv := os.Getenv("SHIPSHAPE_OUTPUT_FORMAT"); outputFormatEnv != "" {
+		p.Format = outputFormatEnv
+	}
+
+	if !p.ValidateOutputFormat() {
+		log.Fatalf("Invalid output format; needs to be one of: %s.",
+			strings.Join(OutputFormats, "|"))
 	}
 }
 
+func (p *Stdout) Output(w io.Writer) error {
+	switch p.Format {
+	case "json":
+		data, err := json.Marshal(p.ResultList)
+		if err != nil {
+			return fmt.Errorf("unable to convert result to json: %+v", err)
+		}
+		fmt.Fprint(w, string(data)+"\n")
+	case "junit":
+		w := bufio.NewWriter(os.Stdout)
+		p.JUnit(w)
+	case "table":
+		tw := tabwriter.NewWriter(w, 0, 0, 3, ' ', 0)
+		p.Table(tw)
+	case "pretty":
+		w := bufio.NewWriter(os.Stdout)
+		p.Pretty(w)
+	}
+	return nil
+}
+
 // TableDisplay generates the tabular output for the ResultList.
-func TableDisplay(w *tabwriter.Writer) {
+func (p *Stdout) Table(w *tabwriter.Writer) {
 	var linePass, lineFail string
 
-	if len(RunResultList.Results) == 0 {
+	if len(p.ResultList.Results) == 0 {
 		fmt.Fprint(w, "No result available; ensure your shipshape.yml is configured correctly.\n")
 		w.Flush()
 		return
 	}
 
 	fmt.Fprintf(w, "NAME\tSTATUS\tPASSES\tFAILS\n")
-	for _, r := range RunResultList.Results {
+	for _, r := range p.ResultList.Results {
 		linePass = ""
 		lineFail = ""
 		if len(r.Passes) > 0 {
@@ -98,16 +137,16 @@ func TableDisplay(w *tabwriter.Writer) {
 	w.Flush()
 }
 
-// SimpleDisplay outputs only failures to the writer.
-func SimpleDisplay(w *bufio.Writer) {
-	if len(RunResultList.Results) == 0 {
+// Pretty outputs only failures to the writer.
+func (p *Stdout) Pretty(w *bufio.Writer) {
+	if len(p.ResultList.Results) == 0 {
 		fmt.Fprint(w, "No result available; ensure your shipshape.yml is configured correctly.\n")
 		w.Flush()
 		return
 	}
 
 	printRemediations := func() {
-		for _, r := range RunResultList.Results {
+		for _, r := range p.ResultList.Results {
 			_, successful, _, _ := r.RemediationsCount()
 			if successful == 0 {
 				continue
@@ -125,8 +164,8 @@ func SimpleDisplay(w *bufio.Writer) {
 		}
 	}
 
-	if RunResultList.RemediationPerformed && RunResultList.TotalBreaches > 0 {
-		switch RunResultList.RemediationStatus() {
+	if p.ResultList.RemediationPerformed && p.ResultList.TotalBreaches > 0 {
+		switch p.ResultList.RemediationStatus() {
 		case breach.RemediationStatusNoSupport:
 			fmt.Fprint(w, "Breaches were detected but none of them could be "+
 				"fixed as remediation is not supported for them yet.\n\n")
@@ -148,17 +187,17 @@ func SimpleDisplay(w *bufio.Writer) {
 			w.Flush()
 			return
 		}
-	} else if RunResultList.Status() == result.Pass {
+	} else if p.ResultList.Status() == result.Pass {
 		fmt.Fprint(w, "Ship is in top shape; no breach detected!\n")
 		w.Flush()
 		return
 	}
 
-	if !RunResultList.RemediationPerformed {
+	if !p.ResultList.RemediationPerformed {
 		fmt.Fprint(w, "# Breaches were detected\n\n")
 	}
 
-	for _, r := range RunResultList.Results {
+	for _, r := range p.ResultList.Results {
 		if len(r.Breaches) == 0 || r.RemediationStatus == breach.RemediationStatusSuccess {
 			continue
 		}
@@ -175,31 +214,31 @@ func SimpleDisplay(w *bufio.Writer) {
 }
 
 // JUnit outputs the checks results in the JUnit XML format.
-func JUnit(w *bufio.Writer) {
+func (p *Stdout) JUnit(w *bufio.Writer) {
 	tss := JUnitTestSuites{
-		Tests:      RunResultList.TotalChecks,
-		Errors:     RunResultList.TotalBreaches,
+		Tests:      p.ResultList.TotalChecks,
+		Errors:     p.ResultList.TotalBreaches,
 		TestSuites: []JUnitTestSuite{},
 	}
 
 	// Create a JUnitTestSuite for each CheckType.
-	for ct, checks := range RunConfig.Checks {
+	for pplugin, policies := range p.ResultList.Policies {
 		ts := JUnitTestSuite{
-			Name:      string(ct),
-			Tests:     RunResultList.CheckCountByType[string(ct)],
-			Errors:    RunResultList.BreachCountByType[string(ct)],
+			Name:      string(pplugin),
+			Tests:     p.ResultList.CheckCountByType[string(pplugin)],
+			Errors:    p.ResultList.BreachCountByType[string(pplugin)],
 			TestCases: []JUnitTestCase{},
 		}
 
 		// Create a JUnitTestCase for each Check.
-		for _, c := range checks {
+		for _, plc := range policies {
 			tc := JUnitTestCase{
-				Name:      c.GetName(),
-				ClassName: c.GetName(),
+				Name:      plc,
+				ClassName: plc,
 				Errors:    []JUnitError{},
 			}
 
-			for _, b := range RunResultList.GetBreachesByCheckName(c.GetName()) {
+			for _, b := range p.ResultList.GetBreachesByCheckName(plc) {
 				tc.Errors = append(tc.Errors, JUnitError{Message: b.String()})
 			}
 			ts.TestCases = append(ts.TestCases, tc)
