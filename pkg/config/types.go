@@ -13,7 +13,7 @@ type ConfigV2 struct {
 	Connections map[string]map[string]interface{} `yaml:"connections"`
 	Collect     map[string]map[string]interface{} `yaml:"collect"`
 	Analyse     map[string]map[string]interface{} `yaml:"analyse"`
-	Output      map[string]map[string]interface{} `yaml:"output"`
+	Output      map[string]interface{}            `yaml:"output"`
 }
 
 type Severity string
