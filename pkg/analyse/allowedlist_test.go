@@ -4,20 +4,20 @@ import (
 	"io"
 	"testing"
 
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+
 	. "github.com/salsadigitalauorg/shipshape/pkg/analyse"
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact/testdata"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestAllowedListInit(t *testing.T) {
-
 	assert := assert.New(t)
 
-	// Test that the yaml:key plugin is registered.
+	// Test that the plugin is registered.
 	plugin := Registry["allowed:list"]("testAllowedList")
 	assert.NotNil(plugin)
 	analyser, ok := plugin.(*AllowedList)
