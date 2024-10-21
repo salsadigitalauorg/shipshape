@@ -1,10 +1,8 @@
 package output_test
 
 import (
-	"bufio"
 	"bytes"
 	"testing"
-	"text/tabwriter"
 
 	"github.com/stretchr/testify/assert"
 
@@ -17,9 +15,8 @@ func TestTableDisplay(t *testing.T) {
 	assert := assert.New(t)
 
 	var buf bytes.Buffer
-	w := tabwriter.NewWriter(&buf, 0, 0, 3, ' ', 0)
 	s := &Stdout{Format: "table", ResultList: &result.ResultList{}}
-	s.Table(w)
+	s.Table(&buf)
 	assert.Equal(
 		"No result available; ensure your shipshape.yml is configured correctly.\n",
 		buf.String())
@@ -27,7 +24,7 @@ func TestTableDisplay(t *testing.T) {
 	buf = bytes.Buffer{}
 	s = &Stdout{Format: "table", ResultList: &result.ResultList{
 		Results: []result.Result{{Name: "a", Status: result.Pass}}}}
-	s.Table(w)
+	s.Table(&buf)
 	assert.Equal("NAME   STATUS   PASSES   FAILS\n"+
 		"a      Pass              \n", buf.String())
 
@@ -39,7 +36,7 @@ func TestTableDisplay(t *testing.T) {
 			{Name: "c", Status: result.Pass},
 		},
 	}}
-	s.Table(w)
+	s.Table(&buf)
 	assert.Equal("NAME   STATUS   PASSES   FAILS\n"+
 		"a      Pass              \n"+
 		"b      Pass              \n"+
@@ -78,7 +75,7 @@ func TestTableDisplay(t *testing.T) {
 			},
 		},
 	}}
-	s.Table(w)
+	s.Table(&buf)
 	assert.Equal("NAME   STATUS   PASSES    FAILS\n"+
 		"a      Pass     Pass a    \n"+
 		"                Pass ab   \n"+
@@ -100,8 +97,7 @@ func TestPrettyDisplay(t *testing.T) {
 
 		s := &Stdout{Format: "pretty", ResultList: &rl}
 		var buf bytes.Buffer
-		w := bufio.NewWriter(&buf)
-		s.Pretty(w)
+		s.Pretty(&buf)
 		assert.Equal("No result available; ensure your shipshape.yml is configured correctly.\n", buf.String())
 	})
 
@@ -112,9 +108,7 @@ func TestPrettyDisplay(t *testing.T) {
 
 		s := &Stdout{Format: "pretty", ResultList: &rl}
 		var buf bytes.Buffer
-		w := bufio.NewWriter(&buf)
-		buf = bytes.Buffer{}
-		s.Pretty(w)
+		s.Pretty(&buf)
 		assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
 	})
 
@@ -130,8 +124,7 @@ func TestPrettyDisplay(t *testing.T) {
 
 		s := &Stdout{Format: "pretty", ResultList: &rl}
 		var buf bytes.Buffer
-		w := bufio.NewWriter(&buf)
-		s.Pretty(w)
+		s.Pretty(&buf)
 		assert.Equal("# Breaches were detected\n\n  ### b\n     -- Fail b\n\n", buf.String())
 	})
 
@@ -142,8 +135,7 @@ func TestPrettyDisplay(t *testing.T) {
 
 		s := &Stdout{Format: "pretty", ResultList: &rl}
 		var buf bytes.Buffer
-		w := bufio.NewWriter(&buf)
-		s.Pretty(w)
+		s.Pretty(&buf)
 		assert.Equal("Ship is in top shape; no breach detected!\n", buf.String())
 	})
 
@@ -166,8 +158,7 @@ func TestPrettyDisplay(t *testing.T) {
 
 		s := &Stdout{Format: "pretty", ResultList: &rl}
 		var buf bytes.Buffer
-		w := bufio.NewWriter(&buf)
-		s.Pretty(w)
+		s.Pretty(&buf)
 		assert.Equal("Breaches were detected but were all fixed successfully!\n\n"+
 			"  ### a\n     -- fixed 1\n\n", buf.String())
 	})
@@ -199,8 +190,7 @@ func TestPrettyDisplay(t *testing.T) {
 
 		s := &Stdout{Format: "pretty", ResultList: &rl}
 		var buf bytes.Buffer
-		w := bufio.NewWriter(&buf)
-		s.Pretty(w)
+		s.Pretty(&buf)
 		assert.Equal("Breaches were detected but not all of them could be "+
 			"fixed as they are either not supported yet or there were errors "+
 			"when trying to remediate.\n\n"+
@@ -227,8 +217,7 @@ func TestPrettyDisplay(t *testing.T) {
 
 		s := &Stdout{Format: "pretty", ResultList: &rl}
 		var buf bytes.Buffer
-		w := bufio.NewWriter(&buf)
-		s.Pretty(w)
+		s.Pretty(&buf)
 		assert.Equal("Breaches were detected but none of them could be "+
 			"fixed as there were errors when trying to remediate.\n\n"+
 			"# Non-remediated breaches\n\n"+
@@ -242,8 +231,7 @@ func TestJUnit(t *testing.T) {
 	rl := result.NewResultList(false)
 	s := &Stdout{Format: "junit", ResultList: &rl}
 	var buf bytes.Buffer
-	w := bufio.NewWriter(&buf)
-	s.JUnit(w)
+	s.JUnit(&buf)
 	assert.Equal(`<?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="0" errors="0"></testsuites>
 `, buf.String())
@@ -252,7 +240,7 @@ func TestJUnit(t *testing.T) {
 	rl.Results = append(rl.Results, result.Result{
 		Name: "a", Status: result.Pass})
 	buf = bytes.Buffer{}
-	s.JUnit(w)
+	s.JUnit(&buf)
 	assert.Equal(`<?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="0" errors="0">
     <testsuite name="test-check" tests="0" errors="0">
@@ -270,7 +258,7 @@ func TestJUnit(t *testing.T) {
 		},
 	})
 	buf = bytes.Buffer{}
-	s.JUnit(w)
+	s.JUnit(&buf)
 	assert.Equal(`<?xml version="1.0" encoding="UTF-8"?>
 <testsuites tests="0" errors="0">
     <testsuite name="test-check" tests="0" errors="0">

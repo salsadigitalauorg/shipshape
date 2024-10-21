@@ -2,6 +2,7 @@ package output
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -68,22 +69,23 @@ func (p *Stdout) EnvironmentOverrides() {
 	}
 }
 
-func (p *Stdout) Output(w io.Writer) error {
+func (p *Stdout) Output() ([]byte, error) {
+	var buf bytes.Buffer
 	switch p.Format {
 	case "pretty":
-		p.Pretty(w)
+		p.Pretty(&buf)
 	case "table":
-		p.Table(w)
+		p.Table(&buf)
 	case "json":
 		data, err := json.Marshal(p.ResultList)
 		if err != nil {
-			return fmt.Errorf("unable to convert result to json: %+v", err)
+			return nil, fmt.Errorf("unable to convert result to json: %+v", err)
 		}
-		fmt.Fprintln(w, string(data))
+		fmt.Fprintln(&buf, string(data))
 	case "junit":
-		p.JUnit(w)
+		p.JUnit(&buf)
 	}
-	return nil
+	return buf.Bytes(), nil
 }
 
 // TableDisplay generates the tabular output for the ResultList.
