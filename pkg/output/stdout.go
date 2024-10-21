@@ -23,7 +23,7 @@ var OutputFormats = []string{"json", "pretty", "table"}
 var s = &Stdout{Format: "pretty"}
 
 func init() {
-	Registry["stdout"] = func() Outputter { return s }
+	Outputters["stdout"] = s
 }
 
 func (p *Stdout) Output(rl *result.ResultList) ([]byte, error) {
