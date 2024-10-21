@@ -4,15 +4,13 @@ import (
 	"io"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
 type Outputter interface {
-	AddFlags(*cobra.Command)
-	Output(io.Writer) error
+	Output() ([]byte, error)
 }
 
 var Registry = map[string]func(*result.ResultList) Outputter{}
@@ -50,7 +48,12 @@ func ParseConfig(raw map[string]interface{}, rl *result.ResultList) {
 
 func OutputAll(w io.Writer) error {
 	for _, p := range Outputters {
-		if err := p.Output(w); err != nil {
+		buf, err := p.Output()
+		if err != nil {
+			return err
+		}
+
+		if _, err := w.Write(buf); err != nil {
 			return err
 		}
 	}

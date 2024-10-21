@@ -2,10 +2,10 @@ package lagoon
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -121,23 +121,24 @@ func (p *Lagoon) MustHaveEnvVars() {
 	}
 }
 
-func (p *Lagoon) Output(w io.Writer) error {
+func (p *Lagoon) Output() ([]byte, error) {
 	if !p.PushProblemsToInsightsRemote {
-		return nil
+		return nil, nil
 	}
 
-	buf := bufio.NewWriter(w)
+	buf := bytes.Buffer{}
+	bufW := bufio.NewWriter(&buf)
 	problems := []Problem{}
 
 	if p.ResultList.TotalBreaches == 0 {
 		InitClient(p.ApiBaseUrl, p.ApiToken)
 		err := p.DeleteProblems()
 		if err != nil {
-			return err
+			return nil, err
 		}
-		fmt.Fprint(buf, "no breach to push to Lagoon; only deleted previous problems")
-		buf.Flush()
-		return nil
+		fmt.Fprint(bufW, "no breach to push to Lagoon; only deleted previous problems")
+		bufW.Flush()
+		return buf.Bytes(), nil
 	}
 
 	for _, r := range p.ResultList.Results {
@@ -172,14 +173,14 @@ func (p *Lagoon) Output(w io.Writer) error {
 	if err == nil { // we have a token, and so we can proceed via the internal service call
 		err = ProblemsToInsightsRemote(problems, p.InsightsRemoteEndpoint, bearerToken)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	} else {
-		return err
+		return nil, err
 	}
-	fmt.Fprintln(buf, "successfully pushed problems to Lagoon Remote")
-	buf.Flush()
-	return nil
+	fmt.Fprintln(bufW, "successfully pushed problems to Lagoon Remote")
+	bufW.Flush()
+	return buf.Bytes(), nil
 }
 
 func (p *Lagoon) DeleteProblems() error {
