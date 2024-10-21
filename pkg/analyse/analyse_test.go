@@ -53,12 +53,13 @@ func TestParseConfig(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Len(Analysers, 0)
+			registryBackup := Registry
 			if tc.registry != nil {
 				Registry = tc.registry
 			}
 			ParseConfig(tc.config)
 			defer func() {
-				Registry = map[string]func(string) Analyser{}
+				Registry = registryBackup
 				Analysers = map[string]Analyser{}
 			}()
 			assert.Len(Analysers, tc.expectAnalyserCount)
