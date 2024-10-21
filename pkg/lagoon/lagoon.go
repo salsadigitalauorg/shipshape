@@ -94,6 +94,9 @@ func ProblemsToInsightsRemote(problems []Problem, serviceEndpoint string, bearer
 		return err
 	}
 
+	log.WithField("body", string(bodyString)).
+		Trace("sending problems to Lagoon Insights")
+
 	req, _ := http.NewRequest(http.MethodPost, serviceEndpoint, bytes.NewBuffer(bodyString))
 	req.Header.Set("Authorization", bearerToken)
 	req.Header.Set("Content-Type", "application/json")
