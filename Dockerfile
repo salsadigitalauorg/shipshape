@@ -7,14 +7,15 @@ ADD . $GOPATH/src/github.com/salsadigitalauorg/shipshape/
 
 WORKDIR $GOPATH/src/github.com/salsadigitalauorg/shipshape
 
-ENV CGO_ENABLED 0
+ENV CGO_ENABLED=0
 
 ARG TARGETOS TARGETARCH
 
-RUN GOOS=${TARGETOS} GOARCH=${TARGETARCH} && \
-    go mod tidy && \
+RUN go mod tidy && \
     go generate ./... && \
-    go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${COMMIT}" -o build/shipshape
+    GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build \
+      -ldflags="-s -w -X main.version=${VERSION} \
+        -X main.commit=${COMMIT}" -o build/shipshape
 
 FROM scratch
 
