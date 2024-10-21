@@ -58,7 +58,7 @@ var runCmd = &cobra.Command{
 		}
 
 		log.Print("outputting results")
-		if err := output.OutputAll(os.Stdout); err != nil {
+		if err := output.OutputAll(&shipshape.RunResultList, os.Stdout); err != nil {
 			log.Fatal(err)
 		}
 

@@ -54,7 +54,7 @@ func Init() error {
 	RunResultList = result.NewResultList(Remediate)
 	// Register output plugins.
 	for n, o := range output.Registry {
-		output.Outputters[n] = o(&RunResultList)
+		output.Outputters[n] = o()
 	}
 
 	log.WithFields(log.Fields{
