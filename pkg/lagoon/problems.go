@@ -78,7 +78,7 @@ func (p *Lagoon) Output(rl *result.ResultList) ([]byte, error) {
 			Identifier:        r.Name,
 			Version:           "1",
 			FixedVersion:      "",
-			Source:            "shipshape",
+			Source:            p.Source,
 			Service:           "",
 			Data:              string(breachMapJson),
 			Severity:          SeverityTranslation(config.Severity(r.Severity)),
