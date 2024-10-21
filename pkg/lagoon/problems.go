@@ -30,14 +30,14 @@ type Lagoon struct {
 	InsightsRemoteEndpoint       string `yaml:"insights-remote-endpoint"`
 
 	// Source can be specified when pushing Problems to Lagoon.
-	// Default is "shipshape".
+	// Default is "Shipshape".
 	Source string `yaml:"source"`
 
 	Project     string `yaml:"project"`
 	Environment string `yaml:"environment"`
 }
 
-var l = &Lagoon{Source: "shipshape"}
+var l = &Lagoon{Source: "Shipshape"}
 
 func init() {
 	output.Outputters["lagoon"] = l
@@ -45,14 +45,27 @@ func init() {
 
 func (p *Lagoon) Output(rl *result.ResultList) ([]byte, error) {
 	if !p.PushProblemsToInsightsRemote {
+		log.Debug("skipping pushing problems to Lagoon")
 		return nil, nil
 	}
 
+	log.WithFields(log.Fields{
+		"insights-remote-endpoint": p.InsightsRemoteEndpoint,
+		"project":                  p.Project,
+		"environment":              p.Environment,
+		"source":                   p.Source,
+	}).Debug("pushing problems to Lagoon")
 	buf := bytes.Buffer{}
 	bufW := bufio.NewWriter(&buf)
 	problems := []Problem{}
 
 	if rl.TotalBreaches == 0 {
+		log.WithFields(log.Fields{
+			"project":     p.Project,
+			"environment": p.Environment,
+			"source":      p.Source,
+		}).Debug("cleaning up existing problems")
+
 		InitClient(p.ApiBaseUrl, p.ApiToken)
 		err := p.DeleteProblems()
 		if err != nil {
@@ -106,6 +119,12 @@ func (p *Lagoon) Output(rl *result.ResultList) ([]byte, error) {
 }
 
 func (p *Lagoon) DeleteProblems() error {
+	log.WithFields(log.Fields{
+		"project":     p.Project,
+		"environment": p.Environment,
+		"source":      p.Source,
+	}).Debug("deleting problems from Lagoon")
+
 	envId, err := GetEnvironmentId(p.Project, p.Environment)
 	if err != nil {
 		return err
