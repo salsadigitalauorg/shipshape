@@ -52,10 +52,6 @@ func Init() error {
 	RunConfig = cfg
 
 	RunResultList = result.NewResultList(Remediate)
-	// Register output plugins.
-	for n, o := range output.Registry {
-		output.Outputters[n] = o()
-	}
 
 	log.WithFields(log.Fields{
 		"ProjectDir":    config.ProjectDir,

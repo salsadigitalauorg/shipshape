@@ -40,7 +40,7 @@ type Lagoon struct {
 var l = &Lagoon{Source: "shipshape"}
 
 func init() {
-	output.Registry["lagoon"] = func() output.Outputter { return l }
+	output.Outputters["lagoon"] = l
 }
 
 func (p *Lagoon) Output(rl *result.ResultList) ([]byte, error) {

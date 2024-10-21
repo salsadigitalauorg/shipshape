@@ -13,12 +13,11 @@ type Outputter interface {
 	Output(*result.ResultList) ([]byte, error)
 }
 
-var Registry = map[string]func() Outputter{}
 var Outputters = map[string]Outputter{}
 
 func registryKeys() []string {
 	keys := []string{}
-	for k := range Registry {
+	for k := range Outputters {
 		keys = append(keys, k)
 	}
 	return keys
@@ -28,7 +27,7 @@ func ParseConfig(raw map[string]interface{}, rl *result.ResultList) {
 	count := 0
 	log.WithField("registry", registryKeys()).Debug("outputters")
 	for pluginName, pluginMap := range raw {
-		o, ok := Registry[pluginName]
+		o, ok := Outputters[pluginName]
 		if !ok {
 			continue
 		}
@@ -36,11 +35,9 @@ func ParseConfig(raw map[string]interface{}, rl *result.ResultList) {
 		// Convert the map to yaml, then parse it into the plugin.
 		// Not catching any errors here since the yaml content is known.
 		pluginYaml, _ := yaml.Marshal(pluginMap)
-		p := o()
-		yaml.Unmarshal(pluginYaml, p)
+		yaml.Unmarshal(pluginYaml, o)
 
 		log.WithFields(log.Fields{"plugin": pluginName}).Debug("parsed outputter")
-		Outputters[pluginName] = p
 		count++
 	}
 	log.Infof("parsed %d outputters", count)
