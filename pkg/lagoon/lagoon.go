@@ -51,7 +51,7 @@ func InitClient(apiBaseUrl, apiToken string) {
 		&oauth2.Token{AccessToken: apiToken},
 	)
 	httpClient := oauth2.NewClient(context.Background(), src)
-	Client = graphql.NewClient(apiToken+"/graphql", httpClient)
+	Client = graphql.NewClient(apiBaseUrl+"/graphql", httpClient)
 }
 
 // GetEnvironmentId derives the environment id from a Lagoon project
