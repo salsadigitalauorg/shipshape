@@ -11,18 +11,9 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 
-	"github.com/hasura/go-graphql-client"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestInitClient(t *testing.T) {
-	assert := assert.New(t)
-
-	assert.Nil(lagoon.Client)
-	lagoon.InitClient()
-	assert.NotNil(lagoon.Client)
-}
 
 func TestMustHaveEnvVars(t *testing.T) {
 	assert := assert.New(t)
@@ -60,64 +51,6 @@ func TestMustHaveEnvVars(t *testing.T) {
 	})
 }
 
-func TestGetEnvironmentIdFromEnvVars(t *testing.T) {
-	assert := assert.New(t)
-
-	svr := internal.MockLagoonServer()
-	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
-	origOutput := logrus.StandardLogger().Out
-	os.Setenv("LAGOON_PROJECT", "foo")
-	os.Setenv("LAGOON_ENVIRONMENT", "bar")
-	var buf bytes.Buffer
-	logrus.SetOutput(&buf)
-	defer func() {
-		svr.Close()
-		internal.MockLagoonReset()
-		lagoon.Client = nil
-		os.Unsetenv("LAGOON_PROJECT")
-		os.Unsetenv("LAGOON_ENVIRONMENT")
-		logrus.SetOutput(origOutput)
-	}()
-
-	_, err := lagoon.GetEnvironmentIdFromEnvVars()
-	assert.NoError(err)
-	assert.Equal(1, internal.MockLagoonNumCalls)
-	assert.Equal("{\"query\":\"query ($ns:String!){"+
-		"environmentByKubernetesNamespaceName(kubernetesNamespaceName: $ns)"+
-		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
-}
-
-func TestDeleteProblems(t *testing.T) {
-	assert := assert.New(t)
-
-	svr := internal.MockLagoonServer()
-	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
-	origOutput := logrus.StandardLogger().Out
-	os.Setenv("LAGOON_PROJECT", "foo")
-	os.Setenv("LAGOON_ENVIRONMENT", "bar")
-	var buf bytes.Buffer
-	logrus.SetOutput(&buf)
-	defer func() {
-		svr.Close()
-		internal.MockLagoonReset()
-		lagoon.Client = nil
-		os.Unsetenv("LAGOON_PROJECT")
-		os.Unsetenv("LAGOON_ENVIRONMENT")
-		logrus.SetOutput(origOutput)
-	}()
-
-	err := lagoon.DeleteProblems()
-	assert.NoError(err)
-	assert.Equal(2, internal.MockLagoonNumCalls)
-	assert.Equal("{\"query\":\"query ($ns:String!){"+
-		"environmentByKubernetesNamespaceName(kubernetesNamespaceName: $ns)"+
-		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
-	assert.Equal("{\"query\":\"mutation ($envId:Int!$service:String!$sourceName:String!)"+
-		"{deleteProblemsFromSource(input: {environment: $envId, source: "+
-		"$sourceName, service:$service})}\",\"variables\":{\"envId\":50,\"service\":\"\",\"sourceName\":"+
-		"\"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
-}
-
 func Test_GetBearerTokenFromDisk(t *testing.T) {
 	type args struct {
 		tokenLocation string
@@ -144,6 +77,41 @@ func Test_GetBearerTokenFromDisk(t *testing.T) {
 				return
 			}
 			assert.Equalf(t, tt.want, got, "getBearerTokenFromDisk(%v)", tt.args.tokenLocation)
+		})
+	}
+}
+
+func Test_DeleteProblemsInsightsRemote(t *testing.T) {
+	type args struct {
+		bearerToken string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantErr       assert.ErrorAssertionFunc
+		testBodyEqual bool
+	}{
+		{
+			name: "Successful post",
+			args: args{
+				bearerToken: "bearertoken",
+			},
+			wantErr:       assert.NoError,
+			testBodyEqual: true,
+		},
+	}
+	for _, tt := range tests {
+
+		mockServerData := internal.MockInsightsRemoteTestState{}
+
+		serv := internal.MockRemoteInsightsServer(&mockServerData)
+
+		t.Run(tt.name, func(t *testing.T) {
+			tt.wantErr(t, lagoon.DeleteProblems(serv.URL, tt.args.bearerToken), fmt.Sprintf("DeleteProblems(%v)", tt.args.bearerToken))
+			if tt.testBodyEqual == true { //let's check the data we sent through seems correct
+				assert.Equal(t, http.MethodDelete, mockServerData.LastCallMethod)
+				assert.Contains(t, mockServerData.LastCallEndpoint, lagoon.SourceName)
+			}
 		})
 	}
 }

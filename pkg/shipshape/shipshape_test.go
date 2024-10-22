@@ -20,7 +20,7 @@ func TestInit(t *testing.T) {
 
 	t.Run("defaultValues", func(t *testing.T) {
 		currDir, _ := os.Getwd()
-		err := Init("", []string{}, []string{}, false, false, "", "", "")
+		err := Init("", []string{}, []string{}, false, false, "")
 		assert.NoError(err)
 		assert.Equal(currDir, config.ProjectDir)
 		assert.Equal(config.Config{
@@ -32,7 +32,7 @@ func TestInit(t *testing.T) {
 	})
 
 	t.Run("projectDirIsSet", func(t *testing.T) {
-		err := Init("foo", []string{}, []string{}, false, false, "warn", "", "")
+		err := Init("foo", []string{}, []string{}, false, false, "warn")
 		assert.NoError(err)
 		assert.Equal("foo", config.ProjectDir)
 	})
