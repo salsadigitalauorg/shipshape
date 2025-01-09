@@ -15,11 +15,11 @@ import (
 
 type Stdout struct {
 	// Plugin-specific fields.
-	// Format is the output format. One of "pretty", "table", "json".
+	// Format is the output format. One of "pretty", "table", "json", "junit".
 	Format string `yaml:"format"`
 }
 
-var OutputFormats = []string{"json", "pretty", "table"}
+var OutputFormats = []string{"json", "pretty", "table", "junit"}
 var s = &Stdout{Format: "pretty"}
 
 func init() {

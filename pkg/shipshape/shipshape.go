@@ -52,6 +52,13 @@ func Init() error {
 	RunConfig = cfg
 
 	RunResultList = result.NewResultList(Remediate)
+	RunResultList.Policies = map[string][]string{}
+	for ct, checks := range RunConfig.Checks {
+		RunResultList.Policies[string(ct)] = []string{}
+		for _, c := range checks {
+			RunResultList.Policies[string(ct)] = append(RunResultList.Policies[string(ct)], c.GetName())
+		}
+	}
 
 	log.WithFields(log.Fields{
 		"ProjectDir":    config.ProjectDir,
