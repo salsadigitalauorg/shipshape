@@ -26,31 +26,35 @@ output them in the format specified`,
 				continue
 			}
 
-			fmt.Printf("%s:\n", f.GetName())
+			fmt.Printf("%s:", f.GetName())
 			switch f.GetFormat() {
 			case data.FormatMapListString:
 				loadedData := data.AsMapListString(f.GetData())
 				for k, vList := range loadedData {
-					fmt.Printf("  %s:\n", k)
+					fmt.Printf("\n  %s:\n", k)
 					for _, v := range vList {
 						fmt.Printf("    - %s\n", v)
 					}
 				}
 			case data.FormatMapString:
 				loadedData := data.AsMapString(f.GetData())
+				fmt.Println()
 				for k, v := range loadedData {
 					fmt.Printf("  %s: %s\n", k, v)
 				}
 			case data.FormatMapNestedString:
 				loadedData := data.AsMapNestedString(f.GetData())
+				fmt.Println()
 				for k, vMap := range loadedData {
 					fmt.Printf("  %s:\n", k)
 					for k2, v := range vMap {
 						fmt.Printf("    %s: %s\n", k2, v)
 					}
 				}
+			case data.FormatString:
+				fmt.Printf(" %s\n", f.GetData())
 			default:
-				fmt.Println("collect not yet implemented for", f.GetFormat())
+				fmt.Println(" collect not yet implemented for", f.GetFormat())
 			}
 		}
 	},

@@ -1,0 +1,8 @@
+module:
+  block: 0
+  lagoon_logs: 0
+  mysql: 0
+  node: 0
+theme:
+  claro: 0
+profile: standard

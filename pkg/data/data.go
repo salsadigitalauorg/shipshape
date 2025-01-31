@@ -3,6 +3,8 @@ package data
 type DataFormat string
 
 const (
+	// FormatNil is used to represent nil.
+	FormatNil DataFormat = "nil"
 	// FormatRaw is used to represent []byte.
 	FormatRaw DataFormat = "raw"
 	// FormatString is used to represent string.
@@ -59,6 +61,10 @@ func AsMapBytes(data interface{}) map[string][]byte {
 func AsMapString(data interface{}) map[string]string {
 	if data == nil {
 		return nil
+	}
+
+	if parsedData, ok := data.(map[string]string); ok {
+		return parsedData
 	}
 
 	ifcMap := data.(map[string]interface{})

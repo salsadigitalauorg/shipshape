@@ -64,6 +64,22 @@ func TestKeyCollect(t *testing.T) {
 
 		// Raw data format (data.FormatRaw) cases.
 		{
+			Name:   "inputFormat/Raw/NotFound",
+			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
+			TestInput: internal.FactInputTest{
+				DataFormat: data.FormatRaw, Data: []byte("bar: baz")},
+			ExpectedErrors: []error{errors.New("yaml path not found")},
+		},
+		{
+			Name: "inputFormat/Raw/NotFound/Ignored",
+			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo",
+				IgnoreNotFound: true},
+			TestInput: internal.FactInputTest{
+				DataFormat: data.FormatRaw, Data: []byte("bar: baz")},
+			ExpectedFormat: data.FormatNil,
+			ExpectedData:   nil,
+		},
+		{
 			Name:   "inputFormat/Raw",
 			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
 			TestInput: internal.FactInputTest{
@@ -96,6 +112,26 @@ func TestKeyCollect(t *testing.T) {
 		},
 
 		// Map of Raw data (data.FormatMapBytes) format cases.
+		{
+			Name:   "inputFormat/MapBytes/NotFound",
+			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
+			TestInput: internal.FactInputTest{
+				DataFormat: data.FormatMapBytes,
+				Data:       map[string][]byte{"file1": []byte("bar: baz")},
+			},
+			ExpectedErrors: []error{errors.New("yaml path not found")},
+		},
+		{
+			Name: "inputFormat/MapBytes/NotFound/Ignored",
+			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo",
+				IgnoreNotFound: true},
+			TestInput: internal.FactInputTest{
+				DataFormat: data.FormatMapBytes,
+				Data:       map[string][]byte{"file1": []byte("bar: baz")},
+			},
+			ExpectedFormat: data.FormatNil,
+			ExpectedData:   nil,
+		},
 		{
 			Name:   "inputFormat/MapBytes/scalar",
 			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
