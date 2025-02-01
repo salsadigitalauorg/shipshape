@@ -41,7 +41,18 @@ func AsListString(data interface{}) []string {
 	if data == nil {
 		return nil
 	}
-	return data.([]string)
+
+	if parsedData, ok := data.([]string); ok {
+		return parsedData
+	}
+
+	ifcList := data.([]interface{})
+	strList := []string{}
+	for _, v := range ifcList {
+		strList = append(strList, v.(string))
+	}
+
+	return strList
 }
 
 func AsListMapString(data interface{}) []map[string]string {

@@ -1,0 +1,18 @@
+collect:
+  extension-file:
+    file:read:
+      path: core.extension.yml
+
+  modules:
+    yaml:key:
+      input: extension-file
+      path: module
+      keys-only: true
+
+analyse:
+  lagoon-logs-check:
+    allowed:list:
+      description: Lagoon logs module is enabled
+      input: modules
+      required:
+        - lagoon_logs

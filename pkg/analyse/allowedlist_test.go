@@ -35,11 +35,89 @@ func TestAllowedListAnalyse(t *testing.T) {
 		name             string
 		input            fact.Facter
 		allowed          []string
+		required         []string
 		deprecated       []string
 		excludeKeys      []string
 		ignore           []string
 		expectedBreaches []breach.Breach
 	}{
+		// List of strings.
+		{
+			name: "listString/NoBreaches",
+			input: &testdata.TestFacter{
+				Name:                "testFacter",
+				TestInputDataFormat: data.FormatListString,
+				TestInputData:       []interface{}{"value1", "value2"},
+			},
+			allowed:          []string{"value1", "value2"},
+			expectedBreaches: []breach.Breach{},
+		},
+		{
+			name: "listString/Ignored",
+			input: &testdata.TestFacter{
+				Name:                "testFacter",
+				TestInputDataFormat: data.FormatListString,
+				TestInputData:       []interface{}{"value1", "value2", "value3"},
+			},
+			allowed:          []string{"value1", "value2"},
+			ignore:           []string{"value3"},
+			expectedBreaches: []breach.Breach{},
+		},
+		{
+			name: "listString/NotAllowed",
+			input: &testdata.TestFacter{
+				Name:                "testFacter",
+				TestInputDataFormat: data.FormatListString,
+				TestInputData:       []interface{}{"value1", "value2", "value3"},
+			},
+			allowed: []string{"value1", "value2"},
+			expectedBreaches: []breach.Breach{
+				&breach.ValueBreach{
+					BreachType: "value",
+					CheckName:  "testAllowedList",
+					ValueLabel: "disallowed value found",
+					Value:      "value3",
+				},
+			},
+		},
+		{
+			name: "listString/Deprecated",
+			input: &testdata.TestFacter{
+				Name:                "testFacter",
+				TestInputDataFormat: data.FormatListString,
+				TestInputData:       []interface{}{"value1", "value2", "value3"},
+			},
+			allowed:    []string{"value1", "value2"},
+			deprecated: []string{"value3"},
+			expectedBreaches: []breach.Breach{
+				&breach.ValueBreach{
+					BreachType: "value",
+					CheckName:  "testAllowedList",
+					ValueLabel: "deprecated value found",
+					Value:      "value3",
+				},
+			},
+		},
+		{
+			name: "listString/Required",
+			input: &testdata.TestFacter{
+				Name:                "testFacter",
+				TestInputDataFormat: data.FormatListString,
+				TestInputData:       []interface{}{"value1", "value2"},
+			},
+			allowed:  []string{"value1", "value2"},
+			required: []string{"value3"},
+			expectedBreaches: []breach.Breach{
+				&breach.ValueBreach{
+					BreachType: "value",
+					CheckName:  "testAllowedList",
+					ValueLabel: "required value not found",
+					Value:      "value3",
+				},
+			},
+		},
+
+		// String map.
 		{
 			name: "mapStringNoBreaches",
 			input: &testdata.TestFacter{
@@ -114,6 +192,33 @@ func TestAllowedListAnalyse(t *testing.T) {
 					Key:        "key3",
 					ValueLabel: "deprecated",
 					Value:      "value3",
+				},
+			},
+		},
+		{
+			name: "mapString/Required",
+			input: &testdata.TestFacter{
+				Name:                "testFacter",
+				TestInputDataFormat: data.FormatMapString,
+				TestInputData: map[string]interface{}{
+					"key1": "value1",
+					"key2": "value2",
+					"key3": "value3",
+				},
+			},
+			required: []string{"value4", "value5"},
+			expectedBreaches: []breach.Breach{
+				&breach.ValueBreach{
+					BreachType: "value",
+					CheckName:  "testAllowedList",
+					ValueLabel: "required value not found",
+					Value:      "value4",
+				},
+				&breach.ValueBreach{
+					BreachType: "value",
+					CheckName:  "testAllowedList",
+					ValueLabel: "required value not found",
+					Value:      "value5",
 				},
 			},
 		},
@@ -226,6 +331,41 @@ func TestAllowedListAnalyse(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "mapListString/Required",
+			input: &testdata.TestFacter{
+				Name:                "testFacter",
+				TestInputDataFormat: data.FormatMapListString,
+				TestInputData: map[string][]string{
+					"key1": {"value1", "value3", "value5"},
+					"key2": {"value2", "value4"},
+				},
+			},
+			required: []string{"value5", "value6"},
+			expectedBreaches: []breach.Breach{
+				&breach.KeyValueBreach{
+					BreachType: "key-value",
+					CheckName:  "testAllowedList",
+					Key:        "key1",
+					ValueLabel: "required value not found",
+					Value:      "value6",
+				},
+				&breach.KeyValueBreach{
+					BreachType: "key-value",
+					CheckName:  "testAllowedList",
+					Key:        "key2",
+					ValueLabel: "required value not found",
+					Value:      "value5",
+				},
+				&breach.KeyValueBreach{
+					BreachType: "key-value",
+					CheckName:  "testAllowedList",
+					Key:        "key2",
+					ValueLabel: "required value not found",
+					Value:      "value6",
+				},
+			},
+		},
 	}
 
 	for _, tc := range tt {
@@ -239,6 +379,7 @@ func TestAllowedListAnalyse(t *testing.T) {
 			analyser := AllowedList{
 				Id:          "testAllowedList",
 				Allowed:     tc.allowed,
+				Required:    tc.required,
 				Deprecated:  tc.deprecated,
 				ExcludeKeys: tc.excludeKeys,
 				Ignore:      tc.ignore,
