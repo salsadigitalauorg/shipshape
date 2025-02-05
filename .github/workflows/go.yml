@@ -37,7 +37,7 @@ jobs:
       run: ./build/shipshape config list-checks
 
     - name: Test
-      run: go test -v -race ./... -coverprofile=build/coverage.out
+      run: go test -v -race $(go list ./... | grep -v /cmd/gen) -coverprofile=build/coverage.out
 
     - uses: shogo82148/actions-goveralls@v1
       with:

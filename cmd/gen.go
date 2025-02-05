@@ -5,8 +5,9 @@ package main
 import (
 	"log"
 
-	"github.com/salsadigitalauorg/shipshape/cmd/gen"
 	"github.com/spf13/pflag"
+
+	"github.com/salsadigitalauorg/shipshape/cmd/gen"
 )
 
 var (
