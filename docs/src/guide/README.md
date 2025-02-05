@@ -30,6 +30,30 @@ COPY --from=ghcr.io/salsadigitalauorg/shipshape:latest /usr/local/bin/shipshape 
 ```
 
 ## Usage
+
+The basic layout of the config file is as follows:
+```yaml
+# Optional - Set up any connection(s) required for
+# collecting data (docker, mysql, etc...).
+connections:
+  ...
+
+# Required - Set up how to collect the data.
+collect:
+  ...
+
+# Optional - Set up how to analyse the data.
+# Leave empty if no analysis is required.
+# Run the command `shipshape collect .` in that case.
+analyse:
+  ...
+
+# Optional - Configure output format and other output plugin options.
+# Defaults to stdout with the pretty format.
+output:
+  ...
+```
+
 Create a config file:
 ```yaml
 # shipshape.yml
@@ -48,12 +72,12 @@ collect:
 
 analyse:
   disallowed-php-scripts-found:
-    not-empty:
+    not:empty:
       description: 'Disallowed php scripts found'
       input: disallowed-php-scripts
       severity: high
   sensitive-public-files-found:
-    not-empty:
+    not:empty:
       description: 'Sensitive files found in public directory'
       input: sensitive-public-files
       severity: high
@@ -63,8 +87,6 @@ Execute the policy:
 ```sh
 shipshape run .
 ```
-
-See the [configuration](/config) documentation for more information.
 
 ```
 $ shipshape run -h
@@ -104,3 +126,9 @@ Global Flags:
   -v, --verbose            Display verbose output - equivalent to --log-level info
 ```
 
+## Next steps
+
+  - [Connections](connections)
+  - [Collecting data](collect)
+  - [Analysing data](analyse)
+  - [Outputs](outputs)

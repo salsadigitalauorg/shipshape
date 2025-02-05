@@ -55,7 +55,10 @@ module.exports = {
           collapsable: false,
           children: [
             '',
-            'configuration',
+            'connections',
+            'collect',
+            'analyse',
+            'outputs',
           ]
         }
       ],
