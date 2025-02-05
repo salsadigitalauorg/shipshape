@@ -93,11 +93,13 @@ func CollectAllFacts() {
 
 func CollectFact(name string, f Facter) {
 	log.WithField("fact", name).Debug("starting CollectFact process")
+	var inputF Facter
 	if f.GetInputName() != "" {
 		log.WithField("fact", name).
 			WithField("inputName", f.GetInputName()).
 			Debug("collect input")
-		CollectFact(f.GetInputName(), GetInstance(f.GetInputName()))
+		inputF = GetInstance(f.GetInputName())
+		CollectFact(f.GetInputName(), inputF)
 	}
 
 	if len(f.GetAdditionalInputNames()) > 0 {
@@ -107,6 +109,10 @@ func CollectFact(name string, f Facter) {
 				Debug("collect additional input")
 			CollectFact(n, GetInstance(n))
 		}
+	}
+
+	if inputF != nil && len(inputF.GetErrors()) > 0 {
+		return
 	}
 
 	if utils.StringSliceContains(collected, name) {

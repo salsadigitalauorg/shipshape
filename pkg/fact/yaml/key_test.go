@@ -40,7 +40,11 @@ func TestKeySupportedInputs(t *testing.T) {
 	key := Key{Name: "testKeyYaml"}
 	supportLevel, inputs := key.SupportedInputs()
 	assert.Equal(t, fact.SupportRequired, supportLevel)
-	assert.ElementsMatch(t, []string{"file:read", "file:lookup", "yaml:key"}, inputs)
+	assert.ElementsMatch(t, []string{
+		"docker:command",
+		"file:read",
+		"file:lookup",
+		"yaml:key"}, inputs)
 }
 
 func TestKeyCollect(t *testing.T) {

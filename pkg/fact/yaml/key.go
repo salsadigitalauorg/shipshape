@@ -55,7 +55,11 @@ func (p *Key) SupportedConnections() (fact.SupportLevel, []string) {
 }
 
 func (p *Key) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportRequired, []string{"file:read", "file:lookup", "yaml:key"}
+	return fact.SupportRequired, []string{
+		"docker:command",
+		"file:read",
+		"file:lookup",
+		"yaml:key"}
 }
 
 func (p *Key) Collect() {

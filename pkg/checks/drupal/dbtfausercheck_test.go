@@ -35,7 +35,7 @@ func TestDbTfaUserCheck(t *testing.T) {
 				CheckType:  "drupal-db-user-tfa",
 				Severity:   "normal",
 				ValueLabel: "error fetching drush user info",
-				Value:      "unable to run drush command",
+				Value:      "<nil>: unable to run drush command",
 			}},
 			c.Result.Breaches,
 		)

@@ -11,6 +11,6 @@ collect:
 analyse:
   lagoon-logs-check:
     regex:match:
-      description: Lagoon logs module is enabled
+      description: Lagoon logs module is not enabled
       input: module-lagoon_logs
       pattern: "^0$"

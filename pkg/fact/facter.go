@@ -39,9 +39,9 @@ func ValidatePluginConnection(p Facter) (connection.Connectioner, error) {
 		}
 	}
 	return nil, &ErrSupportNone{
-		Plugin:        p.GetName(),
+		Plugin:        p.PluginName(),
 		SupportType:   "connection",
-		SupportPlugin: p.GetConnectionName()}
+		SupportPlugin: plugin.PluginName()}
 }
 
 func ValidatePluginInput(p Facter) (Facter, error) {
@@ -70,6 +70,12 @@ func ValidatePluginInput(p Facter) (Facter, error) {
 				SupportType:   "input",
 				SupportPlugin: p.GetInputName()}
 		}
+
+		log.WithFields(log.Fields{
+			"fact":                p.GetName(),
+			"input-plugin":        plugin.GetName(),
+			"input-plugin-format": plugin.GetFormat(),
+		}).Debug("found input plugin")
 
 		if plugin.GetFormat() == "" {
 			return nil, &ErrSupportRequired{

@@ -1,6 +1,11 @@
 package docker
 
 import (
+	"errors"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
@@ -44,10 +49,25 @@ func (p *DockerCommand) SupportedInputs() (fact.SupportLevel, []string) {
 }
 
 func (p *DockerCommand) Collect() {
+	log.WithFields(log.Fields{
+		"fact-plugin":       p.PluginName(),
+		"fact":              p.Name,
+		"connection":        p.GetConnectionName(),
+		"connection-plugin": p.connection.PluginName(),
+	}).Debug("collecting data")
+
 	dockerConn := p.connection.(*connection.DockerExec)
 	dockerConn.Command = p.Command
 	rawData, err := dockerConn.Run()
 	if err != nil {
+		errMsg := command.GetMsgFromCommandError(err)
+		if errMsg == "" {
+			errMsg = string(rawData)
+		} else {
+			errMsg = errMsg + ": " + string(rawData)
+		}
+		err = errors.New(errMsg)
+		log.WithError(err).Error("docker command failed")
 		p.errors = append(p.errors, err)
 		return
 	}

@@ -190,7 +190,7 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 			Remediation: breach.Remediation{
 				Status: breach.RemediationStatusFailed,
 				Messages: []string{"error blocking forbidden user '1' due to error: " +
-					"Unable to find a matching user"}}},
+					"<nil>: Unable to find a matching user"}}},
 		}, c.Result.Breaches)
 		c.Result.DetermineResultStatus(true)
 	})

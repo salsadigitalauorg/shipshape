@@ -84,7 +84,7 @@ func TestGetMsgFromCommandError(t *testing.T) {
 		msg := command.GetMsgFromCommandError(&exec.ExitError{
 			Stderr: []byte("some error"),
 		})
-		assert.Equal("some error", msg)
+		assert.Equal("<nil>: some error", msg)
 	})
 
 	t.Run("error", func(t *testing.T) {

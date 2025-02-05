@@ -12,7 +12,7 @@ collect:
 analyse:
   lagoon-logs-check:
     allowed:list:
-      description: Lagoon logs module is enabled
+      description: Lagoon logs module is not enabled
       input: modules
       required:
         - lagoon_logs
