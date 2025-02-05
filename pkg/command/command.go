@@ -48,7 +48,12 @@ func GetMsgFromCommandError(err error) string {
 	if errors.As(err, &pathErr) {
 		errMsg = pathErr.Path + ": " + pathErr.Err.Error()
 	} else if errors.As(err, &exitErr) {
-		errMsg = string(exitErr.Stderr)
+		stderr := string(exitErr.Stderr)
+		if stderr != "" {
+			errMsg = string(exitErr.Error()) + ": " + string(exitErr.Stderr)
+		} else {
+			errMsg = string(exitErr.Error())
+		}
 	} else {
 		errMsg = err.Error()
 	}

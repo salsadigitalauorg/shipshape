@@ -154,8 +154,7 @@ func RunV2() {
 	log.Print("collecting facts")
 	fact.CollectAllFacts()
 	if len(fact.Errors) > 0 {
-		log.WithField("errors", fact.Errors).
-			Fatal("failed to collect facts")
+		log.Fatal("failed to collect facts")
 	}
 
 	if FactsOnly {

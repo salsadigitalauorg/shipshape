@@ -40,7 +40,11 @@ func TestKeySupportedInputs(t *testing.T) {
 	key := Key{Name: "testKeyYaml"}
 	supportLevel, inputs := key.SupportedInputs()
 	assert.Equal(t, fact.SupportRequired, supportLevel)
-	assert.ElementsMatch(t, []string{"file:read", "file:lookup", "yaml:key"}, inputs)
+	assert.ElementsMatch(t, []string{
+		"docker:command",
+		"file:read",
+		"file:lookup",
+		"yaml:key"}, inputs)
 }
 
 func TestKeyCollect(t *testing.T) {
@@ -63,6 +67,22 @@ func TestKeyCollect(t *testing.T) {
 		},
 
 		// Raw data format (data.FormatRaw) cases.
+		{
+			Name:   "inputFormat/Raw/NotFound",
+			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
+			TestInput: internal.FactInputTest{
+				DataFormat: data.FormatRaw, Data: []byte("bar: baz")},
+			ExpectedErrors: []error{errors.New("yaml path not found")},
+		},
+		{
+			Name: "inputFormat/Raw/NotFound/Ignored",
+			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo",
+				IgnoreNotFound: true},
+			TestInput: internal.FactInputTest{
+				DataFormat: data.FormatRaw, Data: []byte("bar: baz")},
+			ExpectedFormat: data.FormatNil,
+			ExpectedData:   nil,
+		},
 		{
 			Name:   "inputFormat/Raw",
 			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
@@ -96,6 +116,26 @@ func TestKeyCollect(t *testing.T) {
 		},
 
 		// Map of Raw data (data.FormatMapBytes) format cases.
+		{
+			Name:   "inputFormat/MapBytes/NotFound",
+			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
+			TestInput: internal.FactInputTest{
+				DataFormat: data.FormatMapBytes,
+				Data:       map[string][]byte{"file1": []byte("bar: baz")},
+			},
+			ExpectedErrors: []error{errors.New("yaml path not found")},
+		},
+		{
+			Name: "inputFormat/MapBytes/NotFound/Ignored",
+			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo",
+				IgnoreNotFound: true},
+			TestInput: internal.FactInputTest{
+				DataFormat: data.FormatMapBytes,
+				Data:       map[string][]byte{"file1": []byte("bar: baz")},
+			},
+			ExpectedFormat: data.FormatNil,
+			ExpectedData:   nil,
+		},
 		{
 			Name:   "inputFormat/MapBytes/scalar",
 			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},

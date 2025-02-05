@@ -97,7 +97,7 @@ func TestUserRoleCheckFetchData(t *testing.T) {
 		assert.EqualValues(
 			[]breach.Breach{&breach.ValueBreach{
 				BreachType: "value",
-				Value:      "unable to run drush command",
+				Value:      "<nil>: unable to run drush command",
 			}},
 			c.Result.Breaches,
 		)

@@ -1,7 +1,10 @@
 package analyse
 
 import (
+	"fmt"
 	"regexp"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
@@ -36,6 +39,8 @@ func (p *RegexMatch) PluginName() string {
 
 func (p *RegexMatch) Analyse() {
 	switch p.input.GetFormat() {
+	case data.FormatNil:
+		return
 	case data.FormatMapNestedString:
 		inputData := data.AsMapNestedString(p.input.GetData())
 		for k, kvs := range inputData {
@@ -51,5 +56,18 @@ func (p *RegexMatch) Analyse() {
 				}
 			}
 		}
+	case data.FormatString:
+		inputData := data.AsString(p.input.GetData())
+		match, _ := regexp.MatchString(p.Pattern, inputData)
+		if match {
+			breach.EvaluateTemplate(p, &breach.ValueBreach{
+				Value: fmt.Sprintf("%s equals '%s'", p.InputName, inputData),
+			})
+		}
+	default:
+		log.WithField("input-format", p.input.GetFormat()).Debug("unsupported input format")
+		breach.EvaluateTemplate(p, &breach.ValueBreach{
+			Value: fmt.Sprintf("unsupported input format %s", p.input.GetFormat()),
+		})
 	}
 }

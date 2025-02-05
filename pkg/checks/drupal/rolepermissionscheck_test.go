@@ -88,7 +88,7 @@ func TestRolePermissionsCheck_RunCheck(t *testing.T) {
 				BreachType: breach.BreachTypeValue,
 				CheckType:  "drupal-role-permissions",
 				Severity:   "normal",
-				Value:      "Unexpected error"}},
+				Value:      "<nil>: Unexpected error"}},
 			c.Result.Breaches)
 	})
 

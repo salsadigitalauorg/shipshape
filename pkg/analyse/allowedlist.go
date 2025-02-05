@@ -3,6 +3,8 @@ package analyse
 import (
 	"regexp"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
@@ -24,6 +26,7 @@ type AllowedList struct {
 	PackageMatch string `yaml:"package-match"`
 	pkgRegex     *regexp.Regexp
 	Allowed      []string `yaml:"allowed"`
+	Required     []string `yaml:"required"`
 	Deprecated   []string `yaml:"deprecated"`
 	ExcludeKeys  []string `yaml:"exclude-keys"`
 	Ignore       []string `yaml:"ignore"`
@@ -45,8 +48,47 @@ func (p *AllowedList) Analyse() {
 	}
 
 	switch p.input.GetFormat() {
+	case data.FormatListString:
+		inputData := data.AsListString(p.input.GetData())
+		foundRequired := map[string]bool{}
+		for _, v := range inputData {
+			if p.isIgnored(v) {
+				continue
+			}
+
+			if p.isDeprecated(v) {
+				breach.EvaluateTemplate(p, &breach.ValueBreach{
+					ValueLabel: "deprecated value found",
+					Value:      v,
+				})
+				continue
+			}
+
+			if len(p.Required) == 0 && !p.isAllowed(v) {
+				breach.EvaluateTemplate(p, &breach.ValueBreach{
+					ValueLabel: "disallowed value found",
+					Value:      v,
+				})
+			}
+
+			if len(p.Required) > 0 && p.isRequired(v) {
+				foundRequired[v] = true
+			}
+		}
+
+		if len(p.Required) > 0 {
+			for _, r := range p.Required {
+				if ok := foundRequired[r]; !ok {
+					breach.EvaluateTemplate(p, &breach.ValueBreach{
+						ValueLabel: "required value not found",
+						Value:      r,
+					})
+				}
+			}
+		}
 	case data.FormatMapString:
 		inputData := data.AsMapString(p.input.GetData())
+		foundRequired := map[string]bool{}
 		for k, v := range inputData {
 			if p.isExcludedKey(k) || p.isIgnored(v) {
 				continue
@@ -62,7 +104,7 @@ func (p *AllowedList) Analyse() {
 				continue
 			}
 
-			if !p.isAllowed(v) {
+			if len(p.Required) == 0 && !p.isAllowed(v) {
 				breach.EvaluateTemplate(p, &breach.KeyValueBreach{
 					KeyLabel:   "key",
 					Key:        k,
@@ -71,7 +113,23 @@ func (p *AllowedList) Analyse() {
 				})
 				continue
 			}
+
+			if len(p.Required) > 0 && p.isRequired(v) {
+				foundRequired[v] = true
+			}
 		}
+
+		if len(p.Required) > 0 {
+			for _, r := range p.Required {
+				if ok := foundRequired[r]; !ok {
+					breach.EvaluateTemplate(p, &breach.ValueBreach{
+						ValueLabel: "required value not found",
+						Value:      r,
+					})
+				}
+			}
+		}
+
 	case data.FormatMapListString:
 		inputData := data.AsMapListString(p.input.GetData())
 		for k, listV := range inputData {
@@ -79,6 +137,7 @@ func (p *AllowedList) Analyse() {
 				continue
 			}
 
+			foundRequired := map[string]bool{}
 			for _, v := range listV {
 				if p.isIgnored(v) {
 					continue
@@ -94,7 +153,7 @@ func (p *AllowedList) Analyse() {
 					continue
 				}
 
-				if !p.isAllowed(v) {
+				if len(p.Required) == 0 && !p.isAllowed(v) {
 					breach.EvaluateTemplate(p, &breach.KeyValueBreach{
 						KeyLabel:   "key",
 						Key:        k,
@@ -103,8 +162,27 @@ func (p *AllowedList) Analyse() {
 					})
 					continue
 				}
+
+				if len(p.Required) > 0 && p.isRequired(v) {
+					foundRequired[v] = true
+				}
+			}
+
+			if len(p.Required) > 0 {
+				for _, r := range p.Required {
+					if ok := foundRequired[r]; !ok {
+						breach.EvaluateTemplate(p, &breach.KeyValueBreach{
+							Key:        k,
+							ValueLabel: "required value not found",
+							Value:      r,
+						})
+					}
+				}
 			}
 		}
+
+	default:
+		log.WithField("input-format", p.input.GetFormat()).Error("unsupported input format")
 	}
 }
 
@@ -148,6 +226,15 @@ func (p *AllowedList) isExcludedKey(key string) bool {
 
 func (p *AllowedList) isIgnored(value string) bool {
 	for _, i := range p.Ignore {
+		if i == value {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *AllowedList) isRequired(value string) bool {
+	for _, i := range p.Required {
 		if i == value {
 			return true
 		}

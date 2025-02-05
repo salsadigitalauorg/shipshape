@@ -19,11 +19,17 @@ func NewYamlLookup(src []byte, path string) (*YamlLookup, error) {
 		log.WithError(err).Debug("failed to unmarshal yaml")
 		return nil, err
 	}
+
 	foundNodes, err := utils.LookupYamlPath(&n, path)
 	if err != nil {
 		log.WithError(err).Debug("failed to lookup yaml path")
 		return nil, err
 	}
+
+	if len(foundNodes) == 0 {
+		return nil, ErrPathNotFound
+	}
+
 	return &YamlLookup{Path: path, Nodes: foundNodes, Kind: foundNodes[0].Kind}, nil
 }
 

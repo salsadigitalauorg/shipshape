@@ -36,6 +36,8 @@ type Key struct {
 	NodesOnly bool `yaml:"nodes-only"`
 	// Only return the keys found at the path, if it's a map.
 	KeysOnly bool `yaml:"keys-only"`
+	// Ignore errors if the path is not found.
+	IgnoreNotFound bool `yaml:"ignore-not-found"`
 }
 
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Key --package=yaml --envresolver
@@ -53,7 +55,11 @@ func (p *Key) SupportedConnections() (fact.SupportLevel, []string) {
 }
 
 func (p *Key) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportRequired, []string{"file:read", "file:lookup", "yaml:key"}
+	return fact.SupportRequired, []string{
+		"docker:command",
+		"file:read",
+		"file:lookup",
+		"yaml:key"}
 }
 
 func (p *Key) Collect() {
@@ -80,6 +86,10 @@ func (p *Key) Collect() {
 		var err error
 		lookup, err = NewYamlLookup(inputData, p.Path)
 		if err != nil {
+			if p.IgnoreNotFound && errors.Is(err, ErrPathNotFound) {
+				p.Format = data.FormatNil
+				return
+			}
 			p.errors = append(p.errors, err)
 			return
 		}
@@ -94,6 +104,19 @@ func (p *Key) Collect() {
 		var errs []error
 		lookupMap, errs = NewMapYamlLookup(inputData, p.Path)
 		if len(errs) > 0 {
+			if p.IgnoreNotFound {
+				allNotFound := true
+				for _, err := range errs {
+					if !errors.Is(err, ErrPathNotFound) {
+						allNotFound = false
+						break
+					}
+				}
+				if allNotFound {
+					p.Format = data.FormatNil
+					return
+				}
+			}
 			p.errors = append(p.errors, errs...)
 			return
 		}

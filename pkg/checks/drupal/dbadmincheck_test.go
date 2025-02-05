@@ -233,7 +233,7 @@ func TestAdminUserRemediate(t *testing.T) {
 			Remediation: breach.Remediation{
 				Status: "failed",
 				Messages: []string{"failed to set is_admin to false for role 'foo' " +
-					"due to error: unable to run drush command"},
+					"due to error: <nil>: unable to run drush command"},
 			},
 		}}, c.Result.Breaches)
 	})
