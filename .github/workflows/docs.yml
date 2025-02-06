@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@main
 
       - name: Publish to Quant
-        uses: quantcdn/action-deploy@v5
+        uses: quantcdn/deploy-action@v5
         with:
           customer: salsa-digital
           project: shipshape
