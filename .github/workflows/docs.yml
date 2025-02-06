@@ -26,7 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      # TODO: Remove this step and the one above once all docs are moved to Quant.
+      - name: Checkout
+        uses: actions/checkout@main
+
       - name: Replace base dir for Quant & rebuild
         run: |
           cd docs
