@@ -26,7 +26,7 @@ jobs:
       - name: Replace base dir for Quant & rebuild
         run: |
           cd docs
-          sed "s/base: \"\/shipshape\/\"/base: \"\/main\/\"/" src/.vuepress/config.js
+          sed -i "s/base: \"\/shipshape\/\"/base: \"\/main\/\"/" src/.vuepress/config.js
           npm install
           npm run build
 
