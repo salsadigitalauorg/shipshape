@@ -2,7 +2,7 @@ name: Publish docs
 
 on:
   push:
-    branches: [ main ]
+    branches: [ 1.x ]
     paths:
       - 'docs/**'
   workflow_dispatch:
@@ -15,9 +15,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@main
 
-      - name: vuepress-deploy
-        uses: jenkey2011/vuepress-deploy@master
-        env:
-          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BUILD_SCRIPT: cd docs && npm install && npm run build
-          BUILD_DIR: src/.vuepress/dist
+      - name: Publish to Quant
+        uses: quantcdn/action-deploy@v5
+        with:
+          customer: salsa-digital
+          project: shipshape
+          token: ${{ secrets.QUANT_TOKEN }}
+          dir: docs/src/.vuepress/dist
+          skip-unpublish-regex: '^/main.*'

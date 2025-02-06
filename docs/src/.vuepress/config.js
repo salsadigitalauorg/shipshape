@@ -21,7 +21,9 @@ module.exports = {
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }]
   ],
 
-  base: "/shipshape/",
+  base: "/1.x/",
+
+  dest: "src/.vuepress/dist/1.x",
 
   /**
    * Theme configuration, here is the default theme configuration for VuePress.
@@ -42,6 +44,15 @@ module.exports = {
       {
         text: 'Reference',
         link: '/reference/',
+      },
+      {
+        text: '1.x',
+        items: [
+          {
+            text: 'main',
+            link: 'https://818b00ca-cb1b-4227-99ed-284bd9c399db.quantsites.com/main',
+          },
+        ],
       },
       {
         text: 'GitHub',
