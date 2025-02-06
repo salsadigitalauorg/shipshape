@@ -20,4 +20,21 @@ jobs:
         env:
           ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_SCRIPT: cd docs && npm install && npm run build
-          BUILD_DIR: src/.vuepress/dist
+          BUILD_DIR: src/.vuepress/dist/main
+
+      # TODO: Remove this step and the one above once all docs are moved to Quant.
+      - name: Replace base dir for Quant & rebuild
+        run: |
+          cd docs
+          sed "s/base: \"\/shipshape\/\"/base: \"\/main\/\"/" src/.vuepress/config.js
+          npm install
+          npm run build
+
+      - name: Publish to Quant
+        uses: quantcdn/action-deploy@v5
+        with:
+          customer: salsa-digital
+          project: shipshape
+          token: ${{ secrets.QUANT_TOKEN }}
+          dir: docs/src/.vuepress/dist
+          skip-unpublish-regex: '^/1\.x.*'
