@@ -31,7 +31,7 @@ jobs:
           npm run build
 
       - name: Publish to Quant
-        uses: quantcdn/action-deploy@v5
+        uses: quantcdn/deploy-action@v5.0.0
         with:
           customer: salsa-digital
           project: shipshape
