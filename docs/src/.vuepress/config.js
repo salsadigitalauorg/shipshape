@@ -50,7 +50,7 @@ module.exports = {
         items: [
           {
             text: 'main',
-            link: 'https://818b00ca-cb1b-4227-99ed-284bd9c399db.quantsites.com/main',
+            link: 'https://salsadigitalauorg.github.io/shipshape/',
           },
         ],
       },
