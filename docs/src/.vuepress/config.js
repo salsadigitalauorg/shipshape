@@ -21,7 +21,7 @@ module.exports = {
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }]
   ],
 
-  base: "/main/",
+  base: "/shipshape/",
 
   dest: "src/.vuepress/dist/main",
 
