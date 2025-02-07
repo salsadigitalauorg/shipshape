@@ -41,16 +41,16 @@ func TestResultRemediationsCount(t *testing.T) {
 
 	r := Result{
 		Breaches: []breach.Breach{
-			&breach.ValueBreach{CheckName: "x", Remediation: breach.Remediation{Status: breach.RemediationStatusNoSupport}},
-			&breach.ValueBreach{CheckName: "h", Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess}},
-			&breach.ValueBreach{CheckName: "i", Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess}},
-			&breach.ValueBreach{CheckName: "v", Remediation: breach.Remediation{Status: breach.RemediationStatusFailed}},
-			&breach.ValueBreach{CheckName: "w", Remediation: breach.Remediation{Status: breach.RemediationStatusFailed}},
-			&breach.ValueBreach{CheckName: "x", Remediation: breach.Remediation{Status: breach.RemediationStatusFailed}},
-			&breach.ValueBreach{CheckName: "f", Remediation: breach.Remediation{Status: breach.RemediationStatusPartial}},
-			&breach.ValueBreach{CheckName: "e", Remediation: breach.Remediation{Status: breach.RemediationStatusPartial}},
-			&breach.ValueBreach{CheckName: "d", Remediation: breach.Remediation{Status: breach.RemediationStatusPartial}},
-			&breach.ValueBreach{CheckName: "c", Remediation: breach.Remediation{Status: breach.RemediationStatusPartial}},
+			&breach.ValueBreach{CheckName: "x", RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusNoSupport}},
+			&breach.ValueBreach{CheckName: "h", RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess}},
+			&breach.ValueBreach{CheckName: "i", RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess}},
+			&breach.ValueBreach{CheckName: "v", RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed}},
+			&breach.ValueBreach{CheckName: "w", RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed}},
+			&breach.ValueBreach{CheckName: "x", RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed}},
+			&breach.ValueBreach{CheckName: "f", RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusPartial}},
+			&breach.ValueBreach{CheckName: "e", RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusPartial}},
+			&breach.ValueBreach{CheckName: "d", RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusPartial}},
+			&breach.ValueBreach{CheckName: "c", RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusPartial}},
 		},
 	}
 	unsupported, successful, failed, partial := r.RemediationsCount()
@@ -98,9 +98,9 @@ func TestResultDetermineResultStatus(t *testing.T) {
 			remediationPerformed: true,
 			breaches: []breach.Breach{
 				&breach.ValueBreach{
-					CheckName:   "x",
-					Value:       "breach 1",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusNoSupport},
+					CheckName:         "x",
+					Value:             "breach 1",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusNoSupport},
 				},
 			},
 			expectedStatus:            Fail,
@@ -111,9 +111,9 @@ func TestResultDetermineResultStatus(t *testing.T) {
 			remediationPerformed: true,
 			breaches: []breach.Breach{
 				&breach.ValueBreach{
-					CheckName:   "x",
-					Value:       "breach 1",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess},
+					CheckName:         "x",
+					Value:             "breach 1",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess},
 				},
 			},
 			expectedStatus:            Pass,
@@ -124,9 +124,9 @@ func TestResultDetermineResultStatus(t *testing.T) {
 			remediationPerformed: true,
 			breaches: []breach.Breach{
 				&breach.ValueBreach{
-					CheckName:   "x",
-					Value:       "breach 1",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusFailed},
+					CheckName:         "x",
+					Value:             "breach 1",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed},
 				},
 			},
 			expectedStatus:            Fail,
@@ -137,9 +137,9 @@ func TestResultDetermineResultStatus(t *testing.T) {
 			remediationPerformed: true,
 			breaches: []breach.Breach{
 				&breach.ValueBreach{
-					CheckName:   "x",
-					Value:       "breach 1",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusPartial},
+					CheckName:         "x",
+					Value:             "breach 1",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusPartial},
 				},
 			},
 			expectedStatus:            Fail,
@@ -162,14 +162,14 @@ func TestResultDetermineResultStatus(t *testing.T) {
 			remediationPerformed: true,
 			breaches: []breach.Breach{
 				&breach.ValueBreach{
-					CheckName:   "x",
-					Value:       "breach 1",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusFailed},
+					CheckName:         "x",
+					Value:             "breach 1",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed},
 				},
 				&breach.ValueBreach{
-					CheckName:   "f",
-					Value:       "breach 2",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusFailed},
+					CheckName:         "f",
+					Value:             "breach 2",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed},
 				},
 			},
 			expectedStatus:            Fail,
@@ -180,14 +180,14 @@ func TestResultDetermineResultStatus(t *testing.T) {
 			remediationPerformed: true,
 			breaches: []breach.Breach{
 				&breach.ValueBreach{
-					CheckName:   "x",
-					Value:       "breach 1",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusNoSupport},
+					CheckName:         "x",
+					Value:             "breach 1",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusNoSupport},
 				},
 				&breach.ValueBreach{
-					CheckName:   "f",
-					Value:       "breach 2",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusNoSupport},
+					CheckName:         "f",
+					Value:             "breach 2",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusNoSupport},
 				},
 			},
 			expectedStatus:            Fail,
@@ -200,32 +200,14 @@ func TestResultDetermineResultStatus(t *testing.T) {
 			remediationPerformed: true,
 			breaches: []breach.Breach{
 				&breach.ValueBreach{
-					CheckName:   "x",
-					Value:       "breach 1",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess},
+					CheckName:         "x",
+					Value:             "breach 1",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess},
 				},
 				&breach.ValueBreach{
-					CheckName:   "f",
-					Value:       "breach 2",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusFailed},
-				},
-			},
-			expectedStatus:            Fail,
-			expectedRemediationStatus: breach.RemediationStatusPartial,
-		},
-		{
-			name:                 "multipleBreachesRemediationPartial",
-			remediationPerformed: true,
-			breaches: []breach.Breach{
-				&breach.ValueBreach{
-					CheckName:   "x",
-					Value:       "breach 1",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess},
-				},
-				&breach.ValueBreach{
-					CheckName:   "f",
-					Value:       "breach 2",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusFailed},
+					CheckName:         "f",
+					Value:             "breach 2",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed},
 				},
 			},
 			expectedStatus:            Fail,
@@ -236,14 +218,14 @@ func TestResultDetermineResultStatus(t *testing.T) {
 			remediationPerformed: true,
 			breaches: []breach.Breach{
 				&breach.ValueBreach{
-					CheckName:   "x",
-					Value:       "breach 1",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusPartial},
+					CheckName:         "x",
+					Value:             "breach 1",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess},
 				},
 				&breach.ValueBreach{
-					CheckName:   "f",
-					Value:       "breach 2",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusPartial},
+					CheckName:         "f",
+					Value:             "breach 2",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed},
 				},
 			},
 			expectedStatus:            Fail,
@@ -254,14 +236,32 @@ func TestResultDetermineResultStatus(t *testing.T) {
 			remediationPerformed: true,
 			breaches: []breach.Breach{
 				&breach.ValueBreach{
-					CheckName:   "x",
-					Value:       "breach 1",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusSuccess},
+					CheckName:         "x",
+					Value:             "breach 1",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusPartial},
 				},
 				&breach.ValueBreach{
-					CheckName:   "f",
-					Value:       "breach 2",
-					Remediation: breach.Remediation{Status: breach.RemediationStatusNoSupport},
+					CheckName:         "f",
+					Value:             "breach 2",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusPartial},
+				},
+			},
+			expectedStatus:            Fail,
+			expectedRemediationStatus: breach.RemediationStatusPartial,
+		},
+		{
+			name:                 "multipleBreachesRemediationPartial",
+			remediationPerformed: true,
+			breaches: []breach.Breach{
+				&breach.ValueBreach{
+					CheckName:         "x",
+					Value:             "breach 1",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess},
+				},
+				&breach.ValueBreach{
+					CheckName:         "f",
+					Value:             "breach 2",
+					RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusNoSupport},
 				},
 			},
 			expectedStatus:            Fail,

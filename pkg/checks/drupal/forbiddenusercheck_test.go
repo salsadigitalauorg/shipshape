@@ -187,7 +187,7 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 			BreachType: "key-value",
 			Key:        "forbidden user is active",
 			Value:      c.UserId,
-			Remediation: breach.Remediation{
+			RemediationResult: breach.RemediationResult{
 				Status: breach.RemediationStatusFailed,
 				Messages: []string{"error blocking forbidden user '1' due to error: " +
 					"<nil>: Unable to find a matching user"}}},
@@ -220,7 +220,7 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 			BreachType: "key-value",
 			Key:        "forbidden user is active",
 			Value:      c.UserId,
-			Remediation: breach.Remediation{
+			RemediationResult: breach.RemediationResult{
 				Status:   breach.RemediationStatusSuccess,
 				Messages: []string{"Blocked the forbidden user [1]"}}},
 		}, c.Result.Breaches)

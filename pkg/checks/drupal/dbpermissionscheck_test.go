@@ -266,7 +266,7 @@ func TestDbPermissionsRemediate(t *testing.T) {
 			Key:        "foo",
 			ValueLabel: "permissions",
 			Values:     []string{"bar", "baz"},
-			Remediation: breach.Remediation{
+			RemediationResult: breach.RemediationResult{
 				Status:   breach.RemediationStatusFailed,
 				Messages: []string{"failed to fix disallowed permissions for role 'foo' due to error: <nil>: unable to run drush command"},
 			},

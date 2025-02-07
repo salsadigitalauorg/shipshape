@@ -21,14 +21,14 @@ const (
 //
 //	"file foo.ext not found": file is the ValueLabel, foo.ext is the Value
 type ValueBreach struct {
-	BreachType    `json:"breach-type"`
-	CheckType     string `json:"check-type"`
-	CheckName     string `json:"check-name"`
-	Severity      string `json:"severity"`
-	ValueLabel    string `json:"value-label,omitempty"`
-	Value         string `json:"value"`
-	ExpectedValue string `json:"expected-value,omitempty"`
-	Remediation   `json:"remediation,omitempty"`
+	BreachType        `json:"breach-type"`
+	CheckType         string `json:"check-type"`
+	CheckName         string `json:"check-name"`
+	Severity          string `json:"severity"`
+	ValueLabel        string `json:"value-label,omitempty"`
+	Value             string `json:"value"`
+	ExpectedValue     string `json:"expected-value,omitempty"`
+	RemediationResult `json:"remediation,omitempty"`
 }
 
 func (b ValueBreach) String() string {
@@ -47,16 +47,16 @@ func (b ValueBreach) String() string {
 //	  - app could be the ValueLabel
 //	  - wordpress is the Value
 type KeyValueBreach struct {
-	BreachType    `json:"breach-type"`
-	CheckType     string `json:"check-type"`
-	CheckName     string `json:"check-name"`
-	Severity      string `json:"severity"`
-	KeyLabel      string `json:"key-label,omitempty"`
-	Key           string `json:"key,omitempty"`
-	ValueLabel    string `json:"value-label,omitempty"`
-	Value         string `json:"value"`
-	ExpectedValue string `json:"expected-value,omitempty"`
-	Remediation   `json:"remediation,omitempty"`
+	BreachType        `json:"breach-type"`
+	CheckType         string `json:"check-type"`
+	CheckName         string `json:"check-name"`
+	Severity          string `json:"severity"`
+	KeyLabel          string `json:"key-label,omitempty"`
+	Key               string `json:"key,omitempty"`
+	ValueLabel        string `json:"value-label,omitempty"`
+	Value             string `json:"value"`
+	ExpectedValue     string `json:"expected-value,omitempty"`
+	RemediationResult `json:"remediation,omitempty"`
 }
 
 func (b KeyValueBreach) String() string {
@@ -75,15 +75,15 @@ func (b KeyValueBreach) String() string {
 //	  - permissions could be the ValueLabel
 //	  - [administer site configuration, import configuration] are the Values
 type KeyValuesBreach struct {
-	BreachType  `json:"breach-type"`
-	CheckType   string   `json:"check-type"`
-	CheckName   string   `json:"check-name"`
-	Severity    string   `json:"severity"`
-	KeyLabel    string   `json:"key-label,omitempty"`
-	Key         string   `json:"key,omitempty"`
-	ValueLabel  string   `json:"value-label,omitempty"`
-	Values      []string `json:"values"`
-	Remediation `json:"remediation,omitempty"`
+	BreachType        `json:"breach-type"`
+	CheckType         string   `json:"check-type"`
+	CheckName         string   `json:"check-name"`
+	Severity          string   `json:"severity"`
+	KeyLabel          string   `json:"key-label,omitempty"`
+	Key               string   `json:"key,omitempty"`
+	ValueLabel        string   `json:"value-label,omitempty"`
+	Values            []string `json:"values"`
+	RemediationResult `json:"remediation,omitempty"`
 }
 
 func (b KeyValuesBreach) String() string {

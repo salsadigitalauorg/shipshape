@@ -25,7 +25,7 @@ func TestEqualsInit(t *testing.T) {
 
 func TestEqualsPluginName(t *testing.T) {
 	instance := Equals{Id: "TestEquals"}
-	assert.Equal(t, "allowed:list", instance.PluginName())
+	assert.Equal(t, "equals", instance.PluginName())
 }
 
 func TestEqualsAnalyse(t *testing.T) {

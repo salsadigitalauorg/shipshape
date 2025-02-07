@@ -9,7 +9,7 @@ const (
 	RemediationStatusPartial   RemediationStatus = "partial"
 )
 
-type Remediation struct {
+type RemediationResult struct {
 	Status   RemediationStatus `json:",omitempty"`
 	Messages []string          `json:",omitempty"`
 }

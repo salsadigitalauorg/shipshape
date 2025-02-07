@@ -109,8 +109,8 @@ func (b bogusBreach) GetCheckType() string {
 	return ""
 }
 
-func (b bogusBreach) GetRemediation() *Remediation {
-	return &Remediation{}
+func (b bogusBreach) GetRemediation() *RemediationResult {
+	return &RemediationResult{}
 }
 
 func (b bogusBreach) GetSeverity() string {

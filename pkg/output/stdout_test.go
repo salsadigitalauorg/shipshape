@@ -146,7 +146,7 @@ func TestPrettyDisplay(t *testing.T) {
 					Name: "a",
 					Breaches: []breach.Breach{
 						&breach.ValueBreach{
-							Remediation: breach.Remediation{
+							RemediationResult: breach.RemediationResult{
 								Status:   breach.RemediationStatusSuccess,
 								Messages: []string{"fixed 1"},
 							},
@@ -167,14 +167,14 @@ func TestPrettyDisplay(t *testing.T) {
 					Breaches: []breach.Breach{
 						&breach.ValueBreach{
 							Value: "Fail a",
-							Remediation: breach.Remediation{
+							RemediationResult: breach.RemediationResult{
 								Status:   breach.RemediationStatusSuccess,
 								Messages: []string{"fixed 1"},
 							},
 						},
 						&breach.ValueBreach{
 							Value: "Fail b",
-							Remediation: breach.Remediation{
+							RemediationResult: breach.RemediationResult{
 								Status:   breach.RemediationStatusFailed,
 								Messages: []string{"not fixed 1"},
 							},
@@ -197,7 +197,7 @@ func TestPrettyDisplay(t *testing.T) {
 					Name: "a",
 					Breaches: []breach.Breach{
 						&breach.ValueBreach{
-							Remediation: breach.Remediation{
+							RemediationResult: breach.RemediationResult{
 								Status:   breach.RemediationStatusFailed,
 								Messages: []string{"failed 1"},
 							},
