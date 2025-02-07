@@ -23,5 +23,6 @@ The following Collect/Fact plugins are available:
 
 The following Analyse plugins are available:
   - [allowed:list](../reference/analyse/allowed-list)
+  - [equals](../reference/analyse/equals)
   - [not:empty](../reference/analyse/not-empty)
   - [regex:match](../reference/analyse/regex-match)

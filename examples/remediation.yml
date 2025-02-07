@@ -8,3 +8,17 @@ collect:
         set -o pipefail
         drush pm:list --no-core --package=Security --fields=name,status --format=json|jq -r '.tfa.status'
 
+analyse:
+  tfa-module-absent:
+    equals:
+      description: tfa module not in codebase
+      input: db-tfa-module
+      key: stdout
+      value: 'null'
+
+  db-tfa-module-disabled:
+    equals:
+      description: tfa module is disabled
+      input: db-tfa-module
+      key: stdout
+      value: Enabled
