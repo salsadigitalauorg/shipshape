@@ -1,0 +1,10 @@
+collect:
+  db-tfa-module:
+    command:
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        drush pm:list --no-core --package=Security --fields=name,status --format=json|jq -r '.tfa.status'
+

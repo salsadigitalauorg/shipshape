@@ -92,3 +92,24 @@ func TestGetMsgFromCommandError(t *testing.T) {
 		assert.Equal("basic error", msg)
 	})
 }
+
+func TestGetExitCode(t *testing.T) {
+	assert := assert.New(t)
+
+	t.Run("exitError", func(t *testing.T) {
+		exitCode := command.GetExitCode(&exec.ExitError{
+			Stderr: []byte("some error"),
+		})
+		assert.Equal(-1, exitCode)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		exitCode := command.GetExitCode(errors.New("basic error"))
+		assert.Equal(1, exitCode)
+	})
+
+	t.Run("nil", func(t *testing.T) {
+		exitCode := command.GetExitCode(nil)
+		assert.Equal(0, exitCode)
+	})
+}

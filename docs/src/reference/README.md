@@ -10,6 +10,7 @@ The following Connection plugins are available:
 ## Collect plugins
 
 The following Collect/Fact plugins are available:
+  - [command](../reference/collect/command)
   - [database:search](../reference/collect/database-search)
   - [docker:command](../reference/collect/docker-command)
   - [docker:images](../reference/collect/docker-images)

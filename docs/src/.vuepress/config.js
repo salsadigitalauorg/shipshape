@@ -93,6 +93,7 @@ module.exports = {
               path: '/reference/collect',
               collapsable: false,
               children: [
+                ['/reference/collect/command', 'command'],
                 ['/reference/collect/database-search', 'database:search'],
                 ['/reference/collect/docker-command', 'docker:command'],
                 ['/reference/collect/docker-images', 'docker:images'],

@@ -59,3 +59,15 @@ func GetMsgFromCommandError(err error) string {
 	}
 	return errMsg
 }
+
+func GetExitCode(err error) int {
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return exitErr.ExitCode()
+	}
+
+	if err != nil {
+		return 1
+	}
+	return 0
+}
