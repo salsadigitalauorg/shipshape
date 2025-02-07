@@ -17,6 +17,10 @@ func New{{ .Plugin }}(id string) *{{ .Plugin }} {
 	}
 }
 
+func (p *{{ .Plugin }}) SetInput(input fact.Facter) {
+	p.input = input
+}
+
 func (p *{{ .Plugin }}) GetId() string {
 	return p.Id
 }

@@ -38,6 +38,7 @@ type FactCollectTest struct {
 func TestFactCollect(t *testing.T, fct FactCollectTest) {
 	t.Helper()
 	assert := assert.New(t)
+
 	// Hide logging output.
 	currLogOut := logrus.StandardLogger().Out
 	defer logrus.SetOutput(currLogOut)
