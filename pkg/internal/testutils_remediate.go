@@ -75,7 +75,7 @@ func TestRemediate(t *testing.T, rt RemediateTest) {
 		assert.NotEmpty(r.Breaches)
 		remediationsFound := false
 		for _, b := range r.Breaches {
-			if b.GetRemediation().Status != "" {
+			if b.GetRemediationResult().Status != "" {
 				remediationsFound = true
 				break
 			}
@@ -85,7 +85,7 @@ func TestRemediate(t *testing.T, rt RemediateTest) {
 		assert.NotEmpty(r.Breaches)
 		remediationMsgs := []string{}
 		for _, b := range r.Breaches {
-			remediationMsgs = append(remediationMsgs, b.GetRemediation().Messages...)
+			remediationMsgs = append(remediationMsgs, b.GetRemediationResult().Messages...)
 		}
 		assert.ElementsMatchf(
 			rt.ExpectRemediations,

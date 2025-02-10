@@ -111,10 +111,10 @@ func (p *Stdout) Pretty(rl *result.ResultList, w io.Writer) {
 			}
 			fmt.Fprintf(buf, "  ### %s\n", r.Name)
 			for _, b := range r.Breaches {
-				if b.GetRemediation().Status != breach.RemediationStatusSuccess {
+				if b.GetRemediationResult().Status != breach.RemediationStatusSuccess {
 					continue
 				}
-				for _, msg := range b.GetRemediation().Messages {
+				for _, msg := range b.GetRemediationResult().Messages {
 					fmt.Fprintf(buf, "     -- %s\n", msg)
 				}
 			}
@@ -161,7 +161,7 @@ func (p *Stdout) Pretty(rl *result.ResultList, w io.Writer) {
 		}
 		fmt.Fprintf(buf, "  ### %s\n", r.Name)
 		for _, b := range r.Breaches {
-			if b.GetRemediation().Status == breach.RemediationStatusSuccess {
+			if b.GetRemediationResult().Status == breach.RemediationStatusSuccess {
 				continue
 			}
 			fmt.Fprintf(buf, "     -- %s\n", b)

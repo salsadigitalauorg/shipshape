@@ -54,7 +54,7 @@ func (r *Result) RemediationsCount() (uint32, uint32, uint32, uint32) {
 	failed := uint32(0)
 	partial := uint32(0)
 	for _, b := range r.Breaches {
-		switch b.GetRemediation().Status {
+		switch b.GetRemediationResult().Status {
 		case breach.RemediationStatusNoSupport:
 			unsupported++
 		case breach.RemediationStatusSuccess:

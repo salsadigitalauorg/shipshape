@@ -109,7 +109,7 @@ func (b bogusBreach) GetCheckType() string {
 	return ""
 }
 
-func (b bogusBreach) GetRemediation() *RemediationResult {
+func (b bogusBreach) GetRemediationResult() *RemediationResult {
 	return &RemediationResult{}
 }
 
