@@ -4,10 +4,12 @@ package breach
 type Breach interface {
 	GetCheckName() string
 	GetCheckType() string
+	GetRemediator() *Remediator
 	GetRemediationResult() *RemediationResult
 	GetSeverity() string
 	GetType() BreachType
 	SetCommonValues(checkType string, checkName string, severity string)
+	SetRemediator(Remediator)
 	SetRemediation(status RemediationStatus, msg string)
 	String() string
 }

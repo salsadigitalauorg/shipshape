@@ -17,6 +17,7 @@ var (
 	enableEnvResolver bool
 	breachTypes       []string
 	plugins           []string
+	names             []string
 )
 
 func main() {
@@ -61,6 +62,17 @@ func main() {
 		}
 		gen.AnalysePlugin(plugins)
 		break
+	case "remediator":
+		if len(plugins) == 0 {
+			log.Fatal("remediator missing flags; plugins is required")
+		}
+		if len(names) == 0 {
+			log.Fatal("remediator missing flags; name is required")
+		}
+		gen.RemediatorPlugin(plugins, names)
+		break
+	default:
+		log.Fatalf("unknown argument '%s'", arg)
 	}
 }
 
@@ -70,6 +82,7 @@ func parseFlags() {
 	pflag.BoolVar(&enableEnvResolver, "envresolver", false, "Add envResolver methods to the plugin")
 	pflag.StringSliceVar(&breachTypes, "type", []string{}, "The breach type")
 	pflag.StringSliceVar(&plugins, "plugin", []string{}, "The plugin struct")
+	pflag.StringSliceVar(&names, "name", []string{}, "The plugin name")
 	pflag.Parse()
 }
 

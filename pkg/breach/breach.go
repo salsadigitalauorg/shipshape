@@ -28,6 +28,7 @@ type ValueBreach struct {
 	ValueLabel        string `json:"value-label,omitempty"`
 	Value             string `json:"value"`
 	ExpectedValue     string `json:"expected-value,omitempty"`
+	remediator        Remediator
 	RemediationResult `json:"remediation,omitempty"`
 }
 
@@ -56,6 +57,7 @@ type KeyValueBreach struct {
 	ValueLabel        string `json:"value-label,omitempty"`
 	Value             string `json:"value"`
 	ExpectedValue     string `json:"expected-value,omitempty"`
+	remediator        Remediator
 	RemediationResult `json:"remediation,omitempty"`
 }
 
@@ -83,6 +85,7 @@ type KeyValuesBreach struct {
 	Key               string   `json:"key,omitempty"`
 	ValueLabel        string   `json:"value-label,omitempty"`
 	Values            []string `json:"values"`
+	remediator        Remediator
 	RemediationResult `json:"remediation,omitempty"`
 }
 

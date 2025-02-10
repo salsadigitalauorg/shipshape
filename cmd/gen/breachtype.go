@@ -37,8 +37,12 @@ func (b *{{.BreachType}}Breach) GetCheckType() string {
 	return b.CheckType
 }
 
-func (b *{{.BreachType}}Breach) GetRemediation() *Remediation {
-	return &b.Remediation
+func (b *{{.BreachType}}Breach) GetRemediator() *Remediator {
+	return &b.remediator
+}
+
+func (b *{{.BreachType}}Breach) GetRemediationResult() *RemediationResult {
+	return &b.RemediationResult
 }
 
 func (b *{{.BreachType}}Breach) GetSeverity() string {
@@ -56,10 +60,14 @@ func (b *{{.BreachType}}Breach) SetCommonValues(checkType string, checkName stri
 	b.Severity = severity
 }
 
+func (b *{{.BreachType}}Breach) SetRemediator(r Remediator) {
+	b.remediator = r
+}
+
 func (b *{{.BreachType}}Breach) SetRemediation(status RemediationStatus, msg string) {
-	b.Remediation.Status = status
+	b.RemediationResult.Status = status
 	if msg != "" {
-		b.Remediation.Messages = []string{msg}
+		b.RemediationResult.Messages = []string{msg}
 	}
 }
 `

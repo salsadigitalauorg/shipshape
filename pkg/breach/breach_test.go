@@ -99,7 +99,7 @@ func TestBreachKeyValuesBreachStringers(t *testing.T) {
 	}
 }
 
-type bogusBreach struct{}
+type bogusBreach struct{ remediator Remediator }
 
 func (b bogusBreach) GetCheckName() string {
 	return ""
@@ -107,6 +107,10 @@ func (b bogusBreach) GetCheckName() string {
 
 func (b bogusBreach) GetCheckType() string {
 	return ""
+}
+
+func (b bogusBreach) GetRemediator() *Remediator {
+	return &b.remediator
 }
 
 func (b bogusBreach) GetRemediationResult() *RemediationResult {
