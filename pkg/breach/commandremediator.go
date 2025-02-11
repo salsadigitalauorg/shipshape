@@ -4,17 +4,17 @@ import "github.com/salsadigitalauorg/shipshape/pkg/command"
 
 type CommandRemediator struct {
 	// Common fields.
-	Message string `yaml:"msg"`
+	Message string `json:"msg"`
 
 	// Plugin fields.
-	Command   string `yaml:"cmd"`
-	Arguments string `yaml:"args"`
+	Command   string   `json:"cmd"`
+	Arguments []string `json:"args"`
 }
 
 //go:generate go run ../../cmd/gen.go remediator --plugin=CommandRemediator --name=command
 
 func (r *CommandRemediator) Remediate() RemediationResult {
-	out, err := command.ShellCommander(r.Command, r.Arguments).Output()
+	_, err := command.ShellCommander(r.Command, r.Arguments...).Output()
 	if err != nil {
 		return RemediationResult{
 			Status:   RemediationStatusFailed,
@@ -24,6 +24,6 @@ func (r *CommandRemediator) Remediate() RemediationResult {
 
 	return RemediationResult{
 		Status:   RemediationStatusSuccess,
-		Messages: []string{string(out)},
+		Messages: []string{r.Message},
 	}
 }

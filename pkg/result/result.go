@@ -3,6 +3,8 @@ package result
 import (
 	"sort"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 )
 
@@ -44,6 +46,18 @@ func (r *Result) Sort() {
 			return r.Warnings[i] < r.Warnings[j]
 		})
 	}
+}
+
+func (r *Result) PerformRemediation() {
+	if len(r.Breaches) == 0 {
+		return
+	}
+
+	log.WithFields(r.LogFields()).Debug("performing remediation")
+	for _, b := range r.Breaches {
+		b.PerformRemediation()
+	}
+
 }
 
 // RemediationsCount returns the number of unsupported, successful, failed and
@@ -102,4 +116,22 @@ func (r *Result) DetermineResultStatus(remediationPerformed bool) {
 		return
 	}
 	r.Status = Pass
+}
+
+func (r *Result) LogFields() log.Fields {
+	lf := log.Fields{
+		"name":               r.Name,
+		"severity":           r.Severity,
+		"check-type":         r.CheckType,
+		"status":             r.Status,
+		"remediation-status": r.RemediationStatus,
+	}
+
+	breaches := []string{}
+	for _, b := range r.Breaches {
+		breaches = append(breaches, b.String())
+	}
+	lf["breaches"] = breaches
+
+	return lf
 }

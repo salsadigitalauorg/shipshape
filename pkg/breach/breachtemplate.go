@@ -2,14 +2,16 @@ package breach
 
 import (
 	"bytes"
-	"fmt"
 	"text/template"
 )
 
-func EvaluateTemplate(bt BreachTemplater, b Breach) {
+func EvaluateTemplate(bt BreachTemplater, b Breach, remediation interface{}) {
 	t := bt.GetBreachTemplate()
 
+	// No template set, use raw breach.
 	if t.Type == "" {
+		r := RemediatorFromInterface(remediation)
+		b.SetRemediator(r)
 		bt.AddBreach(b)
 		return
 	}
@@ -35,32 +37,25 @@ func EvaluateTemplate(bt BreachTemplater, b Breach) {
 		rendered.Value = EvaluateTemplateString(bt, t.Value, b)
 	}
 
-	switch t.Type {
+	var breachToAdd Breach
+	switch rendered.Type {
 	case BreachTypeValue:
-		breach, ok := b.(*ValueBreach)
-		if !ok {
-			bt.AddBreach(&ValueBreach{
-				ValueLabel: "unable to cast breach to value",
-				Value:      fmt.Sprintf("%#v", b),
-			})
-		}
+		breach := b.(*ValueBreach)
 		breach.ValueLabel = rendered.ValueLabel
 		breach.Value = rendered.Value
-		bt.AddBreach(breach)
+		breachToAdd = breach
 	case BreachTypeKeyValue:
-		breach, ok := b.(*KeyValueBreach)
-		if !ok {
-			bt.AddBreach(&ValueBreach{
-				ValueLabel: "unable to cast breach to key-value",
-				Value:      fmt.Sprintf("%#v", b),
-			})
-		}
+		breach := b.(*KeyValueBreach)
 		breach.KeyLabel = rendered.KeyLabel
 		breach.Key = rendered.Key
 		breach.ValueLabel = rendered.ValueLabel
 		breach.Value = rendered.Value
-		bt.AddBreach(breach)
+		breachToAdd = breach
 	}
+
+	r := RemediatorFromInterface(remediation)
+	breachToAdd.SetRemediator(r)
+	bt.AddBreach(breachToAdd)
 }
 
 var TemplateFuncs = template.FuncMap{}

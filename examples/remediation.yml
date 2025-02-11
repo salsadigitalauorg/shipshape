@@ -21,4 +21,10 @@ analyse:
       description: tfa module is disabled
       input: db-tfa-module
       key: stdout
-      value: Enabled
+      value: Disabled
+      remediation:
+        cmd: drush
+        args:
+        - pm:enable
+        - tfa
+        msg: tfa module has been successfully enabled

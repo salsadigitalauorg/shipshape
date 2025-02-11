@@ -21,6 +21,7 @@ type Equals struct {
 	Severity              string `yaml:"severity"`
 	breach.BreachTemplate `yaml:"breach-format"`
 	Result                result.Result
+	Remediation           interface{} `yaml:"remediation"`
 	input                 fact.Facter
 
 	// Plugin fields.
@@ -52,14 +53,14 @@ func (p *Equals) Analyse() {
 		if inputData == p.Value {
 			breach.EvaluateTemplate(p, &breach.ValueBreach{
 				Value: fmt.Sprintf("%s equals '%s'", p.InputName, inputData),
-			})
+			}, p.Remediation)
 		}
 	case data.FormatMapString:
 		inputData := data.AsMapString(p.input.GetData())
 		if inputData[p.Key] == p.Value {
 			breach.EvaluateTemplate(p, &breach.ValueBreach{
 				Value: fmt.Sprintf("%s equals '%s'", p.InputName, inputData[p.Key]),
-			})
+			}, p.Remediation)
 		}
 	default:
 		log.WithField("input-format", p.input.GetFormat()).Error("unsupported input format")

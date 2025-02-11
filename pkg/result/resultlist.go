@@ -5,6 +5,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 )
 
@@ -50,6 +52,8 @@ func (rl *ResultList) IncrChecks(ct string, incr int) {
 func (rl *ResultList) AddResult(r Result) {
 	lock.Lock()
 	defer lock.Unlock()
+
+	log.WithFields(r.LogFields()).Debug("adding final result")
 	rl.Results = append(rl.Results, r)
 
 	breachesIncr := len(r.Breaches)

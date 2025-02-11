@@ -109,8 +109,8 @@ func (b bogusBreach) GetCheckType() string {
 	return ""
 }
 
-func (b bogusBreach) GetRemediator() *Remediator {
-	return &b.remediator
+func (b bogusBreach) GetRemediator() Remediator {
+	return b.remediator
 }
 
 func (b bogusBreach) GetRemediationResult() *RemediationResult {
@@ -131,6 +131,12 @@ func (b bogusBreach) SetCommonValues(checkType string, checkName string, severit
 func (b bogusBreach) String() string {
 	return ""
 }
+
+func (b bogusBreach) SetRemediator(r Remediator) {
+	b.remediator = r
+}
+
+func (b bogusBreach) PerformRemediation() {}
 
 func (b bogusBreach) SetRemediation(status RemediationStatus, msg string) {}
 

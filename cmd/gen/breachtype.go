@@ -25,53 +25,8 @@ func BreachType(breachTypes []string) {
 }
 
 func breachTypeFuncs(bt string) string {
-	tmplStr := `
-/*
- * {{.BreachType}}Breach
- */
-func (b *{{.BreachType}}Breach) GetCheckName() string {
-	return b.CheckName
-}
-
-func (b *{{.BreachType}}Breach) GetCheckType() string {
-	return b.CheckType
-}
-
-func (b *{{.BreachType}}Breach) GetRemediator() *Remediator {
-	return &b.remediator
-}
-
-func (b *{{.BreachType}}Breach) GetRemediationResult() *RemediationResult {
-	return &b.RemediationResult
-}
-
-func (b *{{.BreachType}}Breach) GetSeverity() string {
-	return b.Severity
-}
-
-func (b *{{.BreachType}}Breach) GetType() BreachType {
-	return BreachType{{.BreachType}}
-}
-
-func (b *{{.BreachType}}Breach) SetCommonValues(checkType string, checkName string, severity string) {
-	b.BreachType = b.GetType()
-	b.CheckType = checkType
-	b.CheckName = checkName
-	b.Severity = severity
-}
-
-func (b *{{.BreachType}}Breach) SetRemediator(r Remediator) {
-	b.remediator = r
-}
-
-func (b *{{.BreachType}}Breach) SetRemediation(status RemediationStatus, msg string) {
-	b.RemediationResult.Status = status
-	if msg != "" {
-		b.RemediationResult.Messages = []string{msg}
-	}
-}
-`
-	tmpl, err := template.New("breachTypeFuncs").Parse(tmplStr)
+	tmplPath := filepath.Join("..", "..", "pkg", "breach", "gen_templates", "breachtype.go.tmpl")
+	tmpl, err := template.ParseFiles(filepath.Join(getScriptPath(), tmplPath))
 	if err != nil {
 		log.Fatalln(err)
 	}

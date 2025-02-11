@@ -2,6 +2,7 @@ package breach
 
 import (
 	"encoding/json"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -31,25 +32,24 @@ func RemediatorFromInterface(remediation interface{}) Remediator {
 		return nil
 	}
 
-	// Determine the plugin name, if set. Default will be command.
 	// Marshal into json first, so we can later unmarshal as required.
-	type firstPass struct {
-		Plugin string `json:"plugin"`
-	}
-
 	jsm, err := json.Marshal(remediation)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.WithField("remediation-json", string(jsm)).Debug()
+	log.WithField("remediation-json", string(jsm)).Trace()
 
-	var p firstPass
-	if err := json.Unmarshal(jsm, &firstPass{}); err != nil {
+	// Determine the plugin name, if set. Default will be command.
+	var firstPass struct {
+		Plugin string `json:"plugin"`
+	}
+	if err := json.Unmarshal(jsm, &firstPass); err != nil {
 		log.Fatal(err)
 	}
+	log.WithField("firstPass", firstPass.Plugin).Debug("parsing remediator")
 
 	pluginName := ""
-	if p.Plugin == "" {
+	if firstPass.Plugin == "" {
 		pluginName = "command"
 	}
 
@@ -65,5 +65,7 @@ func RemediatorFromInterface(remediation interface{}) Remediator {
 		log.WithField("plugin", pluginName).Fatal("unknown remediation plugin")
 	}
 
+	log.WithField("remediator", fmt.Sprintf("%#v", finalR)).
+		Debug("parsed remediator")
 	return finalR
 }

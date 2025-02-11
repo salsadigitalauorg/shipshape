@@ -20,6 +20,7 @@ type RegexMatch struct {
 	Severity              string `yaml:"severity"`
 	breach.BreachTemplate `yaml:"breach-format"`
 	Result                result.Result
+	Remediation           interface{} `yaml:"remediation"`
 	input                 fact.Facter
 
 	// Plugin fields.
@@ -51,7 +52,7 @@ func (p *RegexMatch) Analyse() {
 						Key:        k,
 						ValueLabel: k2,
 						Value:      v,
-					})
+					}, p.Remediation)
 					continue
 				}
 			}
@@ -62,12 +63,12 @@ func (p *RegexMatch) Analyse() {
 		if match {
 			breach.EvaluateTemplate(p, &breach.ValueBreach{
 				Value: fmt.Sprintf("%s equals '%s'", p.InputName, inputData),
-			})
+			}, p.Remediation)
 		}
 	default:
 		log.WithField("input-format", p.input.GetFormat()).Debug("unsupported input format")
 		breach.EvaluateTemplate(p, &breach.ValueBreach{
 			Value: fmt.Sprintf("unsupported input format %s", p.input.GetFormat()),
-		})
+		}, nil)
 	}
 }

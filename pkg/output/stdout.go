@@ -7,6 +7,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
@@ -126,7 +127,8 @@ func (p *Stdout) Pretty(rl *result.ResultList, w io.Writer) {
 		switch rl.RemediationStatus() {
 		case breach.RemediationStatusNoSupport:
 			fmt.Fprint(buf, "Breaches were detected but none of them could be "+
-				"fixed as remediation is not supported for them yet.\n\n")
+				"fixed as remediation is not supported for them yet or none was "+
+				"provided in the config.\n\n")
 			fmt.Fprint(buf, "# Non-remediated breaches\n\n")
 		case breach.RemediationStatusFailed:
 			fmt.Fprint(buf, "Breaches were detected but none of them could "+
@@ -165,10 +167,27 @@ func (p *Stdout) Pretty(rl *result.ResultList, w io.Writer) {
 				continue
 			}
 			fmt.Fprintf(buf, "     -- %s\n", b)
+			if r.RemediationStatus == breach.RemediationStatusFailed {
+				fmt.Fprintf(buf, "        !!! Remediation failed:\n")
+				for _, msg := range b.GetRemediationResult().Messages {
+					fmt.Fprint(buf, TabbedMultiline("        |  ", msg))
+				}
+			}
 		}
 		fmt.Fprintln(buf)
 	}
 	buf.Flush()
+}
+
+// TabbedMultiline prepends a given tab string
+// to each line in a multiline string.
+func TabbedMultiline(tab, s string) string {
+	s = strings.Trim(s, " \n")
+	lines := strings.Split(s, "\n")
+	for i, l := range lines {
+		lines[i] = fmt.Sprintf("%s%s", tab, l)
+	}
+	return strings.Join(lines, "\n")
 }
 
 // JUnit outputs the checks results in the JUnit XML format.
