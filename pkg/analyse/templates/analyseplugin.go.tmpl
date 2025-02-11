@@ -60,6 +60,13 @@ func (p *{{ .Plugin }}) ValidateInput() error {
 }
 
 func (p *{{ .Plugin }}) PreProcessInput() bool {
+	if p.input == nil {
+		p.AddBreach(&breach.ValueBreach{
+			Value: "no input available to analyse",
+		})
+		return false
+	}
+
 	if len(p.input.GetErrors()) > 0 {
 		errs := []string{}
 		for _, e := range p.input.GetErrors() {
@@ -72,12 +79,6 @@ func (p *{{ .Plugin }}) PreProcessInput() bool {
 		return false
 	}
 
-	if p.input == nil {
-		p.AddBreach(&breach.ValueBreach{
-			Value: "no input available to analyse",
-		})
-		return false
-	}
 	return true
 }
 
