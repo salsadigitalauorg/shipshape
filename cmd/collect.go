@@ -2,11 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/output"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
@@ -26,6 +29,11 @@ output them in the format specified`,
 				continue
 			}
 
+			log.WithFields(log.Fields{
+				"fact":   f.GetName(),
+				"format": f.GetFormat(),
+				"data":   f.GetData(),
+			}).Debug("printing collected fact")
 			fmt.Printf("%s:", f.GetName())
 			switch f.GetFormat() {
 			case data.FormatMapListString:
@@ -40,7 +48,12 @@ output them in the format specified`,
 				loadedData := data.AsMapString(f.GetData())
 				fmt.Println()
 				for k, v := range loadedData {
-					fmt.Printf("  %s: %s\n", k, v)
+					if strings.Contains(v, "\n") {
+						fmt.Printf("  %s:\n", k)
+						fmt.Println(output.TabbedMultiline("    ", v))
+					} else {
+						fmt.Printf("  %s: %s\n", k, v)
+					}
 				}
 			case data.FormatMapNestedString:
 				loadedData := data.AsMapNestedString(f.GetData())
@@ -56,6 +69,7 @@ output them in the format specified`,
 			default:
 				fmt.Println(" collect not yet implemented for", f.GetFormat())
 			}
+			fmt.Println()
 		}
 	},
 }

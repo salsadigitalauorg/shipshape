@@ -22,7 +22,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@main
       with:
-        go-version: 1.21
+        go-version: 1.23
 
     - name: Run generators
       run: go generate ./...
@@ -35,6 +35,9 @@ jobs:
 
     - name: List check types
       run: ./build/shipshape config list-checks
+
+    - name: List plugins
+      run: ./build/shipshape config list-plugins
 
     - name: Test
       run: go test -v -race $(go list ./... | grep -v /cmd/gen) -coverprofile=build/coverage.out
@@ -62,7 +65,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@main
       with:
-        go-version: 1.21
+        go-version: 1.23
 
     - name: Fetch all tags
       run: git fetch --force --tags

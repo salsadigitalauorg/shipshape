@@ -2,13 +2,19 @@ package cmd
 
 import (
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/analyse"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/connection"
+	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/output"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
@@ -30,6 +36,41 @@ var configListChecksCmd = &cobra.Command{
 		sort.Strings(checks)
 		for _, c := range checks {
 			fmt.Println("  - " + c)
+		}
+	},
+}
+
+var configListPluginsCmd = &cobra.Command{
+	Use:   "list-plugins",
+	Short: "List available plugins",
+	Long:  `List all available plugins that can be used in shipshape`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Connection plugins:")
+		plugins := slices.Collect(maps.Keys(connection.Registry))
+		sort.Strings(plugins)
+		for _, p := range plugins {
+			fmt.Println("  - " + p)
+		}
+
+		fmt.Println("\nFact plugins:")
+		plugins = slices.Collect(maps.Keys(fact.Registry))
+		sort.Strings(plugins)
+		for _, p := range plugins {
+			fmt.Println("  - " + p)
+		}
+
+		fmt.Println("\nAnalyse plugins:")
+		plugins = slices.Collect(maps.Keys(analyse.Registry))
+		sort.Strings(plugins)
+		for _, p := range plugins {
+			fmt.Println("  - " + p)
+		}
+
+		fmt.Println("\nOutput plugins:")
+		plugins = slices.Collect(maps.Keys(output.Outputters))
+		sort.Strings(plugins)
+		for _, p := range plugins {
+			fmt.Println("  - " + p)
 		}
 	},
 }
@@ -63,6 +104,7 @@ multiple config files are being merged as expected`,
 }
 
 func init() {
+	configCmd.AddCommand(configListPluginsCmd)
 	configCmd.AddCommand(configListChecksCmd)
 	configCmd.AddCommand(configDumpCmd)
 	rootCmd.AddCommand(configCmd)

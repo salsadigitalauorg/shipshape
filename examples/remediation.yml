@@ -6,7 +6,25 @@ collect:
       - -c
       - |
         set -o pipefail
-        drush pm:list --no-core --package=Security --fields=name,status --format=json|jq -r '.tfa.status'
+        drush pm:list --no-core --package=Security --fields=name,status --format=json | jq -r '.tfa.status'
+
+  db-tfa-config-enabled:
+    command:
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        drush config:get tfa.settings enabled --include-overridden --format=json | jq -r ".[\"tfa.settings:enabled\"]"
+
+  db-tfa-config-required-roles:
+    command:
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        drush config:get tfa.settings required_roles --include-overridden --format=json | jq -r ".[\"tfa.settings:required_roles\"]"
 
 analyse:
   tfa-module-absent:
@@ -28,3 +46,28 @@ analyse:
         - pm:enable
         - tfa
         msg: tfa module has been successfully enabled
+
+  db-tfa-config-disabled:
+    equals:
+      description: tfa is disabled in config
+      input: db-tfa-config-enabled
+      key: stdout
+      value: false
+      remediation:
+        cmd: drush
+        args:
+        - config:set
+        - tfa.settings
+        - enabled
+        - '1'
+        msg: tfa config has been successfully enabled
+
+  db-tfa-no-role-required:
+    equals:
+      description: tfa has no required roles
+      input: db-tfa-config-required-roles
+      key: stdout
+      value: '[]'
+      remediation:
+        cmd: /path/to/tfa-role-remediation.sh
+        msg: tfa config has been updated to require a role
