@@ -28,6 +28,6 @@ func (p *CommandRemediator) Remediate() RemediationResult {
 
 	return RemediationResult{
 		Status:   RemediationStatusSuccess,
-		Messages: []string{p.Message},
+		Messages: []string{p.GetRemediationMessage()},
 	}
 }

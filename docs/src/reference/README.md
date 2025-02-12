@@ -26,3 +26,8 @@ The following Analyse plugins are available:
   - [equals](../reference/analyse/equals)
   - [not:empty](../reference/analyse/not-empty)
   - [regex:match](../reference/analyse/regex-match)
+
+## Remediation plugins
+
+The following Remediation plugins are available:
+  - [command](../reference/remediate/command)

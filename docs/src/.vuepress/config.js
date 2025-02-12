@@ -69,6 +69,7 @@ module.exports = {
             'connections',
             'collect',
             'analyse',
+            'remediate',
             'outputs',
           ]
         }
@@ -112,6 +113,14 @@ module.exports = {
                 ['/reference/analyse/equals', 'equals'],
                 ['/reference/analyse/not-empty', 'not:empty'],
                 ['/reference/analyse/regex-match', 'regex:match'],
+              ]
+            },
+            {
+              title: 'Remediate',
+              path: '/reference/remediate',
+              collapsable: false,
+              children: [
+                ['/reference/remediate/command', 'command'],
               ]
             },
           ]

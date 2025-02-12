@@ -131,4 +131,5 @@ Global Flags:
   - [Connections](connections)
   - [Collecting data](collect)
   - [Analysing data](analyse)
+  - [Remediating breaches](remediate)
   - [Outputs](outputs)
