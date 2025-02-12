@@ -87,9 +87,18 @@ func ValidatePluginInput(p Facter) (Facter, error) {
 				return plugin, nil
 			}
 		}
+
+		return nil, &ErrSupportNone{
+			SupportType:   "input",
+			SupportPlugin: plugin.PluginName(),
+			Plugin:        p.PluginName(),
+		}
 	}
 
-	return nil, &ErrSupportNone{Plugin: p.GetName(), SupportType: "input"}
+	return nil, &ErrSupportNotFound{
+		SupportType:   "input",
+		Plugin:        p.GetName(),
+		SupportPlugin: p.GetInputName()}
 }
 
 func LoadPluginAdditionalInputs(p Facter) ([]Facter, []error) {

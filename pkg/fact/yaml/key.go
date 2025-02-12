@@ -72,6 +72,7 @@ func (p *Key) Collect() {
 		"fact":         p.Name,
 		"input":        p.GetInputName(),
 		"input-plugin": p.input.PluginName(),
+		"input-format": p.input.GetFormat(),
 	}).Debug("collecting data")
 
 	switch p.input.GetFormat() {
@@ -144,6 +145,9 @@ func (p *Key) Collect() {
 			}
 			nestedLookupMap[f] = lookupMap
 		}
+
+	default:
+		log.WithField("input-format", p.input.GetFormat()).Error("unsupported input format")
 	}
 
 	if lookup == nil && lookupMap == nil && nestedLookupMap == nil {
