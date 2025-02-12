@@ -101,7 +101,7 @@ func TestRemediatorFromInterface(t *testing.T) {
 				"expected-remediation-result": "foo",
 			},
 			expected:    nil,
-			expectFatal: "json: cannot unmarshal string into Go struct field TestRemediator.expected-remediation-result of type breach.RemediationResult",
+			expectFatal: "json: cannot unmarshal string into Go struct field TestRemediator.expected-remediation-result of type remediation.RemediationResult",
 		},
 	}
 
