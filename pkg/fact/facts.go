@@ -1,6 +1,8 @@
 package fact
 
 import (
+	"sort"
+
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
@@ -41,17 +43,18 @@ func GetInstance(name string) Facter {
 	}
 }
 
-func registryKeys() []string {
+func RegistryKeys() []string {
 	keys := []string{}
 	for k := range Registry {
 		keys = append(keys, k)
 	}
+	sort.Strings(keys)
 	return keys
 }
 
 func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0
-	log.WithField("registry", registryKeys()).Debug("available fact plugins")
+	log.WithField("registry", RegistryKeys()).Debug("available fact plugins")
 	for name, pluginConf := range raw {
 		for pluginName, pluginMap := range pluginConf {
 			f, ok := Registry[pluginName]

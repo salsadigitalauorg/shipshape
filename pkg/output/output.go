@@ -2,6 +2,7 @@ package output
 
 import (
 	"io"
+	"sort"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -15,17 +16,18 @@ type Outputter interface {
 
 var Outputters = map[string]Outputter{}
 
-func registryKeys() []string {
+func RegistryKeys() []string {
 	keys := []string{}
 	for k := range Outputters {
 		keys = append(keys, k)
 	}
+	sort.Strings(keys)
 	return keys
 }
 
 func ParseConfig(raw map[string]interface{}, rl *result.ResultList) {
 	count := 0
-	log.WithField("registry", registryKeys()).Debug("outputters")
+	log.WithField("registry", RegistryKeys()).Debug("outputters")
 	for pluginName, pluginMap := range raw {
 		o, ok := Outputters[pluginName]
 		if !ok {

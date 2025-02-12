@@ -3,6 +3,7 @@ package remediation
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -28,6 +29,15 @@ type RemediationResult struct {
 }
 
 var Registry = map[string]func() Remediator{}
+
+func RegistryKeys() []string {
+	keys := []string{}
+	for k := range Registry {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
 
 func RemediatorFromInterface(remediation interface{}) Remediator {
 	if remediation == nil {

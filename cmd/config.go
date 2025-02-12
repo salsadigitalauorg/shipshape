@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"maps"
-	"slices"
 	"sort"
 
 	log "github.com/sirupsen/logrus"
@@ -15,6 +13,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/output"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
 
@@ -46,30 +45,27 @@ var configListPluginsCmd = &cobra.Command{
 	Long:  `List all available plugins that can be used in shipshape`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Connection plugins:")
-		plugins := slices.Collect(maps.Keys(connection.Registry))
-		sort.Strings(plugins)
-		for _, p := range plugins {
+		for _, p := range connection.RegistryKeys() {
 			fmt.Println("  - " + p)
 		}
 
 		fmt.Println("\nFact plugins:")
-		plugins = slices.Collect(maps.Keys(fact.Registry))
-		sort.Strings(plugins)
-		for _, p := range plugins {
+		for _, p := range fact.RegistryKeys() {
 			fmt.Println("  - " + p)
 		}
 
 		fmt.Println("\nAnalyse plugins:")
-		plugins = slices.Collect(maps.Keys(analyse.Registry))
-		sort.Strings(plugins)
-		for _, p := range plugins {
+		for _, p := range analyse.RegistryKeys() {
+			fmt.Println("  - " + p)
+		}
+
+		fmt.Println("\nRemediate plugins:")
+		for _, p := range remediation.RegistryKeys() {
 			fmt.Println("  - " + p)
 		}
 
 		fmt.Println("\nOutput plugins:")
-		plugins = slices.Collect(maps.Keys(output.Outputters))
-		sort.Strings(plugins)
-		for _, p := range plugins {
+		for _, p := range output.RegistryKeys() {
 			fmt.Println("  - " + p)
 		}
 	},
