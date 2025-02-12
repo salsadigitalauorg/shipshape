@@ -13,8 +13,12 @@ type CommandRemediator struct {
 
 //go:generate go run ../../cmd/gen.go remediator --plugin=CommandRemediator --name=command
 
-func (r *CommandRemediator) Remediate() RemediationResult {
-	_, err := command.ShellCommander(r.Command, r.Arguments...).Output()
+func init() {
+	Registry["command"] = func() Remediator { return &CommandRemediator{} }
+}
+
+func (p *CommandRemediator) Remediate() RemediationResult {
+	_, err := command.ShellCommander(p.Command, p.Arguments...).Output()
 	if err != nil {
 		return RemediationResult{
 			Status:   RemediationStatusFailed,
@@ -24,6 +28,6 @@ func (r *CommandRemediator) Remediate() RemediationResult {
 
 	return RemediationResult{
 		Status:   RemediationStatusSuccess,
-		Messages: []string{r.Message},
+		Messages: []string{p.Message},
 	}
 }

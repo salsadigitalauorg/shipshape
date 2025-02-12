@@ -17,12 +17,19 @@ func TestBreachValueBreachStringer(t *testing.T) {
 		expected string
 	}{
 		{
-			name: "value-breach",
+			name: "valueBreach",
 			breach: &ValueBreach{
 				ValueLabel: "file not found",
 				Value:      "foo.ext",
 			},
 			expected: "[file not found] foo.ext",
+		},
+		{
+			name: "valueBreach/noLabel",
+			breach: &ValueBreach{
+				Value: "foo.ext was not found",
+			},
+			expected: "foo.ext was not found",
 		},
 	}
 
@@ -90,6 +97,16 @@ func TestBreachKeyValuesBreachStringers(t *testing.T) {
         - delete the site
         - delete the world`,
 		},
+		{
+			name: "KeyValuesBreach/noLabels",
+			breach: &KeyValuesBreach{
+				Key:    "disallowed permissions",
+				Values: []string{"delete the site", "delete the world"},
+			},
+			expected: `disallowed permissions:
+        - delete the site
+        - delete the world`,
+		},
 	}
 
 	for _, test := range tests {
@@ -132,9 +149,7 @@ func (b bogusBreach) String() string {
 	return ""
 }
 
-func (b bogusBreach) SetRemediator(r Remediator) {
-	b.remediator = r
-}
+func (b bogusBreach) SetRemediator(r Remediator) {}
 
 func (b bogusBreach) PerformRemediation() {}
 

@@ -27,6 +27,8 @@ type RemediationResult struct {
 	Messages []string          `json:",omitempty"`
 }
 
+var Registry = map[string]func() Remediator{}
+
 func RemediatorFromInterface(remediation interface{}) Remediator {
 	if remediation == nil {
 		return nil
@@ -48,21 +50,20 @@ func RemediatorFromInterface(remediation interface{}) Remediator {
 	}
 	log.WithField("firstPass", firstPass.Plugin).Debug("parsing remediator")
 
-	pluginName := ""
-	if firstPass.Plugin == "" {
+	pluginName := firstPass.Plugin
+	if pluginName == "" {
 		pluginName = "command"
 	}
 
 	var finalR Remediator
-	switch pluginName {
-	case "command":
-		var r CommandRemediator
-		if err := json.Unmarshal(jsm, &r); err != nil {
-			log.Fatal(err)
-		}
-		finalR = &r
-	default:
+	regEntry, ok := Registry[pluginName]
+	if !ok {
 		log.WithField("plugin", pluginName).Fatal("unknown remediation plugin")
+	}
+
+	finalR = regEntry()
+	if err := json.Unmarshal(jsm, &finalR); err != nil {
+		log.Fatal(err)
 	}
 
 	log.WithField("remediator", fmt.Sprintf("%#v", finalR)).
