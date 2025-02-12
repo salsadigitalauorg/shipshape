@@ -5,7 +5,10 @@ import (
 	"sync"
 	"sync/atomic"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 )
 
 // ResultList is a wrapper around a list of results, providing some useful
@@ -50,6 +53,8 @@ func (rl *ResultList) IncrChecks(ct string, incr int) {
 func (rl *ResultList) AddResult(r Result) {
 	lock.Lock()
 	defer lock.Unlock()
+
+	log.WithFields(r.LogFields()).Debug("adding final result")
 	rl.Results = append(rl.Results, r)
 
 	breachesIncr := len(r.Breaches)
@@ -88,7 +93,7 @@ func (rl *ResultList) RemediationTotalsCount() {
 
 // RemediationStatus calculates and returns the overall result of
 // remediation for all breaches.
-func (rl *ResultList) RemediationStatus() breach.RemediationStatus {
+func (rl *ResultList) RemediationStatus() remediation.RemediationStatus {
 	if !rl.RemediationPerformed {
 		return ""
 	}
@@ -97,21 +102,21 @@ func (rl *ResultList) RemediationStatus() breach.RemediationStatus {
 		(rl.RemediationTotals["successful"] > 0 &&
 			(rl.RemediationTotals["failed"] > 0 ||
 				rl.RemediationTotals["unsupported"] > 0)) {
-		return breach.RemediationStatusPartial
+		return remediation.RemediationStatusPartial
 	}
 	if rl.RemediationTotals["unsupported"] > 0 &&
 		rl.RemediationTotals["successful"] == 0 &&
 		rl.RemediationTotals["failed"] == 0 &&
 		rl.RemediationTotals["partial"] == 0 {
-		return breach.RemediationStatusNoSupport
+		return remediation.RemediationStatusNoSupport
 	}
 	if rl.RemediationTotals["failed"] > 0 &&
 		rl.RemediationTotals["successful"] == 0 &&
 		rl.RemediationTotals["unsupported"] == 0 &&
 		rl.RemediationTotals["partial"] == 0 {
-		return breach.RemediationStatusFailed
+		return remediation.RemediationStatusFailed
 	}
-	return breach.RemediationStatusSuccess
+	return remediation.RemediationStatusSuccess
 }
 
 // GetBreachesByCheckName fetches the list of failures by check name.

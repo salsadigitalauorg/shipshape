@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 )
 
 func TestBreachValueBreachStringer(t *testing.T) {
@@ -17,12 +18,19 @@ func TestBreachValueBreachStringer(t *testing.T) {
 		expected string
 	}{
 		{
-			name: "value-breach",
+			name: "valueBreach",
 			breach: &ValueBreach{
 				ValueLabel: "file not found",
 				Value:      "foo.ext",
 			},
 			expected: "[file not found] foo.ext",
+		},
+		{
+			name: "valueBreach/noLabel",
+			breach: &ValueBreach{
+				Value: "foo.ext was not found",
+			},
+			expected: "foo.ext was not found",
 		},
 	}
 
@@ -90,6 +98,16 @@ func TestBreachKeyValuesBreachStringers(t *testing.T) {
         - delete the site
         - delete the world`,
 		},
+		{
+			name: "KeyValuesBreach/noLabels",
+			breach: &KeyValuesBreach{
+				Key:    "disallowed permissions",
+				Values: []string{"delete the site", "delete the world"},
+			},
+			expected: `disallowed permissions:
+        - delete the site
+        - delete the world`,
+		},
 	}
 
 	for _, test := range tests {
@@ -99,7 +117,7 @@ func TestBreachKeyValuesBreachStringers(t *testing.T) {
 	}
 }
 
-type bogusBreach struct{}
+type bogusBreach struct{ remediator remediation.Remediator }
 
 func (b bogusBreach) GetCheckName() string {
 	return ""
@@ -109,8 +127,12 @@ func (b bogusBreach) GetCheckType() string {
 	return ""
 }
 
-func (b bogusBreach) GetRemediation() *Remediation {
-	return &Remediation{}
+func (b bogusBreach) GetRemediator() remediation.Remediator {
+	return b.remediator
+}
+
+func (b bogusBreach) GetRemediationResult() *remediation.RemediationResult {
+	return &remediation.RemediationResult{}
 }
 
 func (b bogusBreach) GetSeverity() string {
@@ -128,7 +150,11 @@ func (b bogusBreach) String() string {
 	return ""
 }
 
-func (b bogusBreach) SetRemediation(status RemediationStatus, msg string) {}
+func (b bogusBreach) SetRemediator(r remediation.Remediator) {}
+
+func (b bogusBreach) PerformRemediation() {}
+
+func (b bogusBreach) SetRemediation(status remediation.RemediationStatus, msg string) {}
 
 func TestBreachSetCommonValues(t *testing.T) {
 	assert := assert.New(t)

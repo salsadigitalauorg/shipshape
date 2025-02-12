@@ -20,6 +20,7 @@ type AllowedList struct {
 	Severity              string `yaml:"severity"`
 	breach.BreachTemplate `yaml:"breach-format"`
 	Result                result.Result
+	Remediation           interface{} `yaml:"remediation"`
 	input                 fact.Facter
 
 	// Plugin fields.
@@ -60,7 +61,7 @@ func (p *AllowedList) Analyse() {
 				breach.EvaluateTemplate(p, &breach.ValueBreach{
 					ValueLabel: "deprecated value found",
 					Value:      v,
-				})
+				}, p.Remediation)
 				continue
 			}
 
@@ -68,7 +69,7 @@ func (p *AllowedList) Analyse() {
 				breach.EvaluateTemplate(p, &breach.ValueBreach{
 					ValueLabel: "disallowed value found",
 					Value:      v,
-				})
+				}, p.Remediation)
 			}
 
 			if len(p.Required) > 0 && p.isRequired(v) {
@@ -82,7 +83,7 @@ func (p *AllowedList) Analyse() {
 					breach.EvaluateTemplate(p, &breach.ValueBreach{
 						ValueLabel: "required value not found",
 						Value:      r,
-					})
+					}, p.Remediation)
 				}
 			}
 		}
@@ -100,7 +101,7 @@ func (p *AllowedList) Analyse() {
 					Key:        k,
 					ValueLabel: "deprecated",
 					Value:      v,
-				})
+				}, p.Remediation)
 				continue
 			}
 
@@ -110,7 +111,7 @@ func (p *AllowedList) Analyse() {
 					Key:        k,
 					ValueLabel: "disallowed",
 					Value:      v,
-				})
+				}, p.Remediation)
 				continue
 			}
 
@@ -125,7 +126,7 @@ func (p *AllowedList) Analyse() {
 					breach.EvaluateTemplate(p, &breach.ValueBreach{
 						ValueLabel: "required value not found",
 						Value:      r,
-					})
+					}, p.Remediation)
 				}
 			}
 		}
@@ -149,7 +150,7 @@ func (p *AllowedList) Analyse() {
 						Key:        k,
 						ValueLabel: "deprecated",
 						Value:      v,
-					})
+					}, p.Remediation)
 					continue
 				}
 
@@ -159,7 +160,7 @@ func (p *AllowedList) Analyse() {
 						Key:        k,
 						ValueLabel: "disallowed",
 						Value:      v,
-					})
+					}, p.Remediation)
 					continue
 				}
 
@@ -175,7 +176,7 @@ func (p *AllowedList) Analyse() {
 							Key:        k,
 							ValueLabel: "required value not found",
 							Value:      r,
-						})
+						}, p.Remediation)
 					}
 				}
 			}

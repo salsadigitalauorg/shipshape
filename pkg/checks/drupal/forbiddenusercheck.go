@@ -11,6 +11,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -78,11 +79,11 @@ func (c *ForbiddenUserCheck) Remediate() {
 
 		_, err := Drush(c.DrushPath, c.Alias, []string{"user:block", "--uid=" + c.UserId}).Exec()
 		if err != nil {
-			b.SetRemediation(breach.RemediationStatusFailed, fmt.Sprintf(
+			b.SetRemediation(remediation.RemediationStatusFailed, fmt.Sprintf(
 				"error blocking forbidden user '%s' due to error: %s",
 				c.UserId, command.GetMsgFromCommandError(err)))
 		} else {
-			b.SetRemediation(breach.RemediationStatusSuccess, fmt.Sprintf(
+			b.SetRemediation(remediation.RemediationStatusSuccess, fmt.Sprintf(
 				"Blocked the forbidden user [%s]", c.UserId))
 		}
 	}

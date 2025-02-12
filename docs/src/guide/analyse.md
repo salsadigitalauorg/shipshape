@@ -1,4 +1,4 @@
-# Analysing Data
+# Analysing data
 
 ## Simple string check
 ...

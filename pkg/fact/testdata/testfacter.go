@@ -81,3 +81,7 @@ func (p *TestFacter) ValidateInput() error {
 func (p *TestFacter) LoadAdditionalInputs() []error {
 	return []error{}
 }
+
+func (p *TestFacter) AddError(err error) {
+	p.errors = append(p.errors, err)
+}

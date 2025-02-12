@@ -2,6 +2,7 @@ package analyse
 
 import (
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -11,6 +12,7 @@ type Analyser interface {
 	GetId() string
 
 	// Analyse methods.
+	SetInput(input fact.Facter)
 	GetDescription() string
 	GetInputName() string
 	GetBreachTemplate() breach.BreachTemplate

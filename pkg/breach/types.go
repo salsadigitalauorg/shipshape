@@ -1,14 +1,19 @@
 package breach
 
+import "github.com/salsadigitalauorg/shipshape/pkg/remediation"
+
 // Breach provides a representation for different breach types.
 type Breach interface {
 	GetCheckName() string
 	GetCheckType() string
-	GetRemediation() *Remediation
+	GetRemediator() remediation.Remediator
+	GetRemediationResult() *remediation.RemediationResult
 	GetSeverity() string
 	GetType() BreachType
 	SetCommonValues(checkType string, checkName string, severity string)
-	SetRemediation(status RemediationStatus, msg string)
+	SetRemediator(remediation.Remediator)
+	PerformRemediation()
+	SetRemediation(status remediation.RemediationStatus, msg string)
 	String() string
 }
 

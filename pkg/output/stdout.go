@@ -7,9 +7,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"strings"
 	"text/tabwriter"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -111,10 +112,10 @@ func (p *Stdout) Pretty(rl *result.ResultList, w io.Writer) {
 			}
 			fmt.Fprintf(buf, "  ### %s\n", r.Name)
 			for _, b := range r.Breaches {
-				if b.GetRemediation().Status != breach.RemediationStatusSuccess {
+				if b.GetRemediationResult().Status != remediation.RemediationStatusSuccess {
 					continue
 				}
-				for _, msg := range b.GetRemediation().Messages {
+				for _, msg := range b.GetRemediationResult().Messages {
 					fmt.Fprintf(buf, "     -- %s\n", msg)
 				}
 			}
@@ -124,22 +125,23 @@ func (p *Stdout) Pretty(rl *result.ResultList, w io.Writer) {
 
 	if rl.RemediationPerformed && rl.TotalBreaches > 0 {
 		switch rl.RemediationStatus() {
-		case breach.RemediationStatusNoSupport:
+		case remediation.RemediationStatusNoSupport:
 			fmt.Fprint(buf, "Breaches were detected but none of them could be "+
-				"fixed as remediation is not supported for them yet.\n\n")
+				"fixed as remediation is not supported for them yet or none was "+
+				"provided in the config.\n\n")
 			fmt.Fprint(buf, "# Non-remediated breaches\n\n")
-		case breach.RemediationStatusFailed:
+		case remediation.RemediationStatusFailed:
 			fmt.Fprint(buf, "Breaches were detected but none of them could "+
 				"be fixed as there were errors when trying to remediate.\n\n")
 			fmt.Fprint(buf, "# Non-remediated breaches\n\n")
-		case breach.RemediationStatusPartial:
+		case remediation.RemediationStatusPartial:
 			fmt.Fprint(buf, "Breaches were detected but not all of them could "+
 				"be fixed as they are either not supported yet or there were "+
 				"errors when trying to remediate.\n\n")
 			fmt.Fprint(buf, "# Remediations\n\n")
 			printRemediations()
 			fmt.Fprint(buf, "# Non-remediated breaches\n\n")
-		case breach.RemediationStatusSuccess:
+		case remediation.RemediationStatusSuccess:
 			fmt.Fprintf(buf, "Breaches were detected but were all fixed successfully!\n\n")
 			printRemediations()
 			buf.Flush()
@@ -156,19 +158,36 @@ func (p *Stdout) Pretty(rl *result.ResultList, w io.Writer) {
 	}
 
 	for _, r := range rl.Results {
-		if len(r.Breaches) == 0 || r.RemediationStatus == breach.RemediationStatusSuccess {
+		if len(r.Breaches) == 0 || r.RemediationStatus == remediation.RemediationStatusSuccess {
 			continue
 		}
 		fmt.Fprintf(buf, "  ### %s\n", r.Name)
 		for _, b := range r.Breaches {
-			if b.GetRemediation().Status == breach.RemediationStatusSuccess {
+			if b.GetRemediationResult().Status == remediation.RemediationStatusSuccess {
 				continue
 			}
 			fmt.Fprintf(buf, "     -- %s\n", b)
+			if r.RemediationStatus == remediation.RemediationStatusFailed {
+				fmt.Fprintf(buf, "        !!! Remediation failed:\n")
+				for _, msg := range b.GetRemediationResult().Messages {
+					fmt.Fprint(buf, TabbedMultiline("        |  ", msg))
+				}
+			}
 		}
 		fmt.Fprintln(buf)
 	}
 	buf.Flush()
+}
+
+// TabbedMultiline prepends a given tab string
+// to each line in a multiline string.
+func TabbedMultiline(tab, s string) string {
+	s = strings.Trim(s, " \n")
+	lines := strings.Split(s, "\n")
+	for i, l := range lines {
+		lines[i] = fmt.Sprintf("%s%s", tab, l)
+	}
+	return strings.Join(lines, "\n")
 }
 
 // JUnit outputs the checks results in the JUnit XML format.

@@ -13,6 +13,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -230,7 +231,7 @@ func TestAdminUserRemediate(t *testing.T) {
 			Key:        "is_admin: true",
 			ValueLabel: "role",
 			Value:      "foo",
-			Remediation: breach.Remediation{
+			RemediationResult: remediation.RemediationResult{
 				Status: "failed",
 				Messages: []string{"failed to set is_admin to false for role 'foo' " +
 					"due to error: <nil>: unable to run drush command"},

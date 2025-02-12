@@ -63,7 +63,10 @@ func AnalyseAll() map[string]result.Result {
 		if p.PreProcessInput() {
 			p.Analyse()
 		}
-		results[p.GetId()] = p.GetResult()
+		result := p.GetResult()
+		results[p.GetId()] = result
+		log.WithField("analyser", p.GetId()).WithFields(result.LogFields()).
+			Debug("analysed result")
 	}
 	return results
 }

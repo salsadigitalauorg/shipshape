@@ -8,6 +8,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	. "github.com/salsadigitalauorg/shipshape/pkg/output"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -146,8 +147,8 @@ func TestPrettyDisplay(t *testing.T) {
 					Name: "a",
 					Breaches: []breach.Breach{
 						&breach.ValueBreach{
-							Remediation: breach.Remediation{
-								Status:   breach.RemediationStatusSuccess,
+							RemediationResult: remediation.RemediationResult{
+								Status:   remediation.RemediationStatusSuccess,
 								Messages: []string{"fixed 1"},
 							},
 						},
@@ -167,15 +168,15 @@ func TestPrettyDisplay(t *testing.T) {
 					Breaches: []breach.Breach{
 						&breach.ValueBreach{
 							Value: "Fail a",
-							Remediation: breach.Remediation{
-								Status:   breach.RemediationStatusSuccess,
+							RemediationResult: remediation.RemediationResult{
+								Status:   remediation.RemediationStatusSuccess,
 								Messages: []string{"fixed 1"},
 							},
 						},
 						&breach.ValueBreach{
 							Value: "Fail b",
-							Remediation: breach.Remediation{
-								Status:   breach.RemediationStatusFailed,
+							RemediationResult: remediation.RemediationResult{
+								Status:   remediation.RemediationStatusFailed,
 								Messages: []string{"not fixed 1"},
 							},
 						},
@@ -197,8 +198,8 @@ func TestPrettyDisplay(t *testing.T) {
 					Name: "a",
 					Breaches: []breach.Breach{
 						&breach.ValueBreach{
-							Remediation: breach.Remediation{
-								Status:   breach.RemediationStatusFailed,
+							RemediationResult: remediation.RemediationResult{
+								Status:   remediation.RemediationStatusFailed,
 								Messages: []string{"failed 1"},
 							},
 						},

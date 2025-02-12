@@ -12,6 +12,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -214,9 +215,9 @@ func TestDrushYamlCheckRemediate(t *testing.T) {
 				ConfigName:       "core.extension"},
 			ExpectGeneratedCommand: "",
 			ExpectBreaches: []breach.Breach{&breach.ValueBreach{
-				Remediation: breach.Remediation{Status: "no-support"}}},
+				RemediationResult: remediation.RemediationResult{Status: "no-support"}}},
 			ExpectStatusFail:        true,
-			ExpectRemediationStatus: breach.RemediationStatusNoSupport,
+			ExpectRemediationStatus: remediation.RemediationStatusNoSupport,
 		},
 		{
 			Name: "simpleCommand",
@@ -228,11 +229,11 @@ func TestDrushYamlCheckRemediate(t *testing.T) {
 				RemediateCommand: "drush config:set clamav.settings enabled 1"},
 			ExpectGeneratedCommand: "sh -c 'drush config:set clamav.settings enabled 1'",
 			ExpectBreaches: []breach.Breach{&breach.ValueBreach{
-				Remediation: breach.Remediation{
+				RemediationResult: remediation.RemediationResult{
 					Status: "success",
 					Messages: []string{
 						"remediation command for config '' ran successfully"}}}},
-			ExpectRemediationStatus: breach.RemediationStatusSuccess,
+			ExpectRemediationStatus: remediation.RemediationStatusSuccess,
 		},
 		{
 			Name: "multilineCommand",
@@ -250,11 +251,11 @@ set -eu
 drush config:set clamav.settings enabled true
 '`,
 			ExpectBreaches: []breach.Breach{&breach.ValueBreach{
-				Remediation: breach.Remediation{
+				RemediationResult: remediation.RemediationResult{
 					Status: "success",
 					Messages: []string{
 						"remediation command for config '' ran successfully"}}}},
-			ExpectRemediationStatus: breach.RemediationStatusSuccess,
+			ExpectRemediationStatus: remediation.RemediationStatusSuccess,
 		},
 	}
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -15,9 +16,12 @@ type TestAnalyserPreprocessInputFail struct {
 	Severity              string `yaml:"severity"`
 	breach.BreachTemplate `yaml:"breach-format"`
 	Result                result.Result
+	input                 fact.Facter
 }
 
 func (p *TestAnalyserPreprocessInputFail) PluginName() string { return "test-analyser" }
+
+func (p *TestAnalyserPreprocessInputFail) SetInput(input fact.Facter) { p.input = input }
 
 func (p *TestAnalyserPreprocessInputFail) GetId() string { return p.Id }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/drupal"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -187,8 +188,8 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 			BreachType: "key-value",
 			Key:        "forbidden user is active",
 			Value:      c.UserId,
-			Remediation: breach.Remediation{
-				Status: breach.RemediationStatusFailed,
+			RemediationResult: remediation.RemediationResult{
+				Status: remediation.RemediationStatusFailed,
 				Messages: []string{"error blocking forbidden user '1' due to error: " +
 					"<nil>: Unable to find a matching user"}}},
 		}, c.Result.Breaches)
@@ -220,8 +221,8 @@ func TestForbiddenUserCheck_Remediate(t *testing.T) {
 			BreachType: "key-value",
 			Key:        "forbidden user is active",
 			Value:      c.UserId,
-			Remediation: breach.Remediation{
-				Status:   breach.RemediationStatusSuccess,
+			RemediationResult: remediation.RemediationResult{
+				Status:   remediation.RemediationStatusSuccess,
 				Messages: []string{"Blocked the forbidden user [1]"}}},
 		}, c.Result.Breaches)
 		c.Result.DetermineResultStatus(true)

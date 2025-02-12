@@ -2,6 +2,7 @@ package testdata
 
 import (
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -12,6 +13,7 @@ type TestAnalyser struct {
 	InputName             string `yaml:"input"`
 	breach.BreachTemplate `yaml:"breach-format"`
 	Result                result.Result
+	input                 fact.Facter
 }
 
 // Common plugin methods.
@@ -20,6 +22,8 @@ func (p *TestAnalyser) PluginName() string { return "test-analyser" }
 func (p *TestAnalyser) GetId() string { return p.Id }
 
 // Analyse methods.
+
+func (p *TestAnalyser) SetInput(input fact.Facter) { p.input = input }
 
 func (p *TestAnalyser) GetDescription() string { return p.Description }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
@@ -151,11 +152,11 @@ func (c *AdminUserCheck) Remediate() {
 
 		_, err := Drush(c.DrushPath, c.Alias, []string{"config:set", "user.role." + b.Value, "is_admin", "0"}).Exec()
 		if err != nil {
-			b.SetRemediation(breach.RemediationStatusFailed, fmt.Sprintf(
+			b.SetRemediation(remediation.RemediationStatusFailed, fmt.Sprintf(
 				"failed to set is_admin to false for role '%s' due to error: %s",
 				b.Value, command.GetMsgFromCommandError(err)))
 		} else {
-			b.SetRemediation(breach.RemediationStatusSuccess, fmt.Sprintf(
+			b.SetRemediation(remediation.RemediationStatusSuccess, fmt.Sprintf(
 				"Fixed disallowed admin setting for role [%s]", b.Value))
 		}
 	}

@@ -16,6 +16,7 @@ type NotEmpty struct {
 	Severity              string `yaml:"severity"`
 	breach.BreachTemplate `yaml:"breach-format"`
 	Result                result.Result
+	Remediation           interface{} `yaml:"remediation"`
 	input                 fact.Facter
 }
 
@@ -44,7 +45,7 @@ func (p *NotEmpty) Analyse() {
 					Key:        k,
 					ValueLabel: subK,
 					Value:      v,
-				})
+				}, p.Remediation)
 			}
 		}
 	}

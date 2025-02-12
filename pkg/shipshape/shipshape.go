@@ -147,7 +147,7 @@ func RunV2() {
 	log.Print("parsing analysers config")
 	analyse.ParseConfig(RunConfigV2.Analyse)
 
-	RunResultList = result.NewResultList(false)
+	RunResultList = result.NewResultList(Remediate)
 	log.Print("parsing output config")
 	output.ParseConfig(RunConfigV2.Output, &RunResultList)
 
@@ -170,11 +170,21 @@ func RunV2() {
 
 	log.Print("analysing facts")
 	results := analyse.AnalyseAll()
-	log.WithField("results", fmt.Sprintf("%#v", results)).Debug("analysed facts")
+
+	if Remediate {
+		log.Print("starting remediation")
+		for _, r := range results {
+			r.PerformRemediation()
+		}
+	}
+
 	for _, r := range results {
-		r.DetermineResultStatus(false)
+		r.DetermineResultStatus(Remediate)
 		RunResultList.AddResult(r)
 	}
+
+	RunResultList.Sort()
+	RunResultList.RemediationTotalsCount()
 }
 
 func Exit(code int) {

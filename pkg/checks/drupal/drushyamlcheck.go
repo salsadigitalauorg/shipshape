@@ -9,6 +9,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 
 	log "github.com/sirupsen/logrus"
@@ -65,14 +66,14 @@ func (c *DrushYamlCheck) Remediate() {
 		})
 		if c.RemediateCommand == "" {
 			contextLogger.Print("no remediation command specified - failing")
-			b.SetRemediation(breach.RemediationStatusNoSupport, "")
+			b.SetRemediation(remediation.RemediationStatusNoSupport, "")
 			return
 		}
 
 		contextLogger.Print("running remediation command")
 		_, err := command.ShellCommander("sh", "-c", c.RemediateCommand).Output()
 		if err != nil {
-			b.SetRemediation(breach.RemediationStatusFailed, fmt.Sprintf(
+			b.SetRemediation(remediation.RemediationStatusFailed, fmt.Sprintf(
 				"error running remediation command for config '%s' due to error: %s",
 				c.ConfigName, command.GetMsgFromCommandError(err)))
 		} else {
@@ -80,7 +81,7 @@ func (c *DrushYamlCheck) Remediate() {
 				c.RemediateMsg = fmt.Sprintf(
 					"remediation command for config '%s' ran successfully", c.ConfigName)
 			}
-			b.SetRemediation(breach.RemediationStatusSuccess, c.RemediateMsg)
+			b.SetRemediation(remediation.RemediationStatusSuccess, c.RemediateMsg)
 		}
 	}
 }
