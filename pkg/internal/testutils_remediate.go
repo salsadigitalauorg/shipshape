@@ -7,6 +7,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +27,7 @@ type RemediateTest struct {
 	ExpectStatusFail        bool
 	ExpectNoBreach          bool
 	ExpectBreaches          []breach.Breach
-	ExpectRemediationStatus breach.RemediationStatus
+	ExpectRemediationStatus remediation.RemediationStatus
 	ExpectNoRemediations    bool
 	ExpectRemediations      []string
 }

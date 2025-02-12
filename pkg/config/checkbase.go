@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -119,7 +120,7 @@ func (c *CheckBase) ShouldPerformRemediation() bool {
 // cast to the required type before being used.
 func (c *CheckBase) Remediate() {
 	for _, b := range c.Result.Breaches {
-		b.SetRemediation(breach.RemediationStatusNoSupport, "")
+		b.SetRemediation(remediation.RemediationStatusNoSupport, "")
 	}
 }
 

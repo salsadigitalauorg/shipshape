@@ -1,4 +1,4 @@
-package breach
+package remediation
 
 import (
 	"encoding/json"

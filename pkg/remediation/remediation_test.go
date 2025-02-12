@@ -1,15 +1,16 @@
-package breach_test
+package remediation_test
 
 import (
 	"io"
 	"math"
 	"testing"
 
-	. "github.com/salsadigitalauorg/shipshape/pkg/breach"
-	"github.com/salsadigitalauorg/shipshape/pkg/breach/testdata"
 	"github.com/sirupsen/logrus"
 	logrus_test "github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
+
+	. "github.com/salsadigitalauorg/shipshape/pkg/remediation"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation/testdata"
 )
 
 func TestRemediator(t *testing.T) {

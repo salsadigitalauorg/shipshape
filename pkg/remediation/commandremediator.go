@@ -1,4 +1,4 @@
-package breach
+package remediation
 
 import "github.com/salsadigitalauorg/shipshape/pkg/command"
 

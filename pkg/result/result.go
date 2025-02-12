@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 )
 
 type Status string
@@ -17,14 +18,14 @@ const (
 
 // Result provides the structure for a Check's outcome.
 type Result struct {
-	Name              string                   `json:"name"`
-	Severity          string                   `json:"severity"`
-	CheckType         string                   `json:"check-type"`
-	Passes            []string                 `json:"passes"`
-	Breaches          []breach.Breach          `json:"breaches"`
-	Warnings          []string                 `json:"warnings"`
-	Status            Status                   `json:"status"`
-	RemediationStatus breach.RemediationStatus `json:"remediation-status"`
+	Name              string                        `json:"name"`
+	Severity          string                        `json:"severity"`
+	CheckType         string                        `json:"check-type"`
+	Passes            []string                      `json:"passes"`
+	Breaches          []breach.Breach               `json:"breaches"`
+	Warnings          []string                      `json:"warnings"`
+	Status            Status                        `json:"status"`
+	RemediationStatus remediation.RemediationStatus `json:"remediation-status"`
 }
 
 // Sort reorders the Passes & Failures in order to get consistent output.
@@ -69,13 +70,13 @@ func (r *Result) RemediationsCount() (uint32, uint32, uint32, uint32) {
 	partial := uint32(0)
 	for _, b := range r.Breaches {
 		switch b.GetRemediationResult().Status {
-		case breach.RemediationStatusNoSupport:
+		case remediation.RemediationStatusNoSupport:
 			unsupported++
-		case breach.RemediationStatusSuccess:
+		case remediation.RemediationStatusSuccess:
 			successful++
-		case breach.RemediationStatusFailed:
+		case remediation.RemediationStatusFailed:
 			failed++
-		case breach.RemediationStatusPartial:
+		case remediation.RemediationStatusPartial:
 			partial++
 		}
 	}
@@ -91,21 +92,21 @@ func (r *Result) DetermineResultStatus(remediationPerformed bool) {
 	if remediationPerformed {
 		unsupported, success, failed, partial := r.RemediationsCount()
 		if partial > 0 || (success > 0 && (failed > 0 || unsupported > 0)) {
-			r.RemediationStatus = breach.RemediationStatusPartial
+			r.RemediationStatus = remediation.RemediationStatusPartial
 			r.Status = Fail
 			return
 		}
 		if unsupported > 0 && success == 0 && failed == 0 && partial == 0 {
-			r.RemediationStatus = breach.RemediationStatusNoSupport
+			r.RemediationStatus = remediation.RemediationStatusNoSupport
 			r.Status = Fail
 			return
 		}
 		if failed > 0 && success == 0 && unsupported == 0 && partial == 0 {
-			r.RemediationStatus = breach.RemediationStatusFailed
+			r.RemediationStatus = remediation.RemediationStatusFailed
 			r.Status = Fail
 			return
 		}
-		r.RemediationStatus = breach.RemediationStatusSuccess
+		r.RemediationStatus = remediation.RemediationStatusSuccess
 		r.Status = Pass
 		return
 	}

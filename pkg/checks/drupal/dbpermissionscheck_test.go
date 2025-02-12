@@ -9,6 +9,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/checks/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 
 	"github.com/stretchr/testify/assert"
@@ -266,8 +267,8 @@ func TestDbPermissionsRemediate(t *testing.T) {
 			Key:        "foo",
 			ValueLabel: "permissions",
 			Values:     []string{"bar", "baz"},
-			RemediationResult: breach.RemediationResult{
-				Status:   breach.RemediationStatusFailed,
+			RemediationResult: remediation.RemediationResult{
+				Status:   remediation.RemediationStatusFailed,
 				Messages: []string{"failed to fix disallowed permissions for role 'foo' due to error: <nil>: unable to run drush command"},
 			},
 		}}, c.Result.Breaches)

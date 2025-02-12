@@ -8,6 +8,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	. "github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -83,8 +84,8 @@ func TestResultListAddResult(t *testing.T) {
 		Severity:  "high",
 		CheckType: string(testCheckType),
 		Breaches: []breach.Breach{
-			&breach.ValueBreach{Value: "fail1", RemediationResult: breach.RemediationResult{
-				Status:   breach.RemediationStatusSuccess,
+			&breach.ValueBreach{Value: "fail1", RemediationResult: remediation.RemediationResult{
+				Status:   remediation.RemediationStatusSuccess,
 				Messages: []string{"fixed1"},
 			}},
 			&breach.ValueBreach{Value: "fail2"},
@@ -129,8 +130,8 @@ func TestResultListAddResult(t *testing.T) {
 				CheckType: string(testCheck2Type),
 				Breaches: []breach.Breach{&breach.ValueBreach{
 					Value: "fail7",
-					RemediationResult: breach.RemediationResult{
-						Status:   breach.RemediationStatusSuccess,
+					RemediationResult: remediation.RemediationResult{
+						Status:   remediation.RemediationStatusSuccess,
 						Messages: []string{"fixed2", "fixed3"},
 					},
 				}},
@@ -171,11 +172,11 @@ func TestResultListRemediationTotalsCount(t *testing.T) {
 			name: "allSuccess",
 			results: []Result{
 				{Breaches: []breach.Breach{
-					&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess}},
-					&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess}},
+					&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusSuccess}},
+					&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusSuccess}},
 				}},
 				{Breaches: []breach.Breach{
-					&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess}},
+					&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusSuccess}},
 				}},
 			},
 			expected: map[string]uint32{
@@ -189,17 +190,17 @@ func TestResultListRemediationTotalsCount(t *testing.T) {
 			name: "countingWorks",
 			results: []Result{
 				{Breaches: []breach.Breach{
-					&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess}},
-					&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess}},
-					&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed}},
+					&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusSuccess}},
+					&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusSuccess}},
+					&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusFailed}},
 				}},
 				{Breaches: []breach.Breach{
-					&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess}},
-					&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusPartial}},
+					&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusSuccess}},
+					&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusPartial}},
 				}},
 				{Breaches: []breach.Breach{
-					&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed}},
-					&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusNoSupport}},
+					&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusFailed}},
+					&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusNoSupport}},
 				}},
 			},
 			expected: map[string]uint32{
@@ -228,7 +229,7 @@ func TestResultListRemediationStatus(t *testing.T) {
 		name                 string
 		remediationPerformed bool
 		results              []Result
-		expected             breach.RemediationStatus
+		expected             remediation.RemediationStatus
 	}{
 		{
 			name:                 "noRemediation",
@@ -241,55 +242,55 @@ func TestResultListRemediationStatus(t *testing.T) {
 			remediationPerformed: true,
 			results: []Result{
 				{
-					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusSuccess}}},
 				},
 				{
-					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusSuccess}}},
 				},
 				{
-					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusSuccess}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusSuccess}}},
 				},
 			},
-			expected: breach.RemediationStatusSuccess,
+			expected: remediation.RemediationStatusSuccess,
 		},
 		{
 			name:                 "partial",
 			remediationPerformed: true,
 			results: []Result{
 				{
-					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusPartial}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusPartial}}},
 				},
 				{
-					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusFailed}}},
 				},
 			},
-			expected: breach.RemediationStatusPartial,
+			expected: remediation.RemediationStatusPartial,
 		},
 		{
 			name:                 "fail",
 			remediationPerformed: true,
 			results: []Result{
 				{
-					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusFailed}}},
 				},
 				{
-					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusFailed}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusFailed}}},
 				},
 			},
-			expected: breach.RemediationStatusFailed,
+			expected: remediation.RemediationStatusFailed,
 		},
 		{
 			name:                 "unsupported",
 			remediationPerformed: true,
 			results: []Result{
 				{
-					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusNoSupport}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusNoSupport}}},
 				},
 				{
-					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: breach.RemediationResult{Status: breach.RemediationStatusNoSupport}}},
+					Breaches: []breach.Breach{&breach.ValueBreach{RemediationResult: remediation.RemediationResult{Status: remediation.RemediationStatusNoSupport}}},
 				},
 			},
-			expected: breach.RemediationStatusNoSupport,
+			expected: remediation.RemediationStatusNoSupport,
 		},
 	}
 

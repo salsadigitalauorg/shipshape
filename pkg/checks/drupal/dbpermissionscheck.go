@@ -8,6 +8,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 	"gopkg.in/yaml.v3"
 )
@@ -90,11 +91,11 @@ func (c *DbPermissionsCheck) Remediate() {
 			c.DrushPath, c.Alias,
 			[]string{"role:perm:remove", b.Key, strings.Join(b.Values, ",")}).Exec()
 		if err != nil {
-			b.SetRemediation(breach.RemediationStatusFailed, fmt.Sprintf(
+			b.SetRemediation(remediation.RemediationStatusFailed, fmt.Sprintf(
 				"failed to fix disallowed permissions for role '%s' due to error: %s",
 				b.Key, command.GetMsgFromCommandError(err)))
 		} else {
-			b.SetRemediation(breach.RemediationStatusSuccess, fmt.Sprintf(
+			b.SetRemediation(remediation.RemediationStatusSuccess, fmt.Sprintf(
 				"[%s] fixed disallowed permissions: [%s]",
 				b.Key, strings.Join(b.Values, ", ")))
 		}

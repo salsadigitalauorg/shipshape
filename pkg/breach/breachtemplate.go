@@ -3,6 +3,8 @@ package breach
 import (
 	"bytes"
 	"text/template"
+
+	ss_rem "github.com/salsadigitalauorg/shipshape/pkg/remediation"
 )
 
 func EvaluateTemplate(bt BreachTemplater, b Breach, remediation interface{}) {
@@ -10,7 +12,7 @@ func EvaluateTemplate(bt BreachTemplater, b Breach, remediation interface{}) {
 
 	// No template set, use raw breach.
 	if t.Type == "" {
-		r := RemediatorFromInterface(remediation)
+		r := ss_rem.RemediatorFromInterface(remediation)
 		b.SetRemediator(r)
 		bt.AddBreach(b)
 		return
@@ -53,7 +55,7 @@ func EvaluateTemplate(bt BreachTemplater, b Breach, remediation interface{}) {
 		breachToAdd = breach
 	}
 
-	r := RemediatorFromInterface(remediation)
+	r := ss_rem.RemediatorFromInterface(remediation)
 	breachToAdd.SetRemediator(r)
 	bt.AddBreach(breachToAdd)
 }

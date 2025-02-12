@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	. "github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/remediation"
 )
 
 func TestBreachValueBreachStringer(t *testing.T) {
@@ -116,7 +117,7 @@ func TestBreachKeyValuesBreachStringers(t *testing.T) {
 	}
 }
 
-type bogusBreach struct{ remediator Remediator }
+type bogusBreach struct{ remediator remediation.Remediator }
 
 func (b bogusBreach) GetCheckName() string {
 	return ""
@@ -126,12 +127,12 @@ func (b bogusBreach) GetCheckType() string {
 	return ""
 }
 
-func (b bogusBreach) GetRemediator() Remediator {
+func (b bogusBreach) GetRemediator() remediation.Remediator {
 	return b.remediator
 }
 
-func (b bogusBreach) GetRemediationResult() *RemediationResult {
-	return &RemediationResult{}
+func (b bogusBreach) GetRemediationResult() *remediation.RemediationResult {
+	return &remediation.RemediationResult{}
 }
 
 func (b bogusBreach) GetSeverity() string {
@@ -149,11 +150,11 @@ func (b bogusBreach) String() string {
 	return ""
 }
 
-func (b bogusBreach) SetRemediator(r Remediator) {}
+func (b bogusBreach) SetRemediator(r remediation.Remediator) {}
 
 func (b bogusBreach) PerformRemediation() {}
 
-func (b bogusBreach) SetRemediation(status RemediationStatus, msg string) {}
+func (b bogusBreach) SetRemediation(status remediation.RemediationStatus, msg string) {}
 
 func TestBreachSetCommonValues(t *testing.T) {
 	assert := assert.New(t)
