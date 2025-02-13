@@ -25,6 +25,7 @@ The following Analyse plugins are available:
   - [allowed:list](../reference/analyse/allowed-list)
   - [equals](../reference/analyse/equals)
   - [not:empty](../reference/analyse/not-empty)
+  - [not:equals](../reference/analyse/not-equals)
   - [regex:match](../reference/analyse/regex-match)
   - [regex:not-match](../reference/analyse/regex-not-match)
 

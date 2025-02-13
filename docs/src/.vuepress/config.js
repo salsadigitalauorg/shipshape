@@ -112,6 +112,7 @@ module.exports = {
                 ['/reference/analyse/allowed-list', 'allowed:list'],
                 ['/reference/analyse/equals', 'equals'],
                 ['/reference/analyse/not-empty', 'not:empty'],
+                ['/reference/analyse/not-equals', 'not:equals'],
                 ['/reference/analyse/regex-match', 'regex:match'],
                 ['/reference/analyse/regex-not-match', 'regex:not-match'],
               ]
