@@ -1,0 +1,16 @@
+collect:
+  extension-file:
+    file:read:
+      path: core.extension.yml
+
+  module-lagoon_logs:
+    yaml:key:
+      input: extension-file
+      path: module.lagoon_logs
+
+analyse:
+  lagoon-logs-check:
+    regex:not-match:
+      description: Lagoon logs module is not enabled
+      input: module-lagoon_logs
+      pattern: "^1$"
