@@ -10,6 +10,7 @@ import (
 	"errors"
 	"io/fs"
 	"os/exec"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -48,9 +49,9 @@ func GetMsgFromCommandError(err error) string {
 	if errors.As(err, &pathErr) {
 		errMsg = pathErr.Path + ": " + pathErr.Err.Error()
 	} else if errors.As(err, &exitErr) {
-		stderr := string(exitErr.Stderr)
+		stderr := strings.Trim(string(exitErr.Stderr), " \n")
 		if stderr != "" {
-			errMsg = string(exitErr.Error()) + ": " + string(exitErr.Stderr)
+			errMsg = string(exitErr.Error()) + ": " + stderr
 		} else {
 			errMsg = string(exitErr.Error())
 		}

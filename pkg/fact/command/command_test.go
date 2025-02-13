@@ -1,6 +1,7 @@
 package command_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -45,6 +46,14 @@ func TestCommandCollect(t *testing.T) {
 		{
 			Name:   "emptyCommand",
 			Facter: &Command{Name: "TestCommand"},
+			ExpectedData: map[string]string{
+				"code": "1", "stderr": "exec: no command", "stdout": "",
+			},
+			ExpectedErrors: []error{errors.New("exec: no command")},
+		},
+		{
+			Name:   "emptyCommand/ignoreError",
+			Facter: &Command{Name: "TestCommand", IgnoreError: true},
 			ExpectedData: map[string]string{
 				"code": "1", "stderr": "exec: no command", "stdout": "",
 			},

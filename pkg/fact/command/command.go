@@ -29,8 +29,9 @@ type Command struct {
 	data             interface{}
 
 	// Plugin fields.
-	Cmd  string   `yaml:"cmd"`
-	Args []string `yaml:"args"`
+	Cmd         string   `yaml:"cmd"`
+	Args        []string `yaml:"args"`
+	IgnoreError bool     `yaml:"ignore-error"`
 }
 
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Command --package=command
@@ -54,11 +55,14 @@ func (p *Command) SupportedInputs() (fact.SupportLevel, []string) {
 }
 
 func (p *Command) Collect() {
-	log.WithFields(log.Fields{
+	contextLogger := log.WithFields(log.Fields{
 		"fact-plugin": p.PluginName(),
 		"fact":        p.Name,
-		"cmd":         p.Cmd,
-		"args":        p.Args,
+	})
+
+	contextLogger.WithFields(log.Fields{
+		"cmd":  p.Cmd,
+		"args": p.Args,
 	}).Debug("collecting data")
 
 	res := map[string]string{
@@ -68,7 +72,7 @@ func (p *Command) Collect() {
 	}
 
 	data, err := command.ShellCommander(p.Cmd, p.Args...).Output()
-	log.WithFields(log.Fields{
+	contextLogger.WithFields(log.Fields{
 		"stdout": string(data),
 		"stderr": fmt.Sprintf("%#v", err),
 	}).Debug("command output")
@@ -77,6 +81,14 @@ func (p *Command) Collect() {
 	if err != nil {
 		res["code"] = strconv.Itoa(command.GetExitCode(err))
 		res["stderr"] = command.GetMsgFromCommandError(err)
+
+		if !p.IgnoreError {
+			contextLogger.
+				WithField("stdout", res["stdout"]).
+				WithField("stderr", res["stderr"]).
+				WithError(err).Error("command failed")
+			p.errors = append(p.errors, err)
+		}
 	}
 
 	p.data = res
