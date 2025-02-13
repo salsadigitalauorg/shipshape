@@ -113,6 +113,7 @@ module.exports = {
                 ['/reference/analyse/equals', 'equals'],
                 ['/reference/analyse/not-empty', 'not:empty'],
                 ['/reference/analyse/regex-match', 'regex:match'],
+                ['/reference/analyse/regex-not-match', 'regex:not-match'],
               ]
             },
             {

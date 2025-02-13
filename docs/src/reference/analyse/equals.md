@@ -1,13 +1,20 @@
 # equals
 
-The `equals` plugin checks if a value is exactly equal to an input.
+The `equals` analyser checks if a value equals a given string. For map inputs, it checks if the value at a specified key equals the given string.
 
-## Plugin fields
+## Configuration
 
-| Field | Description                                                    | Required | Default |
-| ----- | -------------------------------------------------------------- | :------: | :-----: |
-| value | The value to compare against.                                  |   Yes    |   ""    |
-| key   | A key to look up the value when the input is a map of strings. |    No    |   []    |
-
+| Field   | Type   | Required | Description                                      |
+| ------- | ------ | -------- | ------------------------------------------------ |
+| value   | string | Yes      | The string value to compare against              |
+| key     | string | No       | For map inputs, the key whose value to check     |
 
 <Content :page-key="$site.pages.find(p => p.path === '/reference/common/analyse.html').key"/>
+
+## Supported Input Formats
+
+- `FormatString`: Checks if the string value equals the configured value
+- `FormatMapString`: Checks if the value at the specified key equals the configured value
+
+## Example Usage
+
