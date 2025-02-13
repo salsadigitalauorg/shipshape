@@ -35,7 +35,6 @@ func TestRegexNotMatchAnalyse(t *testing.T) {
 		name             string
 		input            fact.Facter
 		pattern          string
-		ignore           string
 		expectedBreaches []breach.Breach
 	}{
 		{
@@ -202,7 +201,6 @@ func TestRegexNotMatchAnalyse(t *testing.T) {
 			analyser := RegexNotMatch{
 				Id:      tc.name,
 				Pattern: tc.pattern,
-				Ignore:  tc.ignore,
 			}
 
 			tc.input.Collect()
