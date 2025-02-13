@@ -25,7 +25,6 @@ type RegexMatch struct {
 
 	// Plugin fields.
 	Pattern string `yaml:"pattern"`
-	Ignore  string `yaml:"ignore"`
 }
 
 //go:generate go run ../../cmd/gen.go analyse-plugin --plugin=RegexMatch --package=analyse
