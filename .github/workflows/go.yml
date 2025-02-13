@@ -22,7 +22,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@main
       with:
-        go-version: 1.23
+        go-version: 1.21
 
     - name: Run generators
       run: go generate ./...
@@ -65,7 +65,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@main
       with:
-        go-version: 1.23
+        go-version: 1.21
 
     - name: Fetch all tags
       run: git fetch --force --tags
