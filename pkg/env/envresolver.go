@@ -16,12 +16,25 @@ type EnvResolver interface {
 	GetEnvMap() (map[string]string, error)
 }
 
-func ReadEnvFile(er EnvResolver) (map[string]string, error) {
-	if !er.ShouldResolveEnv() {
+type BaseEnvResolver struct {
+	ResolveEnv bool   `yaml:"resolve-env"`
+	EnvFile    string `yaml:"env-file"`
+}
+
+func (e *BaseEnvResolver) ShouldResolveEnv() bool {
+	return e.ResolveEnv
+}
+
+func (e *BaseEnvResolver) GetEnvFile() string {
+	return e.EnvFile
+}
+
+func (e *BaseEnvResolver) GetEnvMap() (map[string]string, error) {
+	if !e.ShouldResolveEnv() {
 		return nil, nil
 	}
 
-	envFile := er.GetEnvFile()
+	envFile := e.GetEnvFile()
 	if envFile == "" {
 		envFile = filepath.Join(config.ProjectDir, ".env")
 	}

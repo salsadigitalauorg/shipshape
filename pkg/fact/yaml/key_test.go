@@ -11,6 +11,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	. "github.com/salsadigitalauorg/shipshape/pkg/fact/yaml"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 func TestKeyInit(t *testing.T) {
@@ -21,25 +22,25 @@ func TestKeyInit(t *testing.T) {
 	assert.NotNil(factPlugin)
 	keyFacter, ok := factPlugin.(*Key)
 	assert.True(ok)
-	assert.Equal("testKeyYaml", keyFacter.Name)
+	assert.Equal("testKeyYaml", keyFacter.GetId())
 }
 
 func TestKeyPluginName(t *testing.T) {
-	key := Key{Name: "testKeyYaml"}
-	assert.Equal(t, "yaml:key", key.PluginName())
+	key := New("testKeyYaml")
+	assert.Equal(t, "yaml:key", key.GetName())
 }
 
 func TestKeySupportedConnections(t *testing.T) {
-	key := Key{Name: "testKeyYaml"}
+	key := New("testKeyYaml")
 	supportLevel, connections := key.SupportedConnections()
-	assert.Equal(t, fact.SupportNone, supportLevel)
+	assert.Equal(t, plugin.SupportNone, supportLevel)
 	assert.Empty(t, connections)
 }
 
 func TestKeySupportedInputs(t *testing.T) {
-	key := Key{Name: "testKeyYaml"}
+	key := New("testKeyYaml")
 	supportLevel, inputs := key.SupportedInputs()
-	assert.Equal(t, fact.SupportRequired, supportLevel)
+	assert.Equal(t, plugin.SupportRequired, supportLevel)
 	assert.ElementsMatch(t, []string{
 		"docker:command",
 		"file:read",
@@ -51,41 +52,64 @@ func TestKeyCollect(t *testing.T) {
 	tests := []internal.FactCollectTest{
 		{
 			Name:               "noInput",
-			Facter:             &Key{Name: "base-images"},
-			ExpectedInputError: &fact.ErrSupportRequired{SupportType: "input"},
+			Facter:             New("base-images"),
+			ExpectedInputError: &plugin.ErrSupportRequired{SupportType: "input"},
 		},
 		{
-			Name:               "noInput/nameProvided",
-			Facter:             &Key{Name: "base-images", InputName: "test-input"},
-			ExpectedInputError: &fact.ErrSupportRequired{SupportType: "input"},
+			Name: "noInput/nameProvided",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				return f
+			},
+			ExpectedInputError: &plugin.ErrSupportRequired{SupportType: "input"},
 		},
 		{
-			Name:               "inputFormat/Empty",
-			Facter:             &Key{Name: "base-images", InputName: "test-input"},
+			Name: "inputFormat/Empty",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				return f
+			},
 			TestInput:          internal.FactInputTest{Data: []byte("")},
-			ExpectedInputError: &fact.ErrSupportRequired{SupportType: "input data format"},
+			ExpectedInputError: &plugin.ErrSupportRequired{SupportType: "input data format"},
 		},
 
 		// Raw data format (data.FormatRaw) cases.
 		{
-			Name:   "inputFormat/Raw/NotFound",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
+			Name: "inputFormat/Raw/NotFound",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "foo"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatRaw, Data: []byte("bar: baz")},
 			ExpectedErrors: []error{errors.New("yaml path not found")},
 		},
 		{
 			Name: "inputFormat/Raw/NotFound/Ignored",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo",
-				IgnoreNotFound: true},
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "foo"
+				f.IgnoreNotFound = true
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatRaw, Data: []byte("bar: baz")},
 			ExpectedFormat: data.FormatNil,
 			ExpectedData:   nil,
 		},
 		{
-			Name:   "inputFormat/Raw",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
+			Name: "inputFormat/Raw",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "foo"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatRaw, Data: []byte("foo: bar")},
 			ExpectedFormat: data.FormatString,
@@ -93,8 +117,13 @@ func TestKeyCollect(t *testing.T) {
 		},
 		{
 			Name: "inputFormat/Raw/NodesOnly",
-			Facter: &Key{Name: "base-images", InputName: "test-input",
-				Path: "foo", NodesOnly: true},
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "foo"
+				f.NodesOnly = true
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatRaw, Data: []byte("foo: bar")},
 			ExpectedFormat: FormatYamlNodes,
@@ -104,8 +133,13 @@ func TestKeyCollect(t *testing.T) {
 		},
 		{
 			Name: "inputFormat/Raw/KeysOnly",
-			Facter: &Key{Name: "base-images", InputName: "test-input",
-				Path: "foo", KeysOnly: true},
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "foo"
+				f.KeysOnly = true
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatRaw, Data: []byte(`foo:
   bar: baz
@@ -117,8 +151,13 @@ func TestKeyCollect(t *testing.T) {
 
 		// Map of Raw data (data.FormatMapBytes) format cases.
 		{
-			Name:   "inputFormat/MapBytes/NotFound",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
+			Name: "inputFormat/MapBytes/NotFound",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "foo"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,
 				Data:       map[string][]byte{"file1": []byte("bar: baz")},
@@ -127,8 +166,13 @@ func TestKeyCollect(t *testing.T) {
 		},
 		{
 			Name: "inputFormat/MapBytes/NotFound/Ignored",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo",
-				IgnoreNotFound: true},
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "foo"
+				f.IgnoreNotFound = true
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,
 				Data:       map[string][]byte{"file1": []byte("bar: baz")},
@@ -137,8 +181,13 @@ func TestKeyCollect(t *testing.T) {
 			ExpectedData:   nil,
 		},
 		{
-			Name:   "inputFormat/MapBytes/scalar",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
+			Name: "inputFormat/MapBytes/scalar",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "foo"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,
 				Data:       map[string][]byte{"file1": []byte("foo: bar")},
@@ -147,8 +196,13 @@ func TestKeyCollect(t *testing.T) {
 			ExpectedData:   map[string]any{"file1": "bar"},
 		},
 		{
-			Name:   "inputFormat/MapBytes/list",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
+			Name: "inputFormat/MapBytes/list",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "foo"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,
 				Data:       map[string][]byte{"file1": []byte("foo: [bar, baz]")},
@@ -157,8 +211,13 @@ func TestKeyCollect(t *testing.T) {
 			ExpectedData:   map[string]any{"file1": []string{"bar", "baz"}},
 		},
 		{
-			Name:   "inputFormat/MapBytes/mapOfString",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
+			Name: "inputFormat/MapBytes/mapOfString",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "foo"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,
 				Data: map[string][]byte{"file1": []byte(`foo:
@@ -170,8 +229,13 @@ func TestKeyCollect(t *testing.T) {
 			ExpectedData:   map[string]any{"file1": map[string]string{"bar": "baz", "zoo": "bar"}},
 		},
 		{
-			Name:   "inputFormat/MapBytes/mapOfList",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "foo"},
+			Name: "inputFormat/MapBytes/mapOfList",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "foo"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,
 				Data: map[string][]byte{"file1": []byte(`foo:
@@ -185,8 +249,13 @@ func TestKeyCollect(t *testing.T) {
 
 		// List of Yaml nodes (FormatYamlNodes) format cases.
 		{
-			Name:   "inputFormat/YamlNodes/scalar",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "baz"},
+			Name: "inputFormat/YamlNodes/scalar",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "baz"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: FormatYamlNodes,
 				DataFn: func() any {
@@ -201,8 +270,13 @@ func TestKeyCollect(t *testing.T) {
 			ExpectedData:   map[string]any{"bar": "zap", "foo": "zoom"},
 		},
 		{
-			Name:   "inputFormat/YamlNodes/list",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "baz"},
+			Name: "inputFormat/YamlNodes/list",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "baz"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: FormatYamlNodes,
 				DataFn: func() any {
@@ -219,8 +293,13 @@ func TestKeyCollect(t *testing.T) {
 				"bar": []string{"whoop", "pop"}},
 		},
 		{
-			Name:   "inputFormat/YamlNodes/mapOfString",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "baz"},
+			Name: "inputFormat/YamlNodes/mapOfString",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "baz"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: FormatYamlNodes,
 				DataFn: func() any {
@@ -243,8 +322,13 @@ func TestKeyCollect(t *testing.T) {
 				"bar": map[string]string{"whoop": "pop"}},
 		},
 		{
-			Name:   "inputFormat/YamlNodes/mapOfList",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "baz"},
+			Name: "inputFormat/YamlNodes/mapOfList",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "baz"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: FormatYamlNodes,
 				DataFn: func() any {
@@ -269,8 +353,13 @@ func TestKeyCollect(t *testing.T) {
 
 		// Map of Yaml nodes (FormatMapYamlNodes) format cases.
 		{
-			Name:   "inputFormat/MapYamlNodes/scalar",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "baz"},
+			Name: "inputFormat/MapYamlNodes/scalar",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "baz"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: FormatMapYamlNodes,
 				DataFn: func() any {
@@ -294,8 +383,13 @@ func TestKeyCollect(t *testing.T) {
 				"key2": {"zoom": "paf", "whoop": "blo"}},
 		},
 		{
-			Name:   "inputFormat/MapYamlNodes/list",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "baz"},
+			Name: "inputFormat/MapYamlNodes/list",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "baz"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: FormatMapYamlNodes,
 				DataFn: func() any {
@@ -317,8 +411,13 @@ func TestKeyCollect(t *testing.T) {
 				errors.New("unsupported format for nested lookup")},
 		},
 		{
-			Name:   "inputFormat/MapYamlNodes/map",
-			Facter: &Key{Name: "base-images", InputName: "test-input", Path: "baz"},
+			Name: "inputFormat/MapYamlNodes/map",
+			FactFn: func() fact.Facter {
+				f := New("base-images")
+				f.SetInputName("test-input")
+				f.Path = "baz"
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: FormatMapYamlNodes,
 				DataFn: func() any {

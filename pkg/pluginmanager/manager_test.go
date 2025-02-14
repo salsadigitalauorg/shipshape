@@ -3,8 +3,9 @@ package pluginmanager
 import (
 	"testing"
 
-	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 // TestPlugin implements the Plugin interface for testing.

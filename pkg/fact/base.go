@@ -35,12 +35,24 @@ func (p *BaseFact) GetConnectionName() string {
 	return p.ConnectionName
 }
 
+func (p *BaseFact) GetConnection() connection.Connectioner {
+	return p.connection
+}
+
 func (p *BaseFact) GetInputName() string {
 	return p.InputName
 }
 
+func (p *BaseFact) GetInput() Facter {
+	return p.input
+}
+
 func (p *BaseFact) GetAdditionalInputNames() []string {
 	return p.AdditionalInputNames
+}
+
+func (p *BaseFact) GetAdditionalInputs() []Facter {
+	return p.additionalInputs
 }
 
 func (p *BaseFact) GetErrors() []error {
@@ -53,6 +65,10 @@ func (p *BaseFact) GetErrors() []error {
 
 func (p *BaseFact) GetData() interface{} {
 	return p.data
+}
+
+func (p *BaseFact) SetInputName(name string) {
+	p.InputName = name
 }
 
 func (p *BaseFact) SetData(data interface{}) {

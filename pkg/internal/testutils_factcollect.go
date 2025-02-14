@@ -22,6 +22,7 @@ type FactInputTest struct {
 type FactCollectTest struct {
 	Name   string
 	Facter fact.Facter
+	FactFn func() fact.Facter
 
 	TestInput          FactInputTest
 	ExpectedInputError error
@@ -45,6 +46,10 @@ func TestFactCollect(t *testing.T, fct FactCollectTest) {
 	logrus.SetOutput(io.Discard)
 
 	fact.Facts = map[string]fact.Facter{}
+
+	if fct.FactFn != nil {
+		fct.Facter = fct.FactFn()
+	}
 
 	// Load input plugin.
 	if fct.TestInput.DataFn != nil {

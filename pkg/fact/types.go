@@ -1,6 +1,7 @@
 package fact
 
 import (
+	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
@@ -15,12 +16,16 @@ type Facter interface {
 
 	// Connection methods
 	GetConnectionName() string
+	GetConnection() connection.Connectioner
 	SupportedConnections() (plugin.SupportLevel, []string)
 	ValidateConnection() error
 
 	// Input methods
 	GetInputName() string
+	GetInput() Facter
 	GetAdditionalInputNames() []string
+	GetAdditionalInputs() []Facter
+	SetInputName(name string)
 	SupportedInputs() (plugin.SupportLevel, []string)
 	ValidateInput() error
 	LoadAdditionalInputs() []error

@@ -8,23 +8,13 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 type ReadMultiple struct {
-	// Common fields.
-	Name                 string          `yaml:"name"`
-	Format               data.DataFormat `yaml:"format"`
-	ConnectionName       string          `yaml:"connection"`
-	InputName            string          `yaml:"input"`
-	AdditionalInputNames []string        `yaml:"additional-inputs"`
-	connection           connection.Connectioner
-	input                fact.Facter
-	additionalInputs     []fact.Facter
-	errors               []error
-	data                 interface{}
+	fact.BaseFact
 
 	// Plugin fields.
 	Files []string `yaml:"files"`
@@ -33,54 +23,65 @@ type ReadMultiple struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=ReadMultiple --package=file
 
 func init() {
-	fact.Registry["file:read:multiple"] = func(n string) fact.Facter {
-		return &ReadMultiple{Name: n, Format: data.FormatMapBytes}
+	fact.GetManager().Register("file:read:multiple", func(n string) fact.Facter {
+		return NewReadMultiple(n)
+	})
+}
+
+func NewReadMultiple(id string) *ReadMultiple {
+	return &ReadMultiple{
+		BaseFact: fact.BaseFact{
+			BasePlugin: plugin.BasePlugin{
+				Id: id,
+			},
+		},
 	}
 }
 
-func (p *ReadMultiple) PluginName() string {
+func (p *ReadMultiple) GetName() string {
 	return "file:read:multiple"
 }
 
-func (p *ReadMultiple) SupportedConnections() (fact.SupportLevel, []string) {
-	return fact.SupportNone, nil
+func (p *ReadMultiple) SupportedConnections() (plugin.SupportLevel, []string) {
+	return plugin.SupportNone, nil
 }
 
-func (p *ReadMultiple) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportOptional, []string{"yaml:key"}
+func (p *ReadMultiple) SupportedInputs() (plugin.SupportLevel, []string) {
+	return plugin.SupportOptional, []string{"yaml:key"}
 }
 
 func (p *ReadMultiple) Collect() {
 	log.WithFields(log.Fields{
-		"fact":        p.Name,
+		"fact-plugin": p.GetName(),
+		"fact":        p.GetId(),
 		"project-dir": config.ProjectDir,
 	}).Info("collecting files data")
 
-	if p.input == nil && len(p.Files) == 0 {
-		p.errors = append(p.errors, errors.New("no files specified"))
+	if p.GetInput() == nil && len(p.Files) == 0 {
+		p.AddErrors(errors.New("no files specified"))
 		return
 	}
 
-	if p.input != nil {
-		switch p.input.GetFormat() {
+	if p.GetInput() != nil {
+		switch p.GetInput().GetFormat() {
 		case data.FormatMapString:
 			p.Format = data.FormatMapBytes
 			res := map[string][]byte{}
-			filenameMap := data.AsMapString(p.input.GetData())
+			filenameMap := data.AsMapString(p.GetInput().GetData())
 			for k, filename := range filenameMap {
 				fullpath := filepath.Join(config.ProjectDir, filename)
 				if _, err := os.Stat(fullpath); errors.Is(err, os.ErrNotExist) {
-					p.errors = append(p.errors, err)
+					p.AddErrors(err)
 					continue
 				}
 				fData, err := os.ReadFile(fullpath)
 				if err != nil {
-					p.errors = append(p.errors, err)
+					p.AddErrors(err)
 					continue
 				}
 				res[k] = fData
 			}
-			p.data = res
+			p.SetData(res)
 			return
 		}
 	}
@@ -90,16 +91,16 @@ func (p *ReadMultiple) Collect() {
 	for _, filename := range p.Files {
 		fullpath := filepath.Join(config.ProjectDir, filename)
 		if _, err := os.Stat(fullpath); errors.Is(err, os.ErrNotExist) {
-			p.errors = append(p.errors, err)
+			p.AddErrors(err)
 			continue
 		}
 
 		fData, err := os.ReadFile(fullpath)
 		if err != nil {
-			p.errors = append(p.errors, err)
+			p.AddErrors(err)
 			continue
 		}
 		res[filename] = fData
 	}
-	p.data = res
+	p.SetData(res)
 }

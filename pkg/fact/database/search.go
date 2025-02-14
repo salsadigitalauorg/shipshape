@@ -12,21 +12,12 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 // Search searches the provided text from all tables of a database.
 type Search struct {
-	// Common fields.
-	Name                 string          `yaml:"name"`
-	Format               data.DataFormat `yaml:"format"`
-	ConnectionName       string          `yaml:"connection"`
-	InputName            string          `yaml:"input"`
-	AdditionalInputNames []string        `yaml:"additional-inputs"`
-	connection           connection.Connectioner
-	input                fact.Facter
-	additionalInputs     []fact.Facter
-	errors               []error
-	data                 interface{}
+	fact.BaseFact
 
 	// Plugin fields.
 	Tables  map[string][]string `yaml:"tables"`
@@ -34,33 +25,44 @@ type Search struct {
 	IdField string              `yaml:"id-field"`
 }
 
-//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Search --package=database
+//go:generate go run ../../../cmd/gen.go fact-plugin --package=database
 
 func init() {
-	fact.Registry["database:search"] = func(n string) fact.Facter {
-		return &Search{Name: n, Format: data.FormatMapNestedString}
+	fact.GetManager().Register("database:search", func(n string) fact.Facter {
+		return New(n)
+	})
+}
+
+func New(id string) *Search {
+	return &Search{
+		BaseFact: fact.BaseFact{
+			BasePlugin: plugin.BasePlugin{
+				Id: id,
+			},
+			Format: data.FormatMapNestedString,
+		},
 	}
 }
 
-func (p *Search) PluginName() string {
+func (p *Search) GetName() string {
 	return "database:search"
 }
 
-func (p *Search) SupportedConnections() (fact.SupportLevel, []string) {
-	return fact.SupportRequired, []string{"mysql"}
+func (p *Search) SupportedConnections() (plugin.SupportLevel, []string) {
+	return plugin.SupportRequired, []string{"mysql"}
 }
 
-func (p *Search) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportNone, []string{}
+func (p *Search) SupportedInputs() (plugin.SupportLevel, []string) {
+	return plugin.SupportNone, []string{}
 }
 
 func (p *Search) Collect() {
 	if p.IdField == "" {
-		p.errors = append(p.errors, fmt.Errorf("id-field is required"))
+		p.AddErrors(fmt.Errorf("id-field is required"))
 		return
 	}
 
-	conn := p.connection.(*connection.Mysql)
+	conn := p.GetConnection().(*connection.Mysql)
 	log.WithField("mysqlConn", conn).Debug("collecting data")
 
 	if len(p.Tables) == 0 {
@@ -73,7 +75,7 @@ func (p *Search) Collect() {
 
 	// Execute the connection to get the db instance.
 	if _, err := conn.Run(); err != nil {
-		p.errors = append(p.errors, err)
+		p.AddErrors(err)
 		return
 	}
 
@@ -91,7 +93,7 @@ func (p *Search) Collect() {
 				goqu.C(col).Like(p.Search)).ScanVals(&ids); err != nil {
 				log.WithField("err", fmt.Sprintf("%#v", err)).Trace("failed to search")
 				if mErr, ok := err.(*mysql.MySQLError); !ok || mErr.Message != unknownColMsg {
-					p.errors = append(p.errors, err)
+					p.AddErrors(err)
 					continue
 				}
 			}
@@ -106,7 +108,7 @@ func (p *Search) Collect() {
 	}
 
 	log.WithField("occurrences", fmt.Sprintf("%+v", occurrences)).Trace("search done")
-	p.data = occurrences
+	p.SetData(occurrences)
 }
 
 // fetchTablesColumns fetches list of tables and columns from the information_schema db.
@@ -122,7 +124,7 @@ func (p *Search) fetchTablesColumns(conn connection.Mysql) error {
 
 	// Execute the connection to get the db instance.
 	if _, err := conn.Run(); err != nil {
-		p.errors = append(p.errors, err)
+		p.AddErrors(err)
 		return err
 	}
 
@@ -131,7 +133,7 @@ func (p *Search) fetchTablesColumns(conn connection.Mysql) error {
 		goqu.C("table_schema").Eq(origDb),
 		goqu.C("data_type").In([]string{"char", "varchar", "longtext", "longblob"}),
 	)).ScanStructs(&tablesCols); err != nil {
-		p.errors = append(p.errors, err)
+		p.AddErrors(err)
 		return err
 	}
 

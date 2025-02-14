@@ -7,24 +7,14 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 type Lookup struct {
-	// Common fields.
-	Name                 string          `yaml:"name"`
-	Format               data.DataFormat `yaml:"format"`
-	ConnectionName       string          `yaml:"connection"`
-	InputName            string          `yaml:"input"`
-	AdditionalInputNames []string        `yaml:"additional-inputs"`
-	connection           connection.Connectioner
-	input                fact.Facter
-	additionalInputs     []fact.Facter
-	errors               []error
-	data                 interface{}
+	fact.BaseFact
 
 	// Plugin fields.
 	Path           string   `yaml:"path"`
@@ -34,42 +24,54 @@ type Lookup struct {
 	SkipDirs       []string `yaml:"skip-dirs"`
 }
 
-//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Lookup --package=file
+//go:generate go run ../../../cmd/gen.go fact-plugin --package=file
 
 func init() {
-	fact.Registry["file:lookup"] = func(n string) fact.Facter {
-		return &Lookup{Name: n, FileNamesOnly: true}
+	fact.GetManager().Register("file:lookup", func(n string) fact.Facter {
+		return NewLookup(n)
+	})
+}
+
+func NewLookup(id string) *Lookup {
+	return &Lookup{
+		BaseFact: fact.BaseFact{
+			BasePlugin: plugin.BasePlugin{
+				Id: id,
+			},
+		},
+		FileNamesOnly: true,
 	}
 }
 
-func (p *Lookup) PluginName() string {
+func (p *Lookup) GetName() string {
 	return "file:lookup"
 }
 
-func (p *Lookup) SupportedConnections() (fact.SupportLevel, []string) {
-	return fact.SupportNone, []string{}
+func (p *Lookup) SupportedConnections() (plugin.SupportLevel, []string) {
+	return plugin.SupportNone, []string{}
 }
 
-func (p *Lookup) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportNone, []string{}
+func (p *Lookup) SupportedInputs() (plugin.SupportLevel, []string) {
+	return plugin.SupportNone, []string{}
 }
 
 func (p *Lookup) Collect() {
 	log.WithFields(log.Fields{
-		"fact":        p.Name,
+		"fact-plugin": p.GetName(),
+		"fact":        p.GetId(),
 		"project-dir": config.ProjectDir,
 		"path":        p.Path,
 		"pattern":     p.Pattern,
 	}).Info("looking up files")
 	files, err := utils.FindFiles(filepath.Join(config.ProjectDir, p.Path), p.Pattern, p.ExcludePattern, p.SkipDirs)
 	if err != nil {
-		p.errors = append(p.errors, err)
+		p.AddErrors(err)
 		return
 	}
 
 	if p.FileNamesOnly {
 		p.Format = data.FormatListString
-		p.data = files
+		p.SetData(files)
 		return
 	}
 
@@ -77,11 +79,11 @@ func (p *Lookup) Collect() {
 	for _, f := range files {
 		fData, err := os.ReadFile(f)
 		if err != nil {
-			p.errors = append(p.errors, err)
+			p.AddErrors(err)
 			continue
 		}
 		filesDataMap[f] = fData
 	}
 	p.Format = data.FormatMapBytes
-	p.data = filesDataMap
+	p.SetData(filesDataMap)
 }

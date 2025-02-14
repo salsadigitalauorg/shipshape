@@ -23,6 +23,8 @@ type Command struct {
 	IgnoreError bool     `yaml:"ignore-error"`
 }
 
+//go:generate go run ../../../cmd/gen.go fact-plugin --package=command
+
 func init() {
 	fact.GetManager().Register("command", func(n string) fact.Facter {
 		return New(n)

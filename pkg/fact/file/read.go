@@ -8,65 +8,63 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
-	"github.com/salsadigitalauorg/shipshape/pkg/connection"
-	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 type Read struct {
-	// Common fields.
-	Name                 string          `yaml:"name"`
-	Format               data.DataFormat `yaml:"format"`
-	ConnectionName       string          `yaml:"connection"`
-	InputName            string          `yaml:"input"`
-	AdditionalInputNames []string        `yaml:"additional-inputs"`
-	connection           connection.Connectioner
-	input                fact.Facter
-	additionalInputs     []fact.Facter
-	errors               []error
-	data                 interface{}
+	fact.BaseFact
 
 	// Plugin fields.
 	Path string `yaml:"path"`
 }
 
-//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Read --package=file
-
 func init() {
-	fact.Registry["file:read"] = func(n string) fact.Facter {
-		return &Read{Name: n, Format: data.FormatRaw}
+	fact.GetManager().Register("file:read", func(n string) fact.Facter {
+		return NewRead(n)
+	})
+}
+
+func NewRead(id string) *Read {
+	return &Read{
+		BaseFact: fact.BaseFact{
+			BasePlugin: plugin.BasePlugin{
+				Id: id,
+			},
+		},
 	}
 }
 
-func (p *Read) PluginName() string {
+func (p *Read) GetName() string {
 	return "file:read"
 }
 
-func (p *Read) SupportedConnections() (fact.SupportLevel, []string) {
-	return fact.SupportNone, nil
+func (p *Read) SupportedConnections() (plugin.SupportLevel, []string) {
+	return plugin.SupportNone, nil
 }
 
-func (p *Read) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportNone, nil
+func (p *Read) SupportedInputs() (plugin.SupportLevel, []string) {
+	return plugin.SupportNone, nil
 }
 
 func (p *Read) Collect() {
 	log.WithFields(log.Fields{
-		"fact":        p.Name,
+		"fact-plugin": p.GetName(),
+		"fact":        p.GetId(),
 		"project-dir": config.ProjectDir,
 		"path":        p.Path,
 	}).Info("verifying file existence")
 
 	fullpath := filepath.Join(config.ProjectDir, p.Path)
 	if _, err := os.Stat(fullpath); errors.Is(err, os.ErrNotExist) {
-		p.errors = append(p.errors, err)
+		p.AddErrors(err)
 		return
 	}
 
 	fData, err := os.ReadFile(fullpath)
 	if err != nil {
-		p.errors = append(p.errors, err)
+		p.AddErrors(err)
 		return
 	}
-	p.data = fData
+	p.SetData(fData)
 }
