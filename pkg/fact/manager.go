@@ -4,14 +4,14 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/pluginmanager"
 )
 
-// Manager handles fact plugin registration and lifecycle
+// Manager handles fact plugin registration and lifecycle.
 type Manager struct {
 	*pluginmanager.Manager[Facter]
 }
 
 var m *Manager
 
-// GetManager creates a new fact plugin manager
+// GetManager returns the fact manager.
 func GetManager() *Manager {
 	if m == nil {
 		m = &Manager{

@@ -33,11 +33,11 @@ func TestNotEqualsAnalyse(t *testing.T) {
 		// String.
 		{
 			Name: "string",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatString,
-				TestInputData:       "bar",
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatString,
+				"bar",
+			),
 			Analyser: &NotEquals{
 				InputName: "testFact",
 				Id:        "TestNotEquals",
@@ -53,11 +53,11 @@ func TestNotEqualsAnalyse(t *testing.T) {
 		},
 		{
 			Name: "stringEqual",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatString,
-				TestInputData:       "foo",
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatString,
+				"foo",
+			),
 			Analyser: &NotEquals{
 				InputName: "testFact",
 				Id:        "TestNotEquals",
@@ -69,13 +69,13 @@ func TestNotEqualsAnalyse(t *testing.T) {
 		// Map of string.
 		{
 			Name: "mapString",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatMapString,
-				TestInputData: map[string]interface{}{
+			Input: testdata.New(
+				"testFact",
+				data.FormatMapString,
+				map[string]interface{}{
 					"foo": "baz",
 				},
-			},
+			),
 			Analyser: &NotEquals{
 				InputName: "testFact",
 				Id:        "TestNotEquals",
@@ -92,11 +92,11 @@ func TestNotEqualsAnalyse(t *testing.T) {
 		},
 		{
 			Name: "mapStringEqual",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatMapString,
-				TestInputData:       map[string]interface{}{"foo": "bar"},
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatMapString,
+				map[string]interface{}{"foo": "bar"},
+			),
 			Analyser: &NotEquals{
 				InputName: "testFact",
 				Id:        "TestNotEquals",
@@ -109,11 +109,11 @@ func TestNotEqualsAnalyse(t *testing.T) {
 		// Unsupported.
 		{
 			Name: "unsupported",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatListString,
-				TestInputData:       []interface{}{"foo", "bar"},
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatListString,
+				[]interface{}{"foo", "bar"},
+			),
 			Analyser: &NotEquals{
 				InputName: "testFact",
 				Id:        "TestNotEquals",

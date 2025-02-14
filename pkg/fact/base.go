@@ -143,7 +143,7 @@ func (p *BaseFact) ValidateInput() error {
 	}
 
 	if p.GetInputName() != "" {
-		inPlug := GetInstance(p.GetInputName())
+		inPlug, _ := GetManager().GetPlugin(p.GetInputName())
 		if inPlug == nil {
 			return &plugin.ErrSupportNotFound{
 				Plugin:        p.GetName(),
@@ -193,7 +193,7 @@ func (p *BaseFact) LoadAdditionalInputs() []error {
 	plugins := []Facter{}
 	errs := []error{}
 	for _, n := range p.GetAdditionalInputNames() {
-		inPlug := GetInstance(n)
+		inPlug, _ := GetManager().GetPlugin(n)
 		if inPlug == nil {
 			errs = append(errs, &plugin.ErrSupportNotFound{
 				Plugin:        p.GetName(),

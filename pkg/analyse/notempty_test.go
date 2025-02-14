@@ -38,31 +38,31 @@ func TestNotEmptyAnalyse(t *testing.T) {
 	}{
 		{
 			name: "mapNestedStringNil",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapNestedString,
-				TestInputData:       map[string]map[string]string(nil),
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapNestedString,
+				map[string]map[string]string(nil),
+			),
 			expectedBreaches: []breach.Breach{},
 		},
 		{
 			name: "mapNestedStringEmpty",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapNestedString,
-				TestInputData:       map[string]map[string]string{},
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapNestedString,
+				map[string]map[string]string{},
+			),
 			expectedBreaches: []breach.Breach{},
 		},
 		{
 			name: "mapNestedStringNotEmpty",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapNestedString,
-				TestInputData: map[string]map[string]string{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapNestedString,
+				map[string]map[string]string{
 					"key1": {"subKey1": "value1"},
 				},
-			},
+			),
 			expectedBreaches: []breach.Breach{
 				&breach.KeyValueBreach{
 					BreachType: "key-value",

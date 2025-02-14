@@ -5,6 +5,7 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -49,13 +50,13 @@ func (p *{{ .Plugin }}) ValidateInput() error {
 		"analyser": p.Id,
 	}).Debug("validating input")
 
-	plugin := fact.GetInstance(p.InputName)
-	if plugin == nil {
-		return &fact.ErrSupportNotFound{
+	inPlugin, _ := fact.GetManager().GetPlugin(p.InputName)
+	if inPlugin == nil {
+		return &plugin.ErrSupportNotFound{
 			Plugin: p.GetId(), SupportType: "input", SupportPlugin: p.InputName}
 	}
 
-	p.input = plugin
+	p.input = inPlugin
 	return nil
 }
 

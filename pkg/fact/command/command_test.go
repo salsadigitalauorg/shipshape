@@ -16,7 +16,7 @@ func TestCommandInit(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test that the command plugin is registered.
-	factPlugin := fact.Registry["command"]("TestCommand")
+	factPlugin := fact.GetManager().GetRegistry()["command"]("TestCommand")
 	assert.NotNil(factPlugin)
 	keyFacter, ok := factPlugin.(*Command)
 	assert.True(ok)

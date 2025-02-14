@@ -18,7 +18,7 @@ func TestKeyInit(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test that the yaml:key plugin is registered.
-	factPlugin := fact.Registry["yaml:key"]("testKeyYaml")
+	factPlugin := fact.GetManager().GetRegistry()["yaml:key"]("testKeyYaml")
 	assert.NotNil(factPlugin)
 	keyFacter, ok := factPlugin.(*Key)
 	assert.True(ok)

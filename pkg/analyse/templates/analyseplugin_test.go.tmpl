@@ -11,6 +11,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact/testdata"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -52,7 +53,7 @@ func Test{{ .Plugin }}ValidateInput(t *testing.T) {
 	t.Run("noInput", func(t *testing.T) {
 		instance := {{ .Plugin }}{}
 		err := instance.ValidateInput()
-		assert.Equal(t, &fact.ErrSupportNotFound{
+		assert.Equal(t, &plugin.ErrSupportNotFound{
 			Plugin: "", SupportType: "input", SupportPlugin: ""}, err)
 	})
 
@@ -61,7 +62,11 @@ func Test{{ .Plugin }}ValidateInput(t *testing.T) {
 		defer func() { fact.Facts = origFacts }()
 
 		testFacter := &testdata.TestFacter{
-			Name:                "testFacter",
+			BaseFact: fact.BaseFact{
+				BasePlugin: plugin.BasePlugin{
+					Id: "testFacter",
+				},
+			},
 			TestInputDataFormat: data.FormatListString,
 			TestInputData:       nil,
 		}
@@ -85,14 +90,26 @@ func Test{{ .Plugin }}PreProcessInput(t *testing.T) {
 
 	t.Run("inputNoError", func(t *testing.T) {
 		instance := {{ .Plugin }}{}
-		instance.SetInput(&testdata.TestFacter{Name: "testFacter"})
+		instance.SetInput(&testdata.TestFacter{
+			BaseFact: fact.BaseFact{
+				BasePlugin: plugin.BasePlugin{
+					Id: "testFacter",
+				},
+			},
+		})
 		assert.True(t, instance.PreProcessInput())
 	})
 
 	t.Run("inputWithError", func(t *testing.T) {
 		instance := {{ .Plugin }}{}
-		testInput := testdata.TestFacter{Name: "testFacter"}
-		testInput.AddError(errors.New("test error"))
+		testInput := testdata.TestFacter{
+			BaseFact: fact.BaseFact{
+				BasePlugin: plugin.BasePlugin{
+					Id: "testFacter",
+				},
+			},
+		}
+		testInput.AddErrors(errors.New("test error"))
 		instance.SetInput(&testInput)
 		assert.False(t, instance.PreProcessInput())
 		assert.ElementsMatch(t, []breach.Breach{&breach.KeyValuesBreach{

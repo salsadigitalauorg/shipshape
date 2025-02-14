@@ -39,49 +39,49 @@ func TestRegexMatchAnalyse(t *testing.T) {
 	}{
 		{
 			name: "nil",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatNil,
-				TestInputData:       nil,
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatNil,
+				nil,
+			),
 		},
 
 		// Nested string map.
 		{
 			name: "mapNestedStringEmpty",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapNestedString,
-				TestInputData:       map[string]map[string]string{},
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapNestedString,
+				map[string]map[string]string{},
+			),
 		},
 		{
 			name: "mapNestedStringNoMatch",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapNestedString,
-				TestInputData: map[string]map[string]string{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapNestedString,
+				map[string]map[string]string{
 					"key1": {
 						"subkey1": "value1",
 						"subkey2": "value2",
 					},
 				},
-			},
+			),
 			pattern:          ".*value3.*",
 			expectedBreaches: []breach.Breach{},
 		},
 		{
 			name: "mapNestedString1Match",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapNestedString,
-				TestInputData: map[string]map[string]string{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapNestedString,
+				map[string]map[string]string{
 					"key1": {
 						"subkey1": "value1",
 						"subkey2": "value2",
 					},
 				},
-			},
+			),
 			pattern: ".*value2.*",
 			expectedBreaches: []breach.Breach{
 				&breach.KeyValueBreach{
@@ -95,10 +95,10 @@ func TestRegexMatchAnalyse(t *testing.T) {
 		},
 		{
 			name: "mapNestedStringMultipleMatches",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapNestedString,
-				TestInputData: map[string]map[string]string{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapNestedString,
+				map[string]map[string]string{
 					"key1": {
 						"subkey1": "value1",
 						"subkey2": "value2",
@@ -110,7 +110,7 @@ func TestRegexMatchAnalyse(t *testing.T) {
 						"subkey3": "value3",
 					},
 				},
-			},
+			),
 			pattern: ".*value(1|3|5).*",
 			expectedBreaches: []breach.Breach{
 				&breach.KeyValueBreach{
@@ -140,11 +140,11 @@ func TestRegexMatchAnalyse(t *testing.T) {
 		// String.
 		{
 			name: "stringEmpty/match/digit/single/match",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatString,
-				TestInputData:       "0",
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatString,
+				"0",
+			),
 			pattern: "^0$",
 			expectedBreaches: []breach.Breach{
 				&breach.ValueBreach{
@@ -156,11 +156,11 @@ func TestRegexMatchAnalyse(t *testing.T) {
 		},
 		{
 			name: "stringEmpty/match/digit/single/nomatch",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatString,
-				TestInputData:       "010",
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatString,
+				"010",
+			),
 			pattern:          "^0$",
 			expectedBreaches: []breach.Breach{},
 		},
@@ -168,10 +168,11 @@ func TestRegexMatchAnalyse(t *testing.T) {
 		// Unsupported.
 		{
 			name: "unsupported",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: "nosupport",
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatNil,
+				nil,
+			),
 			pattern: ".*",
 			expectedBreaches: []breach.Breach{
 				&breach.ValueBreach{

@@ -1,16 +1,13 @@
 package fact
 
 import (
-	"sort"
-
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
-
-var Registry = map[string]func(string) Facter{}
 
 // OnlyFactNames is a list of fact names to collect.
 // If empty, all facts are collected.
@@ -22,7 +19,7 @@ var collected = []string{}
 
 func init() {
 	breach.TemplateFuncs["lookupFactAsStringMap"] = func(inputName string, key string) string {
-		input := GetInstance(inputName)
+		input, _ := GetManager().GetPlugin(inputName)
 		if input == nil {
 			return ""
 		}
@@ -35,29 +32,16 @@ func init() {
 	}
 }
 
-func GetInstance(name string) Facter {
-	if p, ok := Facts[name]; !ok {
-		return nil
-	} else {
-		return p
-	}
-}
-
-func RegistryKeys() []string {
-	keys := []string{}
-	for k := range Registry {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
+func GetRegistryKeys() []string {
+	return plugin.GetRegistryKeys[Facter](GetManager().GetRegistry())
 }
 
 func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0
-	log.WithField("registry", RegistryKeys()).Debug("available fact plugins")
+	log.WithField("registry", GetRegistryKeys()).Debug("available fact plugins")
 	for name, pluginConf := range raw {
 		for pluginName, pluginMap := range pluginConf {
-			f, ok := Registry[pluginName]
+			f, ok := GetManager().GetRegistry()[pluginName]
 			if !ok {
 				continue
 			}
@@ -101,7 +85,7 @@ func CollectFact(name string, f Facter) {
 		log.WithField("fact", name).
 			WithField("inputName", f.GetInputName()).
 			Debug("collect input")
-		inputF = GetInstance(f.GetInputName())
+		inputF, _ = GetManager().GetPlugin(f.GetInputName())
 		CollectFact(f.GetInputName(), inputF)
 	}
 
@@ -110,7 +94,8 @@ func CollectFact(name string, f Facter) {
 			log.WithField("fact", name).
 				WithField("additionalInputName", n).
 				Debug("collect additional input")
-			CollectFact(n, GetInstance(n))
+			inputF, _ = GetManager().GetPlugin(n)
+			CollectFact(n, inputF)
 		}
 	}
 

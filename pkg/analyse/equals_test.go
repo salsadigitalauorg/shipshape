@@ -33,11 +33,11 @@ func TestEqualsAnalyse(t *testing.T) {
 		// String.
 		{
 			Name: "string",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatString,
-				TestInputData:       "foo",
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatString,
+				"foo",
+			),
 			Analyser: &Equals{
 				InputName: "testFact",
 				Id:        "TestEquals",
@@ -53,11 +53,11 @@ func TestEqualsAnalyse(t *testing.T) {
 		},
 		{
 			Name: "stringNotEqual",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatString,
-				TestInputData:       "bar",
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatString,
+				"bar",
+			),
 			Analyser: &Equals{
 				InputName: "testFact",
 				Id:        "TestEquals",
@@ -69,13 +69,13 @@ func TestEqualsAnalyse(t *testing.T) {
 		// Map of string.
 		{
 			Name: "mapString",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatMapString,
-				TestInputData: map[string]interface{}{
+			Input: testdata.New(
+				"testFact",
+				data.FormatMapString,
+				map[string]interface{}{
 					"foo": "bar",
 				},
-			},
+			),
 			Analyser: &Equals{
 				InputName: "testFact",
 				Id:        "TestEquals",
@@ -92,11 +92,11 @@ func TestEqualsAnalyse(t *testing.T) {
 		},
 		{
 			Name: "mapStringNotEqual",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatMapString,
-				TestInputData:       map[string]interface{}{"foo": "zoom"},
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatMapString,
+				map[string]interface{}{"foo": "zoom"},
+			),
 			Analyser: &Equals{
 				InputName: "testFact",
 				Id:        "TestEquals",
@@ -109,11 +109,11 @@ func TestEqualsAnalyse(t *testing.T) {
 		// Unsupported.
 		{
 			Name: "unsupported",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatListString,
-				TestInputData:       []interface{}{"foo", "bar"},
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatListString,
+				[]interface{}{"foo", "bar"},
+			),
 			Analyser: &Equals{
 				InputName: "testFact",
 				Id:        "TestEquals",

@@ -11,6 +11,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact/testdata"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 type FactInputTest struct {
@@ -58,7 +59,11 @@ func TestFactCollect(t *testing.T, fct FactCollectTest) {
 
 	if fct.TestInput.Data != nil {
 		testP := testdata.TestFacter{
-			Name:                "test-input",
+			BaseFact: fact.BaseFact{
+				BasePlugin: plugin.BasePlugin{
+					Id: "test-input",
+				},
+			},
 			TestInputDataFormat: fct.TestInput.DataFormat,
 			TestInputData:       fct.TestInput.Data,
 		}
@@ -78,7 +83,11 @@ func TestFactCollect(t *testing.T, fct FactCollectTest) {
 	if len(fct.TestAdditionalInputs) > 0 {
 		for name, testInput := range fct.TestAdditionalInputs {
 			testP := testdata.TestFacter{
-				Name:                name,
+				BaseFact: fact.BaseFact{
+					BasePlugin: plugin.BasePlugin{
+						Id: name,
+					},
+				},
 				TestInputDataFormat: testInput.DataFormat,
 				TestInputData:       testInput.Data,
 			}
