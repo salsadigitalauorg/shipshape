@@ -86,5 +86,20 @@ func (m *Manager[T]) Reset() {
 	m.plugins = make(map[string]T)
 }
 
+// You can use it like this:
 // Create a manager for fact plugins
-// var factManager = NewManager[fact.Facter]()
+// factManager := pluginmanager.NewManager[fact.Facter]()
+
+// // Register a plugin
+// factManager.Register("command", func(name string) fact.Facter {
+//     return &command.Command{Name: name}
+// })
+
+// // Get a plugin instance
+// cmdPlugin, err := factManager.GetPlugin("command")
+// if err != nil {
+//     log.Fatal(err)
+// }
+
+// // List all registered plugins
+// plugins := factManager.ListPlugins()
