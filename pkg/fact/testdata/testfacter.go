@@ -3,9 +3,11 @@ package testdata
 import (
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 type TestFacter struct {
+	fact.BaseFact
 	// Common fields.
 	Name                 string          `yaml:"name"`
 	Format               data.DataFormat `yaml:"format"`
@@ -28,11 +30,11 @@ func (p *TestFacter) PluginName() string {
 	return "file:read"
 }
 
-func (p *TestFacter) SupportedConnections() (fact.SupportLevel, []string) {
-	return fact.SupportNone, []string{}
+func (p *TestFacter) SupportedConnections() (plugin.SupportLevel, []string) {
+	return plugin.SupportNone, []string{}
 }
 
-func (p *TestFacter) SupportedInputs() (fact.SupportLevel, []string) {
+func (p *TestFacter) SupportedInputs() (plugin.SupportLevel, []string) {
 	return fact.SupportNone, []string{}
 }
 
@@ -71,11 +73,11 @@ func (p *TestFacter) GetErrors() []error {
 }
 
 func (p *TestFacter) ValidateConnection() error {
-	return &fact.ErrSupportNone{SupportType: "connection"}
+	return &plugin.ErrSupportNone{SupportType: "connection"}
 }
 
 func (p *TestFacter) ValidateInput() error {
-	return &fact.ErrSupportNone{SupportType: "input"}
+	return &plugin.ErrSupportNone{SupportType: "input"}
 }
 
 func (p *TestFacter) LoadAdditionalInputs() []error {

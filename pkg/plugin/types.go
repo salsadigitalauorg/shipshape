@@ -9,6 +9,10 @@ type Plugin interface {
 	GetName() string
 	// GetId returns the unique identifier for this plugin instance.
 	GetId() string
+	// GetErrors returns the errors for this plugin.
+	GetErrors() []error
+	// AddErrors adds an error to the plugin's error list.
+	AddErrors(errs ...error)
 }
 
 // Registry represents a generic plugin registry.

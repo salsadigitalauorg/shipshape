@@ -9,6 +9,7 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	. "github.com/salsadigitalauorg/shipshape/pkg/fact/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 func TestCommandInit(t *testing.T) {
@@ -19,25 +20,25 @@ func TestCommandInit(t *testing.T) {
 	assert.NotNil(factPlugin)
 	keyFacter, ok := factPlugin.(*Command)
 	assert.True(ok)
-	assert.Equal("TestCommand", keyFacter.Name)
+	assert.Equal("TestCommand", keyFacter.Id)
 }
 
 func TestCommandPluginName(t *testing.T) {
-	commandF := Command{Name: "TestCommand"}
-	assert.Equal(t, "command", commandF.PluginName())
+	commandF := New("TestCommand")
+	assert.Equal(t, "command", commandF.GetName())
 }
 
 func TestCommandSupportedConnections(t *testing.T) {
-	commandF := Command{Name: "TestCommand"}
+	commandF := New("TestCommand")
 	supportLevel, connections := commandF.SupportedConnections()
-	assert.Equal(t, fact.SupportNone, supportLevel)
+	assert.Equal(t, plugin.SupportNone, supportLevel)
 	assert.Empty(t, connections)
 }
 
 func TestCommandSupportedInputs(t *testing.T) {
-	commandF := Command{Name: "TestCommand"}
+	commandF := New("TestCommand")
 	supportLevel, inputs := commandF.SupportedInputs()
-	assert.Equal(t, fact.SupportNone, supportLevel)
+	assert.Equal(t, plugin.SupportNone, supportLevel)
 	assert.ElementsMatch(t, []string{}, inputs)
 }
 
@@ -45,7 +46,7 @@ func TestCommandCollect(t *testing.T) {
 	tests := []internal.FactCollectTest{
 		{
 			Name:   "emptyCommand",
-			Facter: &Command{Name: "TestCommand"},
+			Facter: New("TestCommand"),
 			ExpectedData: map[string]string{
 				"code": "1", "stderr": "exec: no command", "stdout": "",
 			},
@@ -53,21 +54,21 @@ func TestCommandCollect(t *testing.T) {
 		},
 		{
 			Name:   "emptyCommand/ignoreError",
-			Facter: &Command{Name: "TestCommand", IgnoreError: true},
+			Facter: New("TestCommand"),
 			ExpectedData: map[string]string{
 				"code": "1", "stderr": "exec: no command", "stdout": "",
 			},
 		},
 		{
 			Name:   "echo",
-			Facter: &Command{Name: "TestCommand", Cmd: "echo", Args: []string{"hello"}},
+			Facter: New("TestCommand"),
 			ExpectedData: map[string]string{
 				"code": "0", "stderr": "", "stdout": "hello",
 			},
 		},
 		{
 			Name:   "multiline",
-			Facter: &Command{Name: "TestCommand", Cmd: "ls", Args: []string{"-A1"}},
+			Facter: New("TestCommand"),
 			ExpectedData: map[string]string{
 				"code": "0", "stderr": "", "stdout": "command.go\ncommand_gen.go\ncommand_test.go",
 			},

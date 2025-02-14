@@ -8,56 +8,46 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/command"
-	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 // Command is a representation of a shell command.
 type Command struct {
-	// Common fields.
-	Name                 string          `yaml:"name"`
-	Format               data.DataFormat `yaml:"format"`
-	ConnectionName       string          `yaml:"connection"`
-	InputName            string          `yaml:"input"`
-	AdditionalInputNames []string        `yaml:"additional-inputs"`
+	fact.BaseFact
 
-	connection       connection.Connectioner
-	input            fact.Facter
-	additionalInputs []fact.Facter
-	errors           []error
-	data             interface{}
-
-	// Plugin fields.
+	// Plugin-specific fields
 	Cmd         string   `yaml:"cmd"`
 	Args        []string `yaml:"args"`
 	IgnoreError bool     `yaml:"ignore-error"`
 }
 
-//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Command --package=command
-
 func init() {
-	fact.Registry["command"] = func(n string) fact.Facter {
-		return &Command{Name: n, Format: data.FormatMapString}
+	fact.GetManager().Register("command", func(n string) fact.Facter {
+		return New(n)
+	})
+}
+
+func New(id string) *Command {
+	return &Command{
+		BaseFact: fact.BaseFact{
+			BasePlugin: plugin.BasePlugin{
+				Id: id,
+			},
+			Format: data.FormatMapString,
+		},
 	}
 }
 
-func (p *Command) PluginName() string {
+func (p *Command) GetName() string {
 	return "command"
-}
-
-func (p *Command) SupportedConnections() (fact.SupportLevel, []string) {
-	return fact.SupportNone, []string{}
-}
-
-func (p *Command) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportNone, []string{}
 }
 
 func (p *Command) Collect() {
 	contextLogger := log.WithFields(log.Fields{
-		"fact-plugin": p.PluginName(),
-		"fact":        p.Name,
+		"fact-plugin": p.GetName(),
+		"fact":        p.GetId(),
 	})
 
 	contextLogger.WithFields(log.Fields{
@@ -87,9 +77,9 @@ func (p *Command) Collect() {
 				WithField("stdout", res["stdout"]).
 				WithField("stderr", res["stderr"]).
 				WithError(err).Error("command failed")
-			p.errors = append(p.errors, err)
+			p.AddErrors(err)
 		}
 	}
 
-	p.data = res
+	p.SetData(res)
 }
