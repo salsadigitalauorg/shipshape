@@ -1,6 +1,7 @@
 package fact
 
 import (
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 	"github.com/salsadigitalauorg/shipshape/pkg/pluginmanager"
 )
 
@@ -19,4 +20,8 @@ func GetManager() *Manager {
 		}
 	}
 	return m
+}
+
+func (m *Manager) GetRegistryKeys() []string {
+	return plugin.GetRegistryKeys[Facter](m.GetRegistry())
 }

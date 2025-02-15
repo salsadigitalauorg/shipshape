@@ -44,16 +44,8 @@ func (p *Images) GetName() string {
 	return "docker:images"
 }
 
-func (p *Images) SupportedConnections() (plugin.SupportLevel, []string) {
-	return plugin.SupportNone, []string{}
-}
-
-func (p *Images) SupportedInputs() (plugin.SupportLevel, []string) {
-	return plugin.SupportRequired, []string{
-		"file:read",
-		"file:lookup",
-		"file:read:multiple",
-	}
+func (p *Images) SupportedInputFormats() (plugin.SupportLevel, []data.DataFormat) {
+	return plugin.SupportRequired, []data.DataFormat{data.FormatMapBytes}
 }
 
 func (p *Images) resolveIgnore(envMapMap map[string]map[string]string) {
@@ -87,11 +79,17 @@ func (p *Images) resolveIgnore(envMapMap map[string]map[string]string) {
 }
 
 func (p *Images) Collect() {
-	log.WithFields(log.Fields{
-		"fact-plugin":  p.GetName(),
-		"fact":         p.GetId(),
-		"input":        p.GetInputName(),
-		"input-plugin": p.GetInput().GetName(),
+	contextLogger := log.WithFields(log.Fields{
+		"fact-plugin": p.GetName(),
+		"fact":        p.GetId(),
+	})
+
+	contextLogger.WithFields(log.Fields{
+		"input":             p.GetInputName(),
+		"input-plugin":      p.GetInput().GetName(),
+		"additional-inputs": p.GetAdditionalInputNames(),
+		"no-tag":            p.NoTag,
+		"ignore":            p.Ignore,
 	}).Debug("collecting data")
 
 	var fileBytesMap map[string][]byte
@@ -107,7 +105,7 @@ func (p *Images) Collect() {
 	default:
 		p.AddErrors(&plugin.ErrSupportNone{
 			Plugin:        p.GetName(),
-			SupportType:   "input data format",
+			SupportType:   "inputFormat",
 			SupportPlugin: string(p.GetInput().GetFormat())})
 	}
 
@@ -117,20 +115,22 @@ func (p *Images) Collect() {
 
 	envMap := map[string]map[string]string{}
 	if p.ArgsFrom != "" {
+		contextLogger.WithField("argsFrom", p.ArgsFrom).Debug("resolving env")
 		if len(p.GetAdditionalInputNames()) == 0 {
 			p.AddErrors(&plugin.ErrSupportRequired{
-				Plugin: p.GetName(), SupportType: "additional inputs"})
+				Plugin: p.GetName(), SupportType: "additionalInputs"})
 			return
 		}
 
 		for _, i := range p.GetAdditionalInputs() {
-			if i.GetName() == p.ArgsFrom {
+			if i.GetId() == p.ArgsFrom {
 				envMap = data.AsMapNestedString(i.GetData())
 				break
 			}
 		}
-	}
 
+		contextLogger.WithField("envMap", envMap).Debug("resolved env")
+	}
 	p.resolveIgnore(envMap)
 
 	baseImagesMap := map[string][]string{}

@@ -37,15 +37,15 @@ func TestKeySupportedConnections(t *testing.T) {
 	assert.Empty(t, connections)
 }
 
-func TestKeySupportedInputs(t *testing.T) {
+func TestKeySupportedInputFormats(t *testing.T) {
 	key := New("testKeyYaml")
-	supportLevel, inputs := key.SupportedInputs()
+	supportLevel, inputFormats := key.SupportedInputFormats()
 	assert.Equal(t, plugin.SupportRequired, supportLevel)
-	assert.ElementsMatch(t, []string{
-		"docker:command",
-		"file:read",
-		"file:lookup",
-		"yaml:key"}, inputs)
+	assert.ElementsMatch(t, []data.DataFormat{
+		data.FormatRaw,
+		data.FormatMapBytes,
+		FormatYamlNodes,
+		FormatMapYamlNodes}, inputFormats)
 }
 
 func TestKeyCollect(t *testing.T) {

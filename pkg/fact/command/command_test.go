@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	. "github.com/salsadigitalauorg/shipshape/pkg/fact/command"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
@@ -37,7 +38,7 @@ func TestCommandSupportedConnections(t *testing.T) {
 
 func TestCommandSupportedInputs(t *testing.T) {
 	commandF := New("TestCommand")
-	supportLevel, inputs := commandF.SupportedInputs()
+	supportLevel, inputs := commandF.SupportedInputFormats()
 	assert.Equal(t, plugin.SupportNone, supportLevel)
 	assert.ElementsMatch(t, []string{}, inputs)
 }
@@ -45,32 +46,50 @@ func TestCommandSupportedInputs(t *testing.T) {
 func TestCommandCollect(t *testing.T) {
 	tests := []internal.FactCollectTest{
 		{
-			Name:   "emptyCommand",
-			Facter: New("TestCommand"),
+			Name:           "emptyCommand",
+			Facter:         New("TestCommand"),
+			ExpectedFormat: data.FormatMapString,
 			ExpectedData: map[string]string{
 				"code": "1", "stderr": "exec: no command", "stdout": "",
 			},
 			ExpectedErrors: []error{errors.New("exec: no command")},
 		},
 		{
-			Name:   "emptyCommand/ignoreError",
-			Facter: New("TestCommand"),
+			Name: "emptyCommand/ignoreError",
+			FactFn: func() fact.Facter {
+				f := New("TestCommand")
+				f.IgnoreError = true
+				return f
+			},
+			ExpectedFormat: data.FormatMapString,
 			ExpectedData: map[string]string{
 				"code": "1", "stderr": "exec: no command", "stdout": "",
 			},
 		},
 		{
-			Name:   "echo",
-			Facter: New("TestCommand"),
+			Name: "echo",
+			FactFn: func() fact.Facter {
+				f := New("TestCommand")
+				f.Cmd = "echo"
+				f.Args = []string{"hello"}
+				return f
+			},
+			ExpectedFormat: data.FormatMapString,
 			ExpectedData: map[string]string{
 				"code": "0", "stderr": "", "stdout": "hello",
 			},
 		},
 		{
-			Name:   "multiline",
-			Facter: New("TestCommand"),
+			Name: "multiline",
+			FactFn: func() fact.Facter {
+				f := New("TestCommand")
+				f.Cmd = "ls"
+				f.Args = []string{"-1"}
+				return f
+			},
+			ExpectedFormat: data.FormatMapString,
 			ExpectedData: map[string]string{
-				"code": "0", "stderr": "", "stdout": "command.go\ncommand_gen.go\ncommand_test.go",
+				"code": "0", "stderr": "", "stdout": "command.go\ncommand_test.go",
 			},
 		},
 	}

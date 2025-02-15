@@ -71,7 +71,7 @@ func TestFactCollect(t *testing.T, fct FactCollectTest) {
 		fact.Facts["test-input"] = &testP
 	}
 
-	err := fct.Facter.ValidateInput()
+	err := fact.ValidateInput(fct.Facter)
 	if fct.ExpectedInputError != nil {
 		assert.Error(err, fct.ExpectedInputError)
 		return
@@ -95,7 +95,7 @@ func TestFactCollect(t *testing.T, fct FactCollectTest) {
 			fact.Facts[name] = &testP
 		}
 
-		errs := fct.Facter.LoadAdditionalInputs()
+		errs := fact.LoadAdditionalInputs(fct.Facter)
 		if len(fct.ExpectedAdditionalInputsErrs) > 0 {
 			assert.ElementsMatch(fct.ExpectedAdditionalInputsErrs, errs)
 			return

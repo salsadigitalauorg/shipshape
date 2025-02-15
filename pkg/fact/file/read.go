@@ -39,14 +39,6 @@ func (p *Read) GetName() string {
 	return "file:read"
 }
 
-func (p *Read) SupportedConnections() (plugin.SupportLevel, []string) {
-	return plugin.SupportNone, nil
-}
-
-func (p *Read) SupportedInputs() (plugin.SupportLevel, []string) {
-	return plugin.SupportNone, nil
-}
-
 func (p *Read) Collect() {
 	log.WithFields(log.Fields{
 		"fact-plugin": p.GetName(),

@@ -52,10 +52,6 @@ func (p *Search) SupportedConnections() (plugin.SupportLevel, []string) {
 	return plugin.SupportRequired, []string{"mysql"}
 }
 
-func (p *Search) SupportedInputs() (plugin.SupportLevel, []string) {
-	return plugin.SupportNone, []string{}
-}
-
 func (p *Search) Collect() {
 	if p.IdField == "" {
 		p.AddErrors(fmt.Errorf("id-field is required"))

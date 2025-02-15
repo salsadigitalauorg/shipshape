@@ -29,10 +29,10 @@ func TestImagesCollect(t *testing.T) {
 				return f
 			},
 			TestInput: internal.FactInputTest{DataFormat: data.FormatRaw, Data: []byte("foo")},
-			ExpectedErrors: []error{&plugin.ErrSupportNone{
+			ExpectedInputError: &plugin.ErrSupportNone{
 				Plugin:        "base-images",
 				SupportType:   "input data format",
-				SupportPlugin: "raw"}},
+				SupportPlugin: "raw"},
 		},
 		{
 			Name: "bogusData",
@@ -80,7 +80,7 @@ FROM php:${PHP_IMAGE_VERSION}
 			ExpectedData:   map[string][]string{"php": {":latest", "php:8.3"}},
 		},
 		{
-			Name: "dockerfile/withArgsWithArgsInput/NoDataFormat",
+			Name: "dockerfile/withArgs/WithAdditionalInput/NoDataFormat",
 			FactFn: func() fact.Facter {
 				f := NewImages("base-images")
 				f.SetInputName("test-input")
@@ -103,11 +103,11 @@ FROM php:${PHP_IMAGE_VERSION}
 				},
 			},
 			ExpectedAdditionalInputsErrs: []error{&plugin.ErrSupportRequired{
-				Plugin:      "args-input",
-				SupportType: "additional input data format"}},
+				Plugin:      "testdata:testfacter",
+				SupportType: "inputFormat"}},
 		},
 		{
-			Name: "dockerfile/withArgsWithArgsInput",
+			Name: "dockerfile/withArgs/WithAdditionalInput",
 			FactFn: func() fact.Facter {
 				f := NewImages("base-images")
 				f.SetInputName("test-input")

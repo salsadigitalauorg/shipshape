@@ -22,11 +22,6 @@ type BaseFact struct {
 	data             interface{}
 }
 
-// Common getter methods
-func (p *BaseFact) GetName() string {
-	return p.GetId()
-}
-
 func (p *BaseFact) GetFormat() data.DataFormat {
 	return p.Format
 }
@@ -67,12 +62,24 @@ func (p *BaseFact) GetData() interface{} {
 	return p.data
 }
 
+func (p *BaseFact) SetConnection(conn connection.Connectioner) {
+	p.connection = conn
+}
+
 func (p *BaseFact) SetInputName(name string) {
 	p.InputName = name
 }
 
+func (p *BaseFact) SetInput(inP Facter) {
+	p.input = inP
+}
+
 func (p *BaseFact) SetData(data interface{}) {
 	p.data = data
+}
+
+func (p *BaseFact) SetAdditionalInputs(plugins []Facter) {
+	p.additionalInputs = plugins
 }
 
 // Default implementations for support methods
@@ -80,15 +87,15 @@ func (p *BaseFact) SupportedConnections() (plugin.SupportLevel, []string) {
 	return plugin.SupportNone, []string{}
 }
 
-func (p *BaseFact) SupportedInputs() (plugin.SupportLevel, []string) {
-	return plugin.SupportNone, []string{}
+func (p *BaseFact) SupportedInputFormats() (plugin.SupportLevel, []data.DataFormat) {
+	return plugin.SupportNone, []data.DataFormat{}
 }
 
-func (p *BaseFact) ValidateConnection() error {
+func ValidateConnection(p Facter) error {
 	connectionSupport, supportedConnections := p.SupportedConnections()
 
 	log.WithFields(log.Fields{
-		"fact":                  p.GetName(),
+		"fact":                  p.GetId(),
 		"connection-support":    connectionSupport,
 		"supported-connections": supportedConnections,
 	}).Debug("validating connection")
@@ -114,7 +121,7 @@ func (p *BaseFact) ValidateConnection() error {
 
 	for _, s := range supportedConnections {
 		if connPlug.PluginName() == s {
-			p.connection = connPlug
+			p.SetConnection(connPlug)
 			return nil
 		}
 	}
@@ -124,26 +131,26 @@ func (p *BaseFact) ValidateConnection() error {
 		SupportPlugin: connPlug.PluginName()}
 }
 
-func (p *BaseFact) ValidateInput() error {
-	inputSupport, supportedInputs := p.SupportedInputs()
+func ValidateInput(p Facter) error {
+	inputFormatSupport, supportedInputFormats := p.SupportedInputFormats()
 	log.WithFields(log.Fields{
 		"fact":             p.GetName(),
-		"input-support":    inputSupport,
-		"supported-inputs": supportedInputs,
+		"input-support":    inputFormatSupport,
+		"supported-inputs": supportedInputFormats,
 	}).Debug("validating input")
 
-	if (inputSupport == plugin.SupportOptional ||
-		inputSupport == plugin.SupportNone) &&
-		len(supportedInputs) == 0 && p.GetInputName() == "" {
+	if (inputFormatSupport == plugin.SupportOptional ||
+		inputFormatSupport == plugin.SupportNone) &&
+		len(supportedInputFormats) == 0 && p.GetInputName() == "" {
 		return nil
 	}
 
-	if inputSupport == plugin.SupportRequired && p.GetInputName() == "" {
-		return &plugin.ErrSupportRequired{Plugin: p.GetName(), SupportType: "input"}
+	if inputFormatSupport == plugin.SupportRequired && p.GetInputName() == "" {
+		return &plugin.ErrSupportRequired{Plugin: p.GetName(), SupportType: "inputFormat"}
 	}
 
 	if p.GetInputName() != "" {
-		inPlug, _ := GetManager().GetPlugin(p.GetInputName())
+		inPlug := Facts[p.GetInputName()]
 		if inPlug == nil {
 			return &plugin.ErrSupportNotFound{
 				Plugin:        p.GetName(),
@@ -159,19 +166,19 @@ func (p *BaseFact) ValidateInput() error {
 
 		if inPlug.GetFormat() == "" {
 			return &plugin.ErrSupportRequired{
-				Plugin: inPlug.GetName(), SupportType: "input data format"}
+				Plugin: inPlug.GetName(), SupportType: "inputFormat"}
 		}
 
-		for _, s := range supportedInputs {
-			if inPlug.GetName() == s {
-				p.input = inPlug
+		for _, s := range supportedInputFormats {
+			if inPlug.GetFormat() == s {
+				p.SetInput(inPlug)
 				return nil
 			}
 		}
 
 		return &plugin.ErrSupportNone{
-			SupportType:   "input",
-			SupportPlugin: inPlug.GetName(),
+			SupportType:   "inputFormat",
+			SupportPlugin: string(inPlug.GetFormat()),
 			Plugin:        p.GetName(),
 		}
 	}
@@ -182,8 +189,8 @@ func (p *BaseFact) ValidateInput() error {
 		SupportPlugin: p.GetInputName()}
 }
 
-func (p *BaseFact) LoadAdditionalInputs() []error {
-	log.WithFields(log.Fields{"fact": p.GetName()}).
+func LoadAdditionalInputs(p Facter) []error {
+	log.WithFields(log.Fields{"fact": p.GetId()}).
 		Debug("loading additional inputs")
 
 	if len(p.GetAdditionalInputNames()) == 0 {
@@ -193,11 +200,11 @@ func (p *BaseFact) LoadAdditionalInputs() []error {
 	plugins := []Facter{}
 	errs := []error{}
 	for _, n := range p.GetAdditionalInputNames() {
-		inPlug, _ := GetManager().GetPlugin(n)
+		inPlug := Facts[n]
 		if inPlug == nil {
 			errs = append(errs, &plugin.ErrSupportNotFound{
 				Plugin:        p.GetName(),
-				SupportType:   "additional input",
+				SupportType:   "input",
 				SupportPlugin: n,
 			})
 			continue
@@ -206,7 +213,7 @@ func (p *BaseFact) LoadAdditionalInputs() []error {
 		if inPlug.GetFormat() == "" {
 			errs = append(errs, &plugin.ErrSupportRequired{
 				Plugin:      inPlug.GetName(),
-				SupportType: "additional input data format"})
+				SupportType: "inputFormat"})
 			continue
 		}
 
@@ -217,7 +224,7 @@ func (p *BaseFact) LoadAdditionalInputs() []error {
 		return errs
 	}
 
-	p.additionalInputs = plugins
+	p.SetAdditionalInputs(plugins)
 	return nil
 }
 

@@ -42,12 +42,8 @@ func (p *ReadMultiple) GetName() string {
 	return "file:read:multiple"
 }
 
-func (p *ReadMultiple) SupportedConnections() (plugin.SupportLevel, []string) {
-	return plugin.SupportNone, nil
-}
-
-func (p *ReadMultiple) SupportedInputs() (plugin.SupportLevel, []string) {
-	return plugin.SupportOptional, []string{"yaml:key"}
+func (p *ReadMultiple) SupportedInputFormats() (plugin.SupportLevel, []data.DataFormat) {
+	return plugin.SupportOptional, []data.DataFormat{data.FormatMapString}
 }
 
 func (p *ReadMultiple) Collect() {

@@ -47,10 +47,6 @@ func (p *DockerCommand) SupportedConnections() (plugin.SupportLevel, []string) {
 	return plugin.SupportRequired, []string{"docker:exec"}
 }
 
-func (p *DockerCommand) SupportedInputs() (plugin.SupportLevel, []string) {
-	return plugin.SupportNone, []string{}
-}
-
 func (p *DockerCommand) Collect() {
 	log.WithFields(log.Fields{
 		"fact-plugin":       p.GetName(),

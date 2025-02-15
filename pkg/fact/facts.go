@@ -5,7 +5,6 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
-	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
@@ -32,13 +31,9 @@ func init() {
 	}
 }
 
-func GetRegistryKeys() []string {
-	return plugin.GetRegistryKeys[Facter](GetManager().GetRegistry())
-}
-
 func ParseConfig(raw map[string]map[string]interface{}) {
 	count := 0
-	log.WithField("registry", GetRegistryKeys()).Debug("available fact plugins")
+	log.WithField("registry", GetManager().GetRegistryKeys()).Debug("available fact plugins")
 	for name, pluginConf := range raw {
 		for pluginName, pluginMap := range pluginConf {
 			f, ok := GetManager().GetRegistry()[pluginName]
@@ -107,21 +102,21 @@ func CollectFact(name string, f Facter) {
 		return
 	}
 
-	if err := f.ValidateConnection(); err != nil {
+	if err := ValidateConnection(f); err != nil {
 		Errors = append(Errors, err)
 		log.WithField("fact", name).WithError(err).
 			Error("failed to validate connection")
 		return
 	}
 
-	if err := f.ValidateInput(); err != nil {
+	if err := ValidateInput(f); err != nil {
 		Errors = append(Errors, err)
 		log.WithField("fact", name).WithError(err).
 			Error("failed to validate input")
 		return
 	}
 
-	if errs := f.LoadAdditionalInputs(); len(errs) != 0 {
+	if errs := LoadAdditionalInputs(f); len(errs) != 0 {
 		Errors = append(Errors, errs...)
 		log.WithField("fact", name).WithField("errors", errs).
 			Error("failed to load additional input")

@@ -47,14 +47,6 @@ func (p *Lookup) GetName() string {
 	return "file:lookup"
 }
 
-func (p *Lookup) SupportedConnections() (plugin.SupportLevel, []string) {
-	return plugin.SupportNone, []string{}
-}
-
-func (p *Lookup) SupportedInputs() (plugin.SupportLevel, []string) {
-	return plugin.SupportNone, []string{}
-}
-
 func (p *Lookup) Collect() {
 	log.WithFields(log.Fields{
 		"fact-plugin": p.GetName(),

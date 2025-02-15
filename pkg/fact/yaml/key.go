@@ -50,16 +50,13 @@ func (p *Key) GetName() string {
 	return "yaml:key"
 }
 
-func (p *Key) SupportedConnections() (plugin.SupportLevel, []string) {
-	return plugin.SupportNone, []string{}
-}
-
-func (p *Key) SupportedInputs() (plugin.SupportLevel, []string) {
-	return plugin.SupportRequired, []string{
-		"docker:command",
-		"file:read",
-		"file:lookup",
-		"yaml:key"}
+func (p *Key) SupportedInputFormats() (plugin.SupportLevel, []data.DataFormat) {
+	return plugin.SupportRequired, []data.DataFormat{
+		data.FormatRaw,
+		data.FormatMapBytes,
+		FormatYamlNodes,
+		FormatMapYamlNodes,
+	}
 }
 
 func (p *Key) Collect() {

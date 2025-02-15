@@ -17,8 +17,8 @@ type Facter interface {
 	// Connection methods
 	GetConnectionName() string
 	GetConnection() connection.Connectioner
+	SetConnection(connection.Connectioner)
 	SupportedConnections() (plugin.SupportLevel, []string)
-	ValidateConnection() error
 
 	// Input methods
 	GetInputName() string
@@ -26,9 +26,9 @@ type Facter interface {
 	GetAdditionalInputNames() []string
 	GetAdditionalInputs() []Facter
 	SetInputName(name string)
-	SupportedInputs() (plugin.SupportLevel, []string)
-	ValidateInput() error
-	LoadAdditionalInputs() []error
+	SetInput(Facter)
+	SupportedInputFormats() (plugin.SupportLevel, []data.DataFormat)
+	SetAdditionalInputs([]Facter)
 
 	// Collection
 	Collect()
