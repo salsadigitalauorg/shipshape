@@ -14,7 +14,7 @@ import (
 )
 
 type ReadMultiple struct {
-	fact.BaseFact
+	fact.BaseFact `yaml:",inline"`
 
 	// Plugin fields.
 	Files []string `yaml:"files"`
@@ -23,7 +23,7 @@ type ReadMultiple struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --plugin=ReadMultiple --package=file
 
 func init() {
-	fact.GetManager().Register("file:read:multiple", func(n string) fact.Facter {
+	fact.Manager().RegisterFactory("file:read:multiple", func(n string) fact.Facter {
 		return NewReadMultiple(n)
 	})
 }
@@ -47,13 +47,16 @@ func (p *ReadMultiple) SupportedInputFormats() (plugin.SupportLevel, []data.Data
 }
 
 func (p *ReadMultiple) Collect() {
-	log.WithFields(log.Fields{
+	contextLogger := log.WithFields(log.Fields{
 		"fact-plugin": p.GetName(),
 		"fact":        p.GetId(),
-		"project-dir": config.ProjectDir,
-	}).Info("collecting files data")
+	})
+
+	contextLogger.WithFields(log.Fields{"project-dir": config.ProjectDir}).
+		Debug("collecting files data")
 
 	if p.GetInput() == nil && len(p.Files) == 0 {
+		contextLogger.Error("no files specified")
 		p.AddErrors(errors.New("no files specified"))
 		return
 	}
@@ -67,11 +70,13 @@ func (p *ReadMultiple) Collect() {
 			for k, filename := range filenameMap {
 				fullpath := filepath.Join(config.ProjectDir, filename)
 				if _, err := os.Stat(fullpath); errors.Is(err, os.ErrNotExist) {
+					contextLogger.WithError(err).Debug("file does not exist")
 					p.AddErrors(err)
 					continue
 				}
 				fData, err := os.ReadFile(fullpath)
 				if err != nil {
+					contextLogger.WithError(err).Debug("error reading file")
 					p.AddErrors(err)
 					continue
 				}
@@ -87,12 +92,14 @@ func (p *ReadMultiple) Collect() {
 	for _, filename := range p.Files {
 		fullpath := filepath.Join(config.ProjectDir, filename)
 		if _, err := os.Stat(fullpath); errors.Is(err, os.ErrNotExist) {
+			contextLogger.WithError(err).Debug("file does not exist")
 			p.AddErrors(err)
 			continue
 		}
 
 		fData, err := os.ReadFile(fullpath)
 		if err != nil {
+			contextLogger.WithError(err).Debug("error reading file")
 			p.AddErrors(err)
 			continue
 		}

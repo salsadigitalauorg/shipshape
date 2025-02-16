@@ -14,7 +14,7 @@ import (
 )
 
 type Lookup struct {
-	fact.BaseFact
+	fact.BaseFact `yaml:",inline"`
 
 	// Plugin fields.
 	Path           string   `yaml:"path"`
@@ -27,7 +27,7 @@ type Lookup struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --package=file
 
 func init() {
-	fact.GetManager().Register("file:lookup", func(n string) fact.Facter {
+	fact.Manager().RegisterFactory("file:lookup", func(n string) fact.Facter {
 		return NewLookup(n)
 	})
 }
@@ -48,15 +48,20 @@ func (p *Lookup) GetName() string {
 }
 
 func (p *Lookup) Collect() {
-	log.WithFields(log.Fields{
+	contextLogger := log.WithFields(log.Fields{
 		"fact-plugin": p.GetName(),
 		"fact":        p.GetId(),
+	})
+
+	contextLogger.WithFields(log.Fields{
 		"project-dir": config.ProjectDir,
 		"path":        p.Path,
 		"pattern":     p.Pattern,
-	}).Info("looking up files")
+	}).Debug("looking up files")
+
 	files, err := utils.FindFiles(filepath.Join(config.ProjectDir, p.Path), p.Pattern, p.ExcludePattern, p.SkipDirs)
 	if err != nil {
+		contextLogger.WithError(err).Error("error looking up files")
 		p.AddErrors(err)
 		return
 	}
@@ -71,6 +76,7 @@ func (p *Lookup) Collect() {
 	for _, f := range files {
 		fData, err := os.ReadFile(f)
 		if err != nil {
+			contextLogger.WithError(err).Error("error reading file")
 			p.AddErrors(err)
 			continue
 		}

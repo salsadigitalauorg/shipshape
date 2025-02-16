@@ -8,19 +8,20 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 type Read struct {
-	fact.BaseFact
+	fact.BaseFact `yaml:",inline"`
 
 	// Plugin fields.
 	Path string `yaml:"path"`
 }
 
 func init() {
-	fact.GetManager().Register("file:read", func(n string) fact.Facter {
+	fact.Manager().RegisterFactory("file:read", func(n string) fact.Facter {
 		return NewRead(n)
 	})
 }
@@ -31,6 +32,7 @@ func NewRead(id string) *Read {
 			BasePlugin: plugin.BasePlugin{
 				Id: id,
 			},
+			Format: data.FormatRaw,
 		},
 	}
 }
@@ -40,21 +42,26 @@ func (p *Read) GetName() string {
 }
 
 func (p *Read) Collect() {
-	log.WithFields(log.Fields{
+	contextLogger := log.WithFields(log.Fields{
 		"fact-plugin": p.GetName(),
 		"fact":        p.GetId(),
+	})
+
+	contextLogger.WithFields(log.Fields{
 		"project-dir": config.ProjectDir,
 		"path":        p.Path,
-	}).Info("verifying file existence")
+	}).Debug("verifying file existence")
 
 	fullpath := filepath.Join(config.ProjectDir, p.Path)
 	if _, err := os.Stat(fullpath); errors.Is(err, os.ErrNotExist) {
+		contextLogger.WithError(err).Debug("file does not exist")
 		p.AddErrors(err)
 		return
 	}
 
 	fData, err := os.ReadFile(fullpath)
 	if err != nil {
+		contextLogger.WithError(err).Debug("error reading file")
 		p.AddErrors(err)
 		return
 	}

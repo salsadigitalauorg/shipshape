@@ -15,7 +15,7 @@ type TestFacter struct {
 }
 
 func init() {
-	fact.GetManager().Register("testdata:testfacter", func(n string) fact.Facter {
+	fact.Manager().RegisterFactory("testdata:testfacter", func(n string) fact.Facter {
 		return New(n, data.FormatNil, nil)
 	})
 }

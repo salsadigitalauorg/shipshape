@@ -17,7 +17,7 @@ import (
 
 // Search searches the provided text from all tables of a database.
 type Search struct {
-	fact.BaseFact
+	fact.BaseFact `yaml:",inline"`
 
 	// Plugin fields.
 	Tables  map[string][]string `yaml:"tables"`
@@ -28,7 +28,7 @@ type Search struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --package=database
 
 func init() {
-	fact.GetManager().Register("database:search", func(n string) fact.Facter {
+	fact.Manager().RegisterFactory("database:search", func(n string) fact.Facter {
 		return New(n)
 	})
 }

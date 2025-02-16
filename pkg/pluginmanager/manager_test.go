@@ -26,26 +26,26 @@ func TestManager(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test registration
-	err := manager.Register("test", func(name string) *TestPlugin {
+	err := manager.RegisterFactory("testFactory", func(name string) *TestPlugin {
 		return &TestPlugin{BasePlugin: plugin.BasePlugin{Id: name}}
 	})
 	assert.NoError(err)
 
 	// Test duplicate registration
-	err = manager.Register("test", func(name string) *TestPlugin {
+	err = manager.RegisterFactory("testFactory", func(name string) *TestPlugin {
 		return &TestPlugin{BasePlugin: plugin.BasePlugin{Id: name}}
 	})
 	assert.Error(err)
 	assert.Contains(err.Error(), "already registered")
 
 	// Test getting plugin
-	plugin, err := manager.GetPlugin("test")
+	plugin, err := manager.GetPlugin("testFactory", "test")
 	assert.NoError(err)
 	assert.NotNil(plugin)
 	assert.Equal("test-plugin", plugin.GetName())
 
 	// Test getting non-existent plugin
-	plugin, err = manager.GetPlugin("non-existent")
+	plugin, err = manager.GetPlugin("non-existent", "test")
 	assert.Error(err)
 	assert.Contains(err.Error(), "not found in registry")
 	assert.Nil(plugin)
@@ -53,7 +53,7 @@ func TestManager(t *testing.T) {
 	// Test listing plugins
 	plugins := manager.ListPlugins()
 	assert.Equal(1, len(plugins))
-	assert.Equal("test", plugins[0])
+	assert.Equal("testFactory", plugins[0])
 
 	// Test reset
 	manager.Reset()

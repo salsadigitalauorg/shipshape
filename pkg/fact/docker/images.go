@@ -13,7 +13,7 @@ import (
 )
 
 type Images struct {
-	fact.BaseFact
+	fact.BaseFact `yaml:",inline"`
 
 	// Plugin fields.
 	NoTag    bool   `yaml:"no-tag"`
@@ -25,7 +25,7 @@ type Images struct {
 }
 
 func init() {
-	fact.GetManager().Register("docker:images", func(n string) fact.Facter {
+	fact.Manager().RegisterFactory("docker:images", func(n string) fact.Facter {
 		return NewImages(n)
 	})
 }

@@ -18,7 +18,7 @@ func TestKeyInit(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test that the yaml:key plugin is registered.
-	factPlugin := fact.GetManager().GetRegistry()["yaml:key"]("testKeyYaml")
+	factPlugin := fact.Manager().GetFactories()["yaml:key"]("testKeyYaml")
 	assert.NotNil(factPlugin)
 	keyFacter, ok := factPlugin.(*Key)
 	assert.True(ok)
@@ -408,7 +408,7 @@ func TestKeyCollect(t *testing.T) {
 				},
 			},
 			ExpectedErrors: []error{
-				errors.New("unsupported format for nested lookup")},
+				errors.New("unsupported format map-list-string for nested lookup")},
 		},
 		{
 			Name: "inputFormat/MapYamlNodes/map",
@@ -436,7 +436,7 @@ func TestKeyCollect(t *testing.T) {
 				},
 			},
 			ExpectedErrors: []error{
-				errors.New("unsupported format for nested lookup")},
+				errors.New("unsupported format map-nested-string for nested lookup")},
 		},
 	}
 

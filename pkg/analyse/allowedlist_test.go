@@ -12,13 +12,14 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact/testdata"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 func TestAllowedListInit(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test that the plugin is registered.
-	plugin := Registry["allowed:list"]("testAllowedList")
+	plugin := Manager().GetFactories()["allowed:list"]("testAllowedList")
 	assert.NotNil(plugin)
 	analyser, ok := plugin.(*AllowedList)
 	assert.True(ok)
@@ -26,8 +27,8 @@ func TestAllowedListInit(t *testing.T) {
 }
 
 func TestAllowedListPluginName(t *testing.T) {
-	instance := AllowedList{Id: "testAllowedList"}
-	assert.Equal(t, "allowed:list", instance.PluginName())
+	instance := NewAllowedList("testAllowedList")
+	assert.Equal(t, "allowed:list", instance.GetName())
 }
 
 func TestAllowedListAnalyse(t *testing.T) {
@@ -369,15 +370,18 @@ func TestAllowedListAnalyse(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		assert := assert.New(t)
-
 		currLogOut := logrus.StandardLogger().Out
 		defer logrus.SetOutput(currLogOut)
 		logrus.SetOutput(io.Discard)
 
 		t.Run(tc.name, func(t *testing.T) {
+			assert := assert.New(t)
 			analyser := AllowedList{
-				Id:          "testAllowedList",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "testAllowedList",
+					},
+				},
 				Allowed:     tc.allowed,
 				Required:    tc.required,
 				Deprecated:  tc.deprecated,

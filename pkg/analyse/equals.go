@@ -7,44 +7,32 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
-	"github.com/salsadigitalauorg/shipshape/pkg/fact"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
 // Equals is an analyser that checks if a fact is equal to a value.
 // If a map is provided as input, the key is used to look up the value.
 type Equals struct {
-	// Common fields.
-	Id                    string `yaml:"name"`
-	Description           string `yaml:"description"`
-	InputName             string `yaml:"input"`
-	Severity              string `yaml:"severity"`
-	breach.BreachTemplate `yaml:"breach-format"`
-	Result                result.Result
-	Remediation           interface{} `yaml:"remediation"`
-	input                 fact.Facter
-
-	// Plugin fields.
-	Value string `yaml:"value"`
-	Key   string `yaml:"key"`
+	BaseAnalyser `yaml:",inline"`
+	Value        string `yaml:"value"`
+	Key          string `yaml:"key"`
 }
 
 //go:generate go run ../../cmd/gen.go analyse-plugin --plugin=Equals --package=analyse
 
 func init() {
-	Registry["equals"] = func(id string) Analyser { return NewEquals(id) }
+	Manager().RegisterFactory("equals", func(id string) Analyser { return NewEquals(id) })
 }
 
-func (p *Equals) PluginName() string {
+func (p *Equals) GetName() string {
 	return "equals"
 }
 
 func (p *Equals) Analyse() {
 	log.WithFields(log.Fields{
-		"plugin":       p.PluginName(),
-		"id":           p.Id,
-		"input":        p.InputName,
-		"input-format": p.input.GetFormat(),
+		"plugin":       p.GetName(),
+		"id":           p.GetId(),
+		"input":        p.GetInputName(),
+		"input-format": p.GetInput().GetFormat(),
 	}).Debug("analysing")
 
 	switch p.input.GetFormat() {

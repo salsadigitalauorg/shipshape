@@ -15,11 +15,12 @@ type Plugin interface {
 	AddErrors(errs ...error)
 }
 
-// Registry represents a generic plugin registry.
-type Registry[T Plugin] map[string]func(string) T
+// Factories represents a generic plugin factory registry.
+type Factories[T Plugin] map[string]func(string) T
 
-// RegistryNoId represents a plugin registry for plugins that don't require ids.
-type RegistryNoId[T Plugin] map[string]func() T
+// FactoriesNoId represents a plugin factory registry for
+// plugins that don't require ids.
+type FactoriesNoId[T Plugin] map[string]func() T
 
 // SupportLevel defines the level of support for plugin dependencies.
 type SupportLevel string

@@ -10,13 +10,14 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact/testdata"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 func TestNotEqualsInit(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test that the plugin is registered.
-	plugin := Registry["not:equals"]("TestNotEquals")
+	plugin := Manager().GetFactories()["not:equals"]("TestNotEquals")
 	assert.NotNil(plugin)
 	analyser, ok := plugin.(*NotEquals)
 	assert.True(ok)
@@ -24,8 +25,8 @@ func TestNotEqualsInit(t *testing.T) {
 }
 
 func TestNotEqualsPluginName(t *testing.T) {
-	instance := NotEquals{Id: "TestNotEquals"}
-	assert.Equal(t, "not:equals", instance.PluginName())
+	instance := NewNotEquals("TestNotEquals")
+	assert.Equal(t, "not:equals", instance.GetName())
 }
 
 func TestNotEqualsAnalyse(t *testing.T) {
@@ -39,9 +40,13 @@ func TestNotEqualsAnalyse(t *testing.T) {
 				"bar",
 			),
 			Analyser: &NotEquals{
-				InputName: "testFact",
-				Id:        "TestNotEquals",
-				Value:     "foo",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestNotEquals",
+					},
+					InputName: "testFact",
+				},
+				Value: "foo",
 			},
 			ExpectedBreaches: []breach.Breach{
 				&breach.ValueBreach{
@@ -59,9 +64,13 @@ func TestNotEqualsAnalyse(t *testing.T) {
 				"foo",
 			),
 			Analyser: &NotEquals{
-				InputName: "testFact",
-				Id:        "TestNotEquals",
-				Value:     "foo",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestNotEquals",
+					},
+					InputName: "testFact",
+				},
+				Value: "foo",
 			},
 			ExpectedBreaches: []breach.Breach{},
 		},
@@ -77,10 +86,14 @@ func TestNotEqualsAnalyse(t *testing.T) {
 				},
 			),
 			Analyser: &NotEquals{
-				InputName: "testFact",
-				Id:        "TestNotEquals",
-				Key:       "foo",
-				Value:     "bar",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestNotEquals",
+					},
+					InputName: "testFact",
+				},
+				Key:   "foo",
+				Value: "bar",
 			},
 			ExpectedBreaches: []breach.Breach{
 				&breach.ValueBreach{
@@ -98,10 +111,14 @@ func TestNotEqualsAnalyse(t *testing.T) {
 				map[string]interface{}{"foo": "bar"},
 			),
 			Analyser: &NotEquals{
-				InputName: "testFact",
-				Id:        "TestNotEquals",
-				Key:       "foo",
-				Value:     "bar",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestNotEquals",
+					},
+					InputName: "testFact",
+				},
+				Key:   "foo",
+				Value: "bar",
 			},
 			ExpectedBreaches: []breach.Breach{},
 		},
@@ -115,9 +132,13 @@ func TestNotEqualsAnalyse(t *testing.T) {
 				[]interface{}{"foo", "bar"},
 			),
 			Analyser: &NotEquals{
-				InputName: "testFact",
-				Id:        "TestNotEquals",
-				Value:     "foo",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestNotEquals",
+					},
+					InputName: "testFact",
+				},
+				Value: "foo",
 			},
 			ExpectedBreaches: []breach.Breach{},
 		},

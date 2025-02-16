@@ -11,35 +11,51 @@ import (
 
 // Manager handles plugin registration, validation, and lifecycle management.
 type Manager[T plugin.Plugin] struct {
-	mu       sync.RWMutex
-	registry plugin.Registry[T]
-	plugins  map[string]T
+	mu        sync.RWMutex
+	factories plugin.Factories[T]
+	plugins   map[string]T
+	errors    []error
 }
 
 // NewManager creates a new plugin manager instance.
 func NewManager[T plugin.Plugin]() *Manager[T] {
 	return &Manager[T]{
-		registry: make(plugin.Registry[T]),
-		plugins:  make(map[string]T),
+		factories: make(plugin.Factories[T]),
+		plugins:   make(map[string]T),
 	}
 }
 
-// Register adds a new plugin to the registry.
-func (m *Manager[T]) Register(name string, factory func(string) T) error {
+// RegisterFactory adds a new plugin factory to the registry.
+func (m *Manager[T]) RegisterFactory(name string, factory func(string) T) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _, exists := m.registry[name]; exists {
-		return fmt.Errorf("plugin '%s' is already registered", name)
+	if _, exists := m.factories[name]; exists {
+		return fmt.Errorf("plugin factory '%s' is already registered", name)
 	}
 
-	log.WithField("plugin", name).Debug("registering plugin")
-	m.registry[name] = factory
+	log.WithField("plugin", name).Debug("registering plugin factory")
+	m.factories[name] = factory
 	return nil
 }
 
-// GetPlugin returns a plugin instance by name, creating it if it doesn't exist.
-func (m *Manager[T]) GetPlugin(name string) (T, error) {
+// GetFactories returns the plugin factories.
+func (m *Manager[T]) GetFactories() plugin.Factories[T] {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.factories
+}
+
+// FindPlugin returns a plugin instance by name.
+func (m *Manager[T]) FindPlugin(name string) T {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.plugins[name]
+}
+
+// GetPlugin returns a plugin instance by plugin name and id,
+// creating it if it doesn't exist.
+func (m *Manager[T]) GetPlugin(name string, id string) (T, error) {
 	m.mu.RLock()
 	if plugin, exists := m.plugins[name]; exists {
 		m.mu.RUnlock()
@@ -55,35 +71,71 @@ func (m *Manager[T]) GetPlugin(name string) (T, error) {
 		return plugin, nil
 	}
 
-	factory, exists := m.registry[name]
+	factory, exists := m.factories[name]
 	if !exists {
 		var zero T
-		return zero, fmt.Errorf("plugin '%s' not found in registry", name)
+		return zero, fmt.Errorf("plugin factory '%s' not found in registry", name)
 	}
 
-	plugin := factory(name)
-	m.plugins[name] = plugin
+	plugin := factory(id)
+	m.plugins[id] = plugin
 	return plugin, nil
 }
 
-// GetRegistry returns the plugin registry.
-func (m *Manager[T]) GetRegistry() plugin.Registry[T] {
+// GetPlugins returns the plugin instances.
+func (m *Manager[T]) GetPlugins() map[string]T {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return m.registry
+	return m.plugins
+}
+
+// SetPlugins sets the plugin instances.
+func (m *Manager[T]) SetPlugins(plugins map[string]T) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.plugins = plugins
 }
 
 // ListPlugins returns a sorted list of registered plugin names.
 func (m *Manager[T]) ListPlugins() []string {
-	return plugin.GetRegistryKeys[T](m.registry)
+	return plugin.GetFactoriesKeys[T](m.factories)
+}
+
+// ResetPlugins resets the plugin instances.
+func (m *Manager[T]) ResetPlugins() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.plugins = make(map[string]T)
+}
+
+// AddErrors adds errors to the manager.
+func (m *Manager[T]) AddErrors(errs ...error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.errors = append(m.errors, errs...)
+}
+
+// GetErrors returns the errors.
+func (m *Manager[T]) GetErrors() []error {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.errors
+}
+
+// ResetErrors resets the errors.
+func (m *Manager[T]) ResetErrors() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.errors = []error{}
 }
 
 // Reset clears all registered plugins and instances.
 func (m *Manager[T]) Reset() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.registry = make(plugin.Registry[T])
+	m.factories = make(plugin.Factories[T])
 	m.plugins = make(map[string]T)
+	m.errors = []error{}
 }
 
 // You can use it like this:

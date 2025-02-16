@@ -3,30 +3,20 @@ package analyse
 import (
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
-	"github.com/salsadigitalauorg/shipshape/pkg/fact"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	log "github.com/sirupsen/logrus"
 )
 
 type NotEmpty struct {
-	// Common fields.
-	Id                    string `yaml:"name"`
-	Description           string `yaml:"description"`
-	InputName             string `yaml:"input"`
-	Severity              string `yaml:"severity"`
-	breach.BreachTemplate `yaml:"breach-format"`
-	Result                result.Result
-	Remediation           interface{} `yaml:"remediation"`
-	input                 fact.Facter
+	BaseAnalyser `yaml:",inline"`
 }
 
 //go:generate go run ../../cmd/gen.go analyse-plugin --plugin=NotEmpty --package=analyse
 
 func init() {
-	Registry["not:empty"] = func(id string) Analyser { return NewNotEmpty(id) }
+	Manager().RegisterFactory("not:empty", func(id string) Analyser { return NewNotEmpty(id) })
 }
 
-func (p *NotEmpty) PluginName() string {
+func (p *NotEmpty) GetName() string {
 	return "not:empty"
 }
 

@@ -10,7 +10,7 @@ import (
 
 // BaseFact provides common fields and functionality for fact plugins.
 type BaseFact struct {
-	plugin.BasePlugin
+	plugin.BasePlugin    `yaml:",inline"`
 	Format               data.DataFormat `yaml:"format"`
 	ConnectionName       string          `yaml:"connection"`
 	InputName            string          `yaml:"input"`
@@ -134,9 +134,10 @@ func ValidateConnection(p Facter) error {
 func ValidateInput(p Facter) error {
 	inputFormatSupport, supportedInputFormats := p.SupportedInputFormats()
 	log.WithFields(log.Fields{
-		"fact":             p.GetName(),
-		"input-support":    inputFormatSupport,
-		"supported-inputs": supportedInputFormats,
+		"fact":                  p.GetName(),
+		"inputFormatSupport":    inputFormatSupport,
+		"supportedInputFormats": supportedInputFormats,
+		"inputName":             p.GetInputName(),
 	}).Debug("validating input")
 
 	if (inputFormatSupport == plugin.SupportOptional ||
@@ -150,7 +151,7 @@ func ValidateInput(p Facter) error {
 	}
 
 	if p.GetInputName() != "" {
-		inPlug := Facts[p.GetInputName()]
+		inPlug := Manager().FindPlugin(p.GetInputName())
 		if inPlug == nil {
 			return &plugin.ErrSupportNotFound{
 				Plugin:        p.GetName(),
@@ -200,7 +201,7 @@ func LoadAdditionalInputs(p Facter) []error {
 	plugins := []Facter{}
 	errs := []error{}
 	for _, n := range p.GetAdditionalInputNames() {
-		inPlug := Facts[n]
+		inPlug := Manager().FindPlugin(n)
 		if inPlug == nil {
 			errs = append(errs, &plugin.ErrSupportNotFound{
 				Plugin:        p.GetName(),

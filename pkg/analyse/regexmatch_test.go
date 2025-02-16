@@ -14,11 +14,13 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/fact/testdata"
 )
 
+const DataFormatUnsupported data.DataFormat = "nosupport"
+
 func TestRegexMatchInit(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test that the plugin is registered.
-	plugin := Registry["regex:match"]("testRegexMatch")
+	plugin := Manager().GetFactories()["regex:match"]("testRegexMatch")
 	assert.NotNil(plugin)
 	analyser, ok := plugin.(*RegexMatch)
 	assert.True(ok)
@@ -26,8 +28,8 @@ func TestRegexMatchInit(t *testing.T) {
 }
 
 func TestRegexMatchPluginName(t *testing.T) {
-	instance := RegexMatch{Id: "testRegexMatch"}
-	assert.Equal(t, "regex:match", instance.PluginName())
+	instance := NewRegexMatch("testRegexMatch")
+	assert.Equal(t, "regex:match", instance.GetName())
 }
 
 func TestRegexMatchAnalyse(t *testing.T) {
@@ -170,7 +172,7 @@ func TestRegexMatchAnalyse(t *testing.T) {
 			name: "unsupported",
 			input: testdata.New(
 				"testFacter",
-				data.FormatNil,
+				DataFormatUnsupported,
 				nil,
 			),
 			pattern: ".*",
@@ -185,17 +187,15 @@ func TestRegexMatchAnalyse(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		assert := assert.New(t)
-
 		currLogOut := logrus.StandardLogger().Out
 		defer logrus.SetOutput(currLogOut)
 		logrus.SetOutput(io.Discard)
 
 		t.Run(tc.name, func(t *testing.T) {
-			analyser := RegexMatch{
-				Id:      tc.name,
-				Pattern: tc.pattern,
-			}
+			assert := assert.New(t)
+
+			analyser := NewRegexMatch(tc.name)
+			analyser.Pattern = tc.pattern
 
 			tc.input.Collect()
 			analyser.SetInput(tc.input)

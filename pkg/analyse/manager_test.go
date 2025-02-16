@@ -10,6 +10,7 @@ import (
 	. "github.com/salsadigitalauorg/shipshape/pkg/analyse"
 	"github.com/salsadigitalauorg/shipshape/pkg/analyse/testdata"
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
@@ -45,24 +46,28 @@ func TestParseConfig(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		assert := assert.New(t)
-
 		currLogOut := logrus.StandardLogger().Out
 		defer logrus.SetOutput(currLogOut)
 		logrus.SetOutput(io.Discard)
 
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Len(Analysers, 0)
-			registryBackup := Registry
+			assert := assert.New(t)
+			assert.Len(Manager().GetPlugins(), 0)
+			factoriesBackup := Manager().GetFactories()
 			if tc.registry != nil {
-				Registry = tc.registry
+				Manager().Reset()
+				for k, v := range tc.registry {
+					Manager().RegisterFactory(k, v)
+				}
 			}
-			ParseConfig(tc.config)
+			Manager().ParseConfig(tc.config)
 			defer func() {
-				Registry = registryBackup
-				Analysers = map[string]Analyser{}
+				Manager().Reset()
+				for k, v := range factoriesBackup {
+					Manager().RegisterFactory(k, v)
+				}
 			}()
-			assert.Len(Analysers, tc.expectAnalyserCount)
+			assert.Len(Manager().GetPlugins(), tc.expectAnalyserCount)
 		})
 	}
 }
@@ -95,21 +100,25 @@ func TestValidateInputs(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		assert := assert.New(t)
-
 		currLogOut := logrus.StandardLogger().Out
 		defer logrus.SetOutput(currLogOut)
 		logrus.SetOutput(io.Discard)
 
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Len(Errors, 0)
-			Analysers = tc.analysers
-			ValidateInputs()
+			assert := assert.New(t)
+			assert.Len(Manager().GetErrors(), 0)
+
+			if len(tc.analysers) > 0 {
+				Manager().SetPlugins(tc.analysers)
+			}
+
+			Manager().ValidateInputs()
+
 			defer func() {
-				Analysers = map[string]Analyser{}
-				Errors = []error{}
+				Manager().ResetPlugins()
+				Manager().ResetErrors()
 			}()
-			assert.Len(Errors, tc.expectErrorCount)
+			assert.Len(Manager().GetErrors(), tc.expectErrorCount)
 		})
 	}
 }
@@ -128,7 +137,13 @@ func TestAnalyseAll(t *testing.T) {
 		{
 			name: "analyserWithPreProcessInputFail",
 			analysers: map[string]Analyser{
-				"test": &testdata.TestAnalyserPreprocessInputFail{Id: "test"},
+				"test": &testdata.TestAnalyserPreprocessInputFail{
+					BaseAnalyser: BaseAnalyser{
+						BasePlugin: plugin.BasePlugin{
+							Id: "test",
+						},
+					},
+				},
 			},
 			expectResults: map[string]result.Result{
 				"test": {
@@ -144,7 +159,13 @@ func TestAnalyseAll(t *testing.T) {
 		{
 			name: "analyserPass",
 			analysers: map[string]Analyser{
-				"test": &testdata.TestAnalyserPass{Id: "test"},
+				"test": &testdata.TestAnalyserPass{
+					BaseAnalyser: BaseAnalyser{
+						BasePlugin: plugin.BasePlugin{
+							Id: "test",
+						},
+					},
+				},
 			},
 			expectResults: map[string]result.Result{
 				"test": {
@@ -160,21 +181,21 @@ func TestAnalyseAll(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		assert := assert.New(t)
-
 		currLogOut := logrus.StandardLogger().Out
 		defer logrus.SetOutput(currLogOut)
 		logrus.SetOutput(io.Discard)
 
 		t.Run(tc.name, func(t *testing.T) {
+			assert := assert.New(t)
+
 			defer func() {
-				Analysers = map[string]Analyser{}
-				Errors = []error{}
+				Manager().ResetPlugins()
+				Manager().ResetErrors()
 			}()
 
-			assert.Len(Errors, 0)
-			Analysers = tc.analysers
-			results := AnalyseAll()
+			assert.Len(Manager().GetErrors(), 0)
+			Manager().SetPlugins(tc.analysers)
+			results := Manager().AnalyseAll()
 			assert.Equal(tc.expectResults, results)
 		})
 	}

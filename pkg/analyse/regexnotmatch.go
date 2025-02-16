@@ -8,39 +8,42 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
-	"github.com/salsadigitalauorg/shipshape/pkg/fact"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
 
 type RegexNotMatch struct {
-	// Common fields.
-	Id                    string `yaml:"name"`
-	Description           string `yaml:"description"`
-	InputName             string `yaml:"input"`
-	Severity              string `yaml:"severity"`
-	breach.BreachTemplate `yaml:"breach-format"`
-	Result                result.Result
-	Remediation           interface{} `yaml:"remediation"`
-	input                 fact.Facter
-
-	// Plugin fields.
-	Pattern string `yaml:"pattern"`
+	BaseAnalyser `yaml:",inline"`
+	Pattern      string `yaml:"pattern"`
 }
 
 //go:generate go run ../../cmd/gen.go analyse-plugin --plugin=RegexNotMatch --package=analyse
 
 func init() {
-	Registry["regex:not-match"] = func(id string) Analyser { return NewRegexNotMatch(id) }
+	Manager().RegisterFactory("regex:not-match", func(id string) Analyser { return NewRegexNotMatch(id) })
 }
 
-func (p *RegexNotMatch) PluginName() string {
+func (p *RegexNotMatch) GetName() string {
 	return "regex:not-match"
 }
 
 func (p *RegexNotMatch) Analyse() {
+	contextLogger := log.WithFields(log.Fields{
+		"plugin": p.GetName(),
+		"id":     p.GetId(),
+	})
+
+	contextLogger.WithFields(log.Fields{
+		"input":        p.GetInputName(),
+		"input-format": p.GetInput().GetFormat(),
+	}).Debug("analysing")
+
 	switch p.input.GetFormat() {
+
 	case data.FormatNil:
+		breach.EvaluateTemplate(p, &breach.ValueBreach{
+			Value: fmt.Sprintf("%s is nil", p.GetInputName()),
+		}, nil)
 		return
+
 	case data.FormatMapNestedString:
 		inputData := data.AsMapNestedString(p.input.GetData())
 		for k, kvs := range inputData {
@@ -56,6 +59,7 @@ func (p *RegexNotMatch) Analyse() {
 				}
 			}
 		}
+
 	case data.FormatString:
 		inputData := data.AsString(p.input.GetData())
 		match, _ := regexp.MatchString(p.Pattern, inputData)
@@ -64,6 +68,7 @@ func (p *RegexNotMatch) Analyse() {
 				Value: fmt.Sprintf("%s equals '%s'", p.InputName, inputData),
 			}, p.Remediation)
 		}
+
 	default:
 		log.WithField("input-format", p.input.GetFormat()).Debug("unsupported input format")
 		breach.EvaluateTemplate(p, &breach.ValueBreach{

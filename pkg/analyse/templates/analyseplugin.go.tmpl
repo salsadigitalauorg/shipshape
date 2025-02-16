@@ -1,10 +1,6 @@
 package analyse
 
 import (
-	log "github.com/sirupsen/logrus"
-
-	"github.com/salsadigitalauorg/shipshape/pkg/breach"
-	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 	"github.com/salsadigitalauorg/shipshape/pkg/result"
 )
@@ -13,81 +9,14 @@ import (
 
 func New{{ .Plugin }}(id string) *{{ .Plugin }} {
 	return &{{ .Plugin }}{
-		Id: id,
-		Result: result.Result{Name: id, Severity: "normal"},
+		BaseAnalyser: BaseAnalyser{
+			BasePlugin: plugin.BasePlugin{
+				Id: id,
+			},
+			Result: result.Result{
+				Name:     id,
+				Severity: "normal",
+			},
+		},
 	}
-}
-
-func (p *{{ .Plugin }}) SetInput(input fact.Facter) {
-	p.input = input
-}
-
-func (p *{{ .Plugin }}) GetId() string {
-	return p.Id
-}
-
-func (p *{{ .Plugin }}) GetDescription() string {
-	return p.Description
-}
-
-func (p *{{ .Plugin }}) GetInputName() string {
-	return p.InputName
-}
-
-func (p *{{ .Plugin }}) GetBreachTemplate() breach.BreachTemplate {
-	return p.BreachTemplate
-}
-
-func (p *{{ .Plugin }}) GetResult() result.Result {
-	if p.Description != "" && p.Result.Name != p.Description {
-		p.Result.Name = p.Description
-	}
-	return p.Result
-}
-
-func (p *{{ .Plugin }}) ValidateInput() error {
-	log.WithFields(log.Fields{
-		"analyser": p.Id,
-	}).Debug("validating input")
-
-	inPlugin, _ := fact.GetManager().GetPlugin(p.InputName)
-	if inPlugin == nil {
-		return &plugin.ErrSupportNotFound{
-			Plugin: p.GetId(), SupportType: "input", SupportPlugin: p.InputName}
-	}
-
-	p.input = inPlugin
-	return nil
-}
-
-func (p *{{ .Plugin }}) PreProcessInput() bool {
-	if p.input == nil {
-		p.AddBreach(&breach.ValueBreach{
-			Value: "no input available to analyse",
-		})
-		return false
-	}
-
-	if len(p.input.GetErrors()) > 0 {
-		errs := []string{}
-		for _, e := range p.input.GetErrors() {
-			errs = append(errs, e.Error())
-		}
-		p.AddBreach(&breach.KeyValuesBreach{
-			Key: "input failure",
-			Values:      errs,
-		})
-		return false
-	}
-
-	return true
-}
-
-// AddBreach appends a Breach to the Result.
-func (p *{{ .Plugin }}) AddBreach(b breach.Breach) {
-	b.SetCommonValues("", p.Id, p.Severity)
-	p.Result.Breaches = append(
-		p.Result.Breaches,
-		b,
-	)
 }

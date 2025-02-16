@@ -15,7 +15,7 @@ import (
 
 // Command is a representation of a shell command.
 type Command struct {
-	fact.BaseFact
+	fact.BaseFact `yaml:",inline"`
 
 	// Plugin-specific fields
 	Cmd         string   `yaml:"cmd"`
@@ -26,7 +26,7 @@ type Command struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --package=command
 
 func init() {
-	fact.GetManager().Register("command", func(n string) fact.Facter {
+	fact.Manager().RegisterFactory("command", func(n string) fact.Facter {
 		return New(n)
 	})
 }

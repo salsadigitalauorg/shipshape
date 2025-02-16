@@ -24,7 +24,7 @@ output them in the format specified`,
 	Run: func(cmd *cobra.Command, args []string) {
 		shipshape.FactsOnly = true
 		runCmd.Run(cmd, args)
-		for _, f := range fact.Facts {
+		for _, f := range fact.Manager().GetPlugins() {
 			if shouldSkipFact(f) {
 				continue
 			}

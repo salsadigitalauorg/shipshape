@@ -18,7 +18,7 @@ func TestRegexNotMatchInit(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test that the plugin is registered.
-	plugin := Registry["regex:not-match"]("testRegexNotMatch")
+	plugin := Manager().GetFactories()["regex:not-match"]("testRegexNotMatch")
 	assert.NotNil(plugin)
 	analyser, ok := plugin.(*RegexNotMatch)
 	assert.True(ok)
@@ -26,13 +26,14 @@ func TestRegexNotMatchInit(t *testing.T) {
 }
 
 func TestRegexNotMatchPluginName(t *testing.T) {
-	instance := RegexNotMatch{Id: "testRegexNotMatch"}
-	assert.Equal(t, "regex:not-match", instance.PluginName())
+	instance := NewRegexNotMatch("testRegexNotMatch")
+	assert.Equal(t, "regex:not-match", instance.GetName())
 }
 
 func TestRegexNotMatchAnalyse(t *testing.T) {
 	tt := []struct {
 		name             string
+		inputName        string
 		input            fact.Facter
 		pattern          string
 		expectedBreaches []breach.Breach
@@ -44,6 +45,14 @@ func TestRegexNotMatchAnalyse(t *testing.T) {
 				data.FormatNil,
 				nil,
 			),
+			inputName: "testFacter",
+			expectedBreaches: []breach.Breach{
+				&breach.ValueBreach{
+					BreachType: "value",
+					CheckName:  "nil",
+					Value:      "testFacter is nil",
+				},
+			},
 		},
 
 		// Nested string map.
@@ -177,7 +186,7 @@ func TestRegexNotMatchAnalyse(t *testing.T) {
 			name: "unsupported",
 			input: testdata.New(
 				"testFacter",
-				data.FormatNil,
+				DataFormatUnsupported,
 				nil,
 			),
 			pattern: ".*",
@@ -192,17 +201,16 @@ func TestRegexNotMatchAnalyse(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		assert := assert.New(t)
-
 		currLogOut := logrus.StandardLogger().Out
 		defer logrus.SetOutput(currLogOut)
 		logrus.SetOutput(io.Discard)
 
 		t.Run(tc.name, func(t *testing.T) {
-			analyser := RegexNotMatch{
-				Id:      tc.name,
-				Pattern: tc.pattern,
-			}
+			assert := assert.New(t)
+
+			analyser := NewRegexNotMatch(tc.name)
+			analyser.InputName = tc.inputName
+			analyser.Pattern = tc.pattern
 
 			tc.input.Collect()
 			analyser.SetInput(tc.input)

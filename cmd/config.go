@@ -50,12 +50,12 @@ var configListPluginsCmd = &cobra.Command{
 		}
 
 		fmt.Println("\nFact plugins:")
-		for _, p := range fact.GetManager().GetRegistryKeys() {
+		for _, p := range fact.Manager().GetFactoriesKeys() {
 			fmt.Println("  - " + p)
 		}
 
 		fmt.Println("\nAnalyse plugins:")
-		for _, p := range analyse.RegistryKeys() {
+		for _, p := range analyse.Manager().GetFactoriesKeys() {
 			fmt.Println("  - " + p)
 		}
 

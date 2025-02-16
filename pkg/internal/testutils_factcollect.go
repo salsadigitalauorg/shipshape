@@ -11,7 +11,6 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact/testdata"
-	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 type FactInputTest struct {
@@ -46,7 +45,7 @@ func TestFactCollect(t *testing.T, fct FactCollectTest) {
 	defer logrus.SetOutput(currLogOut)
 	logrus.SetOutput(io.Discard)
 
-	fact.Facts = map[string]fact.Facter{}
+	fact.Manager().ResetPlugins()
 
 	if fct.FactFn != nil {
 		fct.Facter = fct.FactFn()
@@ -58,17 +57,15 @@ func TestFactCollect(t *testing.T, fct FactCollectTest) {
 	}
 
 	if fct.TestInput.Data != nil {
-		testP := testdata.TestFacter{
-			BaseFact: fact.BaseFact{
-				BasePlugin: plugin.BasePlugin{
-					Id: "test-input",
-				},
-			},
-			TestInputDataFormat: fct.TestInput.DataFormat,
-			TestInputData:       fct.TestInput.Data,
+		p, err := fact.Manager().GetPlugin("testdata:testfacter", "test-input")
+		if err != nil {
+			t.Fatalf("failed to get test input plugin: %s", err)
 		}
+
+		testP := p.(*testdata.TestFacter)
+		testP.TestInputDataFormat = fct.TestInput.DataFormat
+		testP.TestInputData = fct.TestInput.Data
 		testP.Collect()
-		fact.Facts["test-input"] = &testP
 	}
 
 	err := fact.ValidateInput(fct.Facter)
@@ -82,17 +79,15 @@ func TestFactCollect(t *testing.T, fct FactCollectTest) {
 	// Load additional inputs.
 	if len(fct.TestAdditionalInputs) > 0 {
 		for name, testInput := range fct.TestAdditionalInputs {
-			testP := testdata.TestFacter{
-				BaseFact: fact.BaseFact{
-					BasePlugin: plugin.BasePlugin{
-						Id: name,
-					},
-				},
-				TestInputDataFormat: testInput.DataFormat,
-				TestInputData:       testInput.Data,
+			p, err := fact.Manager().GetPlugin("testdata:testfacter", name)
+			if err != nil {
+				t.Fatalf("failed to get test input plugin: %s", err)
 			}
+
+			testP := p.(*testdata.TestFacter)
+			testP.TestInputDataFormat = testInput.DataFormat
+			testP.TestInputData = testInput.Data
 			testP.Collect()
-			fact.Facts[name] = &testP
 		}
 
 		errs := fact.LoadAdditionalInputs(fct.Facter)

@@ -15,8 +15,8 @@ import (
 // Key looks up a key in a YAML file using the file:lookup or
 // yaml:key input plugins.
 type Key struct {
-	fact.BaseFact
-	env.BaseEnvResolver
+	fact.BaseFact       `yaml:",inline"`
+	env.BaseEnvResolver `yaml:",inline"`
 
 	// Plugin fields.
 	Path string `yaml:"path"`
@@ -31,7 +31,7 @@ type Key struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --package=yaml
 
 func init() {
-	fact.GetManager().Register("yaml:key", func(n string) fact.Facter {
+	fact.Manager().RegisterFactory("yaml:key", func(n string) fact.Facter {
 		return New(n)
 	})
 }
@@ -64,9 +64,12 @@ func (p *Key) Collect() {
 	var lookupMap *MapYamlLookup
 	var nestedLookupMap map[string]*MapYamlLookup
 
-	log.WithFields(log.Fields{
-		"fact-plugin":  p.GetName(),
-		"fact":         p.GetId(),
+	contextLogger := log.WithFields(log.Fields{
+		"fact-plugin": p.GetName(),
+		"fact":        p.GetId(),
+	})
+
+	contextLogger.WithFields(log.Fields{
 		"input":        p.GetInputName(),
 		"input-plugin": p.GetInput().GetName(),
 		"input-format": p.GetInput().GetFormat(),
@@ -88,6 +91,7 @@ func (p *Key) Collect() {
 				p.Format = data.FormatNil
 				return
 			}
+			contextLogger.WithError(err).Error("error looking up yaml path")
 			p.AddErrors(err)
 			return
 		}
@@ -115,6 +119,9 @@ func (p *Key) Collect() {
 					return
 				}
 			}
+			for _, err := range errs {
+				contextLogger.WithError(err).Error("error looking up yaml path")
+			}
 			p.AddErrors(errs...)
 			return
 		}
@@ -125,6 +132,9 @@ func (p *Key) Collect() {
 		var errs []error
 		lookupMap, errs = NewMapYamlLookupFromNodes(yamlNodes, p.Path)
 		if len(errs) > 0 {
+			for _, err := range errs {
+				contextLogger.WithError(err).Error("error looking up yaml path")
+			}
 			p.AddErrors(errs...)
 			return
 		}
@@ -137,6 +147,9 @@ func (p *Key) Collect() {
 		for f, nodes := range mapYamlNodes {
 			lookupMap, errs := NewMapYamlLookupFromNodes(nodes, p.Path)
 			if len(errs) > 0 {
+				for _, err := range errs {
+					contextLogger.WithError(err).Error("error looking up yaml path")
+				}
 				p.AddErrors(errs...)
 				return
 			}
@@ -144,7 +157,7 @@ func (p *Key) Collect() {
 		}
 
 	default:
-		log.WithField("input-format", p.GetInput().GetFormat()).
+		contextLogger.WithField("input-format", p.GetInput().GetFormat()).
 			Error("unsupported input format")
 	}
 
@@ -166,6 +179,7 @@ func (p *Key) Collect() {
 	if p.KeysOnly {
 		if lookup != nil {
 			if lookup.Kind != yaml.MappingNode {
+				contextLogger.Error("keys-only lookup only supports a single mapping node")
 				p.AddErrors(errors.New("keys-only lookup only supports a single mapping node"))
 				return
 			}
@@ -177,6 +191,7 @@ func (p *Key) Collect() {
 			p.Format = data.FormatListString
 			p.SetData(keys)
 		} else {
+			contextLogger.Error("yaml-nodes-map unsupported format for keys-only lookup")
 			p.AddErrors(errors.New("yaml-nodes-map unsupported format for keys-only lookup"))
 		}
 		return
@@ -184,11 +199,8 @@ func (p *Key) Collect() {
 
 	envMap, err := p.GetEnvMap()
 	if err != nil {
-		log.WithFields(log.Fields{
-			"fact-plugin": p.GetName(),
-			"fact":        p.GetId(),
-			"input":       p.GetInputName(),
-		}).WithError(err).Error("unable to read env file")
+		contextLogger.WithField("input", p.GetInputName()).
+			WithError(err).Error("unable to read env file")
 		p.AddErrors(err)
 		return
 	}
@@ -214,7 +226,9 @@ func (p *Key) Collect() {
 				case data.FormatMapString:
 					p.Format = data.FormatMapNestedString
 				default:
-					p.AddErrors(errors.New("unsupported format for nested lookup"))
+					contextLogger.WithField("format", m.Format).
+						Error("unsupported format for nested lookup")
+					p.AddErrors(errors.New("unsupported format " + string(m.Format) + " for nested lookup"))
 					return
 				}
 			}

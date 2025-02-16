@@ -10,13 +10,14 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact/testdata"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 func TestEqualsInit(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test that the plugin is registered.
-	plugin := Registry["equals"]("TestEquals")
+	plugin := Manager().GetFactories()["equals"]("TestEquals")
 	assert.NotNil(plugin)
 	analyser, ok := plugin.(*Equals)
 	assert.True(ok)
@@ -24,8 +25,8 @@ func TestEqualsInit(t *testing.T) {
 }
 
 func TestEqualsPluginName(t *testing.T) {
-	instance := Equals{Id: "TestEquals"}
-	assert.Equal(t, "equals", instance.PluginName())
+	instance := NewEquals("TestEquals")
+	assert.Equal(t, "equals", instance.GetName())
 }
 
 func TestEqualsAnalyse(t *testing.T) {
@@ -39,9 +40,13 @@ func TestEqualsAnalyse(t *testing.T) {
 				"foo",
 			),
 			Analyser: &Equals{
-				InputName: "testFact",
-				Id:        "TestEquals",
-				Value:     "foo",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestEquals",
+					},
+					InputName: "testFact",
+				},
+				Value: "foo",
 			},
 			ExpectedBreaches: []breach.Breach{
 				&breach.ValueBreach{
@@ -59,9 +64,13 @@ func TestEqualsAnalyse(t *testing.T) {
 				"bar",
 			),
 			Analyser: &Equals{
-				InputName: "testFact",
-				Id:        "TestEquals",
-				Value:     "foo",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestEquals",
+					},
+					InputName: "testFact",
+				},
+				Value: "foo",
 			},
 			ExpectedBreaches: []breach.Breach{},
 		},
@@ -77,10 +86,14 @@ func TestEqualsAnalyse(t *testing.T) {
 				},
 			),
 			Analyser: &Equals{
-				InputName: "testFact",
-				Id:        "TestEquals",
-				Key:       "foo",
-				Value:     "bar",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestEquals",
+					},
+					InputName: "testFact",
+				},
+				Key:   "foo",
+				Value: "bar",
 			},
 			ExpectedBreaches: []breach.Breach{
 				&breach.ValueBreach{
@@ -98,10 +111,14 @@ func TestEqualsAnalyse(t *testing.T) {
 				map[string]interface{}{"foo": "zoom"},
 			),
 			Analyser: &Equals{
-				InputName: "testFact",
-				Id:        "TestEquals",
-				Key:       "foo",
-				Value:     "bar",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestEquals",
+					},
+					InputName: "testFact",
+				},
+				Key:   "foo",
+				Value: "bar",
 			},
 			ExpectedBreaches: []breach.Breach{},
 		},
@@ -115,9 +132,13 @@ func TestEqualsAnalyse(t *testing.T) {
 				[]interface{}{"foo", "bar"},
 			),
 			Analyser: &Equals{
-				InputName: "testFact",
-				Id:        "TestEquals",
-				Value:     "foo",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestEquals",
+					},
+					InputName: "testFact",
+				},
+				Value: "foo",
 			},
 			ExpectedBreaches: []breach.Breach{},
 		},

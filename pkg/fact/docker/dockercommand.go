@@ -14,7 +14,7 @@ import (
 )
 
 type DockerCommand struct {
-	fact.BaseFact
+	fact.BaseFact `yaml:",inline"`
 
 	// Plugin fields.
 	Command []string `yaml:"command"`
@@ -24,7 +24,7 @@ type DockerCommand struct {
 //go:generate go run ../../../cmd/gen.go fact-plugin --package=docker
 
 func init() {
-	fact.GetManager().Register("docker:command", func(n string) fact.Facter {
+	fact.Manager().RegisterFactory("docker:command", func(n string) fact.Facter {
 		return NewDockerCommand(n)
 	})
 }
