@@ -40,12 +40,6 @@ func main() {
 		}
 		gen.BreachType(breachTypes)
 		break
-	case "connection-plugin":
-		if len(plugins) == 0 {
-			log.Fatal("connection-plugin missing flags; plugin is required")
-		}
-		gen.ConnectionPlugin(plugins)
-		break
 	case "fact-plugin":
 		if pkg == "" {
 			log.Fatal("fact-plugin missing flags; package is required")

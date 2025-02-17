@@ -45,7 +45,7 @@ var configListPluginsCmd = &cobra.Command{
 	Long:  `List all available plugins that can be used in shipshape`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Connection plugins:")
-		for _, p := range connection.RegistryKeys() {
+		for _, p := range connection.Manager().GetFactoriesKeys() {
 			fmt.Println("  - " + p)
 		}
 

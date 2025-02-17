@@ -141,7 +141,9 @@ func RunV2() {
 	log.WithField("config", fmt.Sprintf("%+v", RunConfigV2)).Trace("running v2")
 
 	log.Print("parsing connections config")
-	connection.ParseConfig(RunConfigV2.Connections)
+	if err := connection.Manager().ParseConfig(RunConfigV2.Connections); err != nil {
+		log.Fatal(err)
+	}
 	log.Print("parsing facts config")
 	if err := fact.Manager().ParseConfig(RunConfigV2.Collect); err != nil {
 		log.Fatal(err)

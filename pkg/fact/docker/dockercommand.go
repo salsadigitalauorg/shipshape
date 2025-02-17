@@ -52,7 +52,7 @@ func (p *DockerCommand) Collect() {
 		"fact-plugin":       p.GetName(),
 		"fact":              p.GetId(),
 		"connection":        p.GetConnectionName(),
-		"connection-plugin": p.GetConnection().PluginName(),
+		"connection-plugin": p.GetConnection().GetName(),
 	}).Debug("collecting data")
 
 	dockerConn := p.GetConnection().(*connection.DockerExec)

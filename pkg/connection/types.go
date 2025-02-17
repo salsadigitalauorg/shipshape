@@ -1,7 +1,8 @@
 package connection
 
+import "github.com/salsadigitalauorg/shipshape/pkg/plugin"
+
 type Connectioner interface {
-	PluginName() string
-	GetName() string
+	plugin.Plugin
 	Run() ([]byte, error)
 }

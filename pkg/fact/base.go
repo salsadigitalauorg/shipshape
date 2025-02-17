@@ -111,7 +111,7 @@ func ValidateConnection(p Facter) error {
 			Plugin: p.GetName(), SupportType: "connection"}
 	}
 
-	connPlug := connection.GetInstance(p.GetConnectionName())
+	connPlug := connection.Manager().FindPlugin(p.GetConnectionName())
 	if connPlug == nil {
 		return &plugin.ErrSupportNotFound{
 			Plugin:        p.GetName(),
@@ -120,7 +120,7 @@ func ValidateConnection(p Facter) error {
 	}
 
 	for _, s := range supportedConnections {
-		if connPlug.PluginName() == s {
+		if connPlug.GetName() == s {
 			p.SetConnection(connPlug)
 			return nil
 		}
@@ -128,7 +128,7 @@ func ValidateConnection(p Facter) error {
 	return &plugin.ErrSupportNone{
 		Plugin:        p.GetName(),
 		SupportType:   "connection",
-		SupportPlugin: connPlug.PluginName()}
+		SupportPlugin: connPlug.GetName()}
 }
 
 func ValidateInput(p Facter) error {
