@@ -4,31 +4,19 @@ import (
 	"errors"
 
 	log "github.com/sirupsen/logrus"
-
-	"github.com/salsadigitalauorg/shipshape/pkg/connection"
-	"github.com/salsadigitalauorg/shipshape/pkg/data"
-	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"gopkg.in/yaml.v3"
+
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
+	"github.com/salsadigitalauorg/shipshape/pkg/env"
+	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 // Key looks up a key in a YAML file using the file:lookup or
 // yaml:key input plugins.
 type Key struct {
-	// Common fields.
-	Name                 string          `yaml:"name"`
-	Format               data.DataFormat `yaml:"format"`
-	ConnectionName       string          `yaml:"connection"`
-	InputName            string          `yaml:"input"`
-	AdditionalInputNames []string        `yaml:"additional-inputs"`
-	connection           connection.Connectioner
-	input                fact.Facter
-	additionalInputs     []fact.Facter
-	errors               []error
-	data                 interface{}
-
-	// Resolve env vars.
-	ResolveEnv bool   `yaml:"resolve-env"`
-	EnvFile    string `yaml:"env-file"`
+	fact.BaseFact       `yaml:",inline"`
+	env.BaseEnvResolver `yaml:",inline"`
 
 	// Plugin fields.
 	Path string `yaml:"path"`
@@ -40,26 +28,35 @@ type Key struct {
 	IgnoreNotFound bool `yaml:"ignore-not-found"`
 }
 
-//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=Key --package=yaml --envresolver
+//go:generate go run ../../../cmd/gen.go fact-plugin --package=yaml
 
 func init() {
-	fact.Registry["yaml:key"] = func(n string) fact.Facter { return &Key{Name: n} }
+	fact.Manager().RegisterFactory("yaml:key", func(n string) fact.Facter {
+		return New(n)
+	})
 }
 
-func (p *Key) PluginName() string {
+func New(id string) *Key {
+	return &Key{
+		BaseFact: fact.BaseFact{
+			BasePlugin: plugin.BasePlugin{
+				Id: id,
+			},
+		},
+	}
+}
+
+func (p *Key) GetName() string {
 	return "yaml:key"
 }
 
-func (p *Key) SupportedConnections() (fact.SupportLevel, []string) {
-	return fact.SupportNone, []string{}
-}
-
-func (p *Key) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportRequired, []string{
-		"docker:command",
-		"file:read",
-		"file:lookup",
-		"yaml:key"}
+func (p *Key) SupportedInputFormats() (plugin.SupportLevel, []data.DataFormat) {
+	return plugin.SupportRequired, []data.DataFormat{
+		data.FormatRaw,
+		data.FormatMapBytes,
+		FormatYamlNodes,
+		FormatMapYamlNodes,
+	}
 }
 
 func (p *Key) Collect() {
@@ -67,19 +64,22 @@ func (p *Key) Collect() {
 	var lookupMap *MapYamlLookup
 	var nestedLookupMap map[string]*MapYamlLookup
 
-	log.WithFields(log.Fields{
-		"fact-plugin":  p.PluginName(),
-		"fact":         p.Name,
+	contextLogger := log.WithFields(log.Fields{
+		"fact-plugin": p.GetName(),
+		"fact":        p.GetId(),
+	})
+
+	contextLogger.WithFields(log.Fields{
 		"input":        p.GetInputName(),
-		"input-plugin": p.input.PluginName(),
-		"input-format": p.input.GetFormat(),
+		"input-plugin": p.GetInput().GetName(),
+		"input-format": p.GetInput().GetFormat(),
 	}).Debug("collecting data")
 
-	switch p.input.GetFormat() {
+	switch p.GetInput().GetFormat() {
 
 	// The file:read plugin is used to read the file content.
 	case data.FormatRaw:
-		inputData := data.AsBytes(p.input.GetData())
+		inputData := data.AsBytes(p.GetInput().GetData())
 		if inputData == nil {
 			return
 		}
@@ -91,13 +91,14 @@ func (p *Key) Collect() {
 				p.Format = data.FormatNil
 				return
 			}
-			p.errors = append(p.errors, err)
+			contextLogger.WithError(err).Error("error looking up yaml path")
+			p.AddErrors(err)
 			return
 		}
 
 	// The file:lookup plugin is used to lookup files.
 	case data.FormatMapBytes:
-		inputData := data.AsMapBytes(p.input.GetData())
+		inputData := data.AsMapBytes(p.GetInput().GetData())
 		if inputData == nil {
 			return
 		}
@@ -118,36 +119,46 @@ func (p *Key) Collect() {
 					return
 				}
 			}
-			p.errors = append(p.errors, errs...)
+			for _, err := range errs {
+				contextLogger.WithError(err).Error("error looking up yaml path")
+			}
+			p.AddErrors(errs...)
 			return
 		}
 
 	// The yaml:key plugin is used to lookup keys in a single YAML file.
 	case FormatYamlNodes:
-		yamlNodes := DataAsYamlNodes(p.input.GetData())
+		yamlNodes := DataAsYamlNodes(p.GetInput().GetData())
 		var errs []error
 		lookupMap, errs = NewMapYamlLookupFromNodes(yamlNodes, p.Path)
 		if len(errs) > 0 {
-			p.errors = append(p.errors, errs...)
+			for _, err := range errs {
+				contextLogger.WithError(err).Error("error looking up yaml path")
+			}
+			p.AddErrors(errs...)
 			return
 		}
 
 	// The yaml.lookup plugin is used to lookup keys in multiple YAML files.
 	case FormatMapYamlNodes:
-		mapYamlNodes := DataAsMapYamlNodes(p.input.GetData())
+		mapYamlNodes := DataAsMapYamlNodes(p.GetInput().GetData())
 
 		nestedLookupMap = map[string]*MapYamlLookup{}
 		for f, nodes := range mapYamlNodes {
 			lookupMap, errs := NewMapYamlLookupFromNodes(nodes, p.Path)
 			if len(errs) > 0 {
-				p.errors = append(p.errors, errs...)
+				for _, err := range errs {
+					contextLogger.WithError(err).Error("error looking up yaml path")
+				}
+				p.AddErrors(errs...)
 				return
 			}
 			nestedLookupMap[f] = lookupMap
 		}
 
 	default:
-		log.WithField("input-format", p.input.GetFormat()).Error("unsupported input format")
+		contextLogger.WithField("input-format", p.GetInput().GetFormat()).
+			Error("unsupported input format")
 	}
 
 	if lookup == nil && lookupMap == nil && nestedLookupMap == nil {
@@ -157,10 +168,10 @@ func (p *Key) Collect() {
 	if p.NodesOnly {
 		if lookup != nil {
 			p.Format = FormatYamlNodes
-			p.data = lookup.Nodes
+			p.SetData(lookup.Nodes)
 		} else if lookupMap != nil {
 			p.Format = FormatMapYamlNodes
-			p.data = lookupMap.GetMapNodes()
+			p.SetData(lookupMap.GetMapNodes())
 		}
 		return
 	}
@@ -168,7 +179,8 @@ func (p *Key) Collect() {
 	if p.KeysOnly {
 		if lookup != nil {
 			if lookup.Kind != yaml.MappingNode {
-				p.errors = append(p.errors, errors.New("keys-only lookup only supports a single mapping node"))
+				contextLogger.Error("keys-only lookup only supports a single mapping node")
+				p.AddErrors(errors.New("keys-only lookup only supports a single mapping node"))
 				return
 			}
 			mappedData := MappingNodeToKeyedMap(lookup.Nodes[0])
@@ -177,32 +189,30 @@ func (p *Key) Collect() {
 				keys = append(keys, k)
 			}
 			p.Format = data.FormatListString
-			p.data = keys
+			p.SetData(keys)
 		} else {
-			p.errors = append(p.errors, errors.New("yaml-nodes-map unsupported format for keys-only lookup"))
+			contextLogger.Error("yaml-nodes-map unsupported format for keys-only lookup")
+			p.AddErrors(errors.New("yaml-nodes-map unsupported format for keys-only lookup"))
 		}
 		return
 	}
 
 	envMap, err := p.GetEnvMap()
 	if err != nil {
-		log.WithFields(log.Fields{
-			"fact-plugin": p.PluginName(),
-			"fact":        p.Name,
-			"input":       p.GetInputName(),
-		}).WithError(err).Error("unable to read env file")
-		p.errors = append(p.errors, err)
+		contextLogger.WithField("input", p.GetInputName()).
+			WithError(err).Error("unable to read env file")
+		p.AddErrors(err)
 		return
 	}
 
 	if lookup != nil {
 		lookup.ProcessNodes(envMap)
 		p.Format = lookup.Format
-		p.data = lookup.Data
+		p.SetData(lookup.Data)
 	} else if lookupMap != nil {
 		lookupMap.ProcessMap(envMap)
 		p.Format = lookupMap.Format
-		p.data = lookupMap.DataMap
+		p.SetData(lookupMap.DataMap)
 	} else {
 		res := map[string]map[string]string{}
 		for f, m := range nestedLookupMap {
@@ -216,11 +226,13 @@ func (p *Key) Collect() {
 				case data.FormatMapString:
 					p.Format = data.FormatMapNestedString
 				default:
-					p.errors = append(p.errors, errors.New("unsupported format for nested lookup"))
+					contextLogger.WithField("format", m.Format).
+						Error("unsupported format for nested lookup")
+					p.AddErrors(errors.New("unsupported format " + string(m.Format) + " for nested lookup"))
 					return
 				}
 			}
 		}
-		p.data = res
+		p.SetData(res)
 	}
 }

@@ -7,10 +7,11 @@ collect:
     yaml:key:
       input: extension-file
       path: module.lagoon_logs
+      ignore-not-found: true
 
 analyse:
   lagoon-logs-check:
     regex:not-match:
       description: Lagoon logs module is not enabled
       input: module-lagoon_logs
-      pattern: "^1$"
+      pattern: "^0$"

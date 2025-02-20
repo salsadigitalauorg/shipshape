@@ -7,23 +7,11 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
-	"github.com/salsadigitalauorg/shipshape/pkg/fact"
-	"github.com/salsadigitalauorg/shipshape/pkg/result"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 type AllowedList struct {
-	// Common fields.
-	Id                    string `yaml:"name"`
-	Description           string `yaml:"description"`
-	InputName             string `yaml:"input"`
-	Severity              string `yaml:"severity"`
-	breach.BreachTemplate `yaml:"breach-format"`
-	Result                result.Result
-	Remediation           interface{} `yaml:"remediation"`
-	input                 fact.Facter
-
-	// Plugin fields.
+	BaseAnalyser `yaml:",inline"`
 	PackageMatch string `yaml:"package-match"`
 	pkgRegex     *regexp.Regexp
 	Allowed      []string `yaml:"allowed"`
@@ -36,10 +24,12 @@ type AllowedList struct {
 //go:generate go run ../../cmd/gen.go analyse-plugin --plugin=AllowedList --package=analyse
 
 func init() {
-	Registry["allowed:list"] = func(id string) Analyser { return NewAllowedList(id) }
+	Manager().RegisterFactory("allowed:list", func(id string) Analyser {
+		return NewAllowedList(id)
+	})
 }
 
-func (p *AllowedList) PluginName() string {
+func (p *AllowedList) GetName() string {
 	return "allowed:list"
 }
 

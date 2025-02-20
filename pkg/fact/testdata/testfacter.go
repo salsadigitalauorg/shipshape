@@ -3,17 +3,11 @@ package testdata
 import (
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 type TestFacter struct {
-	// Common fields.
-	Name                 string          `yaml:"name"`
-	Format               data.DataFormat `yaml:"format"`
-	ConnectionName       string          `yaml:"connection"`
-	InputName            string          `yaml:"input"`
-	AdditionalInputNames []string        `yaml:"additional-inputs"`
-	errors               []error
-	data                 interface{}
+	fact.BaseFact
 
 	// Plugin fields.
 	TestInputDataFormat data.DataFormat
@@ -21,67 +15,28 @@ type TestFacter struct {
 }
 
 func init() {
-	fact.Registry["file:read"] = func(n string) fact.Facter { return &TestFacter{Name: n} }
+	fact.Manager().RegisterFactory("testdata:testfacter", func(n string) fact.Facter {
+		return New(n, data.FormatNil, nil)
+	})
 }
 
-func (p *TestFacter) PluginName() string {
-	return "file:read"
+func New(id string, dataFormat data.DataFormat, data any) *TestFacter {
+	return &TestFacter{
+		BaseFact: fact.BaseFact{
+			BasePlugin: plugin.BasePlugin{
+				Id: id,
+			},
+		},
+		TestInputDataFormat: dataFormat,
+		TestInputData:       data,
+	}
 }
 
-func (p *TestFacter) SupportedConnections() (fact.SupportLevel, []string) {
-	return fact.SupportNone, []string{}
-}
-
-func (p *TestFacter) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportNone, []string{}
+func (p *TestFacter) GetName() string {
+	return "testdata:testfacter"
 }
 
 func (p *TestFacter) Collect() {
 	p.Format = p.TestInputDataFormat
-	p.data = p.TestInputData
-}
-
-// Generated methods.
-func (p *TestFacter) GetName() string {
-	return p.Name
-}
-
-func (p *TestFacter) GetData() interface{} {
-	return p.data
-}
-
-func (p *TestFacter) GetFormat() data.DataFormat {
-	return p.Format
-}
-
-func (p *TestFacter) GetConnectionName() string {
-	return p.ConnectionName
-}
-
-func (p *TestFacter) GetInputName() string {
-	return p.InputName
-}
-
-func (p *TestFacter) GetAdditionalInputNames() []string {
-	return p.AdditionalInputNames
-}
-
-func (p *TestFacter) GetErrors() []error {
-	return p.errors
-}
-
-func (p *TestFacter) ValidateConnection() error {
-	return &fact.ErrSupportNone{SupportType: "connection"}
-}
-
-func (p *TestFacter) ValidateInput() error {
-	return &fact.ErrSupportNone{SupportType: "input"}
-}
-
-func (p *TestFacter) LoadAdditionalInputs() []error {
-	return []error{}
-}
-
-func (p *TestFacter) AddError(err error) {
-	p.errors = append(p.errors, err)
+	p.SetData(p.TestInputData)
 }

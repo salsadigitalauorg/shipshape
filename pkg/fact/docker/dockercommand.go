@@ -9,54 +9,53 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/connection"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
 type DockerCommand struct {
-	// Common fields.
-	Name                 string          `yaml:"name"`
-	Format               data.DataFormat `yaml:"format"`
-	ConnectionName       string          `yaml:"connection"`
-	InputName            string          `yaml:"input"`
-	AdditionalInputNames []string        `yaml:"additional-inputs"`
-	connection           connection.Connectioner
-	input                fact.Facter
-	additionalInputs     []fact.Facter
-	errors               []error
-	data                 interface{}
+	fact.BaseFact `yaml:",inline"`
 
 	// Plugin fields.
 	Command []string `yaml:"command"`
 	AsList  bool     `yaml:"as-list"`
 }
 
-//go:generate go run ../../../cmd/gen.go fact-plugin --plugin=DockerCommand --package=docker
+//go:generate go run ../../../cmd/gen.go fact-plugin --package=docker
 
 func init() {
-	fact.Registry["docker:command"] = func(n string) fact.Facter { return &DockerCommand{Name: n} }
+	fact.Manager().RegisterFactory("docker:command", func(n string) fact.Facter {
+		return NewDockerCommand(n)
+	})
 }
 
-func (p *DockerCommand) PluginName() string {
+func NewDockerCommand(id string) *DockerCommand {
+	return &DockerCommand{
+		BaseFact: fact.BaseFact{
+			BasePlugin: plugin.BasePlugin{
+				Id: id,
+			},
+		},
+	}
+}
+
+func (p *DockerCommand) GetName() string {
 	return "docker:command"
 }
 
-func (p *DockerCommand) SupportedConnections() (fact.SupportLevel, []string) {
-	return fact.SupportRequired, []string{"docker:exec"}
-}
-
-func (p *DockerCommand) SupportedInputs() (fact.SupportLevel, []string) {
-	return fact.SupportNone, []string{}
+func (p *DockerCommand) SupportedConnections() (plugin.SupportLevel, []string) {
+	return plugin.SupportRequired, []string{"docker:exec"}
 }
 
 func (p *DockerCommand) Collect() {
 	log.WithFields(log.Fields{
-		"fact-plugin":       p.PluginName(),
-		"fact":              p.Name,
+		"fact-plugin":       p.GetName(),
+		"fact":              p.GetId(),
 		"connection":        p.GetConnectionName(),
-		"connection-plugin": p.connection.PluginName(),
+		"connection-plugin": p.GetConnection().GetName(),
 	}).Debug("collecting data")
 
-	dockerConn := p.connection.(*connection.DockerExec)
+	dockerConn := p.GetConnection().(*connection.DockerExec)
 	dockerConn.Command = p.Command
 	rawData, err := dockerConn.Run()
 	if err != nil {
@@ -68,16 +67,16 @@ func (p *DockerCommand) Collect() {
 		}
 		err = errors.New(errMsg)
 		log.WithError(err).Error("docker command failed")
-		p.errors = append(p.errors, err)
+		p.AddErrors(err)
 		return
 	}
 
 	if !p.AsList {
 		p.Format = data.FormatRaw
-		p.data = rawData
+		p.SetData(rawData)
 		return
 	}
 
 	p.Format = data.FormatListString
-	p.data = utils.MultilineOutputToSlice(rawData)
+	p.SetData(utils.MultilineOutputToSlice(rawData))
 }

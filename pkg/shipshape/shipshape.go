@@ -141,19 +141,25 @@ func RunV2() {
 	log.WithField("config", fmt.Sprintf("%+v", RunConfigV2)).Trace("running v2")
 
 	log.Print("parsing connections config")
-	connection.ParseConfig(RunConfigV2.Connections)
+	if err := connection.Manager().ParseConfig(RunConfigV2.Connections); err != nil {
+		log.Fatal(err)
+	}
 	log.Print("parsing facts config")
-	fact.ParseConfig(RunConfigV2.Collect)
+	if err := fact.Manager().ParseConfig(RunConfigV2.Collect); err != nil {
+		log.Fatal(err)
+	}
 	log.Print("parsing analysers config")
-	analyse.ParseConfig(RunConfigV2.Analyse)
+	if err := analyse.Manager().ParseConfig(RunConfigV2.Analyse); err != nil {
+		log.Fatal(err)
+	}
 
 	RunResultList = result.NewResultList(Remediate)
 	log.Print("parsing output config")
 	output.ParseConfig(RunConfigV2.Output, &RunResultList)
 
 	log.Print("collecting facts")
-	fact.CollectAllFacts()
-	if len(fact.Errors) > 0 {
+	fact.Manager().CollectAllFacts()
+	if len(fact.Manager().GetErrors()) > 0 {
 		log.Fatal("failed to collect facts")
 	}
 
@@ -162,14 +168,14 @@ func RunV2() {
 	}
 
 	log.Print("validating analyser inputs")
-	analyse.ValidateInputs()
-	if len(analyse.Errors) > 0 {
-		log.WithField("errors", analyse.Errors).
+	analyse.Manager().ValidateInputs()
+	if len(analyse.Manager().GetErrors()) > 0 {
+		log.WithField("errors", analyse.Manager().GetErrors()).
 			Fatal("failed to validate analyser inputs")
 	}
 
 	log.Print("analysing facts")
-	results := analyse.AnalyseAll()
+	results := analyse.Manager().AnalyseAll()
 
 	if Remediate {
 		log.Print("starting remediation")

@@ -7,27 +7,40 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	. "github.com/salsadigitalauorg/shipshape/pkg/fact/docker"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 func TestImagesCollect(t *testing.T) {
 	tests := []internal.FactCollectTest{
 		{
-			Name:               "noInput",
-			Facter:             &Images{Name: "base-images", InputName: "test-input"},
-			ExpectedInputError: &fact.ErrSupportRequired{SupportType: "input"},
+			Name: "noInput",
+			FactFn: func() fact.Facter {
+				f := NewImages("base-images")
+				f.SetInputName("test-input")
+				return f
+			},
+			ExpectedInputError: &plugin.ErrSupportRequired{SupportType: "input"},
 		},
 		{
-			Name:      "inputFormatUnsupported",
-			Facter:    &Images{Name: "base-images", InputName: "test-input"},
+			Name: "inputFormatUnsupported",
+			FactFn: func() fact.Facter {
+				f := NewImages("base-images")
+				f.SetInputName("test-input")
+				return f
+			},
 			TestInput: internal.FactInputTest{DataFormat: data.FormatRaw, Data: []byte("foo")},
-			ExpectedErrors: []error{&fact.ErrSupportNone{
+			ExpectedInputError: &plugin.ErrSupportNone{
 				Plugin:        "base-images",
 				SupportType:   "input data format",
-				SupportPlugin: "raw"}},
+				SupportPlugin: "raw"},
 		},
 		{
-			Name:   "bogusData",
-			Facter: &Images{Name: "base-images", InputName: "test-input"},
+			Name: "bogusData",
+			FactFn: func() fact.Facter {
+				f := NewImages("base-images")
+				f.SetInputName("test-input")
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,
 				Data:       map[string][]byte{"foo": []byte("bar")}},
@@ -35,8 +48,12 @@ func TestImagesCollect(t *testing.T) {
 			ExpectedData:   map[string][]string{"foo": {}},
 		},
 		{
-			Name:   "dockerfile/simple",
-			Facter: &Images{Name: "base-images", InputName: "test-input"},
+			Name: "dockerfile/simple",
+			FactFn: func() fact.Facter {
+				f := NewImages("base-images")
+				f.SetInputName("test-input")
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,
 				Data:       map[string][]byte{"Dockerfile": []byte("FROM scratch\n")},
@@ -45,8 +62,12 @@ func TestImagesCollect(t *testing.T) {
 			ExpectedData:   map[string][]string{"Dockerfile": {"scratch:latest"}},
 		},
 		{
-			Name:   "dockerfile/withArgs",
-			Facter: &Images{Name: "base-images", InputName: "test-input"},
+			Name: "dockerfile/withArgs",
+			FactFn: func() fact.Facter {
+				f := NewImages("base-images")
+				f.SetInputName("test-input")
+				return f
+			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,
 				Data: map[string][]byte{"php": []byte(`ARG CLI_IMAGE
@@ -59,12 +80,13 @@ FROM php:${PHP_IMAGE_VERSION}
 			ExpectedData:   map[string][]string{"php": {":latest", "php:8.3"}},
 		},
 		{
-			Name: "dockerfile/withArgsWithArgsInput/NoDataFormat",
-			Facter: &Images{
-				Name:                 "base-images",
-				InputName:            "test-input",
-				ArgsFrom:             "args-input",
-				AdditionalInputNames: []string{"args-input"},
+			Name: "dockerfile/withArgs/WithAdditionalInput/NoDataFormat",
+			FactFn: func() fact.Facter {
+				f := NewImages("base-images")
+				f.SetInputName("test-input")
+				f.ArgsFrom = "args-input"
+				f.AdditionalInputNames = []string{"args-input"}
+				return f
 			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,
@@ -80,17 +102,18 @@ FROM php:${PHP_IMAGE_VERSION}
 					Data: map[string]map[string]string{"php": {"CLI_IMAGE": "myapp"}},
 				},
 			},
-			ExpectedAdditionalInputsErrs: []error{&fact.ErrSupportRequired{
-				Plugin:      "args-input",
-				SupportType: "additional input data format"}},
+			ExpectedAdditionalInputsErrs: []error{&plugin.ErrSupportRequired{
+				Plugin:      "testdata:testfacter",
+				SupportType: "inputFormat"}},
 		},
 		{
-			Name: "dockerfile/withArgsWithArgsInput",
-			Facter: &Images{
-				Name:                 "base-images",
-				InputName:            "test-input",
-				ArgsFrom:             "args-input",
-				AdditionalInputNames: []string{"args-input"},
+			Name: "dockerfile/withArgs/WithAdditionalInput",
+			FactFn: func() fact.Facter {
+				f := NewImages("base-images")
+				f.SetInputName("test-input")
+				f.ArgsFrom = "args-input"
+				f.AdditionalInputNames = []string{"args-input"}
+				return f
 			},
 			TestInput: internal.FactInputTest{
 				DataFormat: data.FormatMapBytes,

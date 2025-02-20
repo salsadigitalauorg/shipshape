@@ -18,7 +18,7 @@ func TestNotEmptyInit(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test that the plugin is registered.
-	plugin := Registry["not:empty"]("testNotEmpty")
+	plugin := Manager().GetFactories()["not:empty"]("testNotEmpty")
 	assert.NotNil(plugin)
 	analyser, ok := plugin.(*NotEmpty)
 	assert.True(ok)
@@ -26,8 +26,8 @@ func TestNotEmptyInit(t *testing.T) {
 }
 
 func TestNotEmptyPluginName(t *testing.T) {
-	instance := NotEmpty{Id: "testNotEmpty"}
-	assert.Equal(t, "not:empty", instance.PluginName())
+	instance := NewNotEmpty("testNotEmpty")
+	assert.Equal(t, "not:empty", instance.GetName())
 }
 
 func TestNotEmptyAnalyse(t *testing.T) {
@@ -38,31 +38,31 @@ func TestNotEmptyAnalyse(t *testing.T) {
 	}{
 		{
 			name: "mapNestedStringNil",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapNestedString,
-				TestInputData:       map[string]map[string]string(nil),
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapNestedString,
+				map[string]map[string]string(nil),
+			),
 			expectedBreaches: []breach.Breach{},
 		},
 		{
 			name: "mapNestedStringEmpty",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapNestedString,
-				TestInputData:       map[string]map[string]string{},
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapNestedString,
+				map[string]map[string]string{},
+			),
 			expectedBreaches: []breach.Breach{},
 		},
 		{
 			name: "mapNestedStringNotEmpty",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapNestedString,
-				TestInputData: map[string]map[string]string{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapNestedString,
+				map[string]map[string]string{
 					"key1": {"subKey1": "value1"},
 				},
-			},
+			),
 			expectedBreaches: []breach.Breach{
 				&breach.KeyValueBreach{
 					BreachType: "key-value",
@@ -83,7 +83,7 @@ func TestNotEmptyAnalyse(t *testing.T) {
 		logrus.SetOutput(io.Discard)
 
 		t.Run(tc.name, func(t *testing.T) {
-			analyser := NotEmpty{Id: tc.name}
+			analyser := NewNotEmpty(tc.name)
 
 			tc.input.Collect()
 			analyser.SetInput(tc.input)

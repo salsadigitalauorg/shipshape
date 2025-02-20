@@ -1,25 +1,33 @@
 package connection
 
-import "github.com/salsadigitalauorg/shipshape/pkg/command"
+import (
+	"github.com/salsadigitalauorg/shipshape/pkg/command"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
+)
 
 type DockerExec struct {
-	// Common fields.
-	Name   string `yaml:"name"`
-	errors []error
-	data   []byte
-
-	// Plugin fields.
-	Container string   `yaml:"container"`
-	Command   []string `yaml:"command"`
+	BaseConnection `yaml:",inline"`
+	Container      string   `yaml:"container"`
+	Command        []string `yaml:"command"`
 }
-
-//go:generate go run ../../cmd/gen.go connection-plugin --plugin=DockerExec
 
 func init() {
-	Registry["docker:exec"] = func(n string) Connectioner { return &DockerExec{Name: n} }
+	Manager().RegisterFactory("docker:exec", func(n string) Connectioner {
+		return NewDockerExec(n)
+	})
 }
 
-func (p *DockerExec) PluginName() string {
+func NewDockerExec(id string) *DockerExec {
+	return &DockerExec{
+		BaseConnection: BaseConnection{
+			BasePlugin: plugin.BasePlugin{
+				Id: id,
+			},
+		},
+	}
+}
+
+func (p *DockerExec) GetName() string {
 	return "docker:exec"
 }
 

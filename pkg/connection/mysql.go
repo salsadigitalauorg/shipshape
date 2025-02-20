@@ -7,28 +7,36 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
 	"github.com/go-sql-driver/mysql"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 type Mysql struct {
-	// Common fields.
-	Name string `yaml:"name"`
-
-	// Plugin fields.
-	Host     string `yaml:"host"`
-	Port     string `yaml:"port"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	Database string `yaml:"database"`
-	Db       *goqu.Database
+	BaseConnection `yaml:",inline"`
+	Host           string `yaml:"host"`
+	Port           string `yaml:"port"`
+	User           string `yaml:"user"`
+	Password       string `yaml:"password"`
+	Database       string `yaml:"database"`
+	Db             *goqu.Database
 }
-
-//go:generate go run ../../cmd/gen.go connection-plugin --plugin=Mysql
 
 func init() {
-	Registry["mysql"] = func(n string) Connectioner { return &Mysql{Name: n} }
+	Manager().RegisterFactory("mysql", func(n string) Connectioner {
+		return NewMysql(n)
+	})
 }
 
-func (p *Mysql) PluginName() string {
+func NewMysql(id string) *Mysql {
+	return &Mysql{
+		BaseConnection: BaseConnection{
+			BasePlugin: plugin.BasePlugin{
+				Id: id,
+			},
+		},
+	}
+}
+
+func (p *Mysql) GetName() string {
 	return "mysql"
 }
 

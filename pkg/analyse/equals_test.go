@@ -10,13 +10,14 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact/testdata"
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 func TestEqualsInit(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test that the plugin is registered.
-	plugin := Registry["equals"]("TestEquals")
+	plugin := Manager().GetFactories()["equals"]("TestEquals")
 	assert.NotNil(plugin)
 	analyser, ok := plugin.(*Equals)
 	assert.True(ok)
@@ -24,8 +25,8 @@ func TestEqualsInit(t *testing.T) {
 }
 
 func TestEqualsPluginName(t *testing.T) {
-	instance := Equals{Id: "TestEquals"}
-	assert.Equal(t, "equals", instance.PluginName())
+	instance := NewEquals("TestEquals")
+	assert.Equal(t, "equals", instance.GetName())
 }
 
 func TestEqualsAnalyse(t *testing.T) {
@@ -33,15 +34,19 @@ func TestEqualsAnalyse(t *testing.T) {
 		// String.
 		{
 			Name: "string",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatString,
-				TestInputData:       "foo",
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatString,
+				"foo",
+			),
 			Analyser: &Equals{
-				InputName: "testFact",
-				Id:        "TestEquals",
-				Value:     "foo",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestEquals",
+					},
+					InputName: "testFact",
+				},
+				Value: "foo",
 			},
 			ExpectedBreaches: []breach.Breach{
 				&breach.ValueBreach{
@@ -53,15 +58,19 @@ func TestEqualsAnalyse(t *testing.T) {
 		},
 		{
 			Name: "stringNotEqual",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatString,
-				TestInputData:       "bar",
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatString,
+				"bar",
+			),
 			Analyser: &Equals{
-				InputName: "testFact",
-				Id:        "TestEquals",
-				Value:     "foo",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestEquals",
+					},
+					InputName: "testFact",
+				},
+				Value: "foo",
 			},
 			ExpectedBreaches: []breach.Breach{},
 		},
@@ -69,18 +78,22 @@ func TestEqualsAnalyse(t *testing.T) {
 		// Map of string.
 		{
 			Name: "mapString",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatMapString,
-				TestInputData: map[string]interface{}{
+			Input: testdata.New(
+				"testFact",
+				data.FormatMapString,
+				map[string]interface{}{
 					"foo": "bar",
 				},
-			},
+			),
 			Analyser: &Equals{
-				InputName: "testFact",
-				Id:        "TestEquals",
-				Key:       "foo",
-				Value:     "bar",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestEquals",
+					},
+					InputName: "testFact",
+				},
+				Key:   "foo",
+				Value: "bar",
 			},
 			ExpectedBreaches: []breach.Breach{
 				&breach.ValueBreach{
@@ -92,16 +105,20 @@ func TestEqualsAnalyse(t *testing.T) {
 		},
 		{
 			Name: "mapStringNotEqual",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatMapString,
-				TestInputData:       map[string]interface{}{"foo": "zoom"},
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatMapString,
+				map[string]interface{}{"foo": "zoom"},
+			),
 			Analyser: &Equals{
-				InputName: "testFact",
-				Id:        "TestEquals",
-				Key:       "foo",
-				Value:     "bar",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestEquals",
+					},
+					InputName: "testFact",
+				},
+				Key:   "foo",
+				Value: "bar",
 			},
 			ExpectedBreaches: []breach.Breach{},
 		},
@@ -109,15 +126,19 @@ func TestEqualsAnalyse(t *testing.T) {
 		// Unsupported.
 		{
 			Name: "unsupported",
-			Input: &testdata.TestFacter{
-				Name:                "testFact",
-				TestInputDataFormat: data.FormatListString,
-				TestInputData:       []interface{}{"foo", "bar"},
-			},
+			Input: testdata.New(
+				"testFact",
+				data.FormatListString,
+				[]interface{}{"foo", "bar"},
+			),
 			Analyser: &Equals{
-				InputName: "testFact",
-				Id:        "TestEquals",
-				Value:     "foo",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "TestEquals",
+					},
+					InputName: "testFact",
+				},
+				Value: "foo",
 			},
 			ExpectedBreaches: []breach.Breach{},
 		},

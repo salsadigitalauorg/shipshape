@@ -24,7 +24,7 @@ output them in the format specified`,
 	Run: func(cmd *cobra.Command, args []string) {
 		shipshape.FactsOnly = true
 		runCmd.Run(cmd, args)
-		for _, f := range fact.Facts {
+		for _, f := range fact.Manager().GetPlugins() {
 			if shouldSkipFact(f) {
 				continue
 			}
@@ -32,10 +32,10 @@ output them in the format specified`,
 			log.WithFields(log.Fields{
 				"fact":   f.GetName(),
 				"format": f.GetFormat(),
-				"data":   f.GetData(),
 			}).Debug("printing collected fact")
 			fmt.Printf("%s:", f.GetName())
 			switch f.GetFormat() {
+
 			case data.FormatMapListString:
 				loadedData := data.AsMapListString(f.GetData())
 				for k, vList := range loadedData {
@@ -44,6 +44,7 @@ output them in the format specified`,
 						fmt.Printf("    - %s\n", v)
 					}
 				}
+
 			case data.FormatMapString:
 				loadedData := data.AsMapString(f.GetData())
 				fmt.Println()
@@ -55,6 +56,7 @@ output them in the format specified`,
 						fmt.Printf("  %s: %s\n", k, v)
 					}
 				}
+
 			case data.FormatMapNestedString:
 				loadedData := data.AsMapNestedString(f.GetData())
 				fmt.Println()
@@ -64,10 +66,17 @@ output them in the format specified`,
 						fmt.Printf("    %s: %s\n", k2, v)
 					}
 				}
+
 			case data.FormatString:
 				fmt.Printf(" %s\n", f.GetData())
+
+			case data.FormatRaw:
+				fmt.Println("\n",
+					output.TabbedMultiline("  ", fmt.Sprintf("%s", f.GetData())))
+
 			default:
-				fmt.Println(" collect not yet implemented for", f.GetFormat())
+				log.WithField("data", fmt.Sprintf("%s", f.GetData())).Warn("collect not yet implemented for this format")
+				fmt.Println("  collect not yet implemented for", f.GetFormat())
 			}
 			fmt.Println()
 		}

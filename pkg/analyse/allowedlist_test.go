@@ -12,13 +12,14 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact/testdata"
+	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 )
 
 func TestAllowedListInit(t *testing.T) {
 	assert := assert.New(t)
 
 	// Test that the plugin is registered.
-	plugin := Registry["allowed:list"]("testAllowedList")
+	plugin := Manager().GetFactories()["allowed:list"]("testAllowedList")
 	assert.NotNil(plugin)
 	analyser, ok := plugin.(*AllowedList)
 	assert.True(ok)
@@ -26,8 +27,8 @@ func TestAllowedListInit(t *testing.T) {
 }
 
 func TestAllowedListPluginName(t *testing.T) {
-	instance := AllowedList{Id: "testAllowedList"}
-	assert.Equal(t, "allowed:list", instance.PluginName())
+	instance := NewAllowedList("testAllowedList")
+	assert.Equal(t, "allowed:list", instance.GetName())
 }
 
 func TestAllowedListAnalyse(t *testing.T) {
@@ -44,32 +45,32 @@ func TestAllowedListAnalyse(t *testing.T) {
 		// List of strings.
 		{
 			name: "listString/NoBreaches",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatListString,
-				TestInputData:       []interface{}{"value1", "value2"},
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatListString,
+				[]interface{}{"value1", "value2"},
+			),
 			allowed:          []string{"value1", "value2"},
 			expectedBreaches: []breach.Breach{},
 		},
 		{
 			name: "listString/Ignored",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatListString,
-				TestInputData:       []interface{}{"value1", "value2", "value3"},
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatListString,
+				[]interface{}{"value1", "value2", "value3"},
+			),
 			allowed:          []string{"value1", "value2"},
 			ignore:           []string{"value3"},
 			expectedBreaches: []breach.Breach{},
 		},
 		{
 			name: "listString/NotAllowed",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatListString,
-				TestInputData:       []interface{}{"value1", "value2", "value3"},
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatListString,
+				[]interface{}{"value1", "value2", "value3"},
+			),
 			allowed: []string{"value1", "value2"},
 			expectedBreaches: []breach.Breach{
 				&breach.ValueBreach{
@@ -82,11 +83,11 @@ func TestAllowedListAnalyse(t *testing.T) {
 		},
 		{
 			name: "listString/Deprecated",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatListString,
-				TestInputData:       []interface{}{"value1", "value2", "value3"},
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatListString,
+				[]interface{}{"value1", "value2", "value3"},
+			),
 			allowed:    []string{"value1", "value2"},
 			deprecated: []string{"value3"},
 			expectedBreaches: []breach.Breach{
@@ -100,11 +101,11 @@ func TestAllowedListAnalyse(t *testing.T) {
 		},
 		{
 			name: "listString/Required",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatListString,
-				TestInputData:       []interface{}{"value1", "value2"},
-			},
+			input: testdata.New(
+				"testFacter",
+				data.FormatListString,
+				[]interface{}{"value1", "value2"},
+			),
 			allowed:  []string{"value1", "value2"},
 			required: []string{"value3"},
 			expectedBreaches: []breach.Breach{
@@ -120,29 +121,29 @@ func TestAllowedListAnalyse(t *testing.T) {
 		// String map.
 		{
 			name: "mapStringNoBreaches",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapString,
-				TestInputData: map[string]interface{}{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapString,
+				map[string]interface{}{
 					"key1": "value1",
 					"key2": "value2",
 				},
-			},
+			),
 			allowed:          []string{"value1", "value2"},
 			expectedBreaches: []breach.Breach{},
 		},
 		{
 			name: "mapStringExcludedIgnored",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapString,
-				TestInputData: map[string]interface{}{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapString,
+				map[string]interface{}{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
 					"key4": "value4",
 				},
-			},
+			),
 			allowed:          []string{"value1", "value2"},
 			excludeKeys:      []string{"key3"},
 			ignore:           []string{"value4"},
@@ -150,15 +151,15 @@ func TestAllowedListAnalyse(t *testing.T) {
 		},
 		{
 			name: "mapStringNotAllowed",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapString,
-				TestInputData: map[string]interface{}{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapString,
+				map[string]interface{}{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
 				},
-			},
+			),
 			allowed: []string{"value1", "value2"},
 			expectedBreaches: []breach.Breach{
 				&breach.KeyValueBreach{
@@ -173,15 +174,15 @@ func TestAllowedListAnalyse(t *testing.T) {
 		},
 		{
 			name: "mapStringDeprecated",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapString,
-				TestInputData: map[string]interface{}{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapString,
+				map[string]interface{}{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
 				},
-			},
+			),
 			allowed:    []string{"value1", "value2"},
 			deprecated: []string{"value3"},
 			expectedBreaches: []breach.Breach{
@@ -197,15 +198,15 @@ func TestAllowedListAnalyse(t *testing.T) {
 		},
 		{
 			name: "mapString/Required",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapString,
-				TestInputData: map[string]interface{}{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapString,
+				map[string]interface{}{
 					"key1": "value1",
 					"key2": "value2",
 					"key3": "value3",
 				},
-			},
+			),
 			required: []string{"value4", "value5"},
 			expectedBreaches: []breach.Breach{
 				&breach.ValueBreach{
@@ -226,29 +227,29 @@ func TestAllowedListAnalyse(t *testing.T) {
 		// Test data with map of list of strings.
 		{
 			name: "mapListStringNoBreaches",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapListString,
-				TestInputData: map[string][]string{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapListString,
+				map[string][]string{
 					"key1": {"value1"},
 					"key2": {"value2"},
 				},
-			},
+			),
 			allowed:          []string{"value1", "value2"},
 			expectedBreaches: []breach.Breach{},
 		},
 		{
 			name: "mapListStringExcludedIgnored",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapListString,
-				TestInputData: map[string][]string{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapListString,
+				map[string][]string{
 					"key1": {"value1"},
 					"key2": {"value2"},
 					"key3": {"value3"},
 					"key4": {"value4"},
 				},
-			},
+			),
 			allowed:          []string{"value1", "value2"},
 			excludeKeys:      []string{"key3"},
 			ignore:           []string{"value4"},
@@ -256,15 +257,15 @@ func TestAllowedListAnalyse(t *testing.T) {
 		},
 		{
 			name: "mapListStringSomeIgnored",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapListString,
-				TestInputData: map[string][]string{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapListString,
+				map[string][]string{
 					"key1": {"value1"},
 					"key2": {"value2"},
 					"key3": {"value3", "value4"},
 				},
-			},
+			),
 			allowed: []string{"value1", "value2"},
 			ignore:  []string{"value4"},
 			expectedBreaches: []breach.Breach{
@@ -280,14 +281,14 @@ func TestAllowedListAnalyse(t *testing.T) {
 		},
 		{
 			name: "mapListStringDeprecated",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapListString,
-				TestInputData: map[string][]string{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapListString,
+				map[string][]string{
 					"key1": {"value1"},
 					"key2": {"value2", "value4"},
 				},
-			},
+			),
 			allowed:    []string{"value1", "value2"},
 			deprecated: []string{"value4"},
 			expectedBreaches: []breach.Breach{
@@ -303,14 +304,14 @@ func TestAllowedListAnalyse(t *testing.T) {
 		},
 		{
 			name: "mapListStringDisallowed",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapListString,
-				TestInputData: map[string][]string{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapListString,
+				map[string][]string{
 					"key1": {"value1", "value3"},
 					"key2": {"value2", "value4"},
 				},
-			},
+			),
 			allowed: []string{"value1", "value2"},
 			expectedBreaches: []breach.Breach{
 				&breach.KeyValueBreach{
@@ -333,14 +334,14 @@ func TestAllowedListAnalyse(t *testing.T) {
 		},
 		{
 			name: "mapListString/Required",
-			input: &testdata.TestFacter{
-				Name:                "testFacter",
-				TestInputDataFormat: data.FormatMapListString,
-				TestInputData: map[string][]string{
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapListString,
+				map[string][]string{
 					"key1": {"value1", "value3", "value5"},
 					"key2": {"value2", "value4"},
 				},
-			},
+			),
 			required: []string{"value5", "value6"},
 			expectedBreaches: []breach.Breach{
 				&breach.KeyValueBreach{
@@ -369,15 +370,18 @@ func TestAllowedListAnalyse(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		assert := assert.New(t)
-
 		currLogOut := logrus.StandardLogger().Out
 		defer logrus.SetOutput(currLogOut)
 		logrus.SetOutput(io.Discard)
 
 		t.Run(tc.name, func(t *testing.T) {
+			assert := assert.New(t)
 			analyser := AllowedList{
-				Id:          "testAllowedList",
+				BaseAnalyser: BaseAnalyser{
+					BasePlugin: plugin.BasePlugin{
+						Id: "testAllowedList",
+					},
+				},
 				Allowed:     tc.allowed,
 				Required:    tc.required,
 				Deprecated:  tc.deprecated,
