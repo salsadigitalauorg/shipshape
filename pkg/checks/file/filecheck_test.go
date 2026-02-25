@@ -107,3 +107,80 @@ func TestFileCheckRunCheck(t *testing.T) {
 	assert.Equal(0, len(c.Result.Breaches))
 	assert.EqualValues([]string{"No illegal files"}, c.Result.Passes)
 }
+
+func TestFileCheckRunCheckSkipDir(t *testing.T) {
+	assert := assert.New(t)
+
+	config.ProjectDir = "testdata"
+	c := FileCheck{
+		Path:              "nested",
+		DisallowedPattern: ".*\\.sql",
+	}
+	c.Name = "file-skip-dir-check1"
+	c.Init(File)
+	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
+	assert.Equal(result.Fail, c.Result.Status)
+	assert.Equal(0, len(c.Result.Passes))
+	assert.EqualValues(
+		[]result.Breach{
+			&result.KeyValuesBreach{
+				BreachType: "key-values",
+				CheckType:  "file",
+				CheckName:  "file-skip-dir-check1",
+				Severity:   "normal",
+				Key:        "illegal files found",
+				Values: []string{
+					"testdata/nested/nested-01/nested-02/skipped/db.sql",
+					"testdata/nested/skipped/dump.sql",
+				},
+			},
+		},
+		c.Result.Breaches,
+	)
+
+	c = FileCheck{
+		Path:              "nested",
+		DisallowedPattern: ".*\\.sql",
+		SkipDir: []string{
+			"skipped",
+		},
+	}
+	c.Name = "file-skip-dir-check2"
+	c.Init(File)
+	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
+	assert.Equal(result.Fail, c.Result.Status)
+	assert.Equal(0, len(c.Result.Passes))
+	assert.EqualValues(
+		[]result.Breach{
+			&result.KeyValuesBreach{
+				BreachType: "key-values",
+				CheckType:  "file",
+				CheckName:  "file-skip-dir-check2",
+				Severity:   "normal",
+				Key:        "illegal files found",
+				Values: []string{
+					"testdata/nested/nested-01/nested-02/skipped/db.sql",
+				},
+			},
+		},
+		c.Result.Breaches,
+	)
+
+	c = FileCheck{
+		Path:              "nested",
+		DisallowedPattern: ".*\\.sql",
+		SkipDir: []string{
+			"skipped",
+			"nested-01/nested-02/skipped",
+		},
+	}
+	c.Name = "file-skip-dir-check3"
+	c.Init(File)
+	c.RunCheck()
+	c.Result.DetermineResultStatus(false)
+	assert.Equal(result.Pass, c.Result.Status)
+	assert.Equal(0, len(c.Result.Breaches))
+	assert.EqualValues([]string{"No illegal files"}, c.Result.Passes)
+}
