@@ -26,6 +26,7 @@ type Result struct {
 	Warnings          []string                      `json:"warnings"`
 	Status            Status                        `json:"status"`
 	RemediationStatus remediation.RemediationStatus `json:"remediation-status"`
+	DetailedMessage   string                        `json:"detailed-message"`
 }
 
 // Sort reorders the Passes & Failures in order to get consistent output.

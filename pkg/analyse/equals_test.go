@@ -44,7 +44,8 @@ func TestEqualsAnalyse(t *testing.T) {
 					BasePlugin: plugin.BasePlugin{
 						Id: "TestEquals",
 					},
-					InputName: "testFact",
+					InputName:       "testFact",
+					DetailedMessage: "Custom message for TestEquals",
 				},
 				Value: "foo",
 			},
@@ -55,6 +56,7 @@ func TestEqualsAnalyse(t *testing.T) {
 					Value:      "testFact equals 'foo'",
 				},
 			},
+			ExpectedDetailedMessage: "Custom message for TestEquals",
 		},
 		{
 			Name: "stringNotEqual",

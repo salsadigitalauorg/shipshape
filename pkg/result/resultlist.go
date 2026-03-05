@@ -148,3 +148,14 @@ func (rl *ResultList) Sort() {
 		return rl.Results[i].Name < rl.Results[j].Name
 	})
 }
+
+// GetResultsByCheckName fetch the list of Result by check name.
+func (rl *ResultList) GetResultsByCheckName(cn string) []Result {
+	var results []Result
+	for _, r := range rl.Results {
+		if r.Name == cn {
+			results = append(results, r)
+		}
+	}
+	return results
+}

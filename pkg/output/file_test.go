@@ -60,15 +60,16 @@ func TestFileOutput(t *testing.T) {
 			rl: &result.ResultList{
 				Results: []result.Result{
 					{
-						Name:   "test-check",
-						Status: result.Fail,
+						Name:            "test-check",
+						Status:          result.Fail,
+						DetailedMessage: "Custom message for test-check",
 						Breaches: []breach.Breach{
 							&breach.ValueBreach{Value: "Fail b"},
 						},
 					},
 				},
 			},
-			expected:    "# Breaches were detected\n\n  ### test-check\n     -- Fail b\n\n",
+			expected:    "# Breaches were detected\n\n  ### test-check\n     -- Fail b\n     #- Custom message for test-check\n\n",
 			expectError: false,
 			expectNil:   false,
 		},
@@ -126,7 +127,7 @@ func TestFileOutput(t *testing.T) {
 				RemediationPerformed: true,
 				RemediationTotals:    map[string]uint32{"successful": 1},
 			},
-			expected:    `{"policies":null,"remediation-performed":true,"total-checks":0,"total-breaches":0,"remediation-totals":{"successful":1},"check-count-by-type":null,"breach-count-by-type":null,"breach-count-by-severity":null,"results":[{"name":"test-check","severity":"","check-type":"","passes":null,"breaches":[{"breach-type":"","check-type":"","check-name":"","severity":"","value":"Fail b","remediation":{"Status":"success","Messages":["fixed 1"]}}],"warnings":null,"status":"Fail","remediation-status":""}]}` + "\n",
+			expected:    `{"policies":null,"remediation-performed":true,"total-checks":0,"total-breaches":0,"remediation-totals":{"successful":1},"check-count-by-type":null,"breach-count-by-type":null,"breach-count-by-severity":null,"results":[{"name":"test-check","severity":"","check-type":"","passes":null,"breaches":[{"breach-type":"","check-type":"","check-name":"","severity":"","value":"Fail b","remediation":{"Status":"success","Messages":["fixed 1"]}}],"warnings":null,"status":"Fail","remediation-status":"","detailed-message":""}]}` + "\n",
 			expectError: false,
 			expectNil:   false,
 		},
@@ -149,6 +150,7 @@ func TestFileOutput(t *testing.T) {
 						Breaches: []breach.Breach{
 							&breach.ValueBreach{Value: "Fail b"},
 						},
+						DetailedMessage: "Custom message for b",
 					},
 				},
 			},
@@ -157,7 +159,7 @@ func TestFileOutput(t *testing.T) {
     <testsuite name="test-check" tests="0" errors="0">
         <testcase name="a" classname="test-check"></testcase>
         <testcase name="b" classname="test-check">
-            <error message="Fail b"></error>
+            <error message="Fail b">Custom message for b</error>
         </testcase>
     </testsuite>
 </testsuites>

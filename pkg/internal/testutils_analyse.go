@@ -12,10 +12,11 @@ import (
 )
 
 type AnalyseTest struct {
-	Name             string
-	Input            fact.Facter
-	Analyser         analyse.Analyser
-	ExpectedBreaches []breach.Breach
+	Name                    string
+	Input                   fact.Facter
+	Analyser                analyse.Analyser
+	ExpectedBreaches        []breach.Breach
+	ExpectedDetailedMessage string
 }
 
 // TestAnalyse is used to run test scenarios in test tables.
@@ -34,4 +35,7 @@ func TestAnalyse(t *testing.T, at AnalyseTest) {
 
 	assert.Len(at.Analyser.GetResult().Breaches, len(at.ExpectedBreaches))
 	assert.ElementsMatch(at.ExpectedBreaches, at.Analyser.GetResult().Breaches)
+	if at.ExpectedDetailedMessage != "" {
+		assert.Equal(at.ExpectedDetailedMessage, at.Analyser.GetResult().DetailedMessage)
+	}
 }

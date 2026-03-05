@@ -85,6 +85,7 @@ analyse:
       description: 'Sensitive files found in public directory'
       input: sensitive-public-files
       severity: high
+      message: 'Please check the directory web/sites/default/files and remove all sensitive files'
 ```
 
 Execute the policy:

@@ -18,6 +18,8 @@ type BaseAnalyser struct {
 	Result                result.Result
 	Remediation           interface{} `yaml:"remediation"`
 	input                 fact.Facter
+	// Optional message for JUnit and Pretty output.
+	DetailedMessage string `yaml:"message"`
 }
 
 func (p *BaseAnalyser) GetDescription() string {
@@ -27,6 +29,9 @@ func (p *BaseAnalyser) GetDescription() string {
 func (p *BaseAnalyser) GetInputName() string {
 	return p.InputName
 }
+
+// GetDetailedMessage returns the DetailedMessage of the check.
+func (p *BaseAnalyser) GetDetailedMessage() string { return p.DetailedMessage }
 
 func (p *BaseAnalyser) GetBreachTemplate() breach.BreachTemplate {
 	return p.BreachTemplate
@@ -43,6 +48,7 @@ func (p *BaseAnalyser) GetResult() result.Result {
 	if p.Severity != "" {
 		p.Result.Severity = p.Severity
 	}
+	p.Result.DetailedMessage = p.DetailedMessage
 	return p.Result
 }
 
