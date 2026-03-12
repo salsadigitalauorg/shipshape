@@ -5,8 +5,9 @@ import (
 )
 
 type JUnitError struct {
-	XMLName xml.Name `xml:"error"`
-	Message string   `xml:"message,attr"`
+	XMLName         xml.Name `xml:"error"`
+	Message         string   `xml:"message,attr"`
+	DetailedMessage string   `xml:",chardata"`
 }
 
 type JUnitTestCase struct {

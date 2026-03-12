@@ -181,6 +181,9 @@ func (p *Stdout) Pretty(rl *result.ResultList, w io.Writer) {
 				}
 			}
 		}
+		if r.DetailedMessage != "" {
+			fmt.Fprintf(buf, "     #- %s\n", r.DetailedMessage)
+		}
 		fmt.Fprintln(buf)
 	}
 	buf.Flush()
@@ -223,8 +226,9 @@ func (p *Stdout) JUnit(rl *result.ResultList, w io.Writer) {
 				Errors:    []JUnitError{},
 			}
 
-			for _, b := range rl.GetBreachesByCheckName(plc) {
-				tc.Errors = append(tc.Errors, JUnitError{Message: b.String()})
+			results := rl.GetResultsByCheckName(plc)
+			for idx, b := range rl.GetBreachesByCheckName(plc) {
+				tc.Errors = append(tc.Errors, JUnitError{Message: b.String(), DetailedMessage: results[idx].DetailedMessage})
 			}
 			ts.TestCases = append(ts.TestCases, tc)
 		}

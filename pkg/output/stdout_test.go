@@ -164,7 +164,8 @@ func TestPrettyDisplay(t *testing.T) {
 			name: "someBreachesRemediated",
 			rl: result.ResultList{
 				Results: []result.Result{{
-					Name: "a",
+					Name:            "a",
+					DetailedMessage: "Custom message for a",
 					Breaches: []breach.Breach{
 						&breach.ValueBreach{
 							Value: "Fail a",
@@ -189,13 +190,14 @@ func TestPrettyDisplay(t *testing.T) {
 				"fixed as they are either not supported yet or there were errors " +
 				"when trying to remediate.\n\n" +
 				"# Remediations\n\n  ### a\n     -- fixed 1\n\n" +
-				"# Non-remediated breaches\n\n  ### a\n     -- Fail b\n\n",
+				"# Non-remediated breaches\n\n  ### a\n     -- Fail b\n     #- Custom message for a\n\n",
 		},
 		{
 			name: "noBreachRemediated",
 			rl: result.ResultList{
 				Results: []result.Result{{
-					Name: "a",
+					Name:            "a",
+					DetailedMessage: "Custom message for a",
 					Breaches: []breach.Breach{
 						&breach.ValueBreach{
 							RemediationResult: remediation.RemediationResult{
@@ -211,7 +213,7 @@ func TestPrettyDisplay(t *testing.T) {
 			expected: "Breaches were detected but none of them could be " +
 				"fixed as there were errors when trying to remediate.\n\n" +
 				"# Non-remediated breaches\n\n" +
-				"  ### a\n     -- \n\n",
+				"  ### a\n     -- \n     #- Custom message for a\n\n",
 		},
 	}
 
@@ -327,6 +329,7 @@ func TestJUnit(t *testing.T) {
 						Breaches: []breach.Breach{
 							&breach.ValueBreach{Value: "check1 failed"},
 						},
+						DetailedMessage: "Custom message for regex:not-match check1 failed",
 					},
 					{
 						Name:      "check2",
@@ -343,7 +346,7 @@ func TestJUnit(t *testing.T) {
 <testsuites tests="3" errors="2">
     <testsuite name="regex:not-match" tests="3" errors="2">
         <testcase name="check1" classname="regex:not-match">
-            <error message="check1 failed"></error>
+            <error message="check1 failed">Custom message for regex:not-match check1 failed</error>
         </testcase>
         <testcase name="check2" classname="regex:not-match">
             <error message="check2 failed"></error>
