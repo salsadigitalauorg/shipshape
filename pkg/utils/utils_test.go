@@ -176,6 +176,37 @@ func TestFindFiles(t *testing.T) {
 			"testdata/findfiles/user.role.editor.yml",
 		}, files)
 	})
+
+	t.Run("skipDirNested1", func(t *testing.T) {
+		files, err := FindFiles("testdata/nested", ".*.sql", "", []string{})
+		assert.NoError(err)
+		assert.ElementsMatch([]string{
+			"testdata/nested/nested-01/nested-02/skipped/db.sql",
+			"testdata/nested/skipped/dump.sql",
+		}, files)
+	})
+	t.Run("skipDirNested2", func(t *testing.T) {
+		files, err := FindFiles("testdata/nested", ".*.sql", "", []string{
+			"skipped"})
+		assert.NoError(err)
+		assert.ElementsMatch([]string{
+			"testdata/nested/nested-01/nested-02/skipped/db.sql",
+		}, files)
+	})
+	t.Run("skipDirNested3", func(t *testing.T) {
+		files, err := FindFiles("testdata/nested", ".*.sql", "", []string{
+			"skipped", "nested-01/nested-02/skipped"})
+		assert.NoError(err)
+		assert.ElementsMatch([]string{}, files)
+	})
+	t.Run("skipDirNested4", func(t *testing.T) {
+		files, err := FindFiles("testdata/nested", ".*.sql", "", []string{
+			"skipped", "nested-02/skipped"})
+		assert.NoError(err)
+		assert.ElementsMatch([]string{
+			"testdata/nested/nested-01/nested-02/skipped/db.sql",
+		}, files)
+	})
 }
 
 func TestMergeBoolPtrs(t *testing.T) {
