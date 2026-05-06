@@ -8,7 +8,7 @@ collect:
       path: web/sites/default/files
       pattern: '.*\.(sql|php|sh|py|bz2|gz|tar|tgz|zip)?$'
       exclude-pattern: '.*\.(css|js)\.gz?$'
-      skip-dir:
+      skip-dirs:
         - private
 
 analyse:
