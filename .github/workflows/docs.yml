@@ -8,7 +8,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  gh-pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: vuepress-deploy
+        uses: jenkey2011/vuepress-deploy@master
+        env:
+          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_SCRIPT: cd docs && npm install && npm run build
+          BUILD_DIR: src/.vuepress/dist/main
+
+  quantcdn:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
