@@ -29,6 +29,15 @@ Or add to your docker image:
 COPY --from=ghcr.io/salsadigitalauorg/shipshape:latest /usr/local/bin/shipshape /usr/local/bin/shipshape
 ```
 
+::: tip Which config format?
+Shipshape supports two configuration formats. The **1.x pipeline** (`collect` /
+`analyse` / `output`) is the recommended format and is used in production. The
+**0.x `checks:` format** is fully supported and continues to run without changes.
+
+See [Config versions](versions.md) for a full comparison and a guide on which
+to use.
+:::
+
 ## Usage
 
 The basic layout of the config file is as follows:
