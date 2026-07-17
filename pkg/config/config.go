@@ -69,13 +69,11 @@ func FetchConfigData(files []string) ([][]byte, error) {
 }
 
 func ParseConfigData(configData [][]byte) (bool, Config, ConfigV2, error) {
-	cfgV2 := ConfigV2{}
-	data := configData[0]
-	if err := yaml.Unmarshal(data, &cfgV2); err != nil {
-		log.WithError(err).Debug("config not v2-compatible")
+	isV2, cfgV2, err := parseConfigDataV2(configData)
+	if err != nil {
+		return false, Config{}, ConfigV2{}, err
 	}
-
-	if len(cfgV2.Collect) > 0 {
+	if isV2 {
 		log.WithField("fact plugins", len(cfgV2.Collect)).
 			WithField("analyse plugins", len(cfgV2.Analyse)).
 			Debug("v2-config parsed")
@@ -106,6 +104,72 @@ func ParseConfigData(configData [][]byte) (bool, Config, ConfigV2, error) {
 		}
 	}
 	return false, finalCfg, ConfigV2{}, nil
+}
+
+// v2ConfigKeys are the recognised top-level sections of a v2 config.
+var v2ConfigKeys = []string{"connections", "collect", "analyse", "output"}
+
+// parseConfigDataV2 decodes each config file into a raw map, deep-merges them
+// in file order (the first file is the base, each subsequent file overlays it),
+// and types the merged result into a ConfigV2.
+//
+// The run is treated as v2 when any file declares a non-empty collect section.
+// When the run is v2, every file must contain at least one recognised v2
+// section; a file that does not is reported as an error rather than silently
+// discarded. When no file is v2, it returns isV2=false so the caller falls
+// through to the v1 parsing path.
+func parseConfigDataV2(configData [][]byte) (bool, ConfigV2, error) {
+	merged := map[string]interface{}{}
+	anyV2 := false
+	rawFiles := make([]map[string]interface{}, 0, len(configData))
+
+	for _, data := range configData {
+		raw := map[string]interface{}{}
+		if err := yaml.Unmarshal(data, &raw); err != nil {
+			log.WithError(err).Debug("config not v2-compatible")
+			rawFiles = append(rawFiles, nil)
+			continue
+		}
+		rawFiles = append(rawFiles, raw)
+		if collect, ok := raw["collect"].(map[string]interface{}); ok && len(collect) > 0 {
+			anyV2 = true
+		}
+	}
+
+	if !anyV2 {
+		return false, ConfigV2{}, nil
+	}
+
+	for i, raw := range rawFiles {
+		if !hasAnyV2Key(raw) {
+			return false, ConfigV2{}, fmt.Errorf(
+				"config file %d is not v2-compatible but was provided alongside a v2 config; "+
+					"mixing v1 and v2 config files is not supported", i+1)
+		}
+		merged = deepMerge(merged, raw, "", fmt.Sprintf("file %d", i+1))
+	}
+
+	mergedData, err := yaml.Marshal(merged)
+	if err != nil {
+		return false, ConfigV2{}, fmt.Errorf("could not re-marshal merged config: %w", err)
+	}
+
+	cfgV2 := ConfigV2{}
+	if err := yaml.Unmarshal(mergedData, &cfgV2); err != nil {
+		return false, ConfigV2{}, fmt.Errorf("could not parse merged v2 config: %w", err)
+	}
+
+	return true, cfgV2, nil
+}
+
+// hasAnyV2Key reports whether raw contains at least one recognised v2 section.
+func hasAnyV2Key(raw map[string]interface{}) bool {
+	for _, k := range v2ConfigKeys {
+		if _, ok := raw[k]; ok {
+			return true
+		}
+	}
+	return false
 }
 
 func (cm *CheckMap) UnmarshalYAML(value *yaml.Node) error {

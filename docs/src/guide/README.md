@@ -143,6 +143,61 @@ Global Flags:
   -v, --verbose            Display verbose output - equivalent to --log-level info
 ```
 
+### Merging multiple config files
+
+You can pass more than one config file and Shipshape will merge them into a
+single configuration before running:
+
+```sh
+shipshape run -f base.yml -f overrides.yml .
+```
+
+Files are merged in the order given on the command line — the first file is the
+base, and each subsequent file is layered on top. Merging follows these rules:
+
+- **Maps are merged recursively.** A later file can set or override an
+  individual field of a plugin instance without repeating the whole block.
+- **Later files win.** When the same scalar value is defined in more than one
+  file, the value from the last file on the command line is used.
+- **Lists are replaced, not combined.** When a later file defines a list value
+  (for example `skip-dir` or `exclude-pattern`), it wholly replaces the earlier
+  list rather than appending to it.
+
+Every override is logged at `warn` level with the config key that was changed,
+so you can audit what a later file altered.
+
+Merging applies to v2 config only. All files in a single run must be v2 config;
+mixing v1 (`checks:`) and v2 (`collect:`) config files in one invocation is not
+supported and will return an error.
+
+#### Example
+
+`base.yml`:
+```yaml
+collect:
+  sensitive-files:
+    file:lookup:
+      path: web/sites/default/files
+      pattern: '.*\.(sql|php)?$'
+      skip-dir:
+        - private
+```
+
+`overrides.yml` — narrows the path and replaces the skip list, leaving the
+pattern untouched:
+```yaml
+collect:
+  sensitive-files:
+    file:lookup:
+      path: web/sites/default/files/public
+      skip-dir:
+        - tmp
+```
+
+The merged result keeps `pattern` from `base.yml`, takes `path` from
+`overrides.yml`, and uses the `skip-dir` list from `overrides.yml`
+(`[tmp]`, not `[private, tmp]`).
+
 ## Next steps
 
   - [Connections](connections)

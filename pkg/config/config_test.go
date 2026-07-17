@@ -375,3 +375,109 @@ func TestFilterChecksToRun(t *testing.T) {
 		}, cfg)
 	})
 }
+
+func TestParseConfigDataV2(t *testing.T) {
+	t.Run("singleFileUnchanged", func(t *testing.T) {
+		assert := assert.New(t)
+		data := [][]byte{[]byte(`
+collect:
+  file1:
+    file:lookup:
+      path: /tmp
+`)}
+		isV2, _, cfgV2, err := ParseConfigData(data)
+		assert.NoError(err)
+		assert.True(isV2)
+		assert.Contains(cfgV2.Collect, "file1")
+	})
+
+	t.Run("twoDisjointV2FilesUnion", func(t *testing.T) {
+		assert := assert.New(t)
+		base := []byte(`
+collect:
+  file1:
+    file:lookup:
+      path: /tmp
+analyse:
+  a1:
+    equals:
+      input: file1
+`)
+		overlay := []byte(`
+collect:
+  file2:
+    file:lookup:
+      path: /var
+output:
+  stdout:
+    format: pretty
+`)
+		isV2, _, cfgV2, err := ParseConfigData([][]byte{base, overlay})
+		assert.NoError(err)
+		assert.True(isV2)
+		assert.Contains(cfgV2.Collect, "file1")
+		assert.Contains(cfgV2.Collect, "file2")
+		assert.Contains(cfgV2.Analyse, "a1")
+		assert.Contains(cfgV2.Output, "stdout")
+	})
+
+	t.Run("sharedInstanceFieldOverride", func(t *testing.T) {
+		assert := assert.New(t)
+		base := []byte(`
+collect:
+  file1:
+    file:lookup:
+      path: /tmp
+      recursive: true
+`)
+		overlay := []byte(`
+collect:
+  file1:
+    file:lookup:
+      path: /var
+`)
+		isV2, _, cfgV2, err := ParseConfigData([][]byte{base, overlay})
+		assert.NoError(err)
+		assert.True(isV2)
+		lookup := cfgV2.Collect["file1"]["file:lookup"].(map[string]interface{})
+		assert.Equal("/var", lookup["path"])
+		assert.Equal(true, lookup["recursive"])
+	})
+
+	t.Run("mixedV1V2FilesError", func(t *testing.T) {
+		assert := assert.New(t)
+		v2File := []byte(`
+collect:
+  file1:
+    file:lookup:
+      path: /tmp
+`)
+		v1File := []byte(`
+checks:
+  file:
+    - name: a file check
+`)
+		isV2, _, _, err := ParseConfigData([][]byte{v2File, v1File})
+		assert.Error(err)
+		assert.False(isV2)
+		assert.Contains(err.Error(), "mixing v1 and v2")
+	})
+
+	t.Run("noV2FallsThroughToV1", func(t *testing.T) {
+		assert := assert.New(t)
+		origRegistry := ChecksRegistry
+		ChecksRegistry = map[CheckType]func() Check{}
+		defer func() { ChecksRegistry = origRegistry }()
+		testchecks.RegisterChecks()
+
+		v1File := []byte(`
+checks:
+  test-check-1:
+    - name: a check
+`)
+		isV2, cfg, _, err := ParseConfigData([][]byte{v1File})
+		assert.NoError(err)
+		assert.False(isV2)
+		assert.Contains(cfg.Checks, testchecks.TestCheck1)
+	})
+}
