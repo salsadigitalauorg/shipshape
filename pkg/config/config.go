@@ -39,7 +39,7 @@ func ReadAndParseConfig() (bool, Config, ConfigV2, error) {
 		return false, Config{}, ConfigV2{}, err
 	}
 
-	return ParseConfigData(configData)
+	return ParseConfigData(configData, Files)
 }
 
 func FetchConfigData(files []string) ([][]byte, error) {
@@ -68,8 +68,8 @@ func FetchConfigData(files []string) ([][]byte, error) {
 	return configData, nil
 }
 
-func ParseConfigData(configData [][]byte) (bool, Config, ConfigV2, error) {
-	isV2, cfgV2, err := parseConfigDataV2(configData)
+func ParseConfigData(configData [][]byte, sources []string) (bool, Config, ConfigV2, error) {
+	isV2, cfgV2, err := parseConfigDataV2(configData, sources)
 	if err != nil {
 		return false, Config{}, ConfigV2{}, err
 	}
@@ -118,19 +118,29 @@ var v2ConfigKeys = []string{"connections", "collect", "analyse", "output"}
 // section; a file that does not is reported as an error rather than silently
 // discarded. When no file is v2, it returns isV2=false so the caller falls
 // through to the v1 parsing path.
-func parseConfigDataV2(configData [][]byte) (bool, ConfigV2, error) {
+func parseConfigDataV2(configData [][]byte, sources []string) (bool, ConfigV2, error) {
+	if len(sources) != len(configData) {
+		sources = make([]string, len(configData))
+		for i := range configData {
+			sources[i] = fmt.Sprintf("file %d", i+1)
+		}
+	}
+
 	merged := map[string]interface{}{}
 	anyV2 := false
 	rawFiles := make([]map[string]interface{}, 0, len(configData))
+	parseErrs := make([]error, 0, len(configData))
 
 	for _, data := range configData {
 		raw := map[string]interface{}{}
 		if err := yaml.Unmarshal(data, &raw); err != nil {
 			log.WithError(err).Debug("config not v2-compatible")
 			rawFiles = append(rawFiles, nil)
+			parseErrs = append(parseErrs, err)
 			continue
 		}
 		rawFiles = append(rawFiles, raw)
+		parseErrs = append(parseErrs, nil)
 		if collect, ok := raw["collect"].(map[string]interface{}); ok && len(collect) > 0 {
 			anyV2 = true
 		}
@@ -141,12 +151,16 @@ func parseConfigDataV2(configData [][]byte) (bool, ConfigV2, error) {
 	}
 
 	for i, raw := range rawFiles {
+		if parseErrs[i] != nil {
+			return false, ConfigV2{}, fmt.Errorf(
+				"config file %q could not be parsed as YAML: %w", sources[i], parseErrs[i])
+		}
 		if !hasAnyV2Key(raw) {
 			return false, ConfigV2{}, fmt.Errorf(
-				"config file %d is not v2-compatible but was provided alongside a v2 config; "+
-					"mixing v1 and v2 config files is not supported", i+1)
+				"config file %q is not v2-compatible but was provided alongside"+
+					" a v2 config; mixing v1 and v2 config files is not supported", sources[i])
 		}
-		merged = deepMerge(merged, raw, "", fmt.Sprintf("file %d", i+1))
+		merged = deepMerge(merged, raw, "", sources[i])
 	}
 
 	mergedData, err := yaml.Marshal(merged)
