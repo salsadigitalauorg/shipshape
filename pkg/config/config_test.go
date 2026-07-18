@@ -15,7 +15,17 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func withCleanRegistry(t *testing.T) {
+	t.Helper()
+	orig := make(map[CheckType]func() Check, len(ChecksRegistry))
+	for k, v := range ChecksRegistry {
+		orig[k] = v
+	}
+	t.Cleanup(func() { ChecksRegistry = orig })
+}
+
 func TestReadAndParseConfig(t *testing.T) {
+	withCleanRegistry(t)
 	assert := assert.New(t)
 
 	currLogOut := logrus.StandardLogger().Out
@@ -37,6 +47,7 @@ func TestReadAndParseConfig(t *testing.T) {
 }
 
 func TestParseConfigData(t *testing.T) {
+	withCleanRegistry(t)
 	assert := assert.New(t)
 
 	currLogOut := logrus.StandardLogger().Out
@@ -95,6 +106,7 @@ checks:
 }
 
 func TestCheckMapUnmarshalYaml(t *testing.T) {
+	withCleanRegistry(t)
 	assert := assert.New(t)
 
 	t.Run("valid", func(t *testing.T) {
@@ -147,6 +159,7 @@ test-check-1:
 	})
 
 	t.Run("invalidYamlLookup", func(t *testing.T) {
+		withCleanRegistry(t)
 		var cm CheckMap
 		testchecks_invalid.RegisterChecks()
 		configBytes := []byte(`
@@ -159,6 +172,7 @@ foo:
 }
 
 func TestMerge(t *testing.T) {
+	withCleanRegistry(t)
 	assert := assert.New(t)
 
 	testchecks.RegisterChecks()
@@ -307,6 +321,7 @@ func TestMerge(t *testing.T) {
 }
 
 func TestFilterChecksToRun(t *testing.T) {
+	withCleanRegistry(t)
 	assert := assert.New(t)
 
 	t.Run("filterByCheckTypes", func(t *testing.T) {
@@ -377,6 +392,7 @@ func TestFilterChecksToRun(t *testing.T) {
 }
 
 func TestParseConfigDataV2(t *testing.T) {
+	withCleanRegistry(t)
 	t.Run("singleFileUnchanged", func(t *testing.T) {
 		assert := assert.New(t)
 		data := [][]byte{[]byte(`
@@ -527,10 +543,9 @@ checks:
 	})
 
 	t.Run("noV2FallsThroughToV1", func(t *testing.T) {
+		withCleanRegistry(t)
 		assert := assert.New(t)
-		origRegistry := ChecksRegistry
 		ChecksRegistry = map[CheckType]func() Check{}
-		defer func() { ChecksRegistry = origRegistry }()
 		testchecks.RegisterChecks()
 
 		v1File := []byte(`
