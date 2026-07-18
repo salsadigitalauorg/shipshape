@@ -49,7 +49,7 @@ func TestParseConfigData(t *testing.T) {
 checks:
   test-check-1: foo
 `
-		_, _, _, err := ParseConfigData([][]byte{[]byte(invalidData)})
+		_, _, _, err := ParseConfigData([][]byte{[]byte(invalidData)}, nil)
 		assert.EqualError(err, "list required under check type 'test-check-1', got !!str instead")
 
 	})
@@ -67,7 +67,7 @@ checks:
     - name: My second test check 2
       bar: zap
 `
-		_, cfg, _, err := ParseConfigData([][]byte{[]byte(data)})
+		_, cfg, _, err := ParseConfigData([][]byte{[]byte(data)}, nil)
 		assert.NoError(err)
 
 		if !assert.Len(cfg.Checks[testchecks.TestCheck1], 1) {
@@ -385,7 +385,7 @@ collect:
     file:lookup:
       path: /tmp
 `)}
-		isV2, _, cfgV2, err := ParseConfigData(data)
+		isV2, _, cfgV2, err := ParseConfigData(data, nil)
 		assert.NoError(err)
 		assert.True(isV2)
 		assert.Contains(cfgV2.Collect, "file1")
@@ -412,7 +412,7 @@ output:
   stdout:
     format: pretty
 `)
-		isV2, _, cfgV2, err := ParseConfigData([][]byte{base, overlay})
+		isV2, _, cfgV2, err := ParseConfigData([][]byte{base, overlay}, nil)
 		assert.NoError(err)
 		assert.True(isV2)
 		assert.Contains(cfgV2.Collect, "file1")
@@ -436,7 +436,7 @@ collect:
     file:lookup:
       path: /var
 `)
-		isV2, _, cfgV2, err := ParseConfigData([][]byte{base, overlay})
+		isV2, _, cfgV2, err := ParseConfigData([][]byte{base, overlay}, nil)
 		assert.NoError(err)
 		assert.True(isV2)
 		lookup := cfgV2.Collect["file1"]["file:lookup"].(map[string]interface{})
@@ -457,9 +457,72 @@ checks:
   file:
     - name: a file check
 `)
-		isV2, _, _, err := ParseConfigData([][]byte{v2File, v1File})
+		isV2, _, _, err := ParseConfigData([][]byte{v2File, v1File}, nil)
 		assert.Error(err)
 		assert.False(isV2)
+		assert.Contains(err.Error(), "mixing v1 and v2")
+	})
+
+	t.Run("malformedOverlayReportsParseError", func(t *testing.T) {
+		assert := assert.New(t)
+		base := []byte(`
+collect:
+  file1:
+    file:lookup:
+      path: /tmp
+`)
+		malformed := []byte(":\n  - [unbalanced")
+		_, _, _, err := ParseConfigData([][]byte{base, malformed}, nil)
+		assert.Error(err)
+		assert.Contains(err.Error(), "could not be parsed as YAML")
+		assert.NotContains(err.Error(), "mixing v1 and v2")
+	})
+
+	t.Run("malformedOverlayNamesFileByIndex", func(t *testing.T) {
+		assert := assert.New(t)
+		base := []byte(`
+collect:
+  file1:
+    file:lookup:
+      path: /tmp
+`)
+		malformed := []byte(":\n  - [unbalanced")
+		_, _, _, err := ParseConfigData([][]byte{base, malformed}, nil)
+		assert.Error(err)
+		assert.Contains(err.Error(), "file 2")
+	})
+
+	t.Run("malformedOverlayNamesFileBySource", func(t *testing.T) {
+		assert := assert.New(t)
+		base := []byte(`
+collect:
+  file1:
+    file:lookup:
+      path: /tmp
+`)
+		malformed := []byte(":\n  - [unbalanced")
+		sources := []string{"/etc/shipshape/base.yml", "/etc/shipshape/overlay.yml"}
+		_, _, _, err := ParseConfigData([][]byte{base, malformed}, sources)
+		assert.Error(err)
+		assert.Contains(err.Error(), "/etc/shipshape/overlay.yml")
+		assert.NotContains(err.Error(), "file 2")
+	})
+
+	t.Run("mixedV1V2StillReportsMixError", func(t *testing.T) {
+		assert := assert.New(t)
+		v2File := []byte(`
+collect:
+  file1:
+    file:lookup:
+      path: /tmp
+`)
+		v1File := []byte(`
+checks:
+  test-check-1:
+    - name: a file check
+`)
+		_, _, _, err := ParseConfigData([][]byte{v2File, v1File}, nil)
+		assert.Error(err)
 		assert.Contains(err.Error(), "mixing v1 and v2")
 	})
 
@@ -475,7 +538,7 @@ checks:
   test-check-1:
     - name: a check
 `)
-		isV2, cfg, _, err := ParseConfigData([][]byte{v1File})
+		isV2, cfg, _, err := ParseConfigData([][]byte{v1File}, nil)
 		assert.NoError(err)
 		assert.False(isV2)
 		assert.Contains(cfg.Checks, testchecks.TestCheck1)
