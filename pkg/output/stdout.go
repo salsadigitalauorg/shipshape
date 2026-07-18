@@ -7,6 +7,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"text/tabwriter"
 
@@ -210,7 +211,16 @@ func (p *Stdout) JUnit(rl *result.ResultList, w io.Writer) {
 	}
 
 	// Create a JUnitTestSuite for each CheckType.
-	for pplugin, policies := range rl.Policies {
+	// Sort the plugin keys so the output ordering is deterministic,
+	// independent of Go's randomised map iteration order.
+	pplugins := make([]string, 0, len(rl.Policies))
+	for pplugin := range rl.Policies {
+		pplugins = append(pplugins, pplugin)
+	}
+	sort.Strings(pplugins)
+
+	for _, pplugin := range pplugins {
+		policies := rl.Policies[pplugin]
 		ts := JUnitTestSuite{
 			Name:      pplugin,
 			Tests:     rl.CheckCountByType[pplugin],
