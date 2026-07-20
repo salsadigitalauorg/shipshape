@@ -15,5 +15,13 @@
   "license": "MIT",
   "devDependencies": {
     "vuepress": "^1.9.10"
+  },
+  "allowScripts": {
+    "core-js@3.49.0": true,
+    "esbuild@0.14.7": true,
+    "fsevents@1.2.13": true,
+    "highlight.js@9.18.5": true,
+    "vuepress@1.9.10": true,
+    "fsevents@2.3.3": true
   }
 }
