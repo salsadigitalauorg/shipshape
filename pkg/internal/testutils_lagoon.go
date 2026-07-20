@@ -35,6 +35,7 @@ func MockLagoonReset() {
 }
 
 type MockInsightsRemoteTestState struct {
+	LastCallMethod   string
 	LastCallBody     string
 	LastCallHeaders  map[string]string
 	LastCallEndpoint string
@@ -44,6 +45,7 @@ type MockInsightsRemoteTestState struct {
 func MockRemoteInsightsServer(state *MockInsightsRemoteTestState) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		state.LastCallEndpoint = r.RequestURI
+		state.LastCallMethod = r.Method
 		requestBody, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(500)

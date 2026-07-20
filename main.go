@@ -82,16 +82,6 @@ func main() {
 
 	determineLogLevel()
 
-	// simple check to ensure we have everything we need to write to the API if required.
-	if lagoon.PushProblemsToInsightRemote {
-		if lagoonApiBaseUrl == "" {
-			log.Fatal("lagoon api base url not provided")
-		}
-		if lagoonApiToken == "" {
-			log.Fatal("lagoon api token not provided")
-		}
-	}
-
 	for _, f := range checksFiles {
 		if !utils.StringIsUrl(f) {
 			if _, err := os.Stat(f); os.IsNotExist(err) {
@@ -111,9 +101,7 @@ func main() {
 		checkTypesToRun,
 		excludeDb,
 		remediate,
-		logLevel,
-		lagoonApiBaseUrl,
-		lagoonApiToken)
+		logLevel)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -186,7 +174,6 @@ func parseFlags() {
 	pflag.BoolVarP(&debug, "debug", "d", false, "Display debug information - equivalent to --log-level debug")
 	pflag.BoolVarP(&excludeDb, "exclude-db", "x", false, "Exclude checks requiring a database; overrides any db checks specified by '--types'")
 	pflag.BoolVarP(&remediate, "remediate", "r", false, "Run remediation for supported checks")
-	pflag.StringVar(&lagoonApiBaseUrl, "lagoon-api-base-url", "", "Base url for the Lagoon API when pushing problems to API (env: LAGOON_API_BASE_URL)")
 	pflag.StringVar(&lagoonApiToken, "lagoon-api-token", "", "Lagoon API token when pushing problems to API (env: LAGOON_API_TOKEN)")
 	pflag.BoolVar(&lagoon.PushProblemsToInsightRemote, "lagoon-push-problems-to-insights", false, "Push audit facts to Lagoon via Insights Remote")
 	pflag.StringVar(&lagoon.LagoonInsightsRemoteEndpoint, "lagoon-insights-remote-endpoint", "http://lagoon-remote-insights-remote.lagoon.svc/problems", "Insights Remote Problems endpoint")
