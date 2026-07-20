@@ -21,7 +21,7 @@ module.exports = {
     ['meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black' }]
   ],
 
-  base: "/1.x/",
+  base: "/shipshape/",
 
   dest: "src/.vuepress/dist/1.x",
 
@@ -44,15 +44,6 @@ module.exports = {
       {
         text: 'Reference',
         link: '/reference/',
-      },
-      {
-        text: '1.x',
-        items: [
-          {
-            text: 'main',
-            link: 'https://salsadigitalauorg.github.io/shipshape/',
-          },
-        ],
       },
       {
         text: 'GitHub',
