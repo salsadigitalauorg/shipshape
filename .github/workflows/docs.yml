@@ -20,7 +20,7 @@ jobs:
         env:
           ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUILD_SCRIPT: cd docs && npm install && npm run build
-          BUILD_DIR: src/.vuepress/dist/main
+          BUILD_DIR: src/.vuepress/dist/1.x
 
   quantcdn:
     runs-on: ubuntu-latest
