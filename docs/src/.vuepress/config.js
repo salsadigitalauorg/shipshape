@@ -71,6 +71,10 @@ module.exports = {
             'analyse',
             'remediate',
             'outputs',
+            'versions',
+            '0.x',
+            'gaps',
+            'roadmap',
           ]
         }
       ],
@@ -123,6 +127,31 @@ module.exports = {
               collapsable: false,
               children: [
                 ['/reference/remediate/command', 'command'],
+              ]
+            },
+            {
+              title: 'Checks (0.x)',
+              path: '/reference/checks',
+              collapsable: false,
+              children: [
+                ['/reference/checks/file', 'file'],
+                ['/reference/checks/file-diff', 'file:diff'],
+                ['/reference/checks/yaml', 'yaml'],
+                ['/reference/checks/json', 'json'],
+                ['/reference/checks/drupal-drush-yaml', 'drush-yaml'],
+                ['/reference/checks/drupal-file-module', 'drupal-file-module'],
+                ['/reference/checks/drupal-db-module', 'drupal-db-module'],
+                ['/reference/checks/drupal-admin-user', 'drupal-admin-user'],
+                ['/reference/checks/drupal-db-permissions', 'drupal-db-permissions'],
+                ['/reference/checks/drupal-db-user-tfa', 'drupal-db-user-tfa'],
+                ['/reference/checks/drupal-user-forbidden', 'drupal-user-forbidden'],
+                ['/reference/checks/drupal-role-permissions', 'drupal-role-permissions'],
+                ['/reference/checks/drupal-user-role', 'drupal-user-role'],
+                ['/reference/checks/drupal-tracking-code', 'drupal-tracking-code'],
+                ['/reference/checks/phpstan', 'phpstan'],
+                ['/reference/checks/sca-application-type', 'sca:application_type'],
+                ['/reference/checks/docker-base-image', 'docker:base_image'],
+                ['/reference/checks/crawler', 'crawler'],
               ]
             },
           ]

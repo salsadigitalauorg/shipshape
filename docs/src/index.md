@@ -10,3 +10,5 @@ features:
   details: Choose between simple (for humans), json, junit or table, according to your needs
 footer: Made by Salsa Digital with ❤️
 ---
+
+Shipshape supports two configuration formats — the 1.x pipeline (`collect` / `analyse` / `output`) and the legacy 0.x `checks:` format. The same binary runs both. See [Config versions](guide/versions.md).
