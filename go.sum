@@ -10,8 +10,9 @@ github.com/antchfx/htmlquery v1.2.5 h1:1lXnx46/1wtv1E/kzmH8vrfMuUKYgkdDBA9pIdMJn
 github.com/antchfx/htmlquery v1.2.5/go.mod h1:2MCVBzYVafPBmKbrmwB9F5xdd+IEgRY61ci2oOsOQVw=
 github.com/antchfx/xmlquery v1.3.11 h1:8aRK7l3+dJjL8ZmwgVzG5AXysrP7Mss2424tfntKWKY=
 github.com/antchfx/xmlquery v1.3.11/go.mod h1:ywPcYkN0GvURUxXpUujaMVvuLSOYQBzoSfHKfAYezCE=
-github.com/antchfx/xpath v1.2.1 h1:qhp4EW6aCOVr5XIkT+l6LJ9ck/JsUH/yyauNgTQkBF8=
 github.com/antchfx/xpath v1.2.1/go.mod h1:i54GszH55fYfBmoZXapTHN8T8tkcHfRgLyVwwqzXNcs=
+github.com/antchfx/xpath v1.3.6 h1:s0y+ElRRtTQdfHP609qFu0+c6bglDv20pqOViQjjdPI=
+github.com/antchfx/xpath v1.3.6/go.mod h1:i54GszH55fYfBmoZXapTHN8T8tkcHfRgLyVwwqzXNcs=
 github.com/containerd/typeurl/v2 v2.1.1 h1:3Q4Pt7i8nYwy2KmQWIw2+1hTvwTE/6w9FqcttATPO/4=
 github.com/containerd/typeurl/v2 v2.1.1/go.mod h1:IDp2JFvbwZ31H8dQbEIY7sDl2L3o3HZj1hsSQlywkQ0=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
