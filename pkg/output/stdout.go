@@ -236,9 +236,15 @@ func (p *Stdout) JUnit(rl *result.ResultList, w io.Writer) {
 				Errors:    []JUnitError{},
 			}
 
-			results := rl.GetResultsByCheckName(plc)
-			for idx, b := range rl.GetBreachesByCheckName(plc) {
-				tc.Errors = append(tc.Errors, JUnitError{Message: b.String(), DetailedMessage: results[idx].DetailedMessage})
+			// Pair each breach with the DetailedMessage of the result that
+			// owns it. Ranging the flattened breach list against a positional
+			// results index panics when a single check emits more than one
+			// breach, and mis-attributes messages when a name maps to several
+			// results.
+			for _, r := range rl.GetResultsByCheckName(plc) {
+				for _, b := range r.Breaches {
+					tc.Errors = append(tc.Errors, JUnitError{Message: b.String(), DetailedMessage: r.DetailedMessage})
+				}
 			}
 			ts.TestCases = append(ts.TestCases, tc)
 		}
