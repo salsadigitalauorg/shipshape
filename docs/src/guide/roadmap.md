@@ -69,6 +69,18 @@ for each is **to be determined (TBD)**.
 
 These are deferred with no committed timeline.
 
+## Known plugin limitations to investigate
+
+These are defects and gaps found while validating the bundled examples against
+1.x. They are tracked here so the affected examples can be simplified or
+completed once the underlying plugin work lands.
+
+| Area | Symptom | Direction |
+|---|---|---|
+| `examples/docker.yml` — `base-images` | `docker:images` with `additional-inputs: [buildargs]` fails at collect with `inputFormat required for 'yaml:key'`. | Investigate whether the example needs an explicit `input-format` on the additional input, or whether `docker:images` additional-input handling regressed. The `base-images` block is currently commented/omitted from a runnable path. |
+| `yaml:key` — empty sequence | A role/config file with an empty YAML list (e.g. `permissions: []`) panics in `YamlLookup.ProcessNodes` (index out of range). | Guard the `SequenceNode` case against empty `Content`. |
+| `allowed:list` — multi-file input | `yaml:key` output over a `file:lookup` (map of file → list) produces `map-nested-string` when any file has an empty map, which `allowed:list` does not support; when all files have lists, `allowed:list`'s `map-list-string` branch panics in `AsMapListString` (the fact data is `map[string]interface{}`, not `map[string][]string`). | Make `allowed:list` accept the actual multi-file `yaml:key` data shape (and `map-nested-string`), so a "disallowed permission across all roles" assertion can be expressed without per-role single-file reads. This is why `examples/drupal-config.yml` asserts permissions per-role rather than across all roles at once. |
+
 ## How to contribute
 
 The [gaps matrix](gaps.md) is the source of truth for what remains open.

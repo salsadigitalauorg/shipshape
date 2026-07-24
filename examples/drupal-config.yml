@@ -1,54 +1,91 @@
+# Analyse exported Drupal configuration (the config/default directory).
+#
+# This example reads exported config YAML and asserts on the install profile,
+# admin roles, and a specific role's permissions. Run it from a directory that
+# contains a `config/default` directory, e.g.:
+#
+#   cd examples/testdata && shipshape run . -f ../drupal-config.yml
+#
+# The examples/testdata/config/default fixture is provided so this runs
+# out of the box.
+#
+# NOTE on scope: asserting a *disallowed permission across all roles at once*
+# (the old `map-list-contain` over a multi-file lookup) is not currently
+# reproducible - `yaml:key`'s multi-file output is not consumable by
+# `allowed:list` (see "Known plugin limitations to investigate" in roadmap.md).
+# Until that is addressed, assert per-role with a single-file read as shown for
+# the anonymous role below.
+
 collect:
+  # Read core.extension.yml, then extract the install profile (a scalar).
+  # `yaml:key` needs an input fact, so read the file first with `file:read`.
+  core-extension:
+    file:read:
+      path: config/default/core.extension.yml
   install-profile:
     yaml:key:
-      file: config/default/core.extension.yml
+      input: core-extension
       path: profile
+
+  # All exported role config files. `file-names-only: false` returns the file
+  # CONTENTS (a map keyed by filename), which `yaml:key` can then index into;
+  # the default (names only) would return just the paths.
   config-files-roles:
     file:lookup:
       path: config/default
       pattern: user.role.*.yml
+      file-names-only: false
+
+  # is_admin flag for each role -> map of {filename: "true"|"false"}.
   role-is-admin:
     yaml:key:
       input: config-files-roles
       path: is_admin
-  role-permissions:
+
+  # The anonymous role's permissions, read from a single file so the
+  # anonymous-only assertion below can target it directly.
+  anonymous-role-file:
+    file:read:
+      path: config/default/user.role.anonymous.yml
+  anonymous-role-permissions:
     yaml:key:
-      input: config-files-roles
+      input: anonymous-role-file
       path: permissions
 
 analyse:
+  # Breach if the install profile is anything other than govcms.
   wrong-install-profile:
-    not-equal:
+    not:equals:
       description: Wrong install profile found
       input: install-profile
       value: govcms
+
+  # Breach if any role carries the is_admin (super admin) flag. The input is a
+  # map of {filename: "true"|"false"}; `allowed:list` flags any value in
+  # `deprecated`, so a value of "true" (quoted - the flag serialises to a
+  # string) on any role is reported.
   admin-role-found:
-    equal:
+    allowed:list:
       description: Admin role found
       input: role-is-admin
-      value: true
       severity: high
-  disallowed-permissions-found:
-    map-list-contain:
-      description: Disallowed permissions found
-      input: role-permissions
-      severity: high
-      values:
-        - administer config permissions
-        - administer modules
-        - administer permissions
-        - administer seckit
-        - administer site configuration
-        - administer software updates
-        - import configuration
-        - synchronize configuration
-        - use PHP for google analytics tracking visibility
+      # not-strict: only `deprecated` values are breaches; other values
+      # (here "false") are permitted rather than flagged as "not allowed".
+      not-strict: true
+      deprecated:
+        - "true"
+
+  # Breach if the anonymous role grants one of these disallowed permissions.
+  # The input is a single role's permission list (FormatListString).
   anonymous-role-disallowed-permissions-found:
-    map-list-contain:
+    allowed:list:
       description: Disallowed permissions found for anonymous role
-      input: role-permissions
-      key: user.role.anonymous.yml
-      values:
+      input: anonymous-role-permissions
+      severity: high
+      # not-strict: only flag the disallowed permissions below; the role's
+      # other (legitimate) permissions are not treated as breaches.
+      not-strict: true
+      deprecated:
         - 'access administration pages'
         - 'access content overview'
         - 'access site reports'
@@ -71,9 +108,3 @@ analyse:
 output:
   stdout:
     format: json
-  file:
-    path: /results.xml
-    format: junit
-  lagoon.problems:
-    api_key:
-    api_endpoint:
