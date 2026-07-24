@@ -57,7 +57,7 @@ func TestDrushExamplesInDrupalContainer(t *testing.T) {
 	net := newNetwork(t, ctx)
 
 	db, err := mysql.Run(ctx,
-		"uselagoon/mariadb-10.5-drupal",
+		"uselagoon/mariadb-10.6-drupal",
 		mysql.WithDatabase(dbName),
 		mysql.WithUsername(dbUser),
 		mysql.WithPassword(dbPass),
@@ -75,7 +75,7 @@ func TestDrushExamplesInDrupalContainer(t *testing.T) {
 
 	// 3. Install the site.
 	execInContainer(t, ctx, drupal,
-		"drush", "site:install", "--yes",
+		"drush", "site:install", "--yes", "--extra=\"--skip-ssl\"",
 		fmt.Sprintf("--db-url=mysql://%s:%s@mariadb:3306/%s", dbUser, dbPass, dbName))
 
 	// 4. Run each drush example inside the container against the installed site.
