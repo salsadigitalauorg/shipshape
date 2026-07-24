@@ -1,0 +1,42 @@
+# 0.x `drupal-user-role` equivalent.
+#
+# Reproduces the 0.x check that verified no user holds a disallowed role
+# (excluding an explicit list of allowed users). The 0.x check collected all
+# uids, then ran
+# `drush user:information --uid=<ids> --fields=roles --format=json`.
+#
+# 1.x recipe: run drush for every uid, emit the roles held by each non-exempt
+# user (one per line), then use `allowed:list` with `deprecated` to flag the
+# disallowed role.
+
+collect:
+  user-roles:
+    command:
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        # All user ids, comma-separated (drush accepts a uid list).
+        uids=$(drush sql:query "SELECT GROUP_CONCAT(uid) FROM users")
+        # Emit the roles held across all users, excluding exempt uids. The
+        # `select` reproduces the 0.x "allowed-users" exemption - here uid 1.
+        # To exempt more, e.g. uids 1 and 2:
+        #   select((.key|tonumber) as $u | ([1,2] | index($u)) | not)
+        # `// []` guards against users with no `roles` key, whose shape can
+        # vary across Drupal/drush versions.
+        drush user:information --uid="$uids" --fields=roles --format=json \
+          | jq -r 'to_entries[]
+                   | select((.key|tonumber) != 1)
+                   | (.value.roles // [])[]'
+
+analyse:
+  user-roles-check:
+    allowed:list:
+      description: A non-exempt user holds a disallowed role
+      input: user-roles
+      # Select the command's stdout; `allowed:list` splits it per line.
+      key: stdout
+      # Roles no (non-exempt) user should hold.
+      deprecated:
+        - administrator

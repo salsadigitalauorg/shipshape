@@ -1,0 +1,40 @@
+# 0.x `drupal-db-module` equivalent.
+#
+# Reproduces the 0.x check that verified required/disallowed modules in the
+# *database* config (via drush, not the exported config files). The 0.x check
+# ran `drush pm:list --status=enabled`.
+#
+# 1.x recipe: run drush to list enabled module machine names one per line, then
+# use `allowed:list` to assert the required modules are present and the
+# deprecated (disallowed) ones are not.
+#
+# Tip: to run drush inside a container instead, swap the `command` fact for a
+# `docker:command` fact with a connection - see drush-over-docker.yml.
+
+collect:
+  enabled-modules:
+    command:
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        # One module machine name per line.
+        drush pm:list --status=enabled --field=name --format=list
+
+analyse:
+  modules-check:
+    allowed:list:
+      description: Required modules missing or deprecated modules enabled
+      input: enabled-modules
+      # `command` output is a map; `key: stdout` selects the command's stdout,
+      # which `allowed:list` then splits into one entry per line.
+      key: stdout
+      # Modules that must be enabled.
+      required:
+        - shield
+        - seckit
+      # Modules that must NOT be enabled.
+      deprecated:
+        - php
+        - devel

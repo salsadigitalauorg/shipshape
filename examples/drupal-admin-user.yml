@@ -1,0 +1,35 @@
+# 0.x `drupal-admin-user` equivalent.
+#
+# Reproduces the 0.x check that verified no unexpected role carries the
+# "super admin" (`is_admin`) flag. The 0.x check read the role config via
+# `drush role:list --fields=. --format=json` and breached when a role had
+# `is_admin: true` that was not in the allowed list.
+#
+# 1.x recipe: run drush to emit the machine name of every role whose `is_admin`
+# flag is true (one per line), then use `allowed:list` with `allowed` to permit
+# only the sanctioned admin role(s).
+
+collect:
+  admin-roles:
+    command:
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        # Emit the id of each role that has the is_admin (super admin) flag set.
+        drush role:list --format=json \
+          | jq -r 'to_entries[]
+                   | select(.value.is_admin == true)
+                   | .key'
+
+analyse:
+  admin-roles-check:
+    allowed:list:
+      description: Unexpected role carries the is_admin (super admin) flag
+      input: admin-roles
+      # Select the command's stdout; `allowed:list` splits it per line.
+      key: stdout
+      # Only these roles are permitted to be super admins.
+      allowed:
+        - administrator

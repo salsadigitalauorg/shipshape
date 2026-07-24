@@ -1,0 +1,39 @@
+# 0.x `drupal-tracking-code` equivalent.
+#
+# Reproduces the 0.x check that verified an expected tracking/analytics snippet
+# is present in the site's rendered homepage. The 0.x check read the site URI
+# from `drush status`, fetched the page over HTTP, and breached when the
+# tracking code regex did NOT match the body.
+#
+# 1.x recipe: fetch the rendered page with curl (URI supplied by drush), count
+# how many times the tracking pattern appears, then use `equals` to breach when
+# the count is "0" (i.e. the tracking code is absent).
+#
+# Note on the analyser choice: `regex:match` breaches when a pattern IS found -
+# the opposite of what we want here - and it cannot read a `command` fact's
+# stdout directly. Counting matches in the shell and asserting with `equals`
+# gives us the "must be present" semantics of the 0.x check.
+
+collect:
+  tracking-code-present:
+    command:
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        # Resolve the site URI from drush, then fetch the homepage.
+        uri=$(drush status --field=uri)
+        # Count matches of the tracking snippet. Adjust the pattern to your
+        # analytics provider (this example matches a GA4 measurement ID).
+        curl -sL "$uri" | grep -c -E 'G-[A-Z0-9]{10}' || true
+
+analyse:
+  tracking-code-check:
+    equals:
+      description: Expected tracking code is missing from the homepage
+      input: tracking-code-present
+      # Select the command's stdout (the match count).
+      key: stdout
+      # `equals` breaches when stdout equals this value ("0" = not found).
+      value: "0"

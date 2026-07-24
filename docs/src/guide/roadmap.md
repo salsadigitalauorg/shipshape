@@ -32,28 +32,25 @@ The [gaps matrix](gaps.md) is the authoritative record of current status.
 
 ## Recipes to document
 
-These checks are already reproducible with existing plugins (status
-**Achievable, undocumented** on the gaps matrix). They need **no new code** —
-only a published recipe and a worked example.
+The Drush-based Drupal checks that were previously **Achievable, undocumented**
+now each have a worked example in `examples/` and are marked **Achievable now**
+on the gaps matrix:
 
-Each shares the collect → parse → assert composition pattern shown in the
-[`drupal-admin-user` recipe](gaps.md#recipe-drupal-admin-user-the-composition-pattern).
-
-| 0.x check | Recipe to publish |
+| 0.x check | Example |
 |---|---|
-| `json` | `file:read` + `yaml:key` + `equals` / `allowed:list` |
-| `drupal-db-module` | `command` + `allowed:list` |
-| `drupal-db-permissions` | `command` / `database:search` + `allowed:list` |
-| `drupal-db-user-tfa` | `command` + `equals` |
-| `drupal-admin-user` | `command` + `yaml:key` + `allowed:list` |
-| `drupal-user-forbidden` | `command` + `not:empty` / `equals` |
-| `drupal-role-permissions` | `command` + `allowed:list` |
-| `drupal-user-role` | `command` + `allowed:list` |
-| `drupal-tracking-code` | `command` + `regex:match` / `not:empty` |
+| `drupal-db-module` | `examples/drupal-db-module.yml` |
+| `drupal-db-permissions` | `examples/drupal-db-permissions.yml` |
+| `drupal-db-user-tfa` | `examples/drupal-db-user-tfa.yml` |
+| `drupal-admin-user` | `examples/drupal-admin-user.yml` |
+| `drupal-user-forbidden` | `examples/drupal-user-forbidden.yml` |
+| `drupal-role-permissions` | `examples/drupal-role-permissions.yml` |
+| `drupal-user-role` | `examples/drupal-user-role.yml` |
+| `drupal-tracking-code` | `examples/drupal-tracking-code.yml` |
 
-For each item, "done" means: a worked recipe in `examples/`, reference
-documentation for the recipe, and the gaps matrix row flipped to
-**Achievable now**.
+They all share the collect → assert composition pattern shown in the
+[Drush composition recipe](gaps.md#recipe-the-drush-composition-pattern): a
+`command` fact emits data one item per line, and `allowed:list` / `equals`
+makes the assertion.
 
 ## New general-purpose capabilities (deferred)
 
@@ -65,6 +62,7 @@ for each is **to be determined (TBD)**.
 
 | 0.x check | Missing capability | Direction |
 |---|---|---|
+| `json` | Parse JSON files and extract keys/values | Add a general-purpose `json:key` fact plugin (analogous to `yaml:key`) |
 | `file:diff` | Compare a file against a rendered template and surface the difference | TBD |
 | `crawler` | Crawl a site and collect non-200 responses | TBD |
 | `sca:application_type` | Scan a codebase for framework markers and dependencies | TBD |

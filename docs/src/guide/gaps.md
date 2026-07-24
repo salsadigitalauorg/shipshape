@@ -51,7 +51,7 @@ Source: `examples/files.yml`
 | 0.x check | Status | 1.x plugin chain |
 |---|---|---|
 | [`yaml`](../reference/checks/yaml.md) | Achievable now | `file:read` + `yaml:key` + `equals` / `allowed:list` — see `examples/drupal-config.yml` |
-| [`json`](../reference/checks/json.md) | Achievable, undocumented | `file:read` + `yaml:key` (parses JSON) + `equals` / `allowed:list` |
+| [`json`](../reference/checks/json.md) | Needs new capability | Needs a `json:key` fact plugin (analogous to `yaml:key`) — [on the roadmap](roadmap.md) |
 
 ### Recipe: yaml
 
@@ -90,14 +90,14 @@ assert with `allowed:list` or `equals`. See the
 |---|---|---|
 | [`drush-yaml`](../reference/checks/drupal-drush-yaml.md) | Achievable now | `docker:command` + `yaml:key` + `equals` — see `examples/drush-over-docker.yml` |
 | [`drupal-file-module`](../reference/checks/drupal-file-module.md) | Achievable now | `file:read` + `yaml:key` + `allowed:list` — see `examples/drupal-config.yml` |
-| [`drupal-db-module`](../reference/checks/drupal-db-module.md) | Achievable, undocumented | `command` + `allowed:list` |
-| [`drupal-db-permissions`](../reference/checks/drupal-db-permissions.md) | Achievable, undocumented | `command` / `database:search` + `allowed:list` |
-| [`drupal-db-user-tfa`](../reference/checks/drupal-db-user-tfa.md) | Achievable, undocumented | `command` + `equals` — pattern shown in `examples/remediation.yml` |
-| [`drupal-admin-user`](../reference/checks/drupal-admin-user.md) | Achievable, undocumented | `command` + `yaml:key` + `allowed:list` |
-| [`drupal-user-forbidden`](../reference/checks/drupal-user-forbidden.md) | Achievable, undocumented | `command` + `not:empty` / `equals` |
-| [`drupal-role-permissions`](../reference/checks/drupal-role-permissions.md) | Achievable, undocumented | `command` + `allowed:list` |
-| [`drupal-user-role`](../reference/checks/drupal-user-role.md) | Achievable, undocumented | `command` + `allowed:list` |
-| [`drupal-tracking-code`](../reference/checks/drupal-tracking-code.md) | Achievable, undocumented | `command` + `regex:match` / `not:empty` |
+| [`drupal-db-module`](../reference/checks/drupal-db-module.md) | Achievable now | `command` + `allowed:list` — see `examples/drupal-db-module.yml` |
+| [`drupal-db-permissions`](../reference/checks/drupal-db-permissions.md) | Achievable now | `command` + `allowed:list` — see `examples/drupal-db-permissions.yml` |
+| [`drupal-db-user-tfa`](../reference/checks/drupal-db-user-tfa.md) | Achievable now | `command` + `equals` — see `examples/drupal-db-user-tfa.yml` |
+| [`drupal-admin-user`](../reference/checks/drupal-admin-user.md) | Achievable now | `command` + `allowed:list` — see `examples/drupal-admin-user.yml` |
+| [`drupal-user-forbidden`](../reference/checks/drupal-user-forbidden.md) | Achievable now | `command` + `equals` — see `examples/drupal-user-forbidden.yml` |
+| [`drupal-role-permissions`](../reference/checks/drupal-role-permissions.md) | Achievable now | `command` + `allowed:list` — see `examples/drupal-role-permissions.yml` |
+| [`drupal-user-role`](../reference/checks/drupal-user-role.md) | Achievable now | `command` + `allowed:list` — see `examples/drupal-user-role.yml` |
+| [`drupal-tracking-code`](../reference/checks/drupal-tracking-code.md) | Achievable now | `command` + `equals` — see `examples/drupal-tracking-code.yml` |
 
 ### Recipe: drush-yaml via Docker
 
@@ -128,36 +128,38 @@ analyse:
 
 Source: `examples/drush-over-docker.yml`
 
-### Recipe: drupal-admin-user — the composition pattern
+### Recipe: the Drush composition pattern
 
-This is the template for the "Achievable, undocumented" Drupal checks above.
-The 0.x `drupal-admin-user` check asserts that UID 1 holds only permitted
-roles. In 1.x you compose the same three building blocks — collect, parse,
-assert — that every other Drush check uses:
+Every Drush-based check above follows the same shape: run a `command` fact that
+emits the data one item per line, then assert with `allowed:list` or `equals`.
 
 ```yaml
 collect:
-  # 1. Collect: run drush to fetch UID 1's account information as YAML.
-  admin-user:
+  # 1. Collect: run drush and emit the machine name of each super-admin role.
+  admin-roles:
     command:
-      cmd: drush
-      args: ["user:information", "1", "--format=yaml"]
-
-  # 2. Parse: extract the roles field from the command output.
-  admin-user-roles:
-    yaml:key:
-      input: admin-user
-      path: roles
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        drush role:list --format=json \
+          | jq -r 'to_entries[] | select(.value.is_admin == true) | .key'
 
 analyse:
-  # 3. Assert: fail if any role outside the allowed set is present.
-  admin-user-roles-allowed:
+  # 2. Assert: fail if any role outside the allowed set is present.
+  admin-roles-check:
     allowed:list:
-      description: UID 1 has a disallowed role
-      input: admin-user-roles
+      description: Unexpected role carries the is_admin flag
+      input: admin-roles
+      # `command` output is a map; `key: stdout` selects stdout, which
+      # `allowed:list` then splits into one entry per line.
+      key: stdout
       allowed:
-        - authenticated
+        - administrator
 ```
+
+Source: `examples/drupal-admin-user.yml`
 
 Swap the `command` and the `allowed:list` / `equals` assertion to reproduce any
 of the other Drush-based checks — the shape stays the same.
@@ -232,9 +234,8 @@ Source: `examples/docker.yml`
 
 | Status | Count |
 |---|---|
-| Achievable now | 6 |
-| Achievable, undocumented | 9 |
-| Needs new capability | 3 |
+| Achievable now | 14 |
+| Achievable, undocumented | 0 |
+| Needs new capability | 4 |
 
-The plan for publishing the undocumented recipes and deciding the direction for
-the remaining capabilities is on the [roadmap](roadmap.md) page.
+The plan for the remaining capabilities is on the [roadmap](roadmap.md) page.

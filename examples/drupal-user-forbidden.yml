@@ -1,0 +1,35 @@
+# 0.x `drupal-user-forbidden` equivalent.
+#
+# Reproduces the 0.x check that verified a forbidden user account (by default
+# uid 1, the original super user) is blocked. The 0.x check ran
+# `drush user:information --uid=1 --fields=user_status --format=json` and
+# breached when the account was active (`user_status` == "1").
+#
+# 1.x recipe: run the same drush command, extract the status, then use `equals`
+# to breach when the status is "1" (active).
+#
+# Note: this uses `equals`, not `not:empty`. The `not:empty` analyser cannot
+# read a `command` fact's stdout directly, and here we need to match a specific
+# value ("1" = active) rather than test for emptiness.
+
+collect:
+  uid1-status:
+    command:
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        # Report the account status of uid 1 (1 = active, 0 = blocked).
+        drush user:information --uid=1 --fields=user_status --format=json \
+          | jq -r '."1".user_status'
+
+analyse:
+  uid1-status-check:
+    equals:
+      description: Forbidden user (uid 1) is active and should be blocked
+      input: uid1-status
+      # Select the command's stdout (the status value).
+      key: stdout
+      # `equals` breaches when stdout equals this value ("1" = active).
+      value: "1"

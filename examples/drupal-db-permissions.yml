@@ -1,0 +1,42 @@
+# 0.x `drupal-db-permissions` equivalent.
+#
+# Reproduces the 0.x check that inspected the permissions granted to roles in
+# the *database* and breached when a disallowed permission was found. The 0.x
+# check ran `drush role:list` and read each role's `perms`.
+#
+# 1.x recipe: run drush to emit every granted permission (one per line) across
+# all roles, then use `allowed:list` with `deprecated` to flag disallowed
+# permissions.
+#
+# Tip: to scope this to a single role, add `--filter=id=<role>` to role:list
+# (see drupal-role-permissions.yml for the per-role variant).
+
+collect:
+  granted-permissions:
+    command:
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        # Flatten every role's granted permissions to one permission per line.
+        # The jq `select` excludes roles you don't want to audit (here the
+        # "anonymous" role). `// []` guards against roles with no `perms` key,
+        # whose shape can vary across Drupal/drush versions.
+        drush role:list --format=json \
+          | jq -r 'to_entries[]
+                   | select(.key != "anonymous")
+                   | (.value.perms // [])[]'
+
+analyse:
+  permissions-check:
+    allowed:list:
+      description: Disallowed permission granted to a role
+      input: granted-permissions
+      # Select the command's stdout; `allowed:list` splits it per line.
+      key: stdout
+      # Permissions no role should have.
+      deprecated:
+        - "administer users"
+        - "administer permissions"
+        - "administer modules"
