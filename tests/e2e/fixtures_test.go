@@ -12,22 +12,22 @@ import (
 // on-disk fixture tree that does not exist under examples/testdata. Each test
 // seeds a temp directory and passes it as the project directory argument.
 //
-// IMPORTANT (discovered during implementation, see
-// docs/plans/2026-07-24-e2e-testcontainers-overhaul.md): files.yml and
-// webforms-tokenised-email-handlers.yml do not currently function as their
-// comments describe against the v2 collect/analyse engine:
+// These tests assert the FIXED behaviour of the bugs discovered during the
+// e2e overhaul (see docs/plans/2026-07-24-e2e-discovered-bugs-fixes.md):
 //
-//   - files.yml pairs a file:lookup fact (which emits FormatListString /
-//     FormatMapBytes) with the not:empty analyser, which only handles
-//     FormatMapNestedString (pkg/analyse/notempty.go). The disallowed-files
-//     check therefore can never breach, even when disallowed files are present.
-//   - webforms produces breaches whose content is template-rendering errors
-//     ("unable to render breach template", "unsupported input format").
+//   - files.yml: not:empty now handles the FormatListString / FormatMapBytes
+//     inputs emitted by file:lookup (pkg/analyse/notempty.go), so disallowed
+//     files breach as intended.
+//   - webforms: regex:match now handles FormatMapString inputs and
+//     lookupFactAsStringMap is panic-safe, so the tokenised to_mail check
+//     detects the token and renders its breach template cleanly.
 //
-// Until those are fixed upstream, these tests assert the CURRENT, stable
-// behaviour (the run completes, emits valid JSON, and the aggregate shape is
-// what the engine actually produces) so they act as regression guards and will
-// visibly change if the underlying bugs are fixed.
+// NOTE: a fourth, out-of-scope defect remains for the cc-mail / bcc-mail
+// checks in webforms-tokenised-email-handlers.yml: when a handler has no
+// cc_mail / bcc_mail key the input format is empty, regex:match falls to its
+// default branch and emits a ValueBreach, and the shared breach template then
+// fails on the missing `.Breach.Key` field. That is tracked separately; these
+// tests deliberately assert only the wrong-to-mail path.
 
 func TestFilesExample(t *testing.T) {
 	t.Parallel()
@@ -48,12 +48,18 @@ func TestFilesExample(t *testing.T) {
 	assert.Equal(t, uint32(2), rl.TotalChecks, "files.yml defines two checks")
 	assert.Contains(t, rl.CheckCountByType, "not:empty")
 
-	// Current behaviour: not:empty cannot fire for a file:lookup input, so
-	// there are zero breaches. If this assertion starts failing, the upstream
-	// not:empty/file:lookup format mismatch has likely been fixed and this
-	// test (and the manifest) should be updated to assert real breaches.
-	assert.Equal(t, uint32(0), rl.TotalBreaches,
-		"files.yml currently cannot breach; see notempty.go format handling")
+	// not:empty now fires for a file:lookup input (FormatListString), so both
+	// the disallowed PHP script and the sensitive public file are flagged.
+	assert.Equal(t, uint32(2), rl.TotalBreaches,
+		"files.yml should breach on adminer.php and backup.sql")
+
+	scripts, ok := findResult(rl, "disallowed-php-scripts-found")
+	require.True(t, ok, "disallowed-php-scripts-found result not present")
+	assert.Equal(t, "Fail", scripts.Status, "adminer.php must be flagged")
+
+	sensitive, ok := findResult(rl, "sensitive-public-files-found")
+	require.True(t, ok, "sensitive-public-files-found result not present")
+	assert.Equal(t, "Fail", sensitive.Status, "backup.sql must be flagged")
 }
 
 func TestWebformsExample(t *testing.T) {
@@ -71,11 +77,29 @@ func TestWebformsExample(t *testing.T) {
 		"run", project, "-f", examplePath("webforms-tokenised-email-handlers.yml"), "-o", "json")
 	rl := res.DecodeJSON(t)
 
-	// Smoke-level guard: the example wires three regex:match checks over the
-	// discovered webform handlers and completes without a fatal error.
+	// The example wires three regex:match checks over the discovered webform
+	// handlers and completes without a fatal error.
 	assert.Equal(t, uint32(3), rl.TotalChecks, "webforms defines three checks")
 	assert.Contains(t, rl.CheckCountByType, "regex:match")
-	assert.Equal(t, 0, res.ExitCode, "run completes without fatal error")
+
+	// regex:match now handles the FormatMapString input produced by yaml:key,
+	// and lookupFactAsStringMap no longer panics: the tokenised to_mail is
+	// detected and its breach template renders a real message (not a
+	// "template" / "unsupported input format" error).
+	toMail, ok := findResult(rl, "wrong-to-mail")
+	require.True(t, ok, "wrong-to-mail result not present\nstderr: %s", res.Stderr)
+	assert.Equal(t, "Fail", toMail.Status, "[site:mail] token must be flagged")
+	require.NotEmpty(t, toMail.Breaches, "wrong-to-mail should have a breach")
+	b := toMail.Breaches[0]
+	assert.Equal(t, "[site:mail]", b["value"], "matched token value")
+	// The rendered value-label proves both the FormatMapString handling and
+	// the lookupFactAsStringMap template function worked without error.
+	label, _ := b["value-label"].(string)
+	assert.NotContains(t, label, "unable to render breach template",
+		"breach template must render cleanly")
+	assert.NotContains(t, label, "unsupported input format",
+		"map-string input must be handled by regex:match")
+	assert.Contains(t, label, "has token", "breach template must render the handler message")
 }
 
 // dockerComposeFixture is a minimal Lagoon-style compose project plus the

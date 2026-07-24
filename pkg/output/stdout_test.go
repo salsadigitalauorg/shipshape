@@ -411,6 +411,44 @@ func TestJUnit(t *testing.T) {
 </testsuites>
 `,
 		},
+		{
+			name: "checkWithMultipleBreaches",
+			rl: result.ResultList{
+				TotalChecks:   1,
+				TotalBreaches: 2,
+				Policies: map[string][]string{
+					"regex:match": {"check1"},
+				},
+				CheckCountByType: map[string]int{
+					"regex:match": 1,
+				},
+				BreachCountByType: map[string]int{
+					"regex:match": 2,
+				},
+				Results: []result.Result{
+					{
+						Name:            "check1",
+						Status:          result.Fail,
+						CheckType:       "regex:match",
+						DetailedMessage: "check1 has two failures",
+						Breaches: []breach.Breach{
+							&breach.ValueBreach{Value: "first failure"},
+							&breach.ValueBreach{Value: "second failure"},
+						},
+					},
+				},
+			},
+			expected: `<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" errors="2">
+    <testsuite name="regex:match" tests="1" errors="2">
+        <testcase name="check1" classname="regex:match">
+            <error message="first failure">check1 has two failures</error>
+            <error message="second failure">check1 has two failures</error>
+        </testcase>
+    </testsuite>
+</testsuites>
+`,
+		},
 	}
 
 	for _, tc := range tt {
