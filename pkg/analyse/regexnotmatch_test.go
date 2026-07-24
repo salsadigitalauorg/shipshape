@@ -181,7 +181,9 @@ func TestRegexNotMatchAnalyse(t *testing.T) {
 			expectedBreaches: []breach.Breach{},
 		},
 
-		// Unsupported.
+		// Unsupported input format is a no-op: absent/unusable optional
+		// data is not a breach. Note this is distinct from FormatNil, which
+		// intentionally breaches with an "is nil" message.
 		{
 			name: "unsupported",
 			input: testdata.New(
@@ -190,13 +192,6 @@ func TestRegexNotMatchAnalyse(t *testing.T) {
 				nil,
 			),
 			pattern: ".*",
-			expectedBreaches: []breach.Breach{
-				&breach.ValueBreach{
-					BreachType: "value",
-					CheckName:  "unsupported",
-					Value:      "unsupported input format nosupport",
-				},
-			},
 		},
 	}
 
