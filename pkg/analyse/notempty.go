@@ -38,5 +38,34 @@ func (p *NotEmpty) Analyse() {
 				}, p.Remediation)
 			}
 		}
+	case data.FormatListString:
+		inputData := data.AsListString(p.input.GetData())
+		for _, v := range inputData {
+			breach.EvaluateTemplate(p, &breach.ValueBreach{
+				ValueLabel: "not empty",
+				Value:      v,
+			}, p.Remediation)
+		}
+	case data.FormatMapString:
+		inputData := data.AsMapString(p.input.GetData())
+		for k, v := range inputData {
+			breach.EvaluateTemplate(p, &breach.KeyValueBreach{
+				Key:        k,
+				ValueLabel: "not empty",
+				Value:      v,
+			}, p.Remediation)
+		}
+	case data.FormatMapBytes:
+		inputData := data.AsMapBytes(p.input.GetData())
+		for k, v := range inputData {
+			breach.EvaluateTemplate(p, &breach.KeyValueBreach{
+				Key:        k,
+				ValueLabel: "not empty",
+				Value:      string(v),
+			}, p.Remediation)
+		}
+	default:
+		log.WithField("input-format", p.input.GetFormat()).
+			Warn("not:empty does not support this input format")
 	}
 }

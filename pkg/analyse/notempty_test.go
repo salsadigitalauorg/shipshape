@@ -73,6 +73,89 @@ func TestNotEmptyAnalyse(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "listStringNil",
+			input: testdata.New(
+				"testFacter",
+				data.FormatListString,
+				[]string(nil),
+			),
+			expectedBreaches: []breach.Breach{},
+		},
+		{
+			name: "listStringEmpty",
+			input: testdata.New(
+				"testFacter",
+				data.FormatListString,
+				[]string{},
+			),
+			expectedBreaches: []breach.Breach{},
+		},
+		{
+			name: "listStringNotEmpty",
+			input: testdata.New(
+				"testFacter",
+				data.FormatListString,
+				[]string{"web/adminer.php", "web/foo.php"},
+			),
+			expectedBreaches: []breach.Breach{
+				&breach.ValueBreach{
+					BreachType: "value",
+					CheckName:  "listStringNotEmpty",
+					ValueLabel: "not empty",
+					Value:      "web/adminer.php",
+				},
+				&breach.ValueBreach{
+					BreachType: "value",
+					CheckName:  "listStringNotEmpty",
+					ValueLabel: "not empty",
+					Value:      "web/foo.php",
+				},
+			},
+		},
+		{
+			name: "mapStringEmpty",
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapString,
+				map[string]string{},
+			),
+			expectedBreaches: []breach.Breach{},
+		},
+		{
+			name: "mapStringNotEmpty",
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapString,
+				map[string]string{"adminer.php": "web/adminer.php"},
+			),
+			expectedBreaches: []breach.Breach{
+				&breach.KeyValueBreach{
+					BreachType: "key-value",
+					CheckName:  "mapStringNotEmpty",
+					Key:        "adminer.php",
+					ValueLabel: "not empty",
+					Value:      "web/adminer.php",
+				},
+			},
+		},
+		{
+			name: "mapBytesNotEmpty",
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapBytes,
+				map[string][]byte{"adminer.php": []byte("<?php")},
+			),
+			expectedBreaches: []breach.Breach{
+				&breach.KeyValueBreach{
+					BreachType: "key-value",
+					CheckName:  "mapBytesNotEmpty",
+					Key:        "adminer.php",
+					ValueLabel: "not empty",
+					Value:      "<?php",
+				},
+			},
+		},
 	}
 
 	for _, tc := range tt {
