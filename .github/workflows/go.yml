@@ -2,12 +2,12 @@ name: Go
 
 on:
   push:
-    branches: [ main, 1.x ]
+    branches: [ 1.x ]
     tags: [ 'v*.*.*' ]
     paths-ignore:
       - 'docs/**'
   pull_request:
-    branches: [ main, 1.x ]
+    branches: [ 1.x ]
     paths-ignore:
       - 'docs/**'
 
@@ -17,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-    - uses: actions/checkout@main
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
     - name: Set up Go
-      uses: actions/setup-go@main
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
         go-version: 1.25
 
@@ -44,12 +44,12 @@ jobs:
       # the e2e suite has its own Docker-capable workflow (.github/workflows/e2e.yml).
       run: go test -v -race $(go list ./... | grep -v /cmd/gen | grep -v /tests/e2e) -coverprofile=build/coverage.out
 
-    - uses: shogo82148/actions-goveralls@v1
+    - uses: shogo82148/actions-goveralls@f43965feeef0f2065761d1eefbb69c7aa273ab0e # v1
       with:
         path-to-profile: build/coverage.out
 
     - name: Upload test coverage
-      uses: actions/upload-artifact@main
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
         name: build
         path: build
@@ -60,12 +60,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-    - uses: actions/checkout@main
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       with:
         fetch-depth: 0
 
     - name: Set up Go
-      uses: actions/setup-go@main
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
       with:
         go-version: 1.25
 
@@ -74,7 +74,7 @@ jobs:
       if: startsWith(github.ref_name, 'v')
 
     - name: Run GoReleaser
-      uses: goreleaser/goreleaser-action@master
+      uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6
       with:
         version: latest
         args: release --clean
