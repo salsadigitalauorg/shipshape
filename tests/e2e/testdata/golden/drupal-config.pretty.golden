@@ -1,0 +1,5 @@
+# Breaches were detected
+
+  ### admin-role-found
+     -- [key:config/default/user.role.administrator.yml] deprecated: true
+

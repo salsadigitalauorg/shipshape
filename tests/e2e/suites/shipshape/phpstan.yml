@@ -1,8 +1,0 @@
-checks:
-  phpstan:
-    - name: 'Banned PHP function list'
-      severity: high
-      configuration: phpstan.neon
-      paths:
-        - web/themes/custom
-        - themes

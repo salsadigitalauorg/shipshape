@@ -1,5 +1,3 @@
-suites/*.log
-# Generated when running venom run -vv
-*.step.*.dump.json
-# Generated when running venom run -vvv
+# Coverage / profiling artefacts from local runs.
+*.out
 *.prof

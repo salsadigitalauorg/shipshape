@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" errors="0">
+    <testsuite name="allowed:list" tests="1" errors="0">
+        <testcase name="lagoon-logs-check" classname="allowed:list"></testcase>
+    </testsuite>
+</testsuites>

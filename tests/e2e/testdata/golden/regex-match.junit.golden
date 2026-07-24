@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" errors="1">
+    <testsuite name="regex:match" tests="1" errors="1">
+        <testcase name="lagoon-logs-check" classname="regex:match">
+            <error message="module-lagoon_logs equals &#39;0&#39;"></error>
+        </testcase>
+    </testsuite>
+</testsuites>
