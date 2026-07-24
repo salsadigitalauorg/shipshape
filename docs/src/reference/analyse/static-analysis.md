@@ -78,9 +78,9 @@ ESLint found issues:
 ```yaml
 analyse:
   phpstan-check:
-    plugin: static-analysis:breaches
-    input: phpstan-results
-    # Uses defaults: check-success=true, check-issues=true, max-issues=0
+    static-analysis:breaches:
+      input: phpstan-results
+      # Uses defaults: check-success=true, check-issues=true, max-issues=0
 ```
 
 ### Error-Only Analysis
@@ -88,10 +88,10 @@ analyse:
 ```yaml
 analyse:
   eslint-errors:
-    plugin: static-analysis:breaches
-    input: eslint-results
-    min-severity: error
-    max-issues: 0
+    static-analysis:breaches:
+      input: eslint-results
+      min-severity: error
+      max-issues: 0
 ```
 
 ### Threshold-Based Analysis
@@ -99,10 +99,10 @@ analyse:
 ```yaml
 analyse:
   pylint-threshold:
-    plugin: static-analysis:breaches
-    input: pylint-results
-    max-issues: 10  # Only fail if more than 10 issues
-    min-severity: warning
+    static-analysis:breaches:
+      input: pylint-results
+      max-issues: 10  # Only fail if more than 10 issues
+      min-severity: warning
 ```
 
 ### Rule Filtering
@@ -110,12 +110,12 @@ analyse:
 ```yaml
 analyse:
   phpstan-filtered:
-    plugin: static-analysis:breaches
-    input: phpstan-results
-    ignore-rules:
-      - phpstan.rules.deadCode
-      - phpstan.rules.unusedVariable
-    min-severity: error
+    static-analysis:breaches:
+      input: phpstan-results
+      ignore-rules:
+        - phpstan.rules.deadCode
+        - phpstan.rules.unusedVariable
+      min-severity: error
 ```
 
 ### Execution-Only Check
@@ -123,10 +123,10 @@ analyse:
 ```yaml
 analyse:
   tool-success:
-    plugin: static-analysis:breaches
-    input: custom-tool-results
-    check-success: true
-    check-issues: false  # Only verify tool ran successfully
+    static-analysis:breaches:
+      input: custom-tool-results
+      check-success: true
+      check-issues: false  # Only verify tool ran successfully
 ```
 
 ### Custom Severity Handling
@@ -134,15 +134,15 @@ analyse:
 ```yaml
 analyse:
   strict-analysis:
-    plugin: static-analysis:breaches
-    input: eslint-results
-    check-success: true
-    check-issues: true
-    min-severity: info      # Include all severity levels
-    max-issues: 0           # Fail on any issues
-    ignore-rules:
-      - no-console         # Allow console statements
-      - prefer-const       # Allow let declarations
+    static-analysis:breaches:
+      input: eslint-results
+      check-success: true
+      check-issues: true
+      min-severity: info      # Include all severity levels
+      max-issues: 0           # Fail on any issues
+      ignore-rules:
+        - no-console         # Allow console statements
+        - prefer-const       # Allow let declarations
 ```
 
 ## Input Data Structure
@@ -178,10 +178,10 @@ Use `max-issues` thresholds to enforce code quality standards while allowing gra
 ```yaml
 analyse:
   quality-gate:
-    plugin: static-analysis:breaches
-    input: phpstan-results
-    max-issues: 50  # Allow up to 50 issues, fail beyond that
-    min-severity: warning
+    static-analysis:breaches:
+      input: phpstan-results
+      max-issues: 50  # Allow up to 50 issues, fail beyond that
+      min-severity: warning
 ```
 
 ### Security-Focused Analysis
@@ -190,12 +190,12 @@ Focus only on error-level issues that might indicate security problems:
 ```yaml
 analyse:
   security-check:
-    plugin: static-analysis:breaches
-    input: eslint-security-results
-    min-severity: error
-    max-issues: 0
-    ignore-rules:
-      - no-console  # Console statements aren't security issues
+    static-analysis:breaches:
+      input: eslint-security-results
+      min-severity: error
+      max-issues: 0
+      ignore-rules:
+        - no-console  # Console statements aren't security issues
 ```
 
 ### Development vs Production
@@ -205,16 +205,16 @@ Different thresholds for different environments:
 # Development - allow more issues
 analyse:
   dev-check:
-    plugin: static-analysis:breaches
-    input: analysis-results
-    max-issues: 20
-    min-severity: warning
+    static-analysis:breaches:
+      input: analysis-results
+      max-issues: 20
+      min-severity: warning
 
 # Production - strict enforcement
 analyse:
   prod-check:
-    plugin: static-analysis:breaches
-    input: analysis-results
-    max-issues: 0
-    min-severity: error
+    static-analysis:breaches:
+      input: analysis-results
+      max-issues: 0
+      min-severity: error
 ```

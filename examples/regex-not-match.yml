@@ -1,3 +1,6 @@
+# Requires a `core.extension.yml` in the working directory. A sample is
+# bundled at examples/testdata/core.extension.yml, e.g. run with:
+#   cd examples/testdata && shipshape run . -f ../regex-not-match.yml
 collect:
   extension-file:
     file:read:

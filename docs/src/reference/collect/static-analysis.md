@@ -98,13 +98,13 @@ A JSON object with the following structure:
 ```yaml
 collect:
   phpstan-results:
-    plugin: static-analysis
-    tool: phpstan
-    config: phpstan.neon
-    paths:
-      - src/
-      - web/modules/custom/
-    output-format: json
+    static-analysis:
+      tool: phpstan
+      config: phpstan.neon
+      paths:
+        - src/
+        - web/modules/custom/
+      output-format: json
 ```
 
 ### ESLint with Custom Configuration
@@ -112,15 +112,15 @@ collect:
 ```yaml
 collect:
   eslint-results:
-    plugin: static-analysis
-    tool: eslint
-    config: .eslintrc.json
-    paths:
-      - "src/**/*.js"
-      - "src/**/*.ts"
-    output-format: json
-    environment:
-      NODE_ENV: production
+    static-analysis:
+      tool: eslint
+      config: .eslintrc.json
+      paths:
+        - "src/**/*.js"
+        - "src/**/*.ts"
+      output-format: json
+      environment:
+        NODE_ENV: production
 ```
 
 ### Custom Tool Usage
@@ -128,15 +128,15 @@ collect:
 ```yaml
 collect:
   custom-analysis:
-    plugin: static-analysis
-    tool: custom
-    binary: ./bin/my-analyzer
-    args:
-      - "--strict"
-      - "--format=json"
-    paths:
-      - src/
-    ignore-error: true
+    static-analysis:
+      tool: custom
+      binary: ./bin/my-analyzer
+      args:
+        - "--strict"
+        - "--format=json"
+      paths:
+        - src/
+      ignore-error: true
 ```
 
 ### Advanced PHPStan Configuration
@@ -144,19 +144,19 @@ collect:
 ```yaml
 collect:
   phpstan-advanced:
-    plugin: static-analysis
-    tool: phpstan
-    config: "${PHPSTAN_CONFIG:-phpstan.neon}"
-    paths:
-      - src/
-    presets:
-      memory-limit: "1G"
-      level: "8"
-    environment:
-      XDEBUG_MODE: "off"
-    failure-patterns:
-      - "Parse error"
-      - "Fatal error"
+    static-analysis:
+      tool: phpstan
+      config: "${PHPSTAN_CONFIG:-phpstan.neon}"
+      paths:
+        - src/
+      presets:
+        memory-limit: "1G"
+        level: "8"
+      environment:
+        XDEBUG_MODE: "off"
+      failure-patterns:
+        - "Parse error"
+        - "Fatal error"
 ```
 
 ## Environment Resolution
