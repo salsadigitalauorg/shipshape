@@ -233,7 +233,8 @@ func TestRegexMatchAnalyse(t *testing.T) {
 			},
 		},
 
-		// Unsupported.
+		// Unsupported input format is a no-op: absent/unusable optional data
+		// is not a breach.
 		{
 			name: "unsupported",
 			input: testdata.New(
@@ -242,13 +243,6 @@ func TestRegexMatchAnalyse(t *testing.T) {
 				nil,
 			),
 			pattern: ".*",
-			expectedBreaches: []breach.Breach{
-				&breach.ValueBreach{
-					BreachType: "value",
-					CheckName:  "unsupported",
-					Value:      "unsupported input format nosupport",
-				},
-			},
 		},
 	}
 

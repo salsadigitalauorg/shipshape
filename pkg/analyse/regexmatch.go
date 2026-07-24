@@ -74,9 +74,7 @@ func (p *RegexMatch) Analyse() {
 			}, p.Remediation)
 		}
 	default:
-		log.WithField("input-format", input.GetFormat()).Debug("unsupported input format")
-		breach.EvaluateTemplate(p, &breach.ValueBreach{
-			Value: fmt.Sprintf("unsupported input format %s", input.GetFormat()),
-		}, nil)
+		// Absent or unusable optional data is not a breach; log and no-op.
+		log.WithField("input-format", input.GetFormat()).Error("unsupported input format, skipping")
 	}
 }

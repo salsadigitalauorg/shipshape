@@ -65,7 +65,6 @@ func (p *NotEmpty) Analyse() {
 			}, p.Remediation)
 		}
 	default:
-		log.WithField("input-format", p.input.GetFormat()).
-			Warn("not:empty does not support this input format")
+		log.WithField("input-format", p.input.GetFormat()).Error("unsupported input format")
 	}
 }

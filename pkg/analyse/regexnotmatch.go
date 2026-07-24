@@ -70,9 +70,8 @@ func (p *RegexNotMatch) Analyse() {
 		}
 
 	default:
-		log.WithField("input-format", p.input.GetFormat()).Debug("unsupported input format")
-		breach.EvaluateTemplate(p, &breach.ValueBreach{
-			Value: fmt.Sprintf("unsupported input format %s", p.input.GetFormat()),
-		}, nil)
+		// Absent or unusable optional data is not a breach; log and no-op.
+		// Note: FormatNil is handled above and intentionally still breaches.
+		log.WithField("input-format", p.input.GetFormat()).Error("unsupported input format, skipping")
 	}
 }
