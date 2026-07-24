@@ -1,0 +1,47 @@
+# Read values out of a JSON file using JSONPath expressions.
+#
+# `json:key` reads raw JSON (e.g. from a `file:read`) and evaluates a JSONPath
+# expression (RFC-style `$.a.b[0]`) against it, emitting the matched values for
+# downstream analysers. This is the JSON counterpart to `yaml:key`, using the
+# more expressive JSONPath dialect rather than the dotted-path lookup.
+#
+# `json:key` always emits a list of strings, so it composes naturally with the
+# list-oriented analysers such as `allowed:list`.
+#
+# A sample package.json is bundled at examples/testdata/package.json, e.g.:
+#   cd examples/testdata && shipshape run . -f ../json-lookup.yml
+collect:
+  pkg-file:
+    file:read:
+      path: package.json
+
+  # The package name scalar, e.g. "example-app".
+  pkg-name:
+    json:key:
+      input: pkg-file
+      expression: "$.name"
+
+  # The command run by each declared npm script, e.g. ["eslint .", "vite build"].
+  script-commands:
+    json:key:
+      input: pkg-file
+      expression: "$.scripts.*"
+
+analyse:
+  # The package name must be one of the approved application names.
+  approved-app-name:
+    allowed:list:
+      description: package.json name is not an approved application
+      input: pkg-name
+      allowed:
+        - example-app
+
+  # Every script must invoke an approved build tool; anything else is flagged.
+  approved-script-tooling:
+    allowed:list:
+      description: A script uses an unapproved build tool
+      input: script-commands
+      allowed:
+        - eslint .
+        - vite build
+        - vitest run

@@ -51,7 +51,7 @@ Source: `examples/files.yml`
 | 0.x check | Status | 1.x plugin chain |
 |---|---|---|
 | [`yaml`](../reference/checks/yaml.md) | Achievable now | `file:read` + `yaml:key` + `equals` / `allowed:list` — see `examples/drupal-config.yml` |
-| [`json`](../reference/checks/json.md) | Needs new capability | Needs a `json:key` fact plugin (analogous to `yaml:key`) — [on the roadmap](roadmap.md) |
+| [`json`](../reference/checks/json.md) | Achievable now | `file:read` + `json:key` + `equals` / `allowed:list` — see `examples/json-lookup.yml` |
 
 ### Recipe: yaml
 
@@ -78,6 +78,38 @@ analyse:
 ```
 
 Source: `examples/drupal-config.yml`
+
+### Recipe: json
+
+`json:key` is the JSON counterpart to `yaml:key`. It reads raw JSON (typically
+from a `file:read`) and evaluates a [JSONPath](https://goessner.net/articles/JsonPath/)
+expression against it — e.g. `$.name`, `$.items[0]`, or the wildcard
+`$.scripts.*`. It always emits a list of strings, so it composes directly with
+the list-oriented analysers such as `allowed:list`.
+
+```yaml
+collect:
+  pkg-file:
+    file:read:
+      path: package.json
+
+  script-commands:
+    json:key:
+      input: pkg-file
+      expression: "$.scripts.*"
+
+analyse:
+  approved-script-tooling:
+    allowed:list:
+      description: A script uses an unapproved build tool
+      input: script-commands
+      allowed:
+        - eslint .
+        - vite build
+        - vitest run
+```
+
+Source: `examples/json-lookup.yml`
 
 ## Drupal checks
 

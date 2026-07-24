@@ -70,6 +70,21 @@ func selfContainedCases() []selfContainedCase {
 			},
 		},
 		{
+			name:         "json-lookup",
+			file:         "json-lookup.yml",
+			wantChecks:   2,
+			wantBreaches: 0,
+			// wantPolicies is intentionally omitted: both checks share the
+			// allowed:list plugin, and the policy IDs within a plugin are
+			// collected via Go map iteration (see shipshape.go), so their order
+			// is non-deterministic. checkResults asserts each check by name,
+			// which is order-independent.
+			checkResults: []wantResult{
+				{name: "approved-app-name", status: "Pass", checkType: "allowed:list"},
+				{name: "approved-script-tooling", status: "Pass", checkType: "allowed:list"},
+			},
+		},
+		{
 			name:         "drupal-config",
 			file:         "drupal-config.yml",
 			wantChecks:   3,
