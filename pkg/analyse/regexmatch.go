@@ -56,6 +56,16 @@ func (p *RegexMatch) Analyse() {
 				}
 			}
 		}
+	case data.FormatMapString:
+		inputData := data.AsMapString(input.GetData())
+		for k, v := range inputData {
+			if re.MatchString(v) {
+				breach.EvaluateTemplate(p, &breach.KeyValueBreach{
+					Key:   k,
+					Value: v,
+				}, p.Remediation)
+			}
+		}
 	case data.FormatString:
 		inputData := data.AsString(input.GetData())
 		if re.MatchString(inputData) {
