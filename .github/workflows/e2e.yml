@@ -1,35 +1,51 @@
 name: e2e
 
 on:
-  # schedule:
-  #   - cron: '17 4 * * *'
+  push:
+    branches: [ main, 1.x ]
+    paths-ignore:
+      - 'docs/**'
+  pull_request:
+    branches: [ main, 1.x ]
+    paths-ignore:
+      - 'docs/**'
   workflow_call: {}
   workflow_dispatch:
 
 jobs:
 
+  # Go-native end-to-end suite. Builds the shipshape binary once and runs every
+  # example under examples/ as a subprocess, asserting on the structured JSON
+  # output. Examples that need a live service (MariaDB) use Testcontainers,
+  # which works out of the box on GitHub-hosted runners (Docker preinstalled).
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
     - uses: actions/checkout@main
 
-    - name: Build & start containers
-      run: docker compose up --detach --build
-
-    - name: Run tests
-      run: docker compose exec drupal venom run -vv --stop-on-failure --output-dir /venom-output
-      # env:
-      #   # Allow proper output.
-      #   IS_TTY: true
-
-    - name: Copy venom-output from container
-      run: docker cp shipshape-drupal-1:/venom-output ./venom-output
-      if: always()
-
-    - name: Upload venom log
-      uses: actions/upload-artifact@main
+    - name: Set up Go
+      uses: actions/setup-go@main
       with:
-        name: venom-output
-        path: venom-output
-      if: always()
+        go-version: 1.25
+
+    - name: Run e2e suite
+      run: go test -count=1 -timeout 8m ./tests/e2e/...
+
+  # Heavy drush/Drupal parity suite (retired venom coverage). Builds the Drupal
+  # image and installs a site, so it is opt-in via the e2e_docker build tag and
+  # kept out of the default suite. Runs on manual dispatch.
+  e2e-docker:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Set up Go
+      uses: actions/setup-go@main
+      with:
+        go-version: 1.25
+
+    - name: Run drush/Drupal e2e suite
+      run: go test -count=1 -tags e2e_docker -timeout 25m ./tests/e2e/...

@@ -1,0 +1,4 @@
+NAME                                          STATUS   PASSES   FAILS
+admin-role-found                              Fail              [key:config/default/user.role.administrator.yml] deprecated: true
+anonymous-role-disallowed-permissions-found   Pass              
+wrong-install-profile                         Pass              

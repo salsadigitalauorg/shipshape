@@ -40,7 +40,9 @@ jobs:
       run: ./build/shipshape config list-plugins
 
     - name: Test
-      run: go test -v -race $(go list ./... | grep -v /cmd/gen) -coverprofile=build/coverage.out
+      # Exclude the e2e suite (tests/e2e) and generators from unit-test runs;
+      # the e2e suite has its own Docker-capable workflow (.github/workflows/e2e.yml).
+      run: go test -v -race $(go list ./... | grep -v /cmd/gen | grep -v /tests/e2e) -coverprofile=build/coverage.out
 
     - uses: shogo82148/actions-goveralls@v1
       with:
