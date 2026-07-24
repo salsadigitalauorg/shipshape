@@ -7,6 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/breach"
+	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/plugin"
 	"github.com/salsadigitalauorg/shipshape/pkg/pluginmanager"
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
@@ -29,24 +30,33 @@ var OnlyFactNames = []string{}
 func Manager() *manager {
 	if m == nil {
 		// Add a template function to lookup a fact as a string map.
-		breach.TemplateFuncs["lookupFactAsStringMap"] = func(inputName string, key string) string {
-			input := Manager().FindPlugin(inputName)
-			if input == nil {
-				return ""
-			}
-			ifcMap := input.GetData().(map[string]interface{})
-			val, ok := ifcMap[key]
-			if !ok {
-				return ""
-			}
-			return val.(string)
-		}
+		breach.TemplateFuncs["lookupFactAsStringMap"] = LookupFactAsStringMap
 
 		m = &manager{
 			Manager: pluginmanager.NewManager[Facter](),
 		}
 	}
 	return m
+}
+
+// LookupFactAsStringMap looks up a fact by name and returns the string value
+// for the given key. It is format-aware and never panics: an unknown input, an
+// unsupported data format, or a missing key all return an empty string. This is
+// registered as the "lookupFactAsStringMap" breach template function.
+func LookupFactAsStringMap(inputName string, key string) string {
+	input := Manager().FindPlugin(inputName)
+	if input == nil {
+		return ""
+	}
+
+	if input.GetFormat() == data.FormatMapString {
+		m := data.AsMapString(input.GetData())
+		if v, ok := m[key]; ok {
+			return v
+		}
+	}
+
+	return ""
 }
 
 func (m *manager) GetFactoriesKeys() []string {
