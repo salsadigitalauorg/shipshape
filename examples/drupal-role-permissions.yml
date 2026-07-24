@@ -1,0 +1,40 @@
+# 0.x `drupal-role-permissions` equivalent.
+#
+# Reproduces the 0.x check that verified a single role has all its required
+# permissions and none of its disallowed permissions. The 0.x check ran
+# `drush role:list --filter=id=<role> --fields=perms --format=json`.
+#
+# 1.x recipe: run drush to emit the permissions granted to one role (one per
+# line), then use `allowed:list` with `required` (must be present) and
+# `deprecated` (must be absent).
+#
+# Change the audited role by editing the --filter=id= value below.
+
+collect:
+  role-permissions:
+    command:
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        # Emit each permission granted to the "anonymous" role, one per line.
+        # `// []` guards against the role having no `perms` key, whose shape
+        # can vary across Drupal/drush versions.
+        drush role:list --filter=id=anonymous --fields=perms --format=json \
+          | jq -r '(.anonymous.perms // [])[]'
+
+analyse:
+  role-permissions-check:
+    allowed:list:
+      description: Role is missing a required permission or has a disallowed one
+      input: role-permissions
+      # Select the command's stdout; `allowed:list` splits it per line.
+      key: stdout
+      # Permissions this role must have.
+      required:
+        - "access content"
+      # Permissions this role must NOT have.
+      deprecated:
+        - "administer users"
+        - "administer permissions"

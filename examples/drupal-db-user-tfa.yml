@@ -1,0 +1,48 @@
+# 0.x `drupal-db-user-tfa` equivalent.
+#
+# Reproduces the 0.x check that verified all active users have Two-Factor
+# Authentication (TFA) set up. The 0.x check ran a raw SQL query for active
+# users (uid != 0, status = 1) that had no `users_data` row for the `tfa`
+# module, and breached if any such users existed.
+#
+# 1.x recipe: run the same query via `drush sql:query`, then have the shell emit
+# a fixed sentinel ("FAIL" when one or more users lack TFA, otherwise "OK").
+# `equals` raises a breach when its input EQUALS `value`, so we breach on
+# "FAIL". Emitting a sentinel keeps the assertion robust regardless of how many
+# users are returned.
+
+collect:
+  tfa-status:
+    command:
+      cmd: bash
+      args:
+      - -c
+      - |
+        set -o pipefail
+        # Count active users (excluding anonymous, uid 0) with no TFA data.
+        count=$(drush sql:query "
+          SELECT COUNT(users.uid)
+          FROM users
+          LEFT JOIN users_field_data ON users.uid = users_field_data.uid
+          WHERE users.uid != '0'
+            AND users_field_data.status = '1'
+            AND NOT EXISTS (
+              SELECT 1 FROM users_data
+              WHERE users_data.uid = users.uid
+                AND users_data.module = 'tfa'
+            )")
+        # Emit a sentinel that `equals` can match on. A string compare is used
+        # (rather than a numeric test) because `drush sql:query` may pad or
+        # otherwise format the returned count; "0" is the only value we treat
+        # as a pass.
+        [ "$count" = "0" ] && echo "OK" || echo "FAIL"
+
+analyse:
+  tfa-status-check:
+    equals:
+      description: Active users found without TFA configured
+      input: tfa-status
+      # Select the command's stdout (the sentinel).
+      key: stdout
+      # `equals` breaches when stdout equals this value.
+      value: "FAIL"
