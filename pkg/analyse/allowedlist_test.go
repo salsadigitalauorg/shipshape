@@ -40,6 +40,7 @@ func TestAllowedListAnalyse(t *testing.T) {
 		deprecated       []string
 		excludeKeys      []string
 		ignore           []string
+		notStrict        bool
 		expectedBreaches []breach.Breach
 	}{
 		// List of strings.
@@ -89,6 +90,24 @@ func TestAllowedListAnalyse(t *testing.T) {
 				[]interface{}{"value1", "value2", "value3"},
 			),
 			allowed:    []string{"value1", "value2"},
+			deprecated: []string{"value3"},
+			expectedBreaches: []breach.Breach{
+				&breach.ValueBreach{
+					BreachType: "value",
+					CheckName:  "testAllowedList",
+					ValueLabel: "deprecated value found",
+					Value:      "value3",
+				},
+			},
+		},
+		{
+			name: "listString/NotStrict",
+			input: testdata.New(
+				"testFacter",
+				data.FormatListString,
+				[]interface{}{"value1", "value2", "value3"},
+			),
+			notStrict:  true,
 			deprecated: []string{"value3"},
 			expectedBreaches: []breach.Breach{
 				&breach.ValueBreach{
@@ -386,6 +405,7 @@ func TestAllowedListAnalyse(t *testing.T) {
 				Required:    tc.required,
 				Deprecated:  tc.deprecated,
 				ExcludeKeys: tc.excludeKeys,
+				NotStrict:   tc.notStrict,
 				Ignore:      tc.ignore,
 			}
 

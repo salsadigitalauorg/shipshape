@@ -62,7 +62,7 @@ func (p *AllowedList) Analyse() {
 				continue
 			}
 
-			if len(p.Required) == 0 && !p.isAllowed(v) {
+			if !p.NotStrict && len(p.Required) == 0 && !p.isAllowed(v) {
 				breach.EvaluateTemplate(p, &breach.ValueBreach{
 					ValueLabel: "disallowed value found",
 					Value:      v,
