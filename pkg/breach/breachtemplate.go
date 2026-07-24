@@ -39,15 +39,16 @@ func EvaluateTemplate(bt BreachTemplater, b Breach, remediation interface{}) {
 		rendered.Value = EvaluateTemplateString(bt, t.Value, b)
 	}
 
-	var breachToAdd Breach
-	switch rendered.Type {
-	case BreachTypeValue:
-		breach := b.(*ValueBreach)
+	// Apply the rendered fields back onto the concrete breach. Guarded
+	// (comma-ok) assertions avoid panicking if the reported type and the
+	// concrete type ever diverge; breachToAdd always falls back to b so a
+	// breach is never dropped or nil-dereferenced.
+	breachToAdd := b
+	if breach, ok := b.(*ValueBreach); ok {
 		breach.ValueLabel = rendered.ValueLabel
 		breach.Value = rendered.Value
 		breachToAdd = breach
-	case BreachTypeKeyValue:
-		breach := b.(*KeyValueBreach)
+	} else if breach, ok := b.(*KeyValueBreach); ok {
 		breach.KeyLabel = rendered.KeyLabel
 		breach.Key = rendered.Key
 		breach.ValueLabel = rendered.ValueLabel
@@ -70,10 +71,31 @@ func EvaluateTemplateString(bt BreachTemplater, t string, b Breach) string {
 			ValueLabel: "unable to parse breach template",
 			Value:      err.Error(),
 		})
+		return ""
 	}
 
 	buf := &bytes.Buffer{}
-	data := struct{ Breach }{b}
+	// Expose a stable, tolerant field set so a template referencing a field
+	// absent on this breach's concrete type (e.g. .Breach.Key on a
+	// *ValueBreach) renders empty instead of erroring the whole breach.
+	data := struct {
+		Breach struct {
+			Type          BreachType
+			Key           string
+			KeyLabel      string
+			Value         string
+			ValueLabel    string
+			Values        []string
+			ExpectedValue string
+		}
+	}{}
+	data.Breach.Type = b.GetType()
+	data.Breach.Key = BreachGetKey(b)
+	data.Breach.KeyLabel = BreachGetKeyLabel(b)
+	data.Breach.Value = BreachGetValue(b)
+	data.Breach.ValueLabel = BreachGetValueLabel(b)
+	data.Breach.Values = BreachGetValues(b)
+	data.Breach.ExpectedValue = BreachGetExpectedValue(b)
 	err = templ.Execute(buf, data)
 	if err != nil {
 		bt.AddBreach(&ValueBreach{

@@ -21,13 +21,10 @@ import (
 //   - webforms: regex:match now handles FormatMapString inputs and
 //     lookupFactAsStringMap is panic-safe, so the tokenised to_mail check
 //     detects the token and renders its breach template cleanly.
-//
-// NOTE: a fourth, out-of-scope defect remains for the cc-mail / bcc-mail
-// checks in webforms-tokenised-email-handlers.yml: when a handler has no
-// cc_mail / bcc_mail key the input format is empty, regex:match falls to its
-// default branch and emits a ValueBreach, and the shared breach template then
-// fails on the missing `.Breach.Key` field. That is tracked separately; these
-// tests deliberately assert only the wrong-to-mail path.
+//   - webforms cc-mail / bcc-mail: a handler that omits cc_mail / bcc_mail
+//     now yields an empty input format, which regex:match treats as a no-op
+//     (no breach) instead of emitting a ValueBreach whose key-value breach
+//     template failed on the absent `.Breach.Key` field.
 
 func TestFilesExample(t *testing.T) {
 	t.Parallel()
@@ -72,6 +69,11 @@ func TestWebformsExample(t *testing.T) {
 	writeFile(t, filepath.Join(project, "webform.webform.feedback.yml"),
 		"uuid: 2\nlangcode: en\nstatus: open\nid: feedback\ntitle: 'Feedback form'\n"+
 			"handlers:\n  email_notification:\n    id: email\n    settings:\n      to_mail: 'admin@example.com'\n")
+	// A handler that DOES set a tokenised cc_mail: the cc-mail check must
+	// breach, and its key-value breach template must render cleanly.
+	writeFile(t, filepath.Join(project, "webform.webform.enquiry.yml"),
+		"uuid: 3\nlangcode: en\nstatus: open\nid: enquiry\ntitle: 'Enquiry form'\n"+
+			"handlers:\n  email_cc:\n    id: email\n    settings:\n      cc_mail: '[current-user:mail]'\n")
 
 	res := runShipshape(t, repoRoot,
 		"run", project, "-f", examplePath("webforms-tokenised-email-handlers.yml"), "-o", "json")
@@ -100,6 +102,29 @@ func TestWebformsExample(t *testing.T) {
 	assert.NotContains(t, label, "unsupported input format",
 		"map-string input must be handled by regex:match")
 	assert.Contains(t, label, "has token", "breach template must render the handler message")
+
+	// bcc-mail: no fixture sets bcc_mail, so the yaml:key input is empty and
+	// regex:match is a no-op. Previously this produced a spurious ValueBreach
+	// whose key-value template failed on the absent .Breach.Key field.
+	bccMail, ok := findResult(rl, "wrong-bcc-mail")
+	require.True(t, ok, "wrong-bcc-mail result not present\nstderr: %s", res.Stderr)
+	assert.Equal(t, "Pass", bccMail.Status, "absent bcc_mail must not breach")
+	assert.Empty(t, bccMail.Breaches, "absent optional data is not a breach")
+
+	// cc-mail: the enquiry fixture sets a tokenised cc_mail, so this check
+	// must breach — and the key-value breach template must render cleanly
+	// rather than erroring on a missing field.
+	ccMail, ok := findResult(rl, "wrong-cc-mail")
+	require.True(t, ok, "wrong-cc-mail result not present\nstderr: %s", res.Stderr)
+	assert.Equal(t, "Fail", ccMail.Status, "tokenised cc_mail must be flagged")
+	require.NotEmpty(t, ccMail.Breaches, "wrong-cc-mail should have a breach")
+	ccb := ccMail.Breaches[0]
+	assert.Equal(t, "[current-user:mail]", ccb["value"], "matched cc token value")
+	ccLabel, _ := ccb["value-label"].(string)
+	assert.NotContains(t, ccLabel, "unable to render breach template",
+		"cc breach template must render cleanly")
+	assert.NotContains(t, ccLabel, "unsupported input format",
+		"map-string cc input must be handled by regex:match")
 }
 
 // dockerComposeFixture is a minimal Lagoon-style compose project plus the
