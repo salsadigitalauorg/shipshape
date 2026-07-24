@@ -167,6 +167,72 @@ func TestRegexMatchAnalyse(t *testing.T) {
 			expectedBreaches: []breach.Breach{},
 		},
 
+		// String map.
+		{
+			name: "mapStringEmpty",
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapString,
+				map[string]string{},
+			),
+			pattern:          `\[(.*)\]`,
+			expectedBreaches: []breach.Breach{},
+		},
+		{
+			name: "mapStringNoMatch",
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapString,
+				map[string]string{"contact": "admin@example.com"},
+			),
+			pattern:          `\[(.*)\]`,
+			expectedBreaches: []breach.Breach{},
+		},
+		{
+			name: "mapString1Match",
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapString,
+				map[string]string{"contact": "[current-user:mail]"},
+			),
+			pattern: `\[(.*)\]`,
+			expectedBreaches: []breach.Breach{
+				&breach.KeyValueBreach{
+					BreachType: "key-value",
+					CheckName:  "mapString1Match",
+					Key:        "contact",
+					Value:      "[current-user:mail]",
+				},
+			},
+		},
+		{
+			name: "mapStringMultipleMatches",
+			input: testdata.New(
+				"testFacter",
+				data.FormatMapString,
+				map[string]string{
+					"contact": "[current-user:mail]",
+					"support": "[site:mail]",
+					"static":  "admin@example.com",
+				},
+			),
+			pattern: `\[(.*)\]`,
+			expectedBreaches: []breach.Breach{
+				&breach.KeyValueBreach{
+					BreachType: "key-value",
+					CheckName:  "mapStringMultipleMatches",
+					Key:        "contact",
+					Value:      "[current-user:mail]",
+				},
+				&breach.KeyValueBreach{
+					BreachType: "key-value",
+					CheckName:  "mapStringMultipleMatches",
+					Key:        "support",
+					Value:      "[site:mail]",
+				},
+			},
+		},
+
 		// Unsupported.
 		{
 			name: "unsupported",
