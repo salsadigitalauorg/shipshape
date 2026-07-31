@@ -12,7 +12,7 @@ require (
 	github.com/hasura/go-graphql-client v0.9.2
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/joho/godotenv v1.5.1
-	github.com/minio/selfupdate v0.4.0
+	github.com/minio/selfupdate v0.6.0
 	github.com/moby/buildkit v0.28.1
 	github.com/nikolalohinski/gonja/v2 v2.1.5
 	github.com/pmezard/go-difflib v1.0.0
@@ -27,6 +27,7 @@ require (
 )
 
 require (
+	aead.dev/minisign v0.2.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
