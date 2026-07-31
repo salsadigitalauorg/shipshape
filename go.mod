@@ -9,7 +9,7 @@ require (
 	github.com/goccy/go-json v0.10.2
 	github.com/gocolly/colly v1.2.0
 	github.com/hashicorp/go-version v1.6.0
-	github.com/hasura/go-graphql-client v0.9.2
+	github.com/hasura/go-graphql-client v0.16.0
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/selfupdate v0.4.0
@@ -36,6 +36,7 @@ require (
 	github.com/antchfx/xmlquery v1.3.11 // indirect
 	github.com/antchfx/xpath v1.3.6 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
+	github.com/coder/websocket v1.8.14 // indirect
 	github.com/containerd/containerd v1.7.18 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/containerd/platforms v1.0.0-rc.2 // indirect
@@ -52,7 +53,6 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
-	github.com/go-playground/validator/v10 v10.4.1 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
@@ -96,5 +96,4 @@ require (
 	golang.org/x/text v0.34.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
-	nhooyr.io/websocket v1.8.7 // indirect
 )
