@@ -44,7 +44,7 @@ jobs:
       # the e2e suite has its own Docker-capable workflow (.github/workflows/e2e.yml).
       run: go test -v -race $(go list ./... | grep -v /cmd/gen | grep -v /tests/e2e) -coverprofile=build/coverage.out
 
-    - uses: shogo82148/actions-goveralls@f43965feeef0f2065761d1eefbb69c7aa273ab0e # v1
+    - uses: shogo82148/actions-goveralls@9606dbc5ac5cf888a0e9ef901515c3cd516a2790 # v1
       with:
         path-to-profile: build/coverage.out
 
