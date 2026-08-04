@@ -32,6 +32,8 @@ type Key struct {
 	Expression string `yaml:"expression"`
 }
 
+//go:generate go run ../../../cmd/gen.go fact-plugin --package=json
+
 func init() {
 	fact.Manager().RegisterFactory("json:key", func(n string) fact.Facter {
 		return New(n)
