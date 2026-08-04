@@ -1,0 +1,85 @@
+# Detect drift between a project-template repository and a provisioned
+# project's current state, ignoring placeholders that are meant to vary per
+# project (e.g. {{ PROJECT_NAME }}).
+#
+# `file:drift` compares a template input against a single additional input
+# (the current file), masking placeholder-shaped substrings out of both sides
+# before diffing with a standard unified diff (3 lines of context). This is
+# deliberately not template rendering: it requires no per-project vars map,
+# so the same config runs unmodified across every project provisioned from
+# the template. See docs/plans/2026-07-24-needs-new-capability-plugins.md for
+# the full rationale (ADR: reject Jinja rendering for file-drift detection).
+#
+# In a real audit the template would usually be fetched from the template
+# repository with `http:fetch`:
+#
+#   collect:
+#     template:
+#       http:fetch:
+#         url: https://raw.githubusercontent.com/client/project-template/main/.github/workflows/ci.yml
+#     current:
+#       file:read:
+#         path: .github/workflows/ci.yml
+#
+# This example uses two committed fixtures instead of a live URL, so it runs
+# offline and deterministically in CI.
+#
+# `file:drift` emits an empty list when the current file matches the template
+# (modulo placeholders), or unified diff lines plus any
+# unsubstituted-placeholder notices when it does not - so it pairs naturally
+# with the `drift` analyser, which breaches whenever its input is non-empty.
+collect:
+  template:
+    file:read:
+      path: file-drift/template.yml
+
+  current-clean:
+    file:read:
+      path: file-drift/project-clean.yml
+
+  ci-drift-clean:
+    file:drift:
+      input: template
+      additional-inputs: [current-clean]
+
+  current-drifted:
+    file:read:
+      path: file-drift/project-drifted.yml
+
+  ci-drift-drifted:
+    file:drift:
+      input: template
+      additional-inputs: [current-drifted]
+
+  current-unsubstituted:
+    file:read:
+      path: file-drift/project-unsubstituted.yml
+
+  ci-drift-unsubstituted:
+    file:drift:
+      input: template
+      additional-inputs: [current-unsubstituted]
+
+analyse:
+  # Passes: the placeholder was substituted with a real value and every
+  # other line matches the template exactly.
+  ci-matches-template:
+    drift:
+      input: ci-drift-clean
+      description: "CI workflow has not drifted from the project template"
+
+  # Breaches: runs-on and node-version have genuinely drifted from the
+  # template. The {{ PROJECT_NAME }} line and the ${{ secrets.GITHUB_TOKEN }}
+  # GitHub Actions expression are both correctly excluded from the diff.
+  ci-drifted-from-template:
+    drift:
+      input: ci-drift-drifted
+      description: "CI workflow has not drifted from the project template"
+
+  # Breaches: the placeholder was never substituted - a common provisioning
+  # bug that a rendering-based approach cannot detect, since there would be
+  # nothing on the project side to compare the rendered value against.
+  ci-placeholder-unsubstituted:
+    drift:
+      input: ci-drift-unsubstituted
+      description: "CI workflow has not drifted from the project template"

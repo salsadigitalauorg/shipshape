@@ -116,6 +116,23 @@ func selfContainedCases() []selfContainedCase {
 				{name: "tracking-code-check", status: "Fail", checkType: "equals", breachCount: 1},
 			},
 		},
+		{
+			name:         "file-drift",
+			file:         "file-drift.yml",
+			wantChecks:   3,
+			wantBreaches: 2,
+			wantSeverity: map[string]int{"normal": 2},
+			// wantPolicies is intentionally omitted: all three checks share
+			// the drift plugin, and the policy IDs within a plugin are
+			// collected via Go map iteration (see shipshape.go), so their
+			// order is non-deterministic. checkResults asserts each check by
+			// name, which is order-independent.
+			checkResults: []wantResult{
+				{name: "ci-matches-template", status: "Pass", checkType: "drift"},
+				{name: "ci-drifted-from-template", status: "Fail", checkType: "drift", breachCount: 1},
+				{name: "ci-placeholder-unsubstituted", status: "Fail", checkType: "drift", breachCount: 1},
+			},
+		},
 	}
 }
 
