@@ -63,6 +63,23 @@ func (m *manager) GetFactoriesKeys() []string {
 	return plugin.GetFactoriesKeys[Facter](m.GetFactories())
 }
 
+// ResetPlugins clears the registered plugin instances, as well as the
+// manager's own collected-facts cache. Overrides
+// pluginmanager.Manager.ResetPlugins(), which only clears plugin instances:
+// without also clearing m.collected here, a fact name collected by one test
+// (or run) would be silently skipped by CollectFact's de-dup check
+// (utils.StringSliceContains(m.collected, name)) in a later test/run that
+// reuses the same name with a fresh plugin instance, even though that fresh
+// instance was never actually collected. Production code never calls
+// ResetPlugins mid-process, so this only affects test isolation - but it
+// affects it significantly, since fact names like "primary"/"current" are
+// reused across many _test.go files sharing the package-level manager
+// singleton.
+func (m *manager) ResetPlugins() {
+	m.Manager.ResetPlugins()
+	m.collected = nil
+}
+
 // ParseConfig parses the raw config and creates the facts.
 func (m *manager) ParseConfig(raw map[string]map[string]interface{}) error {
 	count := 0
@@ -110,13 +127,17 @@ func (m *manager) CollectAllFacts() {
 // CollectFact collects a fact.
 func (m *manager) CollectFact(name string, f Facter) {
 	log.WithField("fact", name).Debug("starting CollectFact process")
-	var inputF Facter
+
+	var inputErrored bool
 	if f.GetInputName() != "" {
 		log.WithField("fact", name).
 			WithField("inputName", f.GetInputName()).
 			Debug("collect input")
-		inputF = m.FindPlugin(f.GetInputName())
+		inputF := m.FindPlugin(f.GetInputName())
 		m.CollectFact(f.GetInputName(), inputF)
+		if inputF != nil && len(inputF.GetErrors()) > 0 {
+			inputErrored = true
+		}
 	}
 
 	if len(f.GetAdditionalInputNames()) > 0 {
@@ -124,12 +145,15 @@ func (m *manager) CollectFact(name string, f Facter) {
 			log.WithField("fact", name).
 				WithField("additionalInputName", n).
 				Debug("collect additional input")
-			inputF = m.FindPlugin(n)
-			m.CollectFact(n, inputF)
+			additionalInputF := m.FindPlugin(n)
+			m.CollectFact(n, additionalInputF)
+			if additionalInputF != nil && len(additionalInputF.GetErrors()) > 0 {
+				inputErrored = true
+			}
 		}
 	}
 
-	if inputF != nil && len(inputF.GetErrors()) > 0 {
+	if inputErrored {
 		return
 	}
 
