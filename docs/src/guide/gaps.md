@@ -26,7 +26,7 @@ None of the statuses below mean "waiting for a one-to-one port". Almost every
 | 0.x check | Status | 1.x plugin chain |
 |---|---|---|
 | [`file`](../reference/checks/file.md) | Achievable now | `file:lookup` + `not:empty` — see `examples/files.yml` |
-| [`file:diff`](../reference/checks/file-diff.md) | Needs new capability | TBD |
+| [`file:diff`](../reference/checks/file-diff.md) | Achievable now | `file:read`/`http:fetch` + `file:drift` + `drift` — see `examples/file-drift.yml` |
 
 ### Recipe: file
 
@@ -45,6 +45,83 @@ analyse:
 ```
 
 Source: `examples/files.yml`
+
+### Recipe: file:diff
+
+0.x `file:diff` rendered a Jinja template with an operator-supplied vars map
+and diffed the result against an on-disk file. 1.x deliberately does **not**
+reproduce that: `file:drift` instead masks placeholder-shaped substrings
+(default `{{ VAR }}`) out of both sides before diffing, so the same config
+runs unmodified across every project provisioned from a template — no
+per-project vars map required. It also detects a placeholder that was never
+substituted, which rendering cannot.
+
+Template rendering was rejected in favour of drift matching for several
+reasons: a per-project vars map does not scale across many provisioned
+projects; `${{ VAR }}`-style placeholders collide with GitHub Actions'
+`${{ secrets.* }}` syntax when the template is a workflow file; rendering
+silently substitutes undefined variables rather than surfacing them;
+rendering cannot detect a placeholder that was never substituted, because
+there is nothing left to compare once it is rendered away; and a rendering
+engine (e.g. gonja) pulls in dozens of transitive dependencies where RE2
+(already in the standard library) needs none.
+
+```yaml
+collect:
+  template:
+    http:fetch:
+      url: https://raw.githubusercontent.com/client/project-template/main/.github/workflows/ci.yml
+
+  current:
+    file:read:
+      path: .github/workflows/ci.yml
+
+  ci-drift:
+    file:drift:
+      input: template
+      additional-inputs: [current]
+
+analyse:
+  ci-matches-template:
+    drift:
+      description: CI workflow has not drifted from the project template
+      input: ci-drift
+```
+
+`drift` breaches carry a full unified diff (3 lines of context) via
+`KeyValuesBreach` — legible in `pretty`, `json`, and `junit` output. The
+`table` renderer does not wrap multi-line breach values, so it is unsuitable
+for drift checks.
+
+**Caveat — placeholder matching is a wildcard, not a value check.** Each
+placeholder in a template line is matched against the current line with a
+non-greedy `(.*?)` capture, so `file:drift` confirms *something* occupies the
+placeholder's position, not that the surrounding line is otherwise identical
+in structure. In particular:
+
+- A placeholder capture can absorb adjacent genuine drift on the same line —
+  e.g. template `image: {{ IMG }}:v1` against current
+  `image: evil/malware:latest:v1` reports no drift, because the wildcard
+  swallows everything up to the literal `:v1` suffix. Keep placeholders on
+  their own line, or as the entire value, where the drift you care about
+  could plausibly appear.
+- The same placeholder name used twice on one line (e.g.
+  `a: {{ X }} b: {{ X }}`) is **not** checked for consistency between the two
+  captured values — RE2 has no backreferences, so `file:drift` cannot express
+  "these two captures must match". A current line of `a: one b: two` reports
+  no drift even though the two `X` values differ.
+- An empty substitution (the current file has nothing where the template has
+  `{{ VAR }}`) counts as substituted, not as drift. Only a placeholder that is
+  still **literally present** in the current file — the common
+  copy-paste-and-forgot-to-fill-in bug — is flagged as unsubstituted.
+
+None of these are considered blocking for the initial recipe: they are
+inherent to wildcard-based matching without a rendering/vars step, and are
+judged an acceptable trade-off against the config-per-project cost of true
+template rendering (see the rationale above). Prefer isolating a placeholder to its
+own line, or to the entirety of a value, where precision matters.
+
+Source: `examples/file-drift.yml`
 
 ## YAML / JSON checks
 
@@ -276,8 +353,8 @@ Source: `examples/docker.yml`
 
 | Status | Count |
 |---|---|
-| Achievable now | 14 |
+| Achievable now | 16 |
 | Achievable, undocumented | 0 |
-| Needs new capability | 4 |
+| Needs new capability | 2 |
 
 The plan for the remaining capabilities is on the [roadmap](roadmap.md) page.

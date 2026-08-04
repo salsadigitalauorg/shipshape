@@ -7,8 +7,8 @@
 # before diffing with a standard unified diff (3 lines of context). This is
 # deliberately not template rendering: it requires no per-project vars map,
 # so the same config runs unmodified across every project provisioned from
-# the template. See docs/plans/2026-07-24-needs-new-capability-plugins.md for
-# the full rationale (ADR: reject Jinja rendering for file-drift detection).
+# the template. See the "Recipe: file:diff" section of docs/src/guide/gaps.md
+# for the full rationale, including why template rendering was rejected.
 #
 # In a real audit the template would usually be fetched from the template
 # repository with `http:fetch`:
