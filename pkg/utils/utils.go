@@ -15,6 +15,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-version"
 	log "github.com/sirupsen/logrus"
@@ -282,17 +283,43 @@ func StringIsUrl(s string) bool {
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
+// fetchTimeout bounds the total time (connection, redirects and body read)
+// spent fetching a remote URL, so a slow or unresponsive host cannot hang a
+// run indefinitely. Go's http.Client already caps redirects at 10 by
+// default when CheckRedirect is unset.
+const fetchTimeout = 30 * time.Second
+
+// maxFetchResponseSize bounds the number of bytes read from a remote
+// response body, so an unexpectedly large or malicious response cannot
+// exhaust memory. ISM-1288: outbound content must be bounded and validated.
+const maxFetchResponseSize = 10 * 1024 * 1024 // 10 MiB
+
+var fetchClient = &http.Client{Timeout: fetchTimeout}
+
 // FetchContentFromUrl fetches the content from a url and returns its bytes.
+// The request is bounded by fetchTimeout and the response body is capped at
+// maxFetchResponseSize; a response exceeding the cap returns an error rather
+// than being silently truncated.
 func FetchContentFromUrl(u string) ([]byte, error) {
-	rsp, err := http.Get(u)
+	rsp, err := fetchClient.Get(u)
 	if err != nil {
 		return []byte(nil), err
 	}
 
 	defer rsp.Body.Close()
+	if rsp.StatusCode < 200 || rsp.StatusCode >= 300 {
+		return []byte(nil), fmt.Errorf(
+			"fetching %s returned HTTP %d", u, rsp.StatusCode)
+	}
+
+	limited := io.LimitReader(rsp.Body, maxFetchResponseSize+1)
 	buf := new(bytes.Buffer)
-	if _, err := buf.ReadFrom(rsp.Body); err != nil {
+	if _, err := buf.ReadFrom(limited); err != nil {
 		return []byte(nil), err
+	}
+	if buf.Len() > maxFetchResponseSize {
+		return []byte(nil), fmt.Errorf(
+			"response from %s exceeds maximum allowed size of %d bytes", u, maxFetchResponseSize)
 	}
 	return buf.Bytes(), nil
 }
