@@ -477,6 +477,37 @@ func TestFetchContentFromUrl(t *testing.T) {
 	}
 }
 
+// TestFetchContentFromUrlSizeCap ensures a response larger than the maximum
+// allowed size is rejected with an error rather than silently truncated,
+// bounding memory use for outbound fetches of operator-controlled URLs.
+func TestFetchContentFromUrlSizeCap(t *testing.T) {
+	const overCap = 10*1024*1024 + 1
+	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(make([]byte, overCap))
+	}))
+	defer svr.Close()
+
+	c, err := FetchContentFromUrl(svr.URL + "/big.yml")
+	assert.Error(t, err)
+	assert.Nil(t, c)
+	assert.Contains(t, err.Error(), "exceeds maximum allowed size")
+}
+
+// TestFetchContentFromUrlWithinCap ensures a response right at the boundary
+// of the size cap is still accepted, guarding against an off-by-one in the
+// limit check.
+func TestFetchContentFromUrlWithinCap(t *testing.T) {
+	const atCap = 10 * 1024 * 1024
+	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(make([]byte, atCap))
+	}))
+	defer svr.Close()
+
+	c, err := FetchContentFromUrl(svr.URL + "/exact.yml")
+	assert.NoError(t, err)
+	assert.Len(t, c, atCap)
+}
+
 func TestIsDirectory(t *testing.T) {
 	if a, e := IsDirectory("testdata"); e != nil || !a {
 		t.Errorf("expected directory 'testdata' to exist")
