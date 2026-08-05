@@ -137,6 +137,31 @@ func selfContainedCases() []selfContainedCase {
 				{name: "ci-placeholder-unsubstituted", status: "Fail", checkType: "drift", breachCount: 1},
 			},
 		},
+		{
+			name:         "app-type",
+			file:         "app-type.yml",
+			wantChecks:   4,
+			wantBreaches: 3,
+			wantSeverity: map[string]int{"high": 3},
+			// wantPolicies is intentionally omitted: all four checks share
+			// the detected plugin, and the policy IDs within a plugin are
+			// collected via Go map iteration (see shipshape.go), so their
+			// order is non-deterministic. checkResults asserts each check by
+			// name, which is order-independent.
+			//
+			// drupal/symfony/laravel each score markers+dirs+dependencies
+			// (5+5+10=20), over the threshold of 15, so they breach. The
+			// wordpress fixture only matches its own marker line (score 5,
+			// no dirs or dependencies signal fires for any configured
+			// framework) - 5 never exceeds 15, proving threshold filtering
+			// is exercised here, not just at the unit level.
+			checkResults: []wantResult{
+				{name: "drupal-project-frameworks", status: "Fail", checkType: "detected", breachCount: 1},
+				{name: "symfony-project-frameworks", status: "Fail", checkType: "detected", breachCount: 1},
+				{name: "laravel-project-frameworks", status: "Fail", checkType: "detected", breachCount: 1},
+				{name: "wordpress-project-frameworks", status: "Pass", checkType: "detected"},
+			},
+		},
 	}
 }
 
