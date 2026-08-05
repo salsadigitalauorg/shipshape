@@ -93,6 +93,7 @@ module.exports = {
                 ['/reference/collect/database-search', 'database:search'],
                 ['/reference/collect/docker-command', 'docker:command'],
                 ['/reference/collect/docker-images', 'docker:images'],
+                ['/reference/collect/file-fingerprint', 'file:fingerprint'],
                 ['/reference/collect/file-lookup', 'file:lookup'],
                 ['/reference/collect/file-read', 'file:read'],
                 ['/reference/collect/file-read-multiple', 'file:read:multiple'],
