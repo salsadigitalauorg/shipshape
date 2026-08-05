@@ -1,0 +1,113 @@
+# Detect disallowed application frameworks using weighted evidence rather
+# than simple presence checks.
+#
+# `file:fingerprint` scores each configured framework signature against a
+# codebase: markers (exact-line matches in entrypoint files, e.g. index.php),
+# dirs (directory names present anywhere under the scanned path), and
+# dependencies (package names present in a manifest such as composer.json).
+# Each signal contributes its configured weight per match - so two markers
+# found in two entrypoints score 2x2x weights.markers, not a flat weight -
+# reproducing the accumulation model of the 0.x sca:application_type check
+# it replaces. The one exception is dependencies: a matched dependency scores
+# once only, no matter how many configured names match, mirroring 0.x's
+# single bool-driven award for that signal.
+#
+# A framework is only emitted (as label -> accumulated score) when its score
+# is strictly greater than `threshold`. Sub-threshold scores are not emitted
+# at all, not even as a low value - so a codebase that merely shares one
+# incidental signal with a framework (e.g. a "public" directory, common to
+# several PHP frameworks) does not falsely trigger a breach. This example's
+# threshold (15) is chosen so that a single coincidental dirs-only match
+# (weight 5) never breaches on its own, but a real framework match
+# (markers + dirs + dependencies, typically 20) does.
+#
+# No framework knowledge is baked into the binary - the `frameworks` map
+# below is entirely operator-supplied config. A signature library like this
+# can be shared across projects and composed with local overrides via
+# multiple `-f` flags (deep-merged - see docs/src/guide/gaps.md for the
+# override-replaces-not-appends caveat on repeated list keys).
+#
+# `detected` breaches once per label present in a map-shaped input (any
+# entry is itself the assertion failure), pairing naturally with
+# `file:fingerprint`'s "is a disallowed framework present?" output.
+collect:
+  drupal-project:
+    file:fingerprint:
+      path: app-type/drupal
+      threshold: 15
+      entrypoints: ["index.php"]
+      frameworks: &x-frameworks
+        drupal:
+          markers: ["use Drupal\\Core\\DrupalKernel;"]
+          dirs: [web, docroot]
+          dependencies: [drupal/core-recommended]
+        wordpress:
+          markers: [" * @package WordPress"]
+          dirs: [wp-content]
+        symfony:
+          markers: ["  return new Kernel($context['APP_ENV'], (bool) $context['APP_DEBUG']);"]
+          dirs: [bin, config, public]
+          dependencies: [symfony/runtime, symfony/symfony, symfony/framework]
+        laravel:
+          markers: ["use Illuminate\\Contracts\\Http\\Kernel;"]
+          dirs: [config, public]
+          dependencies: [laravel/framework, laravel/tinker]
+
+  wordpress-project:
+    file:fingerprint:
+      path: app-type/wordpress
+      threshold: 15
+      entrypoints: ["index.php"]
+      frameworks: *x-frameworks
+
+  symfony-project:
+    file:fingerprint:
+      path: app-type/symfony
+      threshold: 15
+      entrypoints: ["index.php"]
+      frameworks: *x-frameworks
+
+  laravel-project:
+    file:fingerprint:
+      path: app-type/laravel
+      threshold: 15
+      entrypoints: ["index.php"]
+      frameworks: *x-frameworks
+
+analyse:
+  # Breaches: the drupal fixture scores markers + dirs + dependencies
+  # (5+5+10=20), well over the threshold.
+  drupal-project-frameworks:
+    detected:
+      description: Disallowed application framework detected
+      input: drupal-project
+      severity: high
+
+  # Passes: the wordpress fixture only matches its own marker line
+  # (score 5). No dirs or dependencies signal fires for any configured
+  # framework, so 5 never exceeds the threshold of 15 - this is the case
+  # that proves threshold filtering, not just label choice.
+  wordpress-project-frameworks:
+    detected:
+      description: Disallowed application framework detected
+      input: wordpress-project
+      severity: high
+
+  # Breaches: the symfony fixture scores markers + dirs + dependencies
+  # (5+5+10=20). The laravel signature's "public" dir also incidentally
+  # matches here (score 5), but 5 stays under threshold and is correctly
+  # not emitted.
+  symfony-project-frameworks:
+    detected:
+      description: Disallowed application framework detected
+      input: symfony-project
+      severity: high
+
+  # Breaches: the laravel fixture scores markers + dirs + dependencies
+  # (5+5+10=20). The symfony signature's "public" dir also incidentally
+  # matches here (score 5) but stays under threshold.
+  laravel-project-frameworks:
+    detected:
+      description: Disallowed application framework detected
+      input: laravel-project
+      severity: high

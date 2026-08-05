@@ -1,0 +1,6 @@
+{
+    "_comment": "Minimal manifest required because the shared frameworks signature (examples/app-type.yml) configures a 'dependencies' list for drupal/symfony/laravel; file:fingerprint requires the manifest to exist whenever any configured framework uses that signal, even one that never matches this fixture.",
+    "require": {
+        "php": "^8.1"
+    }
+}
