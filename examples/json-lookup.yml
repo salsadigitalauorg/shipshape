@@ -1,0 +1,63 @@
+# Read values out of a JSON file using RFC 9535 JSONPath expressions.
+#
+# `json:key` reads raw JSON (e.g. from a `file:read`) and evaluates an
+# RFC 9535 JSONPath expression against it, emitting the matched values for
+# downstream analysers. This is the JSON counterpart to `yaml:key`, using the
+# more expressive JSONPath query language rather than the dotted-path lookup.
+#
+# The emitted format follows the shape of the match: a single scalar emits a
+# string, multiple values emit a list, and objects emit a map.
+#
+# A sample package.json is bundled at examples/testdata/package.json, e.g.:
+#   cd examples/testdata && shipshape run . -f ../json-lookup.yml
+collect:
+  pkg-file:
+    file:read:
+      path: package.json
+
+  # The package name scalar, e.g. "example-app".
+  pkg-name:
+    json:key:
+      input: pkg-file
+      expression: "$.name"
+
+  # The command run by each declared npm script, e.g. ["eslint .", "vite build"].
+  script-commands:
+    json:key:
+      input: pkg-file
+      expression: "$.scripts.*"
+
+  # RFC 9535 filters and functions are supported. Here `search()` selects only
+  # the dependencies pinned with a caret range, which allow silent minor
+  # upgrades at install time.
+  caret-ranged-deps:
+    json:key:
+      input: pkg-file
+      expression: "$.dependencies[?search(@,'\\\\^')]"
+
+analyse:
+  # The package name must match the approved application name. A single scalar
+  # match emits a string, so the scalar analysers apply here rather than
+  # `allowed:list`. `not:equals` breaches when the value differs.
+  approved-app-name:
+    not:equals:
+      description: package.json name is not the approved application
+      input: pkg-name
+      value: example-app
+
+  # Every script must invoke an approved build tool; anything else is flagged.
+  approved-script-tooling:
+    allowed:list:
+      description: A script uses an unapproved build tool
+      input: script-commands
+      allowed:
+        - eslint .
+        - vite build
+        - vitest run
+
+  # Runtime dependencies must be pinned exactly, so a caret range is a breach.
+  # A filter that matches multiple values emits a list.
+  pinned-dependencies:
+    not:empty:
+      description: A runtime dependency uses a caret version range
+      input: caret-ranged-deps

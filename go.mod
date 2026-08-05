@@ -21,6 +21,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.34.0
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.34.0
+	github.com/theory/jsonpath v0.12.0
 	github.com/vmware-labs/yaml-jsonpath v0.3.2
 	golang.org/x/oauth2 v0.31.0
 	gopkg.in/yaml.v3 v3.0.1

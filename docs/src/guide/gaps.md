@@ -51,7 +51,7 @@ Source: `examples/files.yml`
 | 0.x check | Status | 1.x plugin chain |
 |---|---|---|
 | [`yaml`](../reference/checks/yaml.md) | Achievable now | `file:read` + `yaml:key` + `equals` / `allowed:list` — see `examples/drupal-config.yml` |
-| [`json`](../reference/checks/json.md) | Needs new capability | Needs a `json:key` fact plugin (analogous to `yaml:key`) — [on the roadmap](roadmap.md) |
+| [`json`](../reference/checks/json.md) | Achievable now | `file:read` + `json:key` + `equals` / `allowed:list` — see `examples/json-lookup.yml` |
 
 ### Recipe: yaml
 
@@ -78,6 +78,48 @@ analyse:
 ```
 
 Source: `examples/drupal-config.yml`
+
+### Recipe: json
+
+`json:key` is the JSON counterpart to `yaml:key`. It reads raw JSON (typically
+from a `file:read`) and evaluates an [RFC 9535](https://www.rfc-editor.org/rfc/rfc9535.html)
+JSONPath expression against it — e.g. `$.name`, `$.items[0]`, the wildcard
+`$.scripts.*`, or a filter such as `$.deps[?@.name=='x'].version`.
+
+The emitted format follows the shape of the match, mirroring `yaml:key`: a
+single scalar emits a string, multiple values emit a list, and objects emit a
+map. An expression that matches nothing emits nil rather than erroring, so
+`not-empty` can act on the absence of a value.
+
+Note that `json:key` implements RFC 9535, whereas `yaml:key` uses an older
+pre-RFC dialect. The practical difference is filter syntax: `json:key` accepts
+both `[?@.x=='y']` (the RFC form) and `[?(@.x=='y')]`, and supports the RFC
+functions `length()`, `count()`, `match()` and `search()`; `yaml:key` accepts
+only the parenthesised form and none of the functions.
+
+```yaml
+collect:
+  pkg-file:
+    file:read:
+      path: package.json
+
+  script-commands:
+    json:key:
+      input: pkg-file
+      expression: "$.scripts.*"
+
+analyse:
+  approved-script-tooling:
+    allowed:list:
+      description: A script uses an unapproved build tool
+      input: script-commands
+      allowed:
+        - eslint .
+        - vite build
+        - vitest run
+```
+
+Source: `examples/json-lookup.yml`
 
 ## Drupal checks
 
