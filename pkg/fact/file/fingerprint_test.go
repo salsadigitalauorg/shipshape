@@ -242,6 +242,189 @@ func TestFileFingerprintCollect(t *testing.T) {
 			},
 			ExpectedErrors: []error{},
 		},
+		{
+			Name: "testDependenciesOnlyRequire",
+			FactFn: func() fact.Facter {
+				f := NewFingerprint("testDependenciesOnlyRequire")
+				f.Path = "testdata/fingerprint/dependencies-only"
+				f.Threshold = 1
+				f.Frameworks = map[string]FrameworkSignature{
+					"drupal": {
+						Dependencies: []string{"drupal/core-recommended"},
+					},
+				}
+				return f
+			},
+			ExpectedFormat: data.FormatMapString,
+			ExpectedData: map[string]string{
+				"drupal": "10",
+			},
+			ExpectedErrors: []error{},
+		},
+		{
+			Name: "testDependenciesRequireDevFixesZeroXGap",
+			FactFn: func() fact.Facter {
+				f := NewFingerprint("testDependenciesRequireDevFixesZeroXGap")
+				f.Path = "testdata/fingerprint/dependencies-require-dev-only"
+				f.Threshold = 1
+				f.Frameworks = map[string]FrameworkSignature{
+					"drupal": {
+						Dependencies: []string{"drupal/core-dev"},
+					},
+				}
+				return f
+			},
+			ExpectedFormat: data.FormatMapString,
+			ExpectedData: map[string]string{
+				"drupal": "10",
+			},
+			ExpectedErrors: []error{},
+		},
+		{
+			Name: "testDependencyMatchDoesNotAccumulatePerHit",
+			FactFn: func() fact.Facter {
+				f := NewFingerprint("testDependencyMatchDoesNotAccumulatePerHit")
+				f.Path = "testdata/fingerprint/dependencies-only"
+				f.Threshold = 1
+				f.Frameworks = map[string]FrameworkSignature{
+					"drupal": {
+						// Both configured dependency names match (php and
+						// drupal/core-recommended are both present in the
+						// fixture's require block), but the score must
+						// still be a single weights.dependencies award,
+						// not two.
+						Dependencies: []string{"php", "drupal/core-recommended"},
+					},
+				}
+				return f
+			},
+			ExpectedFormat: data.FormatMapString,
+			ExpectedData: map[string]string{
+				"drupal": "10",
+			},
+			ExpectedErrors: []error{},
+		},
+		{
+			Name: "testAllThreeSignalsCombined",
+			FactFn: func() fact.Facter {
+				f := NewFingerprint("testAllThreeSignalsCombined")
+				f.Path = "testdata/fingerprint/all-signals"
+				f.Threshold = 1
+				f.Entrypoints = []string{"index.php"}
+				f.Frameworks = map[string]FrameworkSignature{
+					"drupal": {
+						Markers:      []string{"use Drupal\\Core\\DrupalKernel;"},
+						Dirs:         []string{"web", "docroot"},
+						Dependencies: []string{"drupal/core-recommended"},
+					},
+				}
+				return f
+			},
+			ExpectedFormat: data.FormatMapString,
+			ExpectedData: map[string]string{
+				// markers: 1*1*5 = 5; dirs: 1*5 = 5; dependencies: 10;
+				// total 20.
+				"drupal": "20",
+			},
+			ExpectedErrors: []error{},
+		},
+		{
+			Name: "testMissingManifestIsCollectionError",
+			FactFn: func() fact.Facter {
+				f := NewFingerprint("testMissingManifestIsCollectionError")
+				f.Path = "testdata/fingerprint/markers-only"
+				f.Threshold = 1
+				f.Frameworks = map[string]FrameworkSignature{
+					"drupal": {
+						Dependencies: []string{"drupal/core-recommended"},
+					},
+				}
+				return f
+			},
+			ExpectedFormat: "",
+			ExpectedErrors: []error{ErrManifestNotFound},
+		},
+		{
+			Name: "testMalformedManifestIsCollectionError",
+			FactFn: func() fact.Facter {
+				f := NewFingerprint("testMalformedManifestIsCollectionError")
+				f.Path = "testdata/fingerprint/malformed-manifest"
+				f.Threshold = 1
+				f.Frameworks = map[string]FrameworkSignature{
+					"drupal": {
+						Dependencies: []string{"drupal/core-recommended"},
+					},
+				}
+				return f
+			},
+			ExpectedFormat: "",
+			ExpectedErrors: []error{ErrManifestInvalidJSON},
+		},
+		{
+			Name: "testInvalidDependencyPathExpression",
+			FactFn: func() fact.Facter {
+				f := NewFingerprint("testInvalidDependencyPathExpression")
+				f.Path = "testdata/fingerprint/dependencies-only"
+				f.Threshold = 1
+				f.DependencyPaths = []string{"$.require[?(("}
+				f.Frameworks = map[string]FrameworkSignature{
+					"drupal": {
+						Dependencies: []string{"drupal/core-recommended"},
+					},
+				}
+				return f
+			},
+			ExpectedFormat: "",
+			ExpectedErrors: []error{ErrInvalidDependencyPath},
+		},
+		{
+			Name: "testCustomManifestAndDependencyPathsForPackageJson",
+			FactFn: func() fact.Facter {
+				f := NewFingerprint("testCustomManifestAndDependencyPathsForPackageJson")
+				f.Path = "testdata/fingerprint/package-json-deps"
+				f.Threshold = 1
+				f.Manifest = "package.json"
+				f.DependencyPaths = []string{"$.dependencies", "$.devDependencies"}
+				f.Frameworks = map[string]FrameworkSignature{
+					"react-app": {
+						Dependencies: []string{"react"},
+					},
+					"jest-tested": {
+						Dependencies: []string{"jest"},
+					},
+				}
+				return f
+			},
+			ExpectedFormat: data.FormatMapString,
+			ExpectedData: map[string]string{
+				"react-app":   "10",
+				"jest-tested": "10",
+			},
+			ExpectedErrors: []error{},
+		},
+		{
+			Name: "testDependenciesSkippedWhenNoFrameworkUsesThem",
+			FactFn: func() fact.Facter {
+				// No composer.json under this path - if the dependencies
+				// signal were unconditionally evaluated, this would fail
+				// with ErrManifestNotFound even though no framework
+				// configures 'dependencies'.
+				f := NewFingerprint("testDependenciesSkippedWhenNoFrameworkUsesThem")
+				f.Path = "testdata/fingerprint/markers-only"
+				f.Threshold = 1
+				f.Frameworks = map[string]FrameworkSignature{
+					"drupal": {
+						Markers: []string{"use Drupal\\Core\\DrupalKernel;"},
+					},
+				}
+				return f
+			},
+			ExpectedFormat: data.FormatMapString,
+			ExpectedData: map[string]string{
+				"drupal": "5",
+			},
+			ExpectedErrors: []error{},
+		},
 	}
 
 	config.ProjectDir = ""
@@ -389,4 +572,51 @@ func TestFileFingerprintMarkerMatchingIgnoresCarriageReturns(t *testing.T) {
 			assert.Equal(map[string]string{"drupal": "5"}, f.GetData())
 		})
 	}
+}
+
+// TestFileFingerprintUnreadableManifest asserts that a manifest which
+// exists but cannot be read is reported as ErrManifestUnreadable, not
+// silently scored as zero and not conflated with ErrManifestNotFound -
+// the file is present and expected to be readable, so this is a hard
+// collection error distinct from "no manifest configured for this
+// ecosystem".
+//
+// The fixture is created at runtime with mode 0000 rather than committed,
+// since a permission-stripped file in testdata would not survive checkout
+// reliably.
+func TestFileFingerprintUnreadableManifest(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("running as root: mode 0000 is still readable, cannot test unreadable file")
+	}
+
+	assert := assert.New(t)
+
+	dir := t.TempDir()
+	manifest := filepath.Join(dir, "composer.json")
+	if err := os.WriteFile(manifest, []byte(`{"require":{"drupal/core-recommended":"^10"}}`), 0o644); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+	if err := os.Chmod(manifest, 0o000); err != nil {
+		t.Fatalf("chmod fixture: %v", err)
+	}
+	t.Cleanup(func() {
+		// Restore permissions so t.TempDir cleanup can remove the file.
+		_ = os.Chmod(manifest, 0o644)
+	})
+
+	config.ProjectDir = ""
+
+	f := NewFingerprint("testUnreadableManifest")
+	f.Path = dir
+	f.Threshold = 1
+	f.Frameworks = map[string]FrameworkSignature{
+		"drupal": {Dependencies: []string{"drupal/core-recommended"}},
+	}
+
+	f.Collect()
+
+	if assert.NotEmpty(f.GetErrors(), "unreadable manifest must raise a collection error") {
+		assert.ErrorIs(f.GetErrors()[0], ErrManifestUnreadable)
+	}
+	assert.Empty(f.GetData(), "no data should be emitted when collection fails")
 }
