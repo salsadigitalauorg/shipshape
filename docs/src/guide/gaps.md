@@ -288,7 +288,7 @@ of the other Drush-based checks — the shape stays the same.
 | 0.x check | Status | 1.x plugin chain |
 |---|---|---|
 | [`phpstan`](../reference/checks/phpstan.md) | Achievable now | `static-analysis` + `static-analysis:breaches` — see `examples/phpstan.yml` |
-| [`sca:application_type`](../reference/checks/sca-application-type.md) | Needs new capability | TBD |
+| [`sca:application_type`](../reference/checks/sca-application-type.md) | Achievable now | `file:fingerprint` + `detected` — see `examples/app-type.yml` |
 
 ### Recipe: phpstan
 
@@ -309,6 +309,120 @@ analyse:
 ```
 
 Source: `examples/phpstan.yml`
+
+### Recipe: sca:application_type
+
+0.x `sca:application_type` scored each disallowed framework with a weighted
+likelihood — markers (content matches in entrypoint files), dirs (directory
+presence), and dependencies (manifest lookup) each added to a running total,
+which breached once it exceeded a threshold. `file:fingerprint` reproduces
+this weighted model rather than simple presence matching (`detect` implies
+boolean presence; `fingerprint` conveys accumulated weighted evidence), and
+`detected` breaches once per label present in its map-shaped input.
+
+No framework knowledge is baked into the binary: every signature (which
+markers/dirs/dependencies identify which label) is entirely operator config
+under `frameworks`. The binary only supplies the generic matching mechanism.
+
+```yaml
+collect:
+  app-type:
+    file:fingerprint:
+      path: .
+      threshold: 20
+      entrypoints: ["index.php"]
+      weights: {markers: 5, dirs: 5, dependencies: 10}
+      manifest: composer.json
+      dependency-paths:            # optional override; sensible defaults ship
+        - "$.require"
+        - "$['require-dev']"
+      frameworks:
+        drupal:
+          markers: ["use Drupal\\Core\\DrupalKernel;"]
+          dirs: [web, docroot]
+          dependencies: [drupal/core-recommended]
+        wordpress:
+          markers: [" * @package WordPress"]
+          dirs: [wp-content]
+
+analyse:
+  no-disallowed-frameworks:
+    detected:
+      description: Disallowed application framework detected
+      input: app-type
+      severity: high
+```
+
+Source: `examples/app-type.yml`
+
+**Caveat — markers/dirs accumulate per match, dependencies does not.** A
+framework with 2 markers each found in 2 entrypoint files scores
+`weights.markers * 2 * 2`, not a flat `weights.markers` — and a framework
+with the same directory name matched twice (or two configured dir names both
+present) scores `weights.dirs` twice. This reproduces 0.x's
+`sca:application_type` accumulation model exactly
+(`pkg/checks/sca/apptypecheck.go`), so a ported 0.x config scores
+identically. Dependencies is the one signal that does **not** accumulate:
+however many configured dependency names match, or however many
+`dependency-paths` expressions surface them, a framework's dependencies
+signal contributes `weights.dependencies` at most once — mirroring 0.x's
+single bool-driven award for that signal. Do not assume all three signals
+behave the same way when tuning weights and thresholds.
+
+**Caveat — threshold is a "strictly greater than" boundary, and 0 cannot mean
+"any single match".** A label is only emitted when its accumulated score is
+strictly greater than `threshold`; a score equal to `threshold` does not
+breach. Because YAML unmarshals an absent field to Go's zero value,
+`threshold: 0` and simply omitting `threshold` are indistinguishable from "use
+the default (30)". An operator who genuinely wants "any single match
+breaches" cannot express `threshold: 0` and must configure a negative
+threshold (e.g. `-1`) instead. This is inherited from 0.x, which has the
+identical limitation, and is kept unchanged for compatibility with ported 0.x
+threshold values.
+
+**Composing a shared signature library.** Because `frameworks` is plain
+operator config, a signature library (a YAML file defining `frameworks` for
+common PHP/Node frameworks) can be maintained centrally and composed with a
+project-local config via repeated `-f` flags, which support URLs:
+
+```sh
+shipshape run . \
+  -f https://raw.githubusercontent.com/your-org/shipshape-signatures/main/frameworks.yml \
+  -f ./my-audit.yml
+```
+
+v2 config deep-merges every `-f` file in order
+(`pkg/config/config.go`, `pkg/config/merge.go`). **Caveat: `deepMerge`
+replaces slices and scalars, it does not union or append them.** If both the
+shared library and the local override define `frameworks.drupal.dirs`, the
+local file's list *replaces* the library's list entirely — a local override
+adding one directory to an otherwise-good signature must repeat every
+existing entry, not just the new one. Every override is logged at `Warn`
+with the dotted key path, so a later file silently changing a signature is
+never invisible — but it is easy to author an override that unintentionally
+drops entries from a signature the author only meant to extend. Only maps
+merge recursively; everything else (scalars and slices) is a full
+replacement.
+
+**Scope boundary — this recipe answers "is a disallowed framework present?",
+not "is this the expected app type?".** `file:fingerprint` emits a map of
+label to score for every framework whose score clears the threshold; it does
+not emit a fixed list of allowed/expected labels to compare against, so it
+cannot directly express "this project must be exactly a Drupal site and
+nothing else". Composing the output with `allowed:list` does not work
+either: `allowed:list` on a `FormatMapString` input compares the map's
+*values* (the scores) against an allow-list, not its keys (the labels) — the
+comparison you would actually want. Expected-app-type checking would need a
+`labels-only` toggle (emitting the label set rather than label→score) that
+`file:fingerprint` does not currently offer. Until then, use this recipe only
+for "flag disallowed frameworks", not "assert the one expected framework".
+
+**Sovereignty note.** `file:fingerprint` itself performs local filesystem I/O
+only — no network calls. The `-f <url>` signature-library composition
+pattern above is outbound network I/O at config-load time, not inside the
+fact plugin. For AU-sovereign deployments, host shared signature libraries
+in-region (`ap-southeast-2` or `ap-southeast-4`) rather than pulling them from
+an offshore URL.
 
 ## Infrastructure checks
 
