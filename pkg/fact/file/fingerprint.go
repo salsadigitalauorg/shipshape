@@ -1,7 +1,9 @@
 package file
 
 import (
+	stdjson "encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -10,6 +12,7 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/theory/jsonpath"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
@@ -26,16 +29,54 @@ var (
 	// ErrNoPath is returned when the plugin is configured without a 'path'
 	// to scan.
 	ErrNoPath = errors.New("file:fingerprint requires a 'path'")
+	// ErrManifestNotFound is returned when at least one configured
+	// framework signature uses 'dependencies' but the configured (or
+	// default) manifest file does not exist under Path. A missing
+	// manifest is reported explicitly rather than silently scoring the
+	// dependencies signal as zero, so an operator who expects
+	// composer.json to be present (e.g. it was misconfigured, or Path is
+	// wrong) is told why the framework was not detected instead of
+	// getting a quiet under-score.
+	ErrManifestNotFound = errors.New("file:fingerprint manifest not found")
+	// ErrManifestUnreadable is returned when the manifest exists but
+	// cannot be read (e.g. permissions). Unlike a missing manifest, this
+	// is treated as a hard collection error: the file is present and
+	// expected to be readable, so silently skipping it risks
+	// under-scoring a framework that is actually present.
+	ErrManifestUnreadable = errors.New("file:fingerprint manifest unreadable")
+	// ErrManifestInvalidJSON is returned when the manifest exists and is
+	// readable but cannot be parsed as JSON.
+	ErrManifestInvalidJSON = errors.New("file:fingerprint manifest is not valid JSON")
+	// ErrInvalidDependencyPath is returned when a configured
+	// 'dependency-paths' entry is not a valid RFC 9535 JSONPath
+	// expression. jsonpath.Parse is used rather than MustParse so a
+	// malformed operator-supplied expression surfaces as a clear error
+	// instead of a panic.
+	ErrInvalidDependencyPath = errors.New("file:fingerprint invalid dependency-paths expression")
 )
+
+// defaultDependencyPaths cover composer's require/require-dev (fixing a
+// 0.x gap: utils.HasComposerDependency only ever read 'require') and
+// package.json's dependencies/devDependencies, so a single default
+// configuration works across the PHP and Node ecosystems without
+// operator-supplied 'dependency-paths'.
+var defaultDependencyPaths = []string{
+	"$.require",
+	"$['require-dev']",
+	"$.dependencies",
+	"$.devDependencies",
+}
 
 // FingerprintWeights configures the score contribution of each signal
 // type. Markers and Dirs default to 5, matching 0.x's
 // sca:application_type (pkg/checks/sca/apptypecheck.go), which added +5
-// per marker match and +5 per matching directory. The dependencies signal
-// (weight, default 10) is added in a later slice.
+// per marker match and +5 per matching directory. Dependencies defaults
+// to 10, matching 0.x's single +10 award for a matched dependency
+// (apptypecheck.go:98-102).
 type FingerprintWeights struct {
-	Markers int `yaml:"markers"`
-	Dirs    int `yaml:"dirs"`
+	Markers      int `yaml:"markers"`
+	Dirs         int `yaml:"dirs"`
+	Dependencies int `yaml:"dependencies"`
 }
 
 // FrameworkSignature is the operator-supplied evidence associated with a
@@ -59,6 +100,16 @@ type FrameworkSignature struct {
 	// nested twice, scores twice), again reproducing 0.x's per-match
 	// accumulation.
 	Dirs []string `yaml:"dirs"`
+
+	// Dependencies are manifest package names (e.g.
+	// "drupal/core-recommended") searched for among the values matched by
+	// Fingerprint.DependencyPaths in the manifest. Unlike Markers and
+	// Dirs, a matched dependency scores once only, no matter how many
+	// configured dependency names match or how many dependency-paths
+	// expressions surface them - this reproduces 0.x's single bool-driven
+	// +10 award (apptypecheck.go:98-102), the one signal that does not
+	// accumulate per-hit.
+	Dependencies []string `yaml:"dependencies"`
 }
 
 // Fingerprint scores each configured framework signature against the
@@ -105,7 +156,17 @@ type FrameworkSignature struct {
 // Data handling note: breach/fact output never includes the matched
 // marker text or file path, only the label and its score, so a
 // carelessly-written marker cannot echo file content (potentially
-// containing secrets) into an audit report.
+// containing secrets) into an audit report. The same applies to the
+// dependencies signal: only the label and score are emitted, never the
+// matched manifest key or version string.
+//
+// Dependency-paths safety note: DependencyPaths expressions are parsed
+// with jsonpath.Parse (never MustParse), so a malformed operator-supplied
+// expression is a collection error, not a panic. RFC 9535 JSONPath has
+// no unbounded-recursion construct comparable to e.g. a regex catastrophic
+// backtracking - evaluation cost is bounded by the size of the parsed
+// manifest document, which this fact already reads fully into memory once
+// per Collect call.
 type Fingerprint struct {
 	fact.BaseFact `yaml:",inline"`
 
@@ -115,6 +176,27 @@ type Fingerprint struct {
 	Entrypoints []string                      `yaml:"entrypoints"`
 	Weights     FingerprintWeights            `yaml:"weights"`
 	Frameworks  map[string]FrameworkSignature `yaml:"frameworks"`
+
+	// Manifest is the filename (relative to Path) read for the
+	// dependencies signal. Defaults to "composer.json". Only a single
+	// manifest file is supported per fact instance; a project needing
+	// both composer.json and package.json signatures configures two
+	// file:fingerprint facts.
+	Manifest string `yaml:"manifest"`
+
+	// DependencyPaths are RFC 9535 JSONPath expressions evaluated against
+	// the parsed Manifest; every object matched is treated as a map of
+	// dependency name to version constraint, and its keys are the
+	// candidate dependency names checked against each framework's
+	// Dependencies. Defaults to defaultDependencyPaths, covering
+	// composer's require/require-dev and package.json's
+	// dependencies/devDependencies.
+	DependencyPaths []string `yaml:"dependency-paths"`
+
+	// dependencyPaths holds DependencyPaths (or the defaults) parsed once
+	// and cached, so a multi-framework Collect does not re-parse the same
+	// expressions per framework.
+	dependencyPaths []*jsonpath.Path
 }
 
 func init() {
@@ -167,6 +249,9 @@ func (p *Fingerprint) Collect() {
 	if weights.Dirs == 0 {
 		weights.Dirs = 5
 	}
+	if weights.Dependencies == 0 {
+		weights.Dependencies = 10
+	}
 
 	entrypoints := p.Entrypoints
 	if len(entrypoints) == 0 {
@@ -181,6 +266,35 @@ func (p *Fingerprint) Collect() {
 		"threshold":   threshold,
 		"weights":     weights,
 	}).Debug("fingerprinting codebase")
+
+	// The dependencies signal (manifest read + jsonpath evaluation) is
+	// only attempted when at least one configured framework actually
+	// uses it - a config that never sets 'dependencies' should not fail
+	// just because Path happens not to contain a composer.json.
+	needsDependencies := false
+	for _, sig := range p.Frameworks {
+		if len(sig.Dependencies) > 0 {
+			needsDependencies = true
+			break
+		}
+	}
+
+	var dependencyNames map[string]struct{}
+	if needsDependencies {
+		if err := p.validateDependencyPaths(); err != nil {
+			contextLogger.WithError(err).Error("invalid dependency-paths expression")
+			p.AddErrors(sentinelError(err))
+			return
+		}
+
+		names, err := p.readManifestDependencyNames(fullPath)
+		if err != nil {
+			contextLogger.WithError(err).Error("error reading manifest for dependencies signal")
+			p.AddErrors(sentinelError(err))
+			return
+		}
+		dependencyNames = names
+	}
 
 	var entrypointFiles []string
 	var dirNames []string
@@ -265,6 +379,18 @@ func (p *Fingerprint) Collect() {
 			}
 		}
 
+		// Dependencies score once only, no matter how many configured
+		// names match or how many dependency-paths expressions surface
+		// them - reproducing 0.x's single bool-driven award
+		// (apptypecheck.go:98-102), the one signal that does not
+		// accumulate per-hit.
+		for _, dep := range sig.Dependencies {
+			if _, ok := dependencyNames[dep]; ok {
+				score += weights.Dependencies
+				break
+			}
+		}
+
 		contextLogger.WithFields(log.Fields{
 			"framework": name,
 			"score":     score,
@@ -278,4 +404,104 @@ func (p *Fingerprint) Collect() {
 
 	p.Format = data.FormatMapString
 	p.SetData(result)
+}
+
+// validateDependencyPaths parses DependencyPaths (or
+// defaultDependencyPaths, if unset) into p.dependencyPaths, returning an
+// error wrapping ErrInvalidDependencyPath if any expression is not a
+// valid RFC 9535 JSONPath query. jsonpath.Parse is used rather than
+// MustParse so a malformed operator-supplied expression surfaces as a
+// clear error instead of a panic. Safe to call more than once: parsing is
+// skipped once p.dependencyPaths is populated.
+func (p *Fingerprint) validateDependencyPaths() error {
+	if p.dependencyPaths != nil {
+		return nil
+	}
+
+	exprs := p.DependencyPaths
+	if len(exprs) == 0 {
+		exprs = defaultDependencyPaths
+	}
+
+	parsed := make([]*jsonpath.Path, 0, len(exprs))
+	for _, expr := range exprs {
+		path, err := jsonpath.Parse(expr)
+		if err != nil {
+			return fmt.Errorf("%w %q: %s", ErrInvalidDependencyPath, expr, err)
+		}
+		parsed = append(parsed, path)
+	}
+
+	p.dependencyPaths = parsed
+	return nil
+}
+
+// readManifestDependencyNames reads the configured (or default) Manifest
+// file under fullPath, evaluates every p.dependencyPaths expression
+// against it, and returns the union of keys from every matched object -
+// the set of candidate dependency names checked against each framework's
+// Dependencies.
+//
+// A missing manifest, an unreadable manifest, and a manifest that is not
+// valid JSON each return a distinct sentinel error (ErrManifestNotFound,
+// ErrManifestUnreadable, ErrManifestInvalidJSON respectively) rather than
+// a panic or a silent zero score.
+func (p *Fingerprint) readManifestDependencyNames(fullPath string) (map[string]struct{}, error) {
+	manifestName := p.Manifest
+	if manifestName == "" {
+		manifestName = "composer.json"
+	}
+
+	manifestPath := filepath.Join(fullPath, manifestName)
+
+	if _, err := os.Stat(manifestPath); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, fmt.Errorf("%w: %s", ErrManifestNotFound, manifestPath)
+		}
+		return nil, fmt.Errorf("%w: %s", ErrManifestUnreadable, err)
+	}
+
+	content, err := os.ReadFile(manifestPath)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrManifestUnreadable, err)
+	}
+
+	var doc any
+	if err := stdjson.Unmarshal(content, &doc); err != nil {
+		return nil, fmt.Errorf("%w: %s", ErrManifestInvalidJSON, err)
+	}
+
+	names := map[string]struct{}{}
+	for _, path := range p.dependencyPaths {
+		nodes := path.Select(doc)
+		for node := range nodes.All() {
+			obj, ok := node.(map[string]any)
+			if !ok {
+				continue
+			}
+			for name := range obj {
+				names[name] = struct{}{}
+			}
+		}
+	}
+
+	return names, nil
+}
+
+// sentinelError maps a detailed internal error back to a stable,
+// comparable sentinel so downstream reporting is deterministic. Errors
+// that do not match a known sentinel are returned unchanged. Mirrors
+// json/key.go's sentinel helper.
+func sentinelError(err error) error {
+	for _, s := range []error{
+		ErrManifestNotFound,
+		ErrManifestUnreadable,
+		ErrManifestInvalidJSON,
+		ErrInvalidDependencyPath,
+	} {
+		if errors.Is(err, s) {
+			return s
+		}
+	}
+	return err
 }
