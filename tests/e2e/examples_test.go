@@ -70,6 +70,25 @@ func selfContainedCases() []selfContainedCase {
 			},
 		},
 		{
+			name:         "json-lookup",
+			file:         "json-lookup.yml",
+			wantChecks:   3,
+			wantBreaches: 2,
+			// wantPolicies is intentionally omitted: the policy IDs within a
+			// plugin are collected via Go map iteration (see shipshape.go), so
+			// their order is non-deterministic. checkResults asserts each check
+			// by name, which is order-independent.
+			//
+			// pinned-dependencies breaches twice: the RFC 9535 filter
+			// `$.dependencies[?search(@,'\^')]` matches both caret-ranged
+			// runtime dependencies in testdata/package.json.
+			checkResults: []wantResult{
+				{name: "approved-app-name", status: "Pass", checkType: "not:equals"},
+				{name: "approved-script-tooling", status: "Pass", checkType: "allowed:list"},
+				{name: "pinned-dependencies", status: "Fail", checkType: "not:empty", breachCount: 2},
+			},
+		},
+		{
 			name:         "drupal-config",
 			file:         "drupal-config.yml",
 			wantChecks:   3,
