@@ -1,10 +1,17 @@
-# file:diff
+# filediff
 
 Compares a file on disk against a reference template and reports any
 differences. Use this to ensure configuration files have not drifted from a
 known-good baseline.
 
-**Check type:** `file:diff`
+**Check type:** `filediff`
+
+::: warning The check key has no colon
+The registered check type is `filediff`, not `file:diff`. An unrecognised key
+under `checks:` is **silently ignored** — a config written as `file:diff` runs
+zero checks and still exits `0`, which is indistinguishable from a passing
+build. If this check appears to do nothing, verify the key first.
+:::
 
 ## Fields
 
@@ -22,7 +29,7 @@ known-good baseline.
 
 ```yaml
 checks:
-  file:diff:
+  filediff:
     - name: Nginx config matches template
       target: /etc/nginx/nginx.conf
       source: templates/nginx.conf.j2

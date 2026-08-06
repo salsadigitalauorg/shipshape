@@ -51,20 +51,20 @@ Source: `examples/files.yml`
 0.x `file:diff` rendered a Jinja template with an operator-supplied vars map
 and diffed the result against an on-disk file. 1.x deliberately does **not**
 reproduce that: `file:drift` instead masks placeholder-shaped substrings
-(default `{{ VAR }}`) out of both sides before diffing, so the same config
-runs unmodified across every project provisioned from a template — no
-per-project vars map required. It also detects a placeholder that was never
+(default <code v-pre>{{ VAR }}</code>) out of both sides before diffing, so the
+same config runs unmodified across every project provisioned from a template —
+no per-project vars map required. It also detects a placeholder that was never
 substituted, which rendering cannot.
 
 Template rendering was rejected in favour of drift matching for several
 reasons: a per-project vars map does not scale across many provisioned
-projects; `${{ VAR }}`-style placeholders collide with GitHub Actions'
-`${{ secrets.* }}` syntax when the template is a workflow file; rendering
-silently substitutes undefined variables rather than surfacing them;
-rendering cannot detect a placeholder that was never substituted, because
-there is nothing left to compare once it is rendered away; and a rendering
-engine (e.g. gonja) pulls in dozens of transitive dependencies where RE2
-(already in the standard library) needs none.
+projects; <code v-pre>${{ VAR }}</code>-style placeholders collide with GitHub
+Actions' <code v-pre>${{ secrets.* }}</code> syntax when the template is a
+workflow file; rendering silently substitutes undefined variables rather than
+surfacing them; rendering cannot detect a placeholder that was never
+substituted, because there is nothing left to compare once it is rendered
+away; and a rendering engine (e.g. gonja) pulls in dozens of transitive
+dependencies where RE2 (already in the standard library) needs none.
 
 ```yaml
 collect:
@@ -100,20 +100,20 @@ placeholder's position, not that the surrounding line is otherwise identical
 in structure. In particular:
 
 - A placeholder capture can absorb adjacent genuine drift on the same line —
-  e.g. template `image: {{ IMG }}:v1` against current
+  e.g. template <code v-pre>image: {{ IMG }}:v1</code> against current
   `image: evil/malware:latest:v1` reports no drift, because the wildcard
   swallows everything up to the literal `:v1` suffix. Keep placeholders on
   their own line, or as the entire value, where the drift you care about
   could plausibly appear.
 - The same placeholder name used twice on one line (e.g.
-  `a: {{ X }} b: {{ X }}`) is **not** checked for consistency between the two
-  captured values — RE2 has no backreferences, so `file:drift` cannot express
-  "these two captures must match". A current line of `a: one b: two` reports
-  no drift even though the two `X` values differ.
+  <code v-pre>a: {{ X }} b: {{ X }}</code>) is **not** checked for consistency
+  between the two captured values — RE2 has no backreferences, so `file:drift`
+  cannot express "these two captures must match". A current line of
+  `a: one b: two` reports no drift even though the two `X` values differ.
 - An empty substitution (the current file has nothing where the template has
-  `{{ VAR }}`) counts as substituted, not as drift. Only a placeholder that is
-  still **literally present** in the current file — the common
-  copy-paste-and-forgot-to-fill-in bug — is flagged as unsubstituted.
+  <code v-pre>{{ VAR }}</code>) counts as substituted, not as drift. Only a
+  placeholder that is still **literally present** in the current file — the
+  common copy-paste-and-forgot-to-fill-in bug — is flagged as unsubstituted.
 
 None of these are considered blocking for the initial recipe: they are
 inherent to wildcard-based matching without a rendering/vars step, and are
@@ -128,6 +128,7 @@ Source: `examples/file-drift.yml`
 | 0.x check | Status | 1.x plugin chain |
 |---|---|---|
 | [`yaml`](../reference/checks/yaml.md) | Achievable now | `file:read` + `yaml:key` + `equals` / `allowed:list` — see `examples/drupal-config.yml` |
+| [`yamllint`](../reference/checks/yaml-lint.md) | Needs new capability | No equivalent — a YAML parse error aborts the run instead of breaching. See [below](#recipe-yamllint-not-yet-reproducible). |
 | [`json`](../reference/checks/json.md) | Achievable now | `file:read` + `json:key` + `equals` / `allowed:list` — see `examples/json-lookup.yml` |
 
 ### Recipe: yaml
@@ -155,6 +156,45 @@ analyse:
 ```
 
 Source: `examples/drupal-config.yml`
+
+### Recipe: yamllint (not yet reproducible)
+
+`yamllint` asserts only that files *parse*, reporting an undecodable file as a
+breach. 1.x cannot currently express this, because the two are structurally
+opposed: in 1.x a YAML parse failure is a **collect error**, and any collect
+error is fatal to the whole run —
+`fact.Manager().CollectAllFacts()` is followed immediately by
+`log.Fatal("failed to collect facts")` (`pkg/shipshape/shipshape.go:171-173`).
+
+So the exact condition `yamllint` exists to report is the condition that
+prevents 1.x from reaching the analyse stage at all:
+
+```yaml
+# Aborts with "failed to collect facts" — never produces a breach
+collect:
+  f:
+    file:read:
+      path: bad.yml
+  k:
+    yaml:key:
+      input: f
+      path: a
+```
+
+```
+level=error msg="error looking up yaml path" error="yaml: line 2: mapping values
+  are not allowed in this context" fact=k fact-plugin="yaml:key"
+level=fatal msg="failed to collect facts"
+```
+
+A fix needs a way to treat a fact's collection error as analysable data rather
+than a fatal condition — for example a `yaml:valid` analyser acting on a fact's
+error state, or an opt-in "tolerate collect errors" mode that lets the pipeline
+continue and surfaces the error to an analyser. `BaseAnalyser` already inspects
+`p.input.GetErrors()` (`pkg/analyse/base.go:92`), so the plumbing partly exists;
+the blocker is the unconditional `log.Fatal` upstream of it.
+
+Until then, keep using the 0.x `yamllint` check. It remains fully supported.
 
 ### Recipe: json
 
@@ -531,6 +571,10 @@ that should not be duplicated into a lower-classification results store.
 |---|---|
 | Achievable now | 18 |
 | Achievable, undocumented | 0 |
-| Needs new capability | 0 |
+| Needs new capability | 1 |
+
+19 rows, one per registered 0.x check type. The single remaining gap is
+[`yamllint`](#recipe-yamllint-not-yet-reproducible), which needs a way to treat a
+fact's collection error as analysable data rather than a fatal error.
 
 The plan for the remaining capabilities is on the [roadmap](roadmap.md) page.

@@ -119,14 +119,18 @@ Flags:
                                                  problems to API (env: LAGOON_API_BASE_URL)
       --lagoon-api-token string                  Lagoon API token when pushing problems
                                                  to API (env: LAGOON_API_TOKEN)
+      --lagoon-environment string                The Lagoon environment name (env: LAGOON_ENVIRONMENT)
       --lagoon-insights-remote-endpoint string   Insights Remote Problems endpoint
                                                   (default "http://lagoon-remote-insights-remote.lagoon.svc/problems")
+      --lagoon-project string                    The Lagoon project name (env: LAGOON_PROJECT)
       --lagoon-push-problems-to-insights         Push audit facts to Lagoon via Insights Remote
-  -o, --output-format string                     Output format for stdout [pretty|table|json|junit]
-                                                 (overrides config file)
-      --output-file string                       File to write output to
-      --output-file-format string                Format for file output [pretty|table|json|junit]
-                                                 (defaults to stdout format)
+      --lagoon-source string                     Source to use for Problems pushed to Lagoon (default "Shipshape")
+      --output-file string                       Path to output file
+                                                 (env: SHIPSHAPE_OUTPUT_FILE)
+      --output-file-format string                Format for the output file [pretty|table|json|junit]
+                                                 (env: SHIPSHAPE_OUTPUT_FILE_FORMAT)
+  -o, --output-format string                     Output format [pretty|table|json|junit]
+                                                 (env: SHIPSHAPE_OUTPUT_FORMAT) (default "pretty")
   -r, --remediate                                Run remediation for supported checks
 
 Global Flags:

@@ -16,9 +16,17 @@ needing a running Drupal instance.
 | `file` | string | one of path/file/files/pattern | Single file name |
 | `files` | list | one of path/file/files/pattern | Explicit list of file names |
 | `pattern` | string | one of path/file/files/pattern | Regex pattern to match file names |
-| `config-name` | string | no | Drupal config name (used with `path` to locate `<config-name>.yml`) |
 | `exclude-pattern` | string | no | Regex pattern — matching files are skipped |
+| `ignore-missing` | bool | no | If `true`, pass instead of failing when a file or path does not exist |
 | `values` | list of [KeyValue](#keyvalue-fields) | yes | Assertions to evaluate |
+
+::: warning `config-name` is not supported by this check
+`config-name` belongs to the Drush-based Drupal checks
+([`drush-yaml`](drupal-drush-yaml.md) and friends), **not** to `yaml`. Setting it
+here has no effect: unknown YAML fields are ignored, so a `yaml` check with only
+`config-name` and `path` resolves no file at all and breaches with
+`no file provided`. Use `file:` (or `files:` / `pattern:`) to name the target.
+:::
 
 ## KeyValue fields
 
@@ -40,14 +48,12 @@ Each entry in `values` supports:
 checks:
   yaml:
     - name: File config check
-      config-name: update.settings
       path: config/default
+      file: update.settings.yml
       values:
         - key: check.interval_days
           value: "7"
 ```
-
-Source: `pkg/config/testdata/shipshape.yml`
 
 Multiple assertions in one check:
 
@@ -56,7 +62,7 @@ checks:
   yaml:
     - name: Cron and update settings
       path: config/default
-      config-name: automated_cron.settings
+      file: automated_cron.settings.yml
       values:
         - key: interval
           value: "10800"
@@ -64,14 +70,30 @@ checks:
           truthy: true
 ```
 
+Across many files by pattern:
+
+```yaml
+checks:
+  yaml:
+    - name: No disallowed permissions on any role
+      path: config/default
+      pattern: '^user\.role\..*\.yml$'
+      values:
+        - key: permissions
+          is-list: true
+          disallowed:
+            - administer site configuration
+```
+
 ## Behaviour
 
 Shipshape locates the target file(s) using the supplied path/file/files/pattern
-fields. For each file, it parses the YAML and evaluates every `values` entry.
+fields, in that precedence order — `file` wins over `files`, which wins over
+`pattern`. For each file it parses the YAML and evaluates every `values` entry.
 Any assertion that fails is reported as a breach.
 
-When `config-name` is set alongside `path`, Shipshape looks for
-`<path>/<config-name>.yml`.
+If none of `file`, `files` or `pattern` is set, the check breaches with
+`no file provided` rather than scanning `path` wholesale.
 
 ## Remediation
 
