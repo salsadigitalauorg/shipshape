@@ -1,0 +1,32 @@
+# Assert that YAML files parse - the 1.x equivalent of the 0.x `yamllint` check.
+#
+# `yaml:lint` exists because everywhere else in the pipeline a YAML parse
+# failure is a *collection error*, and any collection error aborts the run
+# before the analyse stage. This plugin treats a parse failure as data
+# instead, so `not:empty` can report it as a breach.
+#
+# File selection is delegated to `file:lookup` with `file-names-only: false`,
+# which emits file contents (map-bytes) rather than names.
+collect:
+  config-files:
+    file:lookup:
+      path: yaml-lint
+      pattern: '.*\.yml$'
+      file-names-only: false
+
+  invalid-yaml:
+    yaml:lint:
+      input: config-files
+
+analyse:
+  yaml-is-valid:
+    not:empty:
+      description: 'YAML files that do not parse'
+      input: invalid-yaml
+      severity: high
+      breach-format:
+        type: key-value
+        key-label: file
+        key: '{{ .Breach.Key }}'
+        value-label: 'YAML error'
+        value: '{{ .Breach.Value }}'

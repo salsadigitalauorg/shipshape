@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - user
+id: valid_example
+label: 'A well-formed config file'
