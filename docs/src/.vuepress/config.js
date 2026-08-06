@@ -93,11 +93,15 @@ module.exports = {
                 ['/reference/collect/database-search', 'database:search'],
                 ['/reference/collect/docker-command', 'docker:command'],
                 ['/reference/collect/docker-images', 'docker:images'],
+                ['/reference/collect/file-drift', 'file:drift'],
                 ['/reference/collect/file-fingerprint', 'file:fingerprint'],
                 ['/reference/collect/file-lookup', 'file:lookup'],
                 ['/reference/collect/file-read', 'file:read'],
                 ['/reference/collect/file-read-multiple', 'file:read:multiple'],
                 ['/reference/collect/http-crawl', 'http:crawl'],
+                ['/reference/collect/http-fetch', 'http:fetch'],
+                ['/reference/collect/json-key', 'json:key'],
+                ['/reference/collect/static-analysis', 'static-analysis'],
                 ['/reference/collect/yaml-key', 'yaml:key'],
               ]
             },
@@ -107,11 +111,14 @@ module.exports = {
               collapsable: false,
               children: [
                 ['/reference/analyse/allowed-list', 'allowed:list'],
+                ['/reference/analyse/detected', 'detected'],
+                ['/reference/analyse/drift', 'drift'],
                 ['/reference/analyse/equals', 'equals'],
                 ['/reference/analyse/not-empty', 'not:empty'],
                 ['/reference/analyse/not-equals', 'not:equals'],
                 ['/reference/analyse/regex-match', 'regex:match'],
                 ['/reference/analyse/regex-not-match', 'regex:not-match'],
+                ['/reference/analyse/static-analysis', 'static-analysis:breaches'],
               ]
             },
             {
@@ -128,8 +135,9 @@ module.exports = {
               collapsable: false,
               children: [
                 ['/reference/checks/file', 'file'],
-                ['/reference/checks/file-diff', 'file:diff'],
+                ['/reference/checks/file-diff', 'filediff'],
                 ['/reference/checks/yaml', 'yaml'],
+                ['/reference/checks/yaml-lint', 'yamllint'],
                 ['/reference/checks/json', 'json'],
                 ['/reference/checks/drupal-drush-yaml', 'drush-yaml'],
                 ['/reference/checks/drupal-file-module', 'drupal-file-module'],

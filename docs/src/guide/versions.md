@@ -23,11 +23,22 @@ Not sure if 1.x covers everything you need? Check the
 
 ## How the binary picks a format
 
-When Shipshape reads a config file it tries to parse it as a 1.x config first.
-If any of the top-level 1.x keys (`connections`, `collect`, `analyse`,
-`output`) are present, the file is treated as 1.x and the pipeline runner is
-used. If none of those keys are found, the file is treated as 0.x and the
-checks runner is used.
+The deciding key is **`collect:`**. When Shipshape reads a config file it tries
+to parse it as a 1.x config first: if a **non-empty top-level `collect:` block**
+is present, the file is treated as 1.x and the pipeline runner is used.
+Otherwise the file is treated as 0.x and the checks runner is used.
+
+::: warning `collect:` is the only key that selects 1.x
+`connections:`, `analyse:` and `output:` do **not** on their own make a file
+1.x. A file containing only `analyse:` (or only `output:`) falls through to the
+0.x runner, which finds no `checks:` block and runs zero checks — exiting `0`
+as though everything passed.
+
+Those three keys matter only once a run is already 1.x, where they are used to
+reject a 0.x file passed alongside a 1.x one (see
+[Mixing formats](#mixing-formats-across-files) below). An empty `collect:` block
+does not count either — it must contain at least one fact.
+:::
 
 The distinguishing key is the top-level block name:
 
@@ -41,7 +52,7 @@ checks:
 ```
 
 ```yaml
-# 1.x — identified by any of: connections, collect, analyse, output
+# 1.x — identified by a non-empty top-level "collect:" key
 collect:
   disallowed-php-scripts:
     file:lookup:
@@ -56,14 +67,30 @@ analyse:
       severity: high
 ```
 
-If a file contains both a `checks:` key and a 1.x key, the 1.x runner takes
-precedence.
+If a single file contains both a `checks:` key and a non-empty `collect:` key,
+the 1.x runner takes precedence and the `checks:` block is ignored.
+
+## Mixing formats across files
+
+Passing a 0.x file and a 1.x file to the same run with `-f` is **an error, not a
+merge**:
+
+```sh
+$ shipshape run . -f pipeline.yml -f legacy-checks.yml
+config file "legacy-checks.yml" is not v2-compatible but was provided
+alongside a v2 config; mixing v1 and v2 config files is not supported
+```
+
+Once any file in the run declares a non-empty `collect:`, every other file must
+contain at least one of `connections`, `collect`, `analyse` or `output`. A file
+with none of them is reported rather than silently discarded. Run the two
+formats as separate invocations instead.
 
 ## Format overview
 
 | | 0.x | 1.x |
 |---|---|---|
-| Top-level key | `checks:` | `collect:` / `analyse:` / `output:` |
+| Top-level key | `checks:` | `collect:` (the deciding key) |
 | Config struct | `Config` | `ConfigV2` |
 | Runner | `RunConfig` | `RunV2` |
 | Model | One check per concern — collection, evaluation, and optional remediation bundled together | Composable pipeline — collect data with one plugin, analyse it with another |

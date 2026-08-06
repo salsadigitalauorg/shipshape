@@ -30,56 +30,56 @@ documented in the reference and backed by a working file in `examples/`.
 
 The [gaps matrix](gaps.md) is the authoritative record of current status.
 
-## Recipes to document
+## Current status: one capability gap remains
 
-The Drush-based Drupal checks that were previously **Achievable, undocumented**
-now each have a worked example in `examples/` and are marked **Achievable now**
-on the gaps matrix:
+18 of the 19 registered 0.x checks have a documented recipe and a working example
+in `examples/`. The remaining gap is **`yamllint`**: it reports an undecodable
+YAML file as a breach, but in 1.x a parse failure is a collect error, and any
+collect error is fatal to the run (`pkg/shipshape/shipshape.go:171-173`) — so the
+pipeline never reaches the analyse stage where the breach would be raised.
 
-| 0.x check | Example |
+Closing it needs a way to treat a fact's collection error as analysable data
+rather than a fatal condition: either an analyser that acts on a fact's error
+state (`BaseAnalyser` already reads `p.input.GetErrors()`), or an opt-in
+"tolerate collect errors" mode. See
+[Recipe: yamllint](gaps.md#recipe-yamllint-not-yet-reproducible).
+
+The capabilities that were previously deferred here have all landed:
+
+| 0.x check | Capability added |
 |---|---|
-| `drupal-db-module` | `examples/drupal-db-module.yml` |
-| `drupal-db-permissions` | `examples/drupal-db-permissions.yml` |
-| `drupal-db-user-tfa` | `examples/drupal-db-user-tfa.yml` |
-| `drupal-admin-user` | `examples/drupal-admin-user.yml` |
-| `drupal-user-forbidden` | `examples/drupal-user-forbidden.yml` |
-| `drupal-role-permissions` | `examples/drupal-role-permissions.yml` |
-| `drupal-user-role` | `examples/drupal-user-role.yml` |
-| `drupal-tracking-code` | `examples/drupal-tracking-code.yml` |
+| `json` | `json:key` fact plugin (RFC 9535 JSONPath) |
+| `filediff` | `file:drift` fact + `drift` analyser — placeholder-masking instead of template rendering |
+| `crawler` | `http:crawl` fact plugin |
+| `sca:application_type` | `file:fingerprint` fact + `detected` analyser |
 
-They all share the collect → assert composition pattern shown in the
+The Drush-based Drupal checks similarly all have worked examples now. They share
+the collect → assert composition pattern shown in the
 [Drush composition recipe](gaps.md#recipe-the-drush-composition-pattern): a
 `command` fact emits data one item per line, and `allowed:list` / `equals`
 makes the assertion.
 
-## New general-purpose capabilities (deferred)
-
-These checks have no existing plugin that can collect the data they need
-(status **Needs new capability** on the gaps matrix). The intended direction is
-to add a **general-purpose, reusable** collect plugin — not a check-specific
-one — so that the new capability serves future recipes too. The exact approach
-for each is **to be determined (TBD)**.
-
-| 0.x check | Missing capability | Direction |
-|---|---|---|
-| `json` | Parse JSON files and extract keys/values | Add a general-purpose `json:key` fact plugin (analogous to `yaml:key`) |
-| `file:diff` | Compare a file against a rendered template and surface the difference | TBD |
-| `crawler` | Crawl a site and collect non-200 responses | TBD |
-| `sca:application_type` | Scan a codebase for framework markers and dependencies | TBD |
-
-These are deferred with no committed timeline.
+Remaining work is therefore **reference documentation quality**, not new
+plugins — several `reference/collect/` and `reference/connection/` pages are
+still title-only stubs, and a few plugins (`http:fetch`, `json:key`, `drift`,
+`detected`) have no reference page at all.
 
 ## Known plugin limitations to investigate
 
-These are defects and gaps found while validating the bundled examples against
-1.x. They are tracked here so the affected examples can be simplified or
-completed once the underlying plugin work lands.
+These are defects found while validating the bundled examples against 1.x. They
+are tracked here so the affected examples can be simplified once the underlying
+plugin work lands.
+
+::: danger Both are panics, not errors
+Each item below crashes the process on operator-supplied config rather than
+reporting a collection error. A malformed or merely unusual config file should
+never panic — these are correctness bugs, not cosmetic ones.
+:::
 
 | Area | Symptom | Direction |
 |---|---|---|
-| `examples/docker.yml` — `base-images` | `docker:images` with `additional-inputs: [buildargs]` fails at collect with `inputFormat required for 'yaml:key'`. | Investigate whether the example needs an explicit `input-format` on the additional input, or whether `docker:images` additional-input handling regressed. The `base-images` block is currently commented/omitted from a runnable path. |
-| `yaml:key` — empty sequence | A role/config file with an empty YAML list (e.g. `permissions: []`) panics in `YamlLookup.ProcessNodes` (index out of range). | Guard the `SequenceNode` case against empty `Content`. |
-| `allowed:list` — multi-file input | `yaml:key` output over a `file:lookup` (map of file → list) produces `map-nested-string` when any file has an empty map, which `allowed:list` does not support; when all files have lists, `allowed:list`'s `map-list-string` branch panics in `AsMapListString` (the fact data is `map[string]interface{}`, not `map[string][]string`). | Make `allowed:list` accept the actual multi-file `yaml:key` data shape (and `map-nested-string`), so a "disallowed permission across all roles" assertion can be expressed without per-role single-file reads. This is why `examples/drupal-config.yml` asserts permissions per-role rather than across all roles at once. |
+| `yaml:key` — empty sequence | A config file with an empty YAML list (e.g. `permissions: []`) panics with `index out of range`. The `SequenceNode` branch indexes `Content[0]` without a length check in **four** places: `YamlLookup.ProcessNodes` (`pkg/fact/yaml/yaml.go:106`, `:122`) and `AliasNodeToData` (`:238`, `:254`). | Guard every `SequenceNode` case against empty `Content`, and emit an empty list rather than panicking. All four sites need the guard, not just the one reached first. |
+| `allowed:list` — multi-file input | `yaml:key` output over a `file:lookup` (map of file → list) panics in `AsMapListString` (`pkg/data/data.go:94`) with `interface conversion: map[string]interface{}, not map[string][]string`, via `allowedlist.go:178`. When any file has an empty map the format instead becomes `map-nested-string`, which `allowed:list` does not handle. | Make `allowed:list` accept the actual multi-file `yaml:key` data shape (and `map-nested-string`), so a "disallowed permission across all roles" assertion can be expressed without per-role single-file reads. This is why `examples/drupal-config.yml` asserts permissions per-role rather than across all roles at once. |
 
 ## How to contribute
 
