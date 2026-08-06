@@ -97,6 +97,7 @@ module.exports = {
                 ['/reference/collect/file-lookup', 'file:lookup'],
                 ['/reference/collect/file-read', 'file:read'],
                 ['/reference/collect/file-read-multiple', 'file:read:multiple'],
+                ['/reference/collect/http-crawl', 'http:crawl'],
                 ['/reference/collect/yaml-key', 'yaml:key'],
               ]
             },
