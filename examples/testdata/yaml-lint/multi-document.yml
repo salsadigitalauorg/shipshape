@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: first-document-is-fine
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: second-document-is-broken
+data:
+  values: [a, b

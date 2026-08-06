@@ -162,6 +162,33 @@ func selfContainedCases() []selfContainedCase {
 				{name: "wordpress-project-frameworks", status: "Pass", checkType: "detected"},
 			},
 		},
+		{
+			name:         "yaml-lint",
+			file:         "yaml-lint.yml",
+			wantChecks:   1,
+			wantBreaches: 3,
+			wantSeverity: map[string]int{"high": 3},
+			wantPolicies: map[string][]string{"not:empty": {"yaml-is-valid"}},
+			// The decisive assertion for this example is that the run
+			// COMPLETES and reports breaches at all. A YAML parse failure is a
+			// collection error everywhere else in the pipeline, and collection
+			// errors are fatal (pkg/shipshape/shipshape.go), so before
+			// yaml:lint existed this config would have aborted with "failed to
+			// collect facts" and produced no JSON to decode.
+			//
+			// Three of the four fixtures breach: broken-syntax.yml (unclosed
+			// flow sequence), duplicate-keys.yml (a *yaml.TypeError, hence the
+			// "cannot decode yaml:" prefix) and multi-document.yml, whose
+			// error is in its SECOND document - caught only because
+			// all-documents defaults to true. valid.yml does not breach.
+			//
+			// Breach order is not asserted: not:empty iterates its input map
+			// without sorting, so the order of the three breaches varies
+			// between runs.
+			checkResults: []wantResult{
+				{name: "yaml-is-valid", status: "Fail", checkType: "not:empty", breachCount: 3},
+			},
+		},
 	}
 }
 
@@ -246,4 +273,48 @@ func TestSelfContainedExitCodes(t *testing.T) {
 // do not cause a non-zero exit under the default configuration.
 func hasHighSeverityBreach(tc selfContainedCase) bool {
 	return tc.wantSeverity["high"] > 0
+}
+
+// TestYamlLintReportsInsteadOfAborting asserts the specific behaviour the
+// yaml:lint plugin exists to provide, which the aggregate assertions in
+// TestSelfContainedExamples cannot express on their own:
+//
+//  1. The run does NOT abort. Malformed YAML is a fatal collection error
+//     everywhere else in the pipeline, so the regression this guards against is
+//     a return to "failed to collect facts" with no results at all.
+//  2. The RIGHT files are reported - in particular multi-document.yml, whose
+//     syntax error is in its second document and is therefore invisible to a
+//     single yaml.Unmarshal (what 0.x yamllint did).
+//  3. valid.yml is NOT reported, so the plugin is not simply failing everything.
+func TestYamlLintReportsInsteadOfAborting(t *testing.T) {
+	t.Parallel()
+
+	res := runExample(t, stagedTestdata(t), "yaml-lint.yml", "json")
+
+	require.NotContains(t, string(res.Stderr), "failed to collect facts",
+		"malformed YAML must be analysable data, not a fatal collect error")
+
+	rl := res.DecodeJSON(t)
+	got, ok := findResult(rl, "yaml-is-valid")
+	require.True(t, ok, "yaml-is-valid result not found")
+
+	reported := map[string]string{}
+	for _, b := range got.Breaches {
+		key, _ := b["key"].(string)
+		value, _ := b["value"].(string)
+		reported[key] = value
+	}
+
+	assert.Contains(t, reported, "yaml-lint/broken-syntax.yml")
+	assert.Contains(t, reported, "yaml-lint/duplicate-keys.yml")
+	assert.Contains(t, reported, "yaml-lint/multi-document.yml",
+		"an error in a later document must be caught: all-documents defaults to true")
+	assert.NotContains(t, reported, "yaml-lint/valid.yml",
+		"a well-formed file must not be reported")
+
+	// A *yaml.TypeError keeps the 0.x "cannot decode yaml:" prefix, which
+	// distinguishes it from a plain syntax error.
+	assert.Contains(t, reported["yaml-lint/duplicate-keys.yml"], "cannot decode yaml:")
+	assert.Contains(t, reported["yaml-lint/duplicate-keys.yml"], `mapping key "status" already defined`)
+	assert.NotContains(t, reported["yaml-lint/broken-syntax.yml"], "cannot decode yaml:")
 }

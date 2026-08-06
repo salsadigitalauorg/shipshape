@@ -128,7 +128,7 @@ Source: `examples/file-drift.yml`
 | 0.x check | Status | 1.x plugin chain |
 |---|---|---|
 | [`yaml`](../reference/checks/yaml.md) | Achievable now | `file:read` + `yaml:key` + `equals` / `allowed:list` — see `examples/drupal-config.yml` |
-| [`yamllint`](../reference/checks/yaml-lint.md) | Needs new capability | No equivalent — a YAML parse error aborts the run instead of breaching. See [below](#recipe-yamllint-not-yet-reproducible). |
+| [`yamllint`](../reference/checks/yaml-lint.md) | Achievable now | `file:lookup` + `yaml:lint` + `not:empty` — see `examples/yaml-lint.yml` |
 | [`json`](../reference/checks/json.md) | Achievable now | `file:read` + `json:key` + `equals` / `allowed:list` — see `examples/json-lookup.yml` |
 
 ### Recipe: yaml
@@ -157,44 +157,79 @@ analyse:
 
 Source: `examples/drupal-config.yml`
 
-### Recipe: yamllint (not yet reproducible)
+### Recipe: yamllint
 
 `yamllint` asserts only that files *parse*, reporting an undecodable file as a
-breach. 1.x cannot currently express this, because the two are structurally
-opposed: in 1.x a YAML parse failure is a **collect error**, and any collect
-error is fatal to the whole run —
+breach. Reproducing it needed a new building block, because the 0.x check and
+the 1.x pipeline were structurally opposed: in 1.x a YAML parse failure is a
+**collect error**, and any collect error is fatal to the whole run —
 `fact.Manager().CollectAllFacts()` is followed immediately by
-`log.Fatal("failed to collect facts")` (`pkg/shipshape/shipshape.go:171-173`).
+`log.Fatal("failed to collect facts")` (`pkg/shipshape/shipshape.go:171-174`).
+So the exact condition `yamllint` exists to report was the condition that
+prevented 1.x from reaching the analyse stage at all.
 
-So the exact condition `yamllint` exists to report is the condition that
-prevents 1.x from reaching the analyse stage at all:
+[`yaml:lint`](../reference/collect/yaml-lint.md) resolves this by inverting the
+relationship: it treats a parse failure as ordinary **data** — a
+filename-to-error map — rather than as a collection error. `not:empty` then
+breaches once per entry.
 
 ```yaml
-# Aborts with "failed to collect facts" — never produces a breach
 collect:
-  f:
-    file:read:
-      path: bad.yml
-  k:
-    yaml:key:
-      input: f
-      path: a
+  config-files:
+    file:lookup:
+      path: config/default
+      pattern: '.*\.yml$'
+      file-names-only: false   # emit contents (map-bytes), not names
+
+  invalid-yaml:
+    yaml:lint:
+      input: config-files
+
+analyse:
+  yaml-is-valid:
+    not:empty:
+      description: 'YAML files that do not parse'
+      input: invalid-yaml
+      severity: high
+      breach-format:
+        type: key-value
+        key-label: file
+        key: '{{ .Breach.Key }}'
+        value-label: 'YAML error'
+        value: '{{ .Breach.Value }}'
 ```
 
-```
-level=error msg="error looking up yaml path" error="yaml: line 2: mapping values
-  are not allowed in this context" fact=k fact-plugin="yaml:key"
-level=fatal msg="failed to collect facts"
-```
+Source: `examples/yaml-lint.yml`
 
-A fix needs a way to treat a fact's collection error as analysable data rather
-than a fatal condition — for example a `yaml:valid` analyser acting on a fact's
-error state, or an opt-in "tolerate collect errors" mode that lets the pipeline
-continue and surfaces the error to an analyser. `BaseAnalyser` already inspects
-`p.input.GetErrors()` (`pkg/analyse/base.go:92`), so the plumbing partly exists;
-the blocker is the unconditional `log.Fatal` upstream of it.
+File selection is delegated to `file:lookup`, so `path`, `pattern`,
+`exclude-pattern` and `skip-dirs` are inherited rather than reimplemented — but
+note `file-names-only: false` is required, since `yaml:lint` needs file contents
+rather than names.
 
-Until then, keep using the 0.x `yamllint` check. It remains fully supported.
+An alternative design — an opt-in "tolerate collect errors" mode surfacing the
+error via `BaseAnalyser`'s existing `p.input.GetErrors()` handling
+(`pkg/analyse/base.go:92`) — was rejected. A tolerated collect error is
+indistinguishable from genuine misconfiguration: a missing file, an unresolvable
+connection and a malformed document would all arrive as the same "input failure",
+so an operator could not tell the assertion they asked for from a broken config.
+It would also have changed run semantics for every fact, where `yaml:lint` is
+additive.
+
+Three differences from the 0.x check are worth knowing:
+
+- **Multi-document files are fully validated.** 0.x used a single
+  `yaml.Unmarshal`, which stops after the first document, so a file whose later
+  documents were malformed passed silently. `yaml:lint` validates every
+  document by default; set `all-documents: false` for 0.x parity.
+- **No per-file passes.** 0.x added `<file> has valid yaml.` for each valid
+  file. 1.x analysers only emit breaches, so a clean run is a single pass on the
+  analyser rather than one per file.
+- **A missing path is still fatal.** `file:lookup` requires a `pattern` and
+  errors on a nonexistent path, so there is no `ignore-missing` equivalent.
+
+Duplicate keys are reported (as `cannot decode yaml: …`, preserving the 0.x
+label for a `yaml.TypeError`), which is worth knowing because a duplicate key
+silently overrides the earlier value at runtime.
 
 ### Recipe: json
 
@@ -569,12 +604,13 @@ that should not be duplicated into a lower-classification results store.
 
 | Status | Count |
 |---|---|
-| Achievable now | 18 |
+| Achievable now | 19 |
 | Achievable, undocumented | 0 |
-| Needs new capability | 1 |
+| Needs new capability | 0 |
 
-19 rows, one per registered 0.x check type. The single remaining gap is
-[`yamllint`](#recipe-yamllint-not-yet-reproducible), which needs a way to treat a
-fact's collection error as analysable data rather than a fatal error.
+19 rows, one per registered 0.x check type. Every 0.x check now has a documented
+recipe and a working example in `examples/` — the last gap, `yamllint`, closed
+with the [`yaml:lint`](../reference/collect/yaml-lint.md) fact plugin.
 
-The plan for the remaining capabilities is on the [roadmap](roadmap.md) page.
+Remaining work is documentation quality rather than new capability; see the
+[roadmap](roadmap.md).

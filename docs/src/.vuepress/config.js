@@ -103,6 +103,7 @@ module.exports = {
                 ['/reference/collect/json-key', 'json:key'],
                 ['/reference/collect/static-analysis', 'static-analysis'],
                 ['/reference/collect/yaml-key', 'yaml:key'],
+                ['/reference/collect/yaml-lint', 'yaml:lint'],
               ]
             },
             {

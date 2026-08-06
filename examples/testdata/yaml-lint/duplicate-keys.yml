@@ -1,0 +1,5 @@
+langcode: en
+status: true
+id: duplicate_keys
+label: 'The status key below is defined twice, silently overriding the first'
+status: false

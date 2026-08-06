@@ -1,0 +1,6 @@
+langcode: en
+status: true
+dependencies:
+  module: [node, user
+id: broken_syntax
+label: 'An unclosed flow sequence above makes this file unparseable'

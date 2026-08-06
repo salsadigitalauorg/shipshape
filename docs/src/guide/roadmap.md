@@ -30,19 +30,14 @@ documented in the reference and backed by a working file in `examples/`.
 
 The [gaps matrix](gaps.md) is the authoritative record of current status.
 
-## Current status: one capability gap remains
+## Current status: no capability gaps remain
 
-18 of the 19 registered 0.x checks have a documented recipe and a working example
-in `examples/`. The remaining gap is **`yamllint`**: it reports an undecodable
-YAML file as a breach, but in 1.x a parse failure is a collect error, and any
-collect error is fatal to the run (`pkg/shipshape/shipshape.go:171-173`) — so the
-pipeline never reaches the analyse stage where the breach would be raised.
-
-Closing it needs a way to treat a fact's collection error as analysable data
-rather than a fatal condition: either an analyser that acts on a fact's error
-state (`BaseAnalyser` already reads `p.input.GetErrors()`), or an opt-in
-"tolerate collect errors" mode. See
-[Recipe: yamllint](gaps.md#recipe-yamllint-not-yet-reproducible).
+All 19 registered 0.x checks have a documented recipe and a working example in
+`examples/`. The last gap, **`yamllint`**, closed with the `yaml:lint` fact
+plugin: it treats a YAML parse failure as analysable data rather than a collect
+error, so the pipeline reaches the analyse stage instead of aborting at
+`log.Fatal("failed to collect facts")` (`pkg/shipshape/shipshape.go:171-174`).
+See [Recipe: yamllint](gaps.md#recipe-yamllint).
 
 The capabilities that were previously deferred here have all landed:
 
@@ -52,6 +47,7 @@ The capabilities that were previously deferred here have all landed:
 | `filediff` | `file:drift` fact + `drift` analyser — placeholder-masking instead of template rendering |
 | `crawler` | `http:crawl` fact plugin |
 | `sca:application_type` | `file:fingerprint` fact + `detected` analyser |
+| `yamllint` | `yaml:lint` fact plugin — parse failures as data, not fatal errors |
 
 The Drush-based Drupal checks similarly all have worked examples now. They share
 the collect → assert composition pattern shown in the
@@ -60,9 +56,14 @@ the collect → assert composition pattern shown in the
 makes the assertion.
 
 Remaining work is therefore **reference documentation quality**, not new
-plugins — several `reference/collect/` and `reference/connection/` pages are
-still title-only stubs, and a few plugins (`http:fetch`, `json:key`, `drift`,
-`detected`) have no reference page at all.
+plugins. Ten pages are still title-only stubs: `database:search`,
+`docker:command`, `docker:images`, `file:fingerprint`, `file:lookup`,
+`file:read`, `file:read:multiple` and `yaml:key` under `reference/collect/`,
+plus `docker:exec` and `mysql` under `reference/connection/`.
+
+`file:lookup` is the highest-value of these, since several recipes now depend on
+its `file-names-only` field to select between emitting file names and file
+contents.
 
 ## Known plugin limitations to investigate
 
