@@ -81,6 +81,23 @@ never panic — these are correctness bugs, not cosmetic ones.
 | `yaml:key` — empty sequence | A config file with an empty YAML list (e.g. `permissions: []`) panics with `index out of range`. The `SequenceNode` branch indexes `Content[0]` without a length check in **four** places: `YamlLookup.ProcessNodes` (`pkg/fact/yaml/yaml.go:106`, `:122`) and `AliasNodeToData` (`:238`, `:254`). | Guard every `SequenceNode` case against empty `Content`, and emit an empty list rather than panicking. All four sites need the guard, not just the one reached first. |
 | `allowed:list` — multi-file input | `yaml:key` output over a `file:lookup` (map of file → list) panics in `AsMapListString` (`pkg/data/data.go:94`) with `interface conversion: map[string]interface{}, not map[string][]string`, via `allowedlist.go:178`. When any file has an empty map the format instead becomes `map-nested-string`, which `allowed:list` does not handle. | Make `allowed:list` accept the actual multi-file `yaml:key` data shape (and `map-nested-string`), so a "disallowed permission across all roles" assertion can be expressed without per-role single-file reads. This is why `examples/drupal-config.yml` asserts permissions per-role rather than across all roles at once. |
 
+## Candidate composability improvements (unscheduled)
+
+These came out of a review of every bundled example. Unlike the defects above,
+none is a bug — each is an ergonomics improvement where the current composition
+works but reads more verbosely than it should. They are recorded for
+prioritisation and are **not** scheduled.
+
+| Candidate                             | Pain point                                                                                                                                                                                  | Direction                                                                                                                                                                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `command` stdout ergonomics           | Nine examples repeat the `bash -c` + `set -o pipefail` + `jq` dance, and eight then need `key: stdout` to select stdout out of a map — an unintuitive extra hop.                            | A `command` option (or thin `command:lines` fact) emitting stdout directly as `FormatListString`, split per line. Highest reuse: it simplifies every Drush recipe at once.                                                               |
+| Collapse `file:read` → `*:key` chains | `required-values.yml`, `regex-match.yml`, `yaml-lookup.yml` and `json-lookup.yml` each wire a `file:read` fact whose only job is to feed `yaml:key`/`json:key`.                             | Let `yaml:key`/`json:key` read a file directly, collapsing two nodes into one. **Note:** `yaml:key` already uses `path:` for the key path within the document (`pkg/fact/yaml/key.go:22`), so this needs a different key (e.g. `file:`). |
+| `string:transform` helper             | `docker.yml` repeats `yaml:key` over `compose-services-nodes` four times and strips image tags with a hard-to-read regex (`package-match: '^(.[^:@]*)?[:@]?([^ latest$]*)'`).               | A small transform helper (strip suffix, split on `:`) so the very common `image:tag` split doesn't need a fragile regex.                                                                                                                 |
+| Named `breach-format` presets         | `domain-in-db-tables.yml` needs a large inline `breach-format` template for readable output. `webforms-tokenised-email-handlers.yml` already works around the repetition with YAML anchors. | A library of named presets (e.g. `key-value-table`). Lowest urgency — YAML anchors already mitigate it.                                                                                                                                  |
+
+The first item is the highest-value, lowest-risk of the four and the natural next
+increment. The remaining three are held pending demonstrated demand.
+
 ## How to contribute
 
 The [gaps matrix](gaps.md) is the source of truth for what remains open.
