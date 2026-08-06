@@ -1,0 +1,52 @@
+# Audit a site for broken links by crawling it and flagging any non-2xx
+# response or transport error encountered along the way.
+#
+# `http:crawl` walks the link graph starting from `url`, following only
+# same-host links (plus any hosts in `include-domains`) up to `max-depth`
+# and a total request `limit`. It emits a map of url -> status/error for
+# every non-2xx response or failed request; 2xx responses (including 203
+# and 204) are not recorded. This pairs naturally with `not:empty`, which
+# breaches whenever its input is non-empty.
+#
+# `url` here is `${CRAWL_BASE_URL}`, resolved via `resolve-env`. Note this
+# reads a `.env` file in the project directory (see
+# pkg/env/envresolver.go) - it does NOT read the process's OS environment.
+# A real audit would point `url` directly at the site under test, e.g.
+# `https://www.example.gov.au`; this example uses an env var so the same
+# config can run against a disposable test server in CI (see
+# tests/e2e/crawl_test.go) as well as a real site locally.
+#
+# allow-insecure is set to true here only because the e2e test target
+# (tests/e2e/crawl_test.go) is a plain-http httptest server. A real audit
+# target should always be https (ISM-1139); omit allow-insecure entirely
+# when auditing production infrastructure so an accidental http:// url
+# fails loudly instead of being silently crawled unencrypted.
+collect:
+  site-links:
+    http:crawl:
+      url: ${CRAWL_BASE_URL}
+      resolve-env: true
+      allow-insecure: true
+      max-depth: 2
+
+  clean-links:
+    http:crawl:
+      url: ${CRAWL_BASE_URL}/clean
+      resolve-env: true
+      allow-insecure: true
+      max-depth: 2
+
+analyse:
+  # Breaches: the site links to a page that returns 404.
+  site-has-no-broken-links:
+    not:empty:
+      input: site-links
+      severity: high
+      description: "Site has no broken links"
+
+  # Passes: the /clean section is a closed subgraph of 2xx pages that never
+  # reaches the broken /missing link reachable from the site root.
+  clean-section-has-no-broken-links:
+    not:empty:
+      input: clean-links
+      description: "All crawled pages returned a 2xx response"

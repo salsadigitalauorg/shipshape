@@ -429,7 +429,7 @@ an offshore URL.
 | 0.x check | Status | 1.x plugin chain |
 |---|---|---|
 | [`docker:base_image`](../reference/checks/docker-base-image.md) | Achievable now | `docker:images` + `allowed:list` — see `examples/docker.yml` |
-| [`crawler`](../reference/checks/crawler.md) | Needs new capability | TBD |
+| [`crawler`](../reference/checks/crawler.md) | Achievable now | `http:crawl` + `not:empty` — see `examples/crawl.yml` |
 
 ### Recipe: docker:base_image
 
@@ -463,12 +463,74 @@ analyse:
 
 Source: `examples/docker.yml`
 
+### Recipe: crawler
+
+```yaml
+collect:
+  site-links:
+    http:crawl:
+      url: ${CRAWL_BASE_URL}
+      resolve-env: true
+      max-depth: 2
+
+analyse:
+  site-has-no-broken-links:
+    not:empty:
+      input: site-links
+      severity: high
+      description: "Site has no broken links"
+```
+
+Source: `examples/crawl.yml`
+
+**Migration notes from the 0.x `crawler` check:**
+
+| 0.x | 1.x |
+|---|---|
+| `domain` | `url` |
+| `extra_domains` | `include-domains` |
+| `include_urls` | `include-urls` |
+| `limit: 0` = unlimited | `limit` defaults to `100` — an unbounded crawl is no longer the default; opt into a wider budget explicitly |
+| no depth control | `max-depth` (default `3`) |
+| 203/204 misreported as errors (a bug in the underlying `colly` v1 library) | only non-2xx responses and transport errors are reported; 203/204 are correctly treated as success |
+| robots.txt always ignored | same — this is an audit tool crawling operator-owned/operator-approved targets, not a general-purpose spider |
+
+**Sovereignty note.** `http:crawl` performs outbound network I/O against
+the configured `url` (and any `include-domains` hosts) — this is the
+intended purpose of the plugin, not an incidental side effect like
+`file:fingerprint`'s signature-library composition. Scope is bounded to
+the root host plus explicitly allow-listed domains; no credentials are
+forwarded with requests; nothing is persisted beyond what an `output:`
+sink writes. For AU-sovereign audits, crawl targets should be
+operator-controlled or operator-approved infrastructure.
+
+**SSRF note.** `url` (and `include-domains`) must come from an explicitly
+configured, trusted value — e.g. a value set in a CI pipeline's own
+config, never a value influenced by end-user input. The domain allowlist
+bounds lateral scope: it is enforced on both discovered links and
+redirects — including every hop of a redirect chain, not only the initial
+request — so an attacker who fully controls the audited site's markup
+cannot make `http:crawl` fetch arbitrary third-party hosts either by
+linking to them directly or by redirecting to them. It does not protect
+against a malicious or attacker-influenced `url` itself; if the
+configured root redirects outside the allowlist, the crawl fails outright
+rather than silently auditing nothing (see the reference page's "Domain
+allowlist" section for the link-vs-redirect distinction and why a
+discovered link redirecting off-host is logged rather than treated as a
+broken link).
+
+**Privacy note (APP 11).** Crawled URLs, including any query strings,
+appear verbatim in breach output. An `output:` sink therefore inherits the
+same data classification as the URL structure of the audited site — treat
+accordingly if the site's URLs can embed identifiers or other information
+that should not be duplicated into a lower-classification results store.
+
 ## Summary
 
 | Status | Count |
 |---|---|
-| Achievable now | 16 |
+| Achievable now | 18 |
 | Achievable, undocumented | 0 |
-| Needs new capability | 2 |
+| Needs new capability | 0 |
 
 The plan for the remaining capabilities is on the [roadmap](roadmap.md) page.
