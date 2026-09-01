@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>0.x to 1.x recipe catalogue | Shipshape</title>
+    <meta name="generator" content="VuePress 1.9.10">
+    
+    <meta name="description" content="Go cli that reads yaml-based policies and runs them against a directory">
+    <meta name="theme-color" content="#3eaf7c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    
+    <link rel="preload" href="/shipshape/assets/css/0.styles.580df9c4.css" as="style"><link rel="preload" href="/shipshape/assets/js/app.9ed6a2c7.js" as="script"><link rel="preload" href="/shipshape/assets/js/2.58881377.js" as="script"><link rel="preload" href="/shipshape/assets/js/1.66d24b6c.js" as="script"><link rel="preload" href="/shipshape/assets/js/44.6a5b4cf8.js" as="script"><link rel="prefetch" href="/shipshape/assets/js/10.1fda56fe.js"><link rel="prefetch" href="/shipshape/assets/js/11.306301a2.js"><link rel="prefetch" href="/shipshape/assets/js/12.4230040c.js"><link rel="prefetch" href="/shipshape/assets/js/13.ef507107.js"><link rel="prefetch" href="/shipshape/assets/js/14.a426b356.js"><link rel="prefetch" href="/shipshape/assets/js/15.df999172.js"><link rel="prefetch" href="/shipshape/assets/js/16.c7420269.js"><link rel="prefetch" href="/shipshape/assets/js/17.690974af.js"><link rel="prefetch" href="/shipshape/assets/js/18.55693c60.js"><link rel="prefetch" href="/shipshape/assets/js/19.d9c21db7.js"><link rel="prefetch" href="/shipshape/assets/js/20.0403f1b3.js"><link rel="prefetch" href="/shipshape/assets/js/21.b6774250.js"><link rel="prefetch" href="/shipshape/assets/js/22.40bd1262.js"><link rel="prefetch" href="/shipshape/assets/js/23.867d14a0.js"><link rel="prefetch" href="/shipshape/assets/js/24.a9f95058.js"><link rel="prefetch" href="/shipshape/assets/js/25.01535785.js"><link rel="prefetch" href="/shipshape/assets/js/26.42b9d707.js"><link rel="prefetch" href="/shipshape/assets/js/27.d5b6b8ed.js"><link rel="prefetch" href="/shipshape/assets/js/28.57569829.js"><link rel="prefetch" href="/shipshape/assets/js/29.085592bc.js"><link rel="prefetch" href="/shipshape/assets/js/3.a98c4d0f.js"><link rel="prefetch" href="/shipshape/assets/js/30.596df26b.js"><link rel="prefetch" href="/shipshape/assets/js/31.e9781271.js"><link rel="prefetch" href="/shipshape/assets/js/32.2ed7b07e.js"><link rel="prefetch" href="/shipshape/assets/js/33.9d866a74.js"><link rel="prefetch" href="/shipshape/assets/js/34.2e1fe058.js"><link rel="prefetch" href="/shipshape/assets/js/35.f40dd951.js"><link rel="prefetch" href="/shipshape/assets/js/36.5facc9ea.js"><link rel="prefetch" href="/shipshape/assets/js/37.7685503f.js"><link rel="prefetch" href="/shipshape/assets/js/38.db664d86.js"><link rel="prefetch" href="/shipshape/assets/js/39.63ddb33f.js"><link rel="prefetch" href="/shipshape/assets/js/4.9dddb9b1.js"><link rel="prefetch" href="/shipshape/assets/js/40.d2eb897c.js"><link rel="prefetch" href="/shipshape/assets/js/41.0f02da5d.js"><link rel="prefetch" href="/shipshape/assets/js/42.d295d96d.js"><link rel="prefetch" href="/shipshape/assets/js/43.1007713a.js"><link rel="prefetch" href="/shipshape/assets/js/45.9831fbc2.js"><link rel="prefetch" href="/shipshape/assets/js/46.1f59c708.js"><link rel="prefetch" href="/shipshape/assets/js/47.3a9ecd13.js"><link rel="prefetch" href="/shipshape/assets/js/48.03b40b91.js"><link rel="prefetch" href="/shipshape/assets/js/49.2bcfca2a.js"><link rel="prefetch" href="/shipshape/assets/js/5.1629a15b.js"><link rel="prefetch" href="/shipshape/assets/js/50.b269037c.js"><link rel="prefetch" href="/shipshape/assets/js/51.25b1e996.js"><link rel="prefetch" href="/shipshape/assets/js/52.6b4a9379.js"><link rel="prefetch" href="/shipshape/assets/js/53.f80e183b.js"><link rel="prefetch" href="/shipshape/assets/js/54.2866ad77.js"><link rel="prefetch" href="/shipshape/assets/js/55.a3b5859d.js"><link rel="prefetch" href="/shipshape/assets/js/56.d674762d.js"><link rel="prefetch" href="/shipshape/assets/js/57.8b39a2df.js"><link rel="prefetch" href="/shipshape/assets/js/58.28464101.js"><link rel="prefetch" href="/shipshape/assets/js/59.62171a34.js"><link rel="prefetch" href="/shipshape/assets/js/6.323335b3.js"><link rel="prefetch" href="/shipshape/assets/js/60.69bdc17d.js"><link rel="prefetch" href="/shipshape/assets/js/61.395d76fd.js"><link rel="prefetch" href="/shipshape/assets/js/62.962cb49d.js"><link rel="prefetch" href="/shipshape/assets/js/63.2271246b.js"><link rel="prefetch" href="/shipshape/assets/js/64.5fb05a57.js"><link rel="prefetch" href="/shipshape/assets/js/65.c40c3080.js"><link rel="prefetch" href="/shipshape/assets/js/66.219721fa.js"><link rel="prefetch" href="/shipshape/assets/js/67.d90cdf9e.js"><link rel="prefetch" href="/shipshape/assets/js/68.369d12ea.js"><link rel="prefetch" href="/shipshape/assets/js/69.d5729954.js"><link rel="prefetch" href="/shipshape/assets/js/7.ee08b80b.js"><link rel="prefetch" href="/shipshape/assets/js/70.8a45adb1.js"><link rel="prefetch" href="/shipshape/assets/js/71.1154aadf.js"><link rel="prefetch" href="/shipshape/assets/js/72.ab557a52.js"><link rel="prefetch" href="/shipshape/assets/js/73.7fe6a546.js"><link rel="prefetch" href="/shipshape/assets/js/74.f565858e.js"><link rel="prefetch" href="/shipshape/assets/js/75.50d39577.js"><link rel="prefetch" href="/shipshape/assets/js/76.bc080c84.js"><link rel="prefetch" href="/shipshape/assets/js/77.cc3666aa.js"><link rel="prefetch" href="/shipshape/assets/js/78.9b7ad710.js"><link rel="prefetch" href="/shipshape/assets/js/79.f87e960f.js"><link rel="prefetch" href="/shipshape/assets/js/80.888accb7.js"><link rel="prefetch" href="/shipshape/assets/js/81.54b6b856.js"><link rel="prefetch" href="/shipshape/assets/js/82.41521b72.js"><link rel="prefetch" href="/shipshape/assets/js/83.499d9a68.js"><link rel="prefetch" href="/shipshape/assets/js/84.71ff7e59.js"><link rel="prefetch" href="/shipshape/assets/js/85.3c5ae31b.js"><link rel="prefetch" href="/shipshape/assets/js/86.fa48263e.js"><link rel="prefetch" href="/shipshape/assets/js/87.06e8f003.js"><link rel="prefetch" href="/shipshape/assets/js/vendors~docsearch.6fed1ae2.js">
+    <link rel="stylesheet" href="/shipshape/assets/css/0.styles.580df9c4.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/shipshape/" class="home-link router-link-active"><!----> <span class="site-name">Shipshape</span></a> <div class="links"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/shipshape/guide/" class="nav-link router-link-active">
+  Guide
+</a></div><div class="nav-item"><a href="/shipshape/reference/" class="nav-link">
+  Reference
+</a></div><div class="nav-item"><a href="https://github.com/salsadigitalauorg/shipshape" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  GitHub
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div> <!----></nav></div></header> <div class="sidebar-mask"></div> <aside class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="/shipshape/guide/" class="nav-link router-link-active">
+  Guide
+</a></div><div class="nav-item"><a href="/shipshape/reference/" class="nav-link">
+  Reference
+</a></div><div class="nav-item"><a href="https://github.com/salsadigitalauorg/shipshape" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  GitHub
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div> <!----></nav>  <ul class="sidebar-links"><li><section class="sidebar-group depth-0"><p class="sidebar-heading open"><span>Guide</span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/shipshape/guide/" aria-current="page" class="sidebar-link">Quick-start</a></li><li><a href="/shipshape/guide/connections.html" class="sidebar-link">Connections</a></li><li><a href="/shipshape/guide/collect.html" class="sidebar-link">Collecting data</a></li><li><a href="/shipshape/guide/analyse.html" class="sidebar-link">Analysing data</a></li><li><a href="/shipshape/guide/remediate.html" class="sidebar-link">Remediating breaches</a></li><li><a href="/shipshape/guide/outputs.html" class="sidebar-link">Outputs</a></li><li><a href="/shipshape/guide/versions.html" class="sidebar-link">Config versions</a></li><li><a href="/shipshape/guide/0.x.html" class="sidebar-link">0.x config format</a></li><li><a href="/shipshape/guide/gaps.html" aria-current="page" class="active sidebar-link">0.x to 1.x recipe catalogue</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#file-checks" class="sidebar-link">File checks</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#recipe-file" class="sidebar-link">Recipe: file</a></li><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#recipe-file-diff" class="sidebar-link">Recipe: file:diff</a></li></ul></li><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#yaml-json-checks" class="sidebar-link">YAML / JSON checks</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#recipe-yaml" class="sidebar-link">Recipe: yaml</a></li><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#recipe-yamllint" class="sidebar-link">Recipe: yamllint</a></li><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#recipe-json" class="sidebar-link">Recipe: json</a></li></ul></li><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#drupal-checks" class="sidebar-link">Drupal checks</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#recipe-drush-yaml-via-docker" class="sidebar-link">Recipe: drush-yaml via Docker</a></li><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#recipe-the-drush-composition-pattern" class="sidebar-link">Recipe: the Drush composition pattern</a></li></ul></li><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#code-quality-checks" class="sidebar-link">Code quality checks</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#recipe-phpstan" class="sidebar-link">Recipe: phpstan</a></li><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#recipe-sca-application-type" class="sidebar-link">Recipe: sca:application_type</a></li></ul></li><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#infrastructure-checks" class="sidebar-link">Infrastructure checks</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#recipe-docker-base-image" class="sidebar-link">Recipe: docker:base_image</a></li><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#recipe-crawler" class="sidebar-link">Recipe: crawler</a></li></ul></li><li class="sidebar-sub-header"><a href="/shipshape/guide/gaps.html#summary" class="sidebar-link">Summary</a></li></ul></li><li><a href="/shipshape/guide/roadmap.html" class="sidebar-link">Roadmap to 1.x parity</a></li></ul></section></li></ul> </aside> <main class="page"> <div class="theme-default-content content__default"><h1 id="_0-x-to-1-x-recipe-catalogue"><a href="#_0-x-to-1-x-recipe-catalogue" class="header-anchor">#</a> 0.x to 1.x recipe catalogue</h1> <p>1.x does not provide a dedicated plugin for each 0.x check. Instead, you
+reproduce a 0.x check by <strong>composing general-purpose <code>collect</code> and <code>analyse</code>
+plugins</strong>. This page is the recipe catalogue: for every 0.x check it shows the
+plugin chain that achieves the same outcome in 1.x.</p> <p>See <a href="/shipshape/guide/versions.html#the-1-x-way-compose-don-t-port">The 1.x way: compose, don't port</a>
+for the reasoning behind this approach.</p> <div class="custom-block tip"><p class="custom-block-title">Reading this table</p> <p>None of the statuses below mean &quot;waiting for a one-to-one port&quot;. Almost every
+0.x check is reproducible today by composing plugins that already exist.</p> <ul><li><strong>Achievable now</strong> — a documented recipe and a working example in <code>examples/</code>
+exist. Copy the example and adapt it.</li> <li><strong>Achievable, undocumented</strong> — the same plugins reproduce the check, but no
+worked example is published yet. The plugin chain is listed so you can build
+it; a published recipe is <a href="/shipshape/guide/roadmap.html">on the roadmap</a>.</li> <li><strong>Needs new capability</strong> — no existing building block collects the required
+data. The 1.x direction is still to be determined (TBD).</li></ul></div> <h2 id="file-checks"><a href="#file-checks" class="header-anchor">#</a> File checks</h2> <table><thead><tr><th>0.x check</th> <th>Status</th> <th>1.x plugin chain</th></tr></thead> <tbody><tr><td><a href="/shipshape/reference/checks/file.html"><code>file</code></a></td> <td>Achievable now</td> <td><code>file:lookup</code> + <code>not:empty</code> — see <code>examples/files.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/file-diff.html"><code>file:diff</code></a></td> <td>Achievable now</td> <td><code>file:read</code>/<code>http:fetch</code> + <code>file:drift</code> + <code>drift</code> — see <code>examples/file-drift.yml</code></td></tr></tbody></table> <h3 id="recipe-file"><a href="#recipe-file" class="header-anchor">#</a> Recipe: file</h3> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">disallowed-php-scripts</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:lookup</span><span class="token punctuation">:</span>
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> web
+      <span class="token key atrule">pattern</span><span class="token punctuation">:</span> <span class="token string">'^(adminer|phpmyadmin|bigdump)?\.php$'</span>
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token key atrule">disallowed-php-scripts-found</span><span class="token punctuation">:</span>
+    <span class="token key atrule">not:empty</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> Disallowed PHP scripts found
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> disallowed<span class="token punctuation">-</span>php<span class="token punctuation">-</span>scripts
+</code></pre></div><p>Source: <code>examples/files.yml</code></p> <h3 id="recipe-file-diff"><a href="#recipe-file-diff" class="header-anchor">#</a> Recipe: file:diff</h3> <p>0.x <code>file:diff</code> rendered a Jinja template with an operator-supplied vars map
+and diffed the result against an on-disk file. 1.x deliberately does <strong>not</strong>
+reproduce that: <code>file:drift</code> instead masks placeholder-shaped substrings
+(default <code>{{ VAR }}</code>) out of both sides before diffing, so the
+same config runs unmodified across every project provisioned from a template —
+no per-project vars map required. It also detects a placeholder that was never
+substituted, which rendering cannot.</p> <p>Template rendering was rejected in favour of drift matching for several
+reasons: a per-project vars map does not scale across many provisioned
+projects; <code>${{ VAR }}</code>-style placeholders collide with GitHub
+Actions' <code>${{ secrets.* }}</code> syntax when the template is a
+workflow file; rendering silently substitutes undefined variables rather than
+surfacing them; rendering cannot detect a placeholder that was never
+substituted, because there is nothing left to compare once it is rendered
+away; and a rendering engine (e.g. gonja) pulls in dozens of transitive
+dependencies where RE2 (already in the standard library) needs none.</p> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">template</span><span class="token punctuation">:</span>
+    <span class="token key atrule">http:fetch</span><span class="token punctuation">:</span>
+      <span class="token key atrule">url</span><span class="token punctuation">:</span> https<span class="token punctuation">:</span>//raw.githubusercontent.com/client/project<span class="token punctuation">-</span>template/main/.github/workflows/ci.yml
+
+  <span class="token key atrule">current</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:read</span><span class="token punctuation">:</span>
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> .github/workflows/ci.yml
+
+  <span class="token key atrule">ci-drift</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:drift</span><span class="token punctuation">:</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> template
+      <span class="token key atrule">additional-inputs</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>current<span class="token punctuation">]</span>
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token key atrule">ci-matches-template</span><span class="token punctuation">:</span>
+    <span class="token key atrule">drift</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> CI workflow has not drifted from the project template
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> ci<span class="token punctuation">-</span>drift
+</code></pre></div><p><code>drift</code> breaches carry a full unified diff (3 lines of context) via
+<code>KeyValuesBreach</code> — legible in <code>pretty</code>, <code>json</code>, and <code>junit</code> output. The
+<code>table</code> renderer does not wrap multi-line breach values, so it is unsuitable
+for drift checks.</p> <p><strong>Caveat — placeholder matching is a wildcard, not a value check.</strong> Each
+placeholder in a template line is matched against the current line with a
+non-greedy <code>(.*?)</code> capture, so <code>file:drift</code> confirms <em>something</em> occupies the
+placeholder's position, not that the surrounding line is otherwise identical
+in structure. In particular:</p> <ul><li>A placeholder capture can absorb adjacent genuine drift on the same line —
+e.g. template <code>image: {{ IMG }}:v1</code> against current
+<code>image: evil/malware:latest:v1</code> reports no drift, because the wildcard
+swallows everything up to the literal <code>:v1</code> suffix. Keep placeholders on
+their own line, or as the entire value, where the drift you care about
+could plausibly appear.</li> <li>The same placeholder name used twice on one line (e.g.
+<code>a: {{ X }} b: {{ X }}</code>) is <strong>not</strong> checked for consistency
+between the two captured values — RE2 has no backreferences, so <code>file:drift</code>
+cannot express &quot;these two captures must match&quot;. A current line of
+<code>a: one b: two</code> reports no drift even though the two <code>X</code> values differ.</li> <li>An empty substitution (the current file has nothing where the template has
+<code>{{ VAR }}</code>) counts as substituted, not as drift. Only a
+placeholder that is still <strong>literally present</strong> in the current file — the
+common copy-paste-and-forgot-to-fill-in bug — is flagged as unsubstituted.</li></ul> <p>None of these are considered blocking for the initial recipe: they are
+inherent to wildcard-based matching without a rendering/vars step, and are
+judged an acceptable trade-off against the config-per-project cost of true
+template rendering (see the rationale above). Prefer isolating a placeholder to its
+own line, or to the entirety of a value, where precision matters.</p> <p>Source: <code>examples/file-drift.yml</code></p> <h2 id="yaml-json-checks"><a href="#yaml-json-checks" class="header-anchor">#</a> YAML / JSON checks</h2> <table><thead><tr><th>0.x check</th> <th>Status</th> <th>1.x plugin chain</th></tr></thead> <tbody><tr><td><a href="/shipshape/reference/checks/yaml.html"><code>yaml</code></a></td> <td>Achievable now</td> <td><code>file:read</code> + <code>yaml:key</code> + <code>equals</code> / <code>allowed:list</code> — see <code>examples/drupal-config.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/yaml-lint.html"><code>yamllint</code></a></td> <td>Achievable now</td> <td><code>file:lookup</code> + <code>yaml:lint</code> + <code>not:empty</code> — see <code>examples/yaml-lint.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/json.html"><code>json</code></a></td> <td>Achievable now</td> <td><code>file:read</code> + <code>json:key</code> + <code>equals</code> / <code>allowed:list</code> — see <code>examples/json-lookup.yml</code></td></tr></tbody></table> <h3 id="recipe-yaml"><a href="#recipe-yaml" class="header-anchor">#</a> Recipe: yaml</h3> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">extension-file</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:read</span><span class="token punctuation">:</span>
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> core.extension.yml
+
+  <span class="token key atrule">modules</span><span class="token punctuation">:</span>
+    <span class="token key atrule">yaml:key</span><span class="token punctuation">:</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> extension<span class="token punctuation">-</span>file
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> module
+      <span class="token key atrule">keys-only</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token key atrule">required-modules</span><span class="token punctuation">:</span>
+    <span class="token key atrule">allowed:list</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> Required modules are not enabled
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> modules
+      <span class="token key atrule">required</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> seckit
+        <span class="token punctuation">-</span> lagoon_logs
+</code></pre></div><p>Source: <code>examples/drupal-config.yml</code></p> <h3 id="recipe-yamllint"><a href="#recipe-yamllint" class="header-anchor">#</a> Recipe: yamllint</h3> <p><code>yamllint</code> asserts only that files <em>parse</em>, reporting an undecodable file as a
+breach. Reproducing it needed a new building block, because the 0.x check and
+the 1.x pipeline were structurally opposed: in 1.x a YAML parse failure is a
+<strong>collect error</strong>, and any collect error is fatal to the whole run —
+<code>fact.Manager().CollectAllFacts()</code> is followed immediately by
+<code>log.Fatal(&quot;failed to collect facts&quot;)</code> (<code>pkg/shipshape/shipshape.go:171-174</code>).
+So the exact condition <code>yamllint</code> exists to report was the condition that
+prevented 1.x from reaching the analyse stage at all.</p> <p><a href="/shipshape/reference/collect/yaml-lint.html"><code>yaml:lint</code></a> resolves this by inverting the
+relationship: it treats a parse failure as ordinary <strong>data</strong> — a
+filename-to-error map — rather than as a collection error. <code>not:empty</code> then
+breaches once per entry.</p> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">config-files</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:lookup</span><span class="token punctuation">:</span>
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> config/default
+      <span class="token key atrule">pattern</span><span class="token punctuation">:</span> <span class="token string">'.*\.yml$'</span>
+      <span class="token key atrule">file-names-only</span><span class="token punctuation">:</span> <span class="token boolean important">false</span>   <span class="token comment"># emit contents (map-bytes), not names</span>
+
+  <span class="token key atrule">invalid-yaml</span><span class="token punctuation">:</span>
+    <span class="token key atrule">yaml:lint</span><span class="token punctuation">:</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> config<span class="token punctuation">-</span>files
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token key atrule">yaml-is-valid</span><span class="token punctuation">:</span>
+    <span class="token key atrule">not:empty</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> <span class="token string">'YAML files that do not parse'</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> invalid<span class="token punctuation">-</span>yaml
+      <span class="token key atrule">severity</span><span class="token punctuation">:</span> high
+      <span class="token key atrule">breach-format</span><span class="token punctuation">:</span>
+        <span class="token key atrule">type</span><span class="token punctuation">:</span> key<span class="token punctuation">-</span>value
+        <span class="token key atrule">key-label</span><span class="token punctuation">:</span> file
+        <span class="token key atrule">key</span><span class="token punctuation">:</span> <span class="token string">'{{ .Breach.Key }}'</span>
+        <span class="token key atrule">value-label</span><span class="token punctuation">:</span> <span class="token string">'YAML error'</span>
+        <span class="token key atrule">value</span><span class="token punctuation">:</span> <span class="token string">'{{ .Breach.Value }}'</span>
+</code></pre></div><p>Source: <code>examples/yaml-lint.yml</code></p> <p>File selection is delegated to <code>file:lookup</code>, so <code>path</code>, <code>pattern</code>,
+<code>exclude-pattern</code> and <code>skip-dirs</code> are inherited rather than reimplemented — but
+note <code>file-names-only: false</code> is required, since <code>yaml:lint</code> needs file contents
+rather than names.</p> <p>An alternative design — an opt-in &quot;tolerate collect errors&quot; mode surfacing the
+error via <code>BaseAnalyser</code>'s existing <code>p.input.GetErrors()</code> handling
+(<code>pkg/analyse/base.go:92</code>) — was rejected. A tolerated collect error is
+indistinguishable from genuine misconfiguration: a missing file, an unresolvable
+connection and a malformed document would all arrive as the same &quot;input failure&quot;,
+so an operator could not tell the assertion they asked for from a broken config.
+It would also have changed run semantics for every fact, where <code>yaml:lint</code> is
+additive.</p> <p>Three differences from the 0.x check are worth knowing:</p> <ul><li><strong>Multi-document files are fully validated.</strong> 0.x used a single
+<code>yaml.Unmarshal</code>, which stops after the first document, so a file whose later
+documents were malformed passed silently. <code>yaml:lint</code> validates every
+document by default; set <code>all-documents: false</code> for 0.x parity.</li> <li><strong>No per-file passes.</strong> 0.x added <code>&lt;file&gt; has valid yaml.</code> for each valid
+file. 1.x analysers only emit breaches, so a clean run is a single pass on the
+analyser rather than one per file.</li> <li><strong>A missing path is still fatal.</strong> <code>file:lookup</code> requires a <code>pattern</code> and
+errors on a nonexistent path, so there is no <code>ignore-missing</code> equivalent.</li></ul> <p>Duplicate keys are reported (as <code>cannot decode yaml: …</code>, preserving the 0.x
+label for a <code>yaml.TypeError</code>), which is worth knowing because a duplicate key
+silently overrides the earlier value at runtime.</p> <h3 id="recipe-json"><a href="#recipe-json" class="header-anchor">#</a> Recipe: json</h3> <p><code>json:key</code> is the JSON counterpart to <code>yaml:key</code>. It reads raw JSON (typically
+from a <code>file:read</code>) and evaluates an <a href="https://www.rfc-editor.org/rfc/rfc9535.html" target="_blank" rel="noopener noreferrer">RFC 9535<span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a>
+JSONPath expression against it — e.g. <code>$.name</code>, <code>$.items[0]</code>, the wildcard
+<code>$.scripts.*</code>, or a filter such as <code>$.deps[?@.name=='x'].version</code>.</p> <p>The emitted format follows the shape of the match, mirroring <code>yaml:key</code>: a
+single scalar emits a string, multiple values emit a list, and objects emit a
+map. An expression that matches nothing emits nil rather than erroring, so
+<code>not-empty</code> can act on the absence of a value.</p> <p>Note that <code>json:key</code> implements RFC 9535, whereas <code>yaml:key</code> uses an older
+pre-RFC dialect. The practical difference is filter syntax: <code>json:key</code> accepts
+both <code>[?@.x=='y']</code> (the RFC form) and <code>[?(@.x=='y')]</code>, and supports the RFC
+functions <code>length()</code>, <code>count()</code>, <code>match()</code> and <code>search()</code>; <code>yaml:key</code> accepts
+only the parenthesised form and none of the functions.</p> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">pkg-file</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:read</span><span class="token punctuation">:</span>
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> package.json
+
+  <span class="token key atrule">script-commands</span><span class="token punctuation">:</span>
+    <span class="token key atrule">json:key</span><span class="token punctuation">:</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> pkg<span class="token punctuation">-</span>file
+      <span class="token key atrule">expression</span><span class="token punctuation">:</span> <span class="token string">&quot;$.scripts.*&quot;</span>
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token key atrule">approved-script-tooling</span><span class="token punctuation">:</span>
+    <span class="token key atrule">allowed:list</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> A script uses an unapproved build tool
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> script<span class="token punctuation">-</span>commands
+      <span class="token key atrule">allowed</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> eslint .
+        <span class="token punctuation">-</span> vite build
+        <span class="token punctuation">-</span> vitest run
+</code></pre></div><p>Source: <code>examples/json-lookup.yml</code></p> <h2 id="drupal-checks"><a href="#drupal-checks" class="header-anchor">#</a> Drupal checks</h2> <p>Every Drush-based Drupal check follows the same pattern: run a <code>command</code> (or
+<code>docker:command</code>) to fetch data, parse it with <code>yaml:key</code> where needed, then
+assert with <code>allowed:list</code> or <code>equals</code>. See the
+<a href="#recipe-drupal-admin-user-the-composition-pattern">worked recipe</a> below.</p> <table><thead><tr><th>0.x check</th> <th>Status</th> <th>1.x plugin chain</th></tr></thead> <tbody><tr><td><a href="/shipshape/reference/checks/drupal-drush-yaml.html"><code>drush-yaml</code></a></td> <td>Achievable now</td> <td><code>docker:command</code> + <code>yaml:key</code> + <code>equals</code> — see <code>examples/drush-over-docker.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/drupal-file-module.html"><code>drupal-file-module</code></a></td> <td>Achievable now</td> <td><code>file:read</code> + <code>yaml:key</code> + <code>allowed:list</code> — see <code>examples/drupal-config.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/drupal-db-module.html"><code>drupal-db-module</code></a></td> <td>Achievable now</td> <td><code>command</code> + <code>allowed:list</code> — see <code>examples/drupal-db-module.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/drupal-db-permissions.html"><code>drupal-db-permissions</code></a></td> <td>Achievable now</td> <td><code>command</code> + <code>allowed:list</code> — see <code>examples/drupal-db-permissions.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/drupal-db-user-tfa.html"><code>drupal-db-user-tfa</code></a></td> <td>Achievable now</td> <td><code>command</code> + <code>equals</code> — see <code>examples/drupal-db-user-tfa.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/drupal-admin-user.html"><code>drupal-admin-user</code></a></td> <td>Achievable now</td> <td><code>command</code> + <code>allowed:list</code> — see <code>examples/drupal-admin-user.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/drupal-user-forbidden.html"><code>drupal-user-forbidden</code></a></td> <td>Achievable now</td> <td><code>command</code> + <code>equals</code> — see <code>examples/drupal-user-forbidden.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/drupal-role-permissions.html"><code>drupal-role-permissions</code></a></td> <td>Achievable now</td> <td><code>command</code> + <code>allowed:list</code> — see <code>examples/drupal-role-permissions.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/drupal-user-role.html"><code>drupal-user-role</code></a></td> <td>Achievable now</td> <td><code>command</code> + <code>allowed:list</code> — see <code>examples/drupal-user-role.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/drupal-tracking-code.html"><code>drupal-tracking-code</code></a></td> <td>Achievable now</td> <td><code>command</code> + <code>equals</code> — see <code>examples/drupal-tracking-code.yml</code></td></tr></tbody></table> <h3 id="recipe-drush-yaml-via-docker"><a href="#recipe-drush-yaml-via-docker" class="header-anchor">#</a> Recipe: drush-yaml via Docker</h3> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">connections</span><span class="token punctuation">:</span>
+  <span class="token key atrule">docker-cli</span><span class="token punctuation">:</span>
+    <span class="token key atrule">docker:exec</span><span class="token punctuation">:</span>
+      <span class="token key atrule">container</span><span class="token punctuation">:</span> my<span class="token punctuation">-</span>app
+
+<span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">tfa-config</span><span class="token punctuation">:</span>
+    <span class="token key atrule">docker:command</span><span class="token punctuation">:</span>
+      <span class="token key atrule">connection</span><span class="token punctuation">:</span> docker<span class="token punctuation">-</span>cli
+      <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">&quot;/app/vendor/bin/drush&quot;</span><span class="token punctuation">,</span> <span class="token string">&quot;config:get&quot;</span><span class="token punctuation">,</span> <span class="token string">&quot;tfa.settings&quot;</span><span class="token punctuation">]</span>
+
+  <span class="token key atrule">tfa-status</span><span class="token punctuation">:</span>
+    <span class="token key atrule">yaml:key</span><span class="token punctuation">:</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> tfa<span class="token punctuation">-</span>config
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> enabled
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token key atrule">tfa-enabled</span><span class="token punctuation">:</span>
+    <span class="token key atrule">equals</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> TFA must be enabled
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> tfa<span class="token punctuation">-</span>status
+      <span class="token key atrule">value</span><span class="token punctuation">:</span> <span class="token string">&quot;true&quot;</span>
+</code></pre></div><p>Source: <code>examples/drush-over-docker.yml</code></p> <h3 id="recipe-the-drush-composition-pattern"><a href="#recipe-the-drush-composition-pattern" class="header-anchor">#</a> Recipe: the Drush composition pattern</h3> <p>Every Drush-based check above follows the same shape: run a <code>command</code> fact that
+emits the data one item per line, then assert with <code>allowed:list</code> or <code>equals</code>.</p> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token comment"># 1. Collect: run drush and emit the machine name of each super-admin role.</span>
+  <span class="token key atrule">admin-roles</span><span class="token punctuation">:</span>
+    <span class="token key atrule">command</span><span class="token punctuation">:</span>
+      <span class="token key atrule">cmd</span><span class="token punctuation">:</span> bash
+      <span class="token key atrule">args</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token punctuation">-</span>c
+      <span class="token punctuation">-</span> <span class="token punctuation">|</span><span class="token scalar string">
+        set -o pipefail
+        drush role:list --format=json \
+          | jq -r 'to_entries[] | select(.value.is_admin == true) | .key'</span>
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token comment"># 2. Assert: fail if any role outside the allowed set is present.</span>
+  <span class="token key atrule">admin-roles-check</span><span class="token punctuation">:</span>
+    <span class="token key atrule">allowed:list</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> Unexpected role carries the is_admin flag
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> admin<span class="token punctuation">-</span>roles
+      <span class="token comment"># `command` output is a map; `key: stdout` selects stdout, which</span>
+      <span class="token comment"># `allowed:list` then splits into one entry per line.</span>
+      <span class="token key atrule">key</span><span class="token punctuation">:</span> stdout
+      <span class="token key atrule">allowed</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> administrator
+</code></pre></div><p>Source: <code>examples/drupal-admin-user.yml</code></p> <p>Swap the <code>command</code> and the <code>allowed:list</code> / <code>equals</code> assertion to reproduce any
+of the other Drush-based checks — the shape stays the same.</p> <h2 id="code-quality-checks"><a href="#code-quality-checks" class="header-anchor">#</a> Code quality checks</h2> <table><thead><tr><th>0.x check</th> <th>Status</th> <th>1.x plugin chain</th></tr></thead> <tbody><tr><td><a href="/shipshape/reference/checks/phpstan.html"><code>phpstan</code></a></td> <td>Achievable now</td> <td><code>static-analysis</code> + <code>static-analysis:breaches</code> — see <code>examples/phpstan.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/sca-application-type.html"><code>sca:application_type</code></a></td> <td>Achievable now</td> <td><code>file:fingerprint</code> + <code>detected</code> — see <code>examples/app-type.yml</code></td></tr></tbody></table> <h3 id="recipe-phpstan"><a href="#recipe-phpstan" class="header-anchor">#</a> Recipe: phpstan</h3> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">phpstan-check</span><span class="token punctuation">:</span>
+    <span class="token key atrule">static-analysis</span><span class="token punctuation">:</span>
+      <span class="token key atrule">tool</span><span class="token punctuation">:</span> phpstan
+      <span class="token key atrule">config</span><span class="token punctuation">:</span> phpstan.neon
+      <span class="token key atrule">paths</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>web/modules/custom<span class="token punctuation">]</span>
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token key atrule">phpstan-issues</span><span class="token punctuation">:</span>
+    <span class="token key atrule">static-analysis:breaches</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> PHPStan found code quality issues
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> phpstan<span class="token punctuation">-</span>check
+      <span class="token key atrule">max-issues</span><span class="token punctuation">:</span> <span class="token number">0</span>
+</code></pre></div><p>Source: <code>examples/phpstan.yml</code></p> <h3 id="recipe-sca-application-type"><a href="#recipe-sca-application-type" class="header-anchor">#</a> Recipe: sca:application_type</h3> <p>0.x <code>sca:application_type</code> scored each disallowed framework with a weighted
+likelihood — markers (content matches in entrypoint files), dirs (directory
+presence), and dependencies (manifest lookup) each added to a running total,
+which breached once it exceeded a threshold. <code>file:fingerprint</code> reproduces
+this weighted model rather than simple presence matching (<code>detect</code> implies
+boolean presence; <code>fingerprint</code> conveys accumulated weighted evidence), and
+<code>detected</code> breaches once per label present in its map-shaped input.</p> <p>No framework knowledge is baked into the binary: every signature (which
+markers/dirs/dependencies identify which label) is entirely operator config
+under <code>frameworks</code>. The binary only supplies the generic matching mechanism.</p> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">app-type</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:fingerprint</span><span class="token punctuation">:</span>
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> .
+      <span class="token key atrule">threshold</span><span class="token punctuation">:</span> <span class="token number">20</span>
+      <span class="token key atrule">entrypoints</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">&quot;index.php&quot;</span><span class="token punctuation">]</span>
+      <span class="token key atrule">weights</span><span class="token punctuation">:</span> <span class="token punctuation">{</span><span class="token key atrule">markers</span><span class="token punctuation">:</span> <span class="token number">5</span><span class="token punctuation">,</span> <span class="token key atrule">dirs</span><span class="token punctuation">:</span> <span class="token number">5</span><span class="token punctuation">,</span> <span class="token key atrule">dependencies</span><span class="token punctuation">:</span> <span class="token number">10</span><span class="token punctuation">}</span>
+      <span class="token key atrule">manifest</span><span class="token punctuation">:</span> composer.json
+      <span class="token key atrule">dependency-paths</span><span class="token punctuation">:</span>            <span class="token comment"># optional override; sensible defaults ship</span>
+        <span class="token punctuation">-</span> <span class="token string">&quot;$.require&quot;</span>
+        <span class="token punctuation">-</span> <span class="token string">&quot;$['require-dev']&quot;</span>
+      <span class="token key atrule">frameworks</span><span class="token punctuation">:</span>
+        <span class="token key atrule">drupal</span><span class="token punctuation">:</span>
+          <span class="token key atrule">markers</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">&quot;use Drupal\\Core\\DrupalKernel;&quot;</span><span class="token punctuation">]</span>
+          <span class="token key atrule">dirs</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>web<span class="token punctuation">,</span> docroot<span class="token punctuation">]</span>
+          <span class="token key atrule">dependencies</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>drupal/core<span class="token punctuation">-</span>recommended<span class="token punctuation">]</span>
+        <span class="token key atrule">wordpress</span><span class="token punctuation">:</span>
+          <span class="token key atrule">markers</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">&quot; * @package WordPress&quot;</span><span class="token punctuation">]</span>
+          <span class="token key atrule">dirs</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>wp<span class="token punctuation">-</span>content<span class="token punctuation">]</span>
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token key atrule">no-disallowed-frameworks</span><span class="token punctuation">:</span>
+    <span class="token key atrule">detected</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> Disallowed application framework detected
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> app<span class="token punctuation">-</span>type
+      <span class="token key atrule">severity</span><span class="token punctuation">:</span> high
+</code></pre></div><p>Source: <code>examples/app-type.yml</code></p> <p><strong>Caveat — markers/dirs accumulate per match, dependencies does not.</strong> A
+framework with 2 markers each found in 2 entrypoint files scores
+<code>weights.markers * 2 * 2</code>, not a flat <code>weights.markers</code> — and a framework
+with the same directory name matched twice (or two configured dir names both
+present) scores <code>weights.dirs</code> twice. This reproduces 0.x's
+<code>sca:application_type</code> accumulation model exactly
+(<code>pkg/checks/sca/apptypecheck.go</code>), so a ported 0.x config scores
+identically. Dependencies is the one signal that does <strong>not</strong> accumulate:
+however many configured dependency names match, or however many
+<code>dependency-paths</code> expressions surface them, a framework's dependencies
+signal contributes <code>weights.dependencies</code> at most once — mirroring 0.x's
+single bool-driven award for that signal. Do not assume all three signals
+behave the same way when tuning weights and thresholds.</p> <p><strong>Caveat — threshold is a &quot;strictly greater than&quot; boundary, and 0 cannot mean
+&quot;any single match&quot;.</strong> A label is only emitted when its accumulated score is
+strictly greater than <code>threshold</code>; a score equal to <code>threshold</code> does not
+breach. Because YAML unmarshals an absent field to Go's zero value,
+<code>threshold: 0</code> and simply omitting <code>threshold</code> are indistinguishable from &quot;use
+the default (30)&quot;. An operator who genuinely wants &quot;any single match
+breaches&quot; cannot express <code>threshold: 0</code> and must configure a negative
+threshold (e.g. <code>-1</code>) instead. This is inherited from 0.x, which has the
+identical limitation, and is kept unchanged for compatibility with ported 0.x
+threshold values.</p> <p><strong>Composing a shared signature library.</strong> Because <code>frameworks</code> is plain
+operator config, a signature library (a YAML file defining <code>frameworks</code> for
+common PHP/Node frameworks) can be maintained centrally and composed with a
+project-local config via repeated <code>-f</code> flags, which support URLs:</p> <div class="language-sh extra-class"><pre class="language-sh"><code>shipshape run <span class="token builtin class-name">.</span> <span class="token punctuation">\</span>
+  <span class="token parameter variable">-f</span> https://raw.githubusercontent.com/your-org/shipshape-signatures/main/frameworks.yml <span class="token punctuation">\</span>
+  <span class="token parameter variable">-f</span> ./my-audit.yml
+</code></pre></div><p>v2 config deep-merges every <code>-f</code> file in order
+(<code>pkg/config/config.go</code>, <code>pkg/config/merge.go</code>). <strong>Caveat: <code>deepMerge</code>
+replaces slices and scalars, it does not union or append them.</strong> If both the
+shared library and the local override define <code>frameworks.drupal.dirs</code>, the
+local file's list <em>replaces</em> the library's list entirely — a local override
+adding one directory to an otherwise-good signature must repeat every
+existing entry, not just the new one. Every override is logged at <code>Warn</code>
+with the dotted key path, so a later file silently changing a signature is
+never invisible — but it is easy to author an override that unintentionally
+drops entries from a signature the author only meant to extend. Only maps
+merge recursively; everything else (scalars and slices) is a full
+replacement.</p> <p><strong>Scope boundary — this recipe answers &quot;is a disallowed framework present?&quot;,
+not &quot;is this the expected app type?&quot;.</strong> <code>file:fingerprint</code> emits a map of
+label to score for every framework whose score clears the threshold; it does
+not emit a fixed list of allowed/expected labels to compare against, so it
+cannot directly express &quot;this project must be exactly a Drupal site and
+nothing else&quot;. Composing the output with <code>allowed:list</code> does not work
+either: <code>allowed:list</code> on a <code>FormatMapString</code> input compares the map's
+<em>values</em> (the scores) against an allow-list, not its keys (the labels) — the
+comparison you would actually want. Expected-app-type checking would need a
+<code>labels-only</code> toggle (emitting the label set rather than label→score) that
+<code>file:fingerprint</code> does not currently offer. Until then, use this recipe only
+for &quot;flag disallowed frameworks&quot;, not &quot;assert the one expected framework&quot;.</p> <p><strong>Sovereignty note.</strong> <code>file:fingerprint</code> itself performs local filesystem I/O
+only — no network calls. The <code>-f &lt;url&gt;</code> signature-library composition
+pattern above is outbound network I/O at config-load time, not inside the
+fact plugin. For AU-sovereign deployments, host shared signature libraries
+in-region (<code>ap-southeast-2</code> or <code>ap-southeast-4</code>) rather than pulling them from
+an offshore URL.</p> <h2 id="infrastructure-checks"><a href="#infrastructure-checks" class="header-anchor">#</a> Infrastructure checks</h2> <table><thead><tr><th>0.x check</th> <th>Status</th> <th>1.x plugin chain</th></tr></thead> <tbody><tr><td><a href="/shipshape/reference/checks/docker-base-image.html"><code>docker:base_image</code></a></td> <td>Achievable now</td> <td><code>docker:images</code> + <code>allowed:list</code> — see <code>examples/docker.yml</code></td></tr> <tr><td><a href="/shipshape/reference/checks/crawler.html"><code>crawler</code></a></td> <td>Achievable now</td> <td><code>http:crawl</code> + <code>not:empty</code> — see <code>examples/crawl.yml</code></td></tr></tbody></table> <h3 id="recipe-docker-base-image"><a href="#recipe-docker-base-image" class="header-anchor">#</a> Recipe: docker:base_image</h3> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">dockerfile-paths</span><span class="token punctuation">:</span>
+    <span class="token key atrule">yaml:key</span><span class="token punctuation">:</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> compose<span class="token punctuation">-</span>services<span class="token punctuation">-</span>nodes
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> build.dockerfile
+
+  <span class="token key atrule">dockerfiles</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:read:multiple</span><span class="token punctuation">:</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> dockerfile<span class="token punctuation">-</span>paths
+
+  <span class="token key atrule">base-images</span><span class="token punctuation">:</span>
+    <span class="token key atrule">docker:images</span><span class="token punctuation">:</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> dockerfiles
+      <span class="token key atrule">no-tag</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token key atrule">disallowed-base-image</span><span class="token punctuation">:</span>
+    <span class="token key atrule">allowed:list</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> Disallowed base image found in Dockerfiles
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> base<span class="token punctuation">-</span>images
+      <span class="token key atrule">allowed</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> uselagoon/php<span class="token punctuation">-</span>8.2<span class="token punctuation">-</span>fpm
+        <span class="token punctuation">-</span> uselagoon/nginx<span class="token punctuation">-</span>drupal
+      <span class="token key atrule">deprecated</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> uselagoon/php<span class="token punctuation">-</span>8.1<span class="token punctuation">-</span>fpm
+</code></pre></div><p>Source: <code>examples/docker.yml</code></p> <h3 id="recipe-crawler"><a href="#recipe-crawler" class="header-anchor">#</a> Recipe: crawler</h3> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">site-links</span><span class="token punctuation">:</span>
+    <span class="token key atrule">http:crawl</span><span class="token punctuation">:</span>
+      <span class="token key atrule">url</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span>CRAWL_BASE_URL<span class="token punctuation">}</span>
+      <span class="token key atrule">resolve-env</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+      <span class="token key atrule">max-depth</span><span class="token punctuation">:</span> <span class="token number">2</span>
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token key atrule">site-has-no-broken-links</span><span class="token punctuation">:</span>
+    <span class="token key atrule">not:empty</span><span class="token punctuation">:</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> site<span class="token punctuation">-</span>links
+      <span class="token key atrule">severity</span><span class="token punctuation">:</span> high
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> <span class="token string">&quot;Site has no broken links&quot;</span>
+</code></pre></div><p>Source: <code>examples/crawl.yml</code></p> <p><strong>Migration notes from the 0.x <code>crawler</code> check:</strong></p> <table><thead><tr><th>0.x</th> <th>1.x</th></tr></thead> <tbody><tr><td><code>domain</code></td> <td><code>url</code></td></tr> <tr><td><code>extra_domains</code></td> <td><code>include-domains</code></td></tr> <tr><td><code>include_urls</code></td> <td><code>include-urls</code></td></tr> <tr><td><code>limit: 0</code> = unlimited</td> <td><code>limit</code> defaults to <code>100</code> — an unbounded crawl is no longer the default; opt into a wider budget explicitly</td></tr> <tr><td>no depth control</td> <td><code>max-depth</code> (default <code>3</code>)</td></tr> <tr><td>203/204 misreported as errors (a bug in the underlying <code>colly</code> v1 library)</td> <td>only non-2xx responses and transport errors are reported; 203/204 are correctly treated as success</td></tr> <tr><td>robots.txt always ignored</td> <td>same — this is an audit tool crawling operator-owned/operator-approved targets, not a general-purpose spider</td></tr></tbody></table> <p><strong>Sovereignty note.</strong> <code>http:crawl</code> performs outbound network I/O against
+the configured <code>url</code> (and any <code>include-domains</code> hosts) — this is the
+intended purpose of the plugin, not an incidental side effect like
+<code>file:fingerprint</code>'s signature-library composition. Scope is bounded to
+the root host plus explicitly allow-listed domains; no credentials are
+forwarded with requests; nothing is persisted beyond what an <code>output:</code>
+sink writes. For AU-sovereign audits, crawl targets should be
+operator-controlled or operator-approved infrastructure.</p> <p><strong>SSRF note.</strong> <code>url</code> (and <code>include-domains</code>) must come from an explicitly
+configured, trusted value — e.g. a value set in a CI pipeline's own
+config, never a value influenced by end-user input. The domain allowlist
+bounds lateral scope: it is enforced on both discovered links and
+redirects — including every hop of a redirect chain, not only the initial
+request — so an attacker who fully controls the audited site's markup
+cannot make <code>http:crawl</code> fetch arbitrary third-party hosts either by
+linking to them directly or by redirecting to them. It does not protect
+against a malicious or attacker-influenced <code>url</code> itself; if the
+configured root redirects outside the allowlist, the crawl fails outright
+rather than silently auditing nothing (see the reference page's &quot;Domain
+allowlist&quot; section for the link-vs-redirect distinction and why a
+discovered link redirecting off-host is logged rather than treated as a
+broken link).</p> <p><strong>Privacy note (APP 11).</strong> Crawled URLs, including any query strings,
+appear verbatim in breach output. An <code>output:</code> sink therefore inherits the
+same data classification as the URL structure of the audited site — treat
+accordingly if the site's URLs can embed identifiers or other information
+that should not be duplicated into a lower-classification results store.</p> <h2 id="summary"><a href="#summary" class="header-anchor">#</a> Summary</h2> <table><thead><tr><th>Status</th> <th>Count</th></tr></thead> <tbody><tr><td>Achievable now</td> <td>19</td></tr> <tr><td>Achievable, undocumented</td> <td>0</td></tr> <tr><td>Needs new capability</td> <td>0</td></tr></tbody></table> <p>19 rows, one per registered 0.x check type. Every 0.x check now has a documented
+recipe and a working example in <code>examples/</code> — the last gap, <code>yamllint</code>, closed
+with the <a href="/shipshape/reference/collect/yaml-lint.html"><code>yaml:lint</code></a> fact plugin.</p> <p>Remaining work is documentation quality rather than new capability; see the
+<a href="/shipshape/guide/roadmap.html">roadmap</a>.</p></div> <footer class="page-edit"><!----> <!----></footer> <div class="page-nav"><p class="inner"><span class="prev">
+      ←
+      <a href="/shipshape/guide/0.x.html" class="prev">
+        0.x config format
+      </a></span> <span class="next"><a href="/shipshape/guide/roadmap.html">
+        Roadmap to 1.x parity
+      </a>
+      →
+    </span></p></div> </main></div><div class="global-ui"></div></div>
+    <script src="/shipshape/assets/js/app.9ed6a2c7.js" defer></script><script src="/shipshape/assets/js/2.58881377.js" defer></script><script src="/shipshape/assets/js/1.66d24b6c.js" defer></script><script src="/shipshape/assets/js/44.6a5b4cf8.js" defer></script>
+  </body>
+</html>

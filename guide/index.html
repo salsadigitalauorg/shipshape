@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Quick-start | Shipshape</title>
+    <meta name="generator" content="VuePress 1.9.10">
+    
+    <meta name="description" content="Go cli that reads yaml-based policies and runs them against a directory">
+    <meta name="theme-color" content="#3eaf7c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    
+    <link rel="preload" href="/shipshape/assets/css/0.styles.580df9c4.css" as="style"><link rel="preload" href="/shipshape/assets/js/app.9ed6a2c7.js" as="script"><link rel="preload" href="/shipshape/assets/js/2.58881377.js" as="script"><link rel="preload" href="/shipshape/assets/js/1.66d24b6c.js" as="script"><link rel="preload" href="/shipshape/assets/js/40.d2eb897c.js" as="script"><link rel="prefetch" href="/shipshape/assets/js/10.1fda56fe.js"><link rel="prefetch" href="/shipshape/assets/js/11.306301a2.js"><link rel="prefetch" href="/shipshape/assets/js/12.4230040c.js"><link rel="prefetch" href="/shipshape/assets/js/13.ef507107.js"><link rel="prefetch" href="/shipshape/assets/js/14.a426b356.js"><link rel="prefetch" href="/shipshape/assets/js/15.df999172.js"><link rel="prefetch" href="/shipshape/assets/js/16.c7420269.js"><link rel="prefetch" href="/shipshape/assets/js/17.690974af.js"><link rel="prefetch" href="/shipshape/assets/js/18.55693c60.js"><link rel="prefetch" href="/shipshape/assets/js/19.d9c21db7.js"><link rel="prefetch" href="/shipshape/assets/js/20.0403f1b3.js"><link rel="prefetch" href="/shipshape/assets/js/21.b6774250.js"><link rel="prefetch" href="/shipshape/assets/js/22.40bd1262.js"><link rel="prefetch" href="/shipshape/assets/js/23.867d14a0.js"><link rel="prefetch" href="/shipshape/assets/js/24.a9f95058.js"><link rel="prefetch" href="/shipshape/assets/js/25.01535785.js"><link rel="prefetch" href="/shipshape/assets/js/26.42b9d707.js"><link rel="prefetch" href="/shipshape/assets/js/27.d5b6b8ed.js"><link rel="prefetch" href="/shipshape/assets/js/28.57569829.js"><link rel="prefetch" href="/shipshape/assets/js/29.085592bc.js"><link rel="prefetch" href="/shipshape/assets/js/3.a98c4d0f.js"><link rel="prefetch" href="/shipshape/assets/js/30.596df26b.js"><link rel="prefetch" href="/shipshape/assets/js/31.e9781271.js"><link rel="prefetch" href="/shipshape/assets/js/32.2ed7b07e.js"><link rel="prefetch" href="/shipshape/assets/js/33.9d866a74.js"><link rel="prefetch" href="/shipshape/assets/js/34.2e1fe058.js"><link rel="prefetch" href="/shipshape/assets/js/35.f40dd951.js"><link rel="prefetch" href="/shipshape/assets/js/36.5facc9ea.js"><link rel="prefetch" href="/shipshape/assets/js/37.7685503f.js"><link rel="prefetch" href="/shipshape/assets/js/38.db664d86.js"><link rel="prefetch" href="/shipshape/assets/js/39.63ddb33f.js"><link rel="prefetch" href="/shipshape/assets/js/4.9dddb9b1.js"><link rel="prefetch" href="/shipshape/assets/js/41.0f02da5d.js"><link rel="prefetch" href="/shipshape/assets/js/42.d295d96d.js"><link rel="prefetch" href="/shipshape/assets/js/43.1007713a.js"><link rel="prefetch" href="/shipshape/assets/js/44.6a5b4cf8.js"><link rel="prefetch" href="/shipshape/assets/js/45.9831fbc2.js"><link rel="prefetch" href="/shipshape/assets/js/46.1f59c708.js"><link rel="prefetch" href="/shipshape/assets/js/47.3a9ecd13.js"><link rel="prefetch" href="/shipshape/assets/js/48.03b40b91.js"><link rel="prefetch" href="/shipshape/assets/js/49.2bcfca2a.js"><link rel="prefetch" href="/shipshape/assets/js/5.1629a15b.js"><link rel="prefetch" href="/shipshape/assets/js/50.b269037c.js"><link rel="prefetch" href="/shipshape/assets/js/51.25b1e996.js"><link rel="prefetch" href="/shipshape/assets/js/52.6b4a9379.js"><link rel="prefetch" href="/shipshape/assets/js/53.f80e183b.js"><link rel="prefetch" href="/shipshape/assets/js/54.2866ad77.js"><link rel="prefetch" href="/shipshape/assets/js/55.a3b5859d.js"><link rel="prefetch" href="/shipshape/assets/js/56.d674762d.js"><link rel="prefetch" href="/shipshape/assets/js/57.8b39a2df.js"><link rel="prefetch" href="/shipshape/assets/js/58.28464101.js"><link rel="prefetch" href="/shipshape/assets/js/59.62171a34.js"><link rel="prefetch" href="/shipshape/assets/js/6.323335b3.js"><link rel="prefetch" href="/shipshape/assets/js/60.69bdc17d.js"><link rel="prefetch" href="/shipshape/assets/js/61.395d76fd.js"><link rel="prefetch" href="/shipshape/assets/js/62.962cb49d.js"><link rel="prefetch" href="/shipshape/assets/js/63.2271246b.js"><link rel="prefetch" href="/shipshape/assets/js/64.5fb05a57.js"><link rel="prefetch" href="/shipshape/assets/js/65.c40c3080.js"><link rel="prefetch" href="/shipshape/assets/js/66.219721fa.js"><link rel="prefetch" href="/shipshape/assets/js/67.d90cdf9e.js"><link rel="prefetch" href="/shipshape/assets/js/68.369d12ea.js"><link rel="prefetch" href="/shipshape/assets/js/69.d5729954.js"><link rel="prefetch" href="/shipshape/assets/js/7.ee08b80b.js"><link rel="prefetch" href="/shipshape/assets/js/70.8a45adb1.js"><link rel="prefetch" href="/shipshape/assets/js/71.1154aadf.js"><link rel="prefetch" href="/shipshape/assets/js/72.ab557a52.js"><link rel="prefetch" href="/shipshape/assets/js/73.7fe6a546.js"><link rel="prefetch" href="/shipshape/assets/js/74.f565858e.js"><link rel="prefetch" href="/shipshape/assets/js/75.50d39577.js"><link rel="prefetch" href="/shipshape/assets/js/76.bc080c84.js"><link rel="prefetch" href="/shipshape/assets/js/77.cc3666aa.js"><link rel="prefetch" href="/shipshape/assets/js/78.9b7ad710.js"><link rel="prefetch" href="/shipshape/assets/js/79.f87e960f.js"><link rel="prefetch" href="/shipshape/assets/js/80.888accb7.js"><link rel="prefetch" href="/shipshape/assets/js/81.54b6b856.js"><link rel="prefetch" href="/shipshape/assets/js/82.41521b72.js"><link rel="prefetch" href="/shipshape/assets/js/83.499d9a68.js"><link rel="prefetch" href="/shipshape/assets/js/84.71ff7e59.js"><link rel="prefetch" href="/shipshape/assets/js/85.3c5ae31b.js"><link rel="prefetch" href="/shipshape/assets/js/86.fa48263e.js"><link rel="prefetch" href="/shipshape/assets/js/87.06e8f003.js"><link rel="prefetch" href="/shipshape/assets/js/vendors~docsearch.6fed1ae2.js">
+    <link rel="stylesheet" href="/shipshape/assets/css/0.styles.580df9c4.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div> <a href="/shipshape/" class="home-link router-link-active"><!----> <span class="site-name">Shipshape</span></a> <div class="links"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""> <!----></div> <nav class="nav-links can-hide"><div class="nav-item"><a href="/shipshape/guide/" aria-current="page" class="nav-link router-link-exact-active router-link-active">
+  Guide
+</a></div><div class="nav-item"><a href="/shipshape/reference/" class="nav-link">
+  Reference
+</a></div><div class="nav-item"><a href="https://github.com/salsadigitalauorg/shipshape" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  GitHub
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div> <!----></nav></div></header> <div class="sidebar-mask"></div> <aside class="sidebar"><nav class="nav-links"><div class="nav-item"><a href="/shipshape/guide/" aria-current="page" class="nav-link router-link-exact-active router-link-active">
+  Guide
+</a></div><div class="nav-item"><a href="/shipshape/reference/" class="nav-link">
+  Reference
+</a></div><div class="nav-item"><a href="https://github.com/salsadigitalauorg/shipshape" target="_blank" rel="noopener noreferrer" class="nav-link external">
+  GitHub
+  <span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a></div> <!----></nav>  <ul class="sidebar-links"><li><section class="sidebar-group depth-0"><p class="sidebar-heading open"><span>Guide</span> <!----></p> <ul class="sidebar-links sidebar-group-items"><li><a href="/shipshape/guide/" aria-current="page" class="active sidebar-link">Quick-start</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/shipshape/guide/#installation" class="sidebar-link">Installation</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/shipshape/guide/#macos" class="sidebar-link">MacOS</a></li><li class="sidebar-sub-header"><a href="/shipshape/guide/#linux" class="sidebar-link">Linux</a></li><li class="sidebar-sub-header"><a href="/shipshape/guide/#docker" class="sidebar-link">Docker</a></li></ul></li><li class="sidebar-sub-header"><a href="/shipshape/guide/#usage" class="sidebar-link">Usage</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/shipshape/guide/#merging-multiple-config-files" class="sidebar-link">Merging multiple config files</a></li></ul></li><li class="sidebar-sub-header"><a href="/shipshape/guide/#next-steps" class="sidebar-link">Next steps</a></li></ul></li><li><a href="/shipshape/guide/connections.html" class="sidebar-link">Connections</a></li><li><a href="/shipshape/guide/collect.html" class="sidebar-link">Collecting data</a></li><li><a href="/shipshape/guide/analyse.html" class="sidebar-link">Analysing data</a></li><li><a href="/shipshape/guide/remediate.html" class="sidebar-link">Remediating breaches</a></li><li><a href="/shipshape/guide/outputs.html" class="sidebar-link">Outputs</a></li><li><a href="/shipshape/guide/versions.html" class="sidebar-link">Config versions</a></li><li><a href="/shipshape/guide/0.x.html" class="sidebar-link">0.x config format</a></li><li><a href="/shipshape/guide/gaps.html" class="sidebar-link">0.x to 1.x recipe catalogue</a></li><li><a href="/shipshape/guide/roadmap.html" class="sidebar-link">Roadmap to 1.x parity</a></li></ul></section></li></ul> </aside> <main class="page"> <div class="theme-default-content content__default"><h1 id="quick-start"><a href="#quick-start" class="header-anchor">#</a> Quick-start</h1> <h2 id="installation"><a href="#installation" class="header-anchor">#</a> Installation</h2> <h3 id="macos"><a href="#macos" class="header-anchor">#</a> MacOS</h3> <p>The preferred method is installation via <a href="https://brew.sh/" target="_blank" rel="noopener noreferrer">Homebrew<span><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg> <span class="sr-only">(opens new window)</span></span></a>.</p> <div class="language-sh extra-class"><pre class="language-sh"><code>brew <span class="token function">install</span> salsadigitalauorg/shipshape/shipshape
+</code></pre></div><h3 id="linux"><a href="#linux" class="header-anchor">#</a> Linux</h3> <div class="language-sh extra-class"><pre class="language-sh"><code><span class="token function">curl</span> <span class="token parameter variable">-L</span> <span class="token parameter variable">-o</span> shipshape https://github.com/salsadigitalauorg/shipshape/releases/latest/download/shipshape-<span class="token variable"><span class="token variable">$(</span><span class="token function">uname</span> <span class="token parameter variable">-s</span><span class="token variable">)</span></span>-<span class="token variable"><span class="token variable">$(</span><span class="token function">uname</span> <span class="token parameter variable">-m</span><span class="token variable">)</span></span>
+<span class="token function">chmod</span> +x shipshape
+<span class="token function">mv</span> shipshape /usr/local/bin/shipshape
+</code></pre></div><h3 id="docker"><a href="#docker" class="header-anchor">#</a> Docker</h3> <p>Run directly from a docker image:</p> <div class="language-sh extra-class"><pre class="language-sh"><code><span class="token function">docker</span> run <span class="token parameter variable">--rm</span> ghcr.io/salsadigitalauorg/shipshape:latest shipshape version
+</code></pre></div><p>Or add to your docker image:</p> <div class="language-Dockerfile extra-class"><pre class="language-dockerfile"><code><span class="token instruction"><span class="token keyword">COPY</span> <span class="token options"><span class="token property">--from</span><span class="token punctuation">=</span><span class="token string">ghcr.io/salsadigitalauorg/shipshape:latest</span></span> /usr/local/bin/shipshape /usr/local/bin/shipshape</span>
+</code></pre></div><div class="custom-block tip"><p class="custom-block-title">Which config format?</p> <p>Shipshape supports two configuration formats. The <strong>1.x pipeline</strong> (<code>collect</code> /
+<code>analyse</code> / <code>output</code>) is the recommended format and is used in production. The
+<strong>0.x <code>checks:</code> format</strong> is fully supported and continues to run without changes.</p> <p>See <a href="/shipshape/guide/versions.html">Config versions</a> for a full comparison and a guide on which
+to use.</p></div> <h2 id="usage"><a href="#usage" class="header-anchor">#</a> Usage</h2> <p>The basic layout of the config file is as follows:</p> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token comment"># Optional - Set up any connection(s) required for</span>
+<span class="token comment"># collecting data (docker, mysql, etc...).</span>
+<span class="token key atrule">connections</span><span class="token punctuation">:</span>
+  <span class="token punctuation">...</span>
+
+<span class="token comment"># Required - Set up how to collect the data.</span>
+<span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token punctuation">...</span>
+
+<span class="token comment"># Optional - Set up how to analyse the data.</span>
+<span class="token comment"># Leave empty if no analysis is required.</span>
+<span class="token comment"># Run the command `shipshape collect .` in that case.</span>
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token punctuation">...</span>
+
+<span class="token comment"># Optional - Configure output format and other output plugin options.</span>
+<span class="token comment"># Defaults to stdout with the pretty format.</span>
+<span class="token key atrule">output</span><span class="token punctuation">:</span>
+  <span class="token key atrule">stdout</span><span class="token punctuation">:</span>
+    <span class="token key atrule">format</span><span class="token punctuation">:</span> pretty  <span class="token comment"># Format for stdout output</span>
+  <span class="token key atrule">file</span><span class="token punctuation">:</span>
+    <span class="token key atrule">path</span><span class="token punctuation">:</span> results/output.xml  <span class="token comment"># File to write output to</span>
+    <span class="token key atrule">format</span><span class="token punctuation">:</span> junit  <span class="token comment"># Format for file output</span>
+</code></pre></div><p>Create a config file:</p> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token comment"># shipshape.yml</span>
+<span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">disallowed-php-scripts</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:lookup</span><span class="token punctuation">:</span>
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> web
+      <span class="token key atrule">pattern</span><span class="token punctuation">:</span> <span class="token string">'^(adminer|phpmyadmin|bigdump)?\.php$'</span>
+  <span class="token key atrule">sensitive-public-files</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:lookup</span><span class="token punctuation">:</span>
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> web/sites/default/files
+      <span class="token key atrule">pattern</span><span class="token punctuation">:</span> <span class="token string">'.*\.(sql|php|sh|py|bz2|gz|tar|tgz|zip)?$'</span>
+      <span class="token key atrule">exclude-pattern</span><span class="token punctuation">:</span> <span class="token string">'.*\.(css|js)\.gz?$'</span>
+      <span class="token key atrule">skip-dir</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> private
+
+<span class="token key atrule">analyse</span><span class="token punctuation">:</span>
+  <span class="token key atrule">disallowed-php-scripts-found</span><span class="token punctuation">:</span>
+    <span class="token key atrule">not:empty</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> <span class="token string">'Disallowed php scripts found'</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> disallowed<span class="token punctuation">-</span>php<span class="token punctuation">-</span>scripts
+      <span class="token key atrule">severity</span><span class="token punctuation">:</span> high
+  <span class="token key atrule">sensitive-public-files-found</span><span class="token punctuation">:</span>
+    <span class="token key atrule">not:empty</span><span class="token punctuation">:</span>
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> <span class="token string">'Sensitive files found in public directory'</span>
+      <span class="token key atrule">input</span><span class="token punctuation">:</span> sensitive<span class="token punctuation">-</span>public<span class="token punctuation">-</span>files
+      <span class="token key atrule">severity</span><span class="token punctuation">:</span> high
+      <span class="token key atrule">message</span><span class="token punctuation">:</span> <span class="token string">'Please check the directory web/sites/default/files and remove all sensitive files'</span>
+</code></pre></div><p>Execute the policy:</p> <div class="language-sh extra-class"><pre class="language-sh"><code>shipshape run <span class="token builtin class-name">.</span>
+</code></pre></div><div class="language-sh extra-class"><pre class="language-sh"><code>$ shipshape run <span class="token parameter variable">-h</span>
+Execute policies against the specified directory
+
+Usage:
+  shipshape run <span class="token punctuation">[</span>dir<span class="token operator">|</span>.<span class="token punctuation">]</span> <span class="token punctuation">[</span>flags<span class="token punctuation">]</span>
+
+Flags:
+  -e, --error-code                               Exit with error code <span class="token keyword">if</span> a failure is
+                                                 detected <span class="token punctuation">(</span>env: SHIPSHAPE_ERROR_ON_FAILURE<span class="token punctuation">)</span>
+      --fail-severity string                     The severity level at <span class="token function">which</span> the program
+                                                 should <span class="token builtin class-name">exit</span> with an error <span class="token punctuation">(</span>default <span class="token string">&quot;high&quot;</span><span class="token punctuation">)</span>
+  -h, <span class="token parameter variable">--help</span>                                     <span class="token builtin class-name">help</span> <span class="token keyword">for</span> run
+      --lagoon-api-base-url string               Base url <span class="token keyword">for</span> the Lagoon API when pushing
+                                                 problems to API <span class="token punctuation">(</span>env: LAGOON_API_BASE_URL<span class="token punctuation">)</span>
+      --lagoon-api-token string                  Lagoon API token when pushing problems
+                                                 to API <span class="token punctuation">(</span>env: LAGOON_API_TOKEN<span class="token punctuation">)</span>
+      --lagoon-environment string                The Lagoon environment name <span class="token punctuation">(</span>env: LAGOON_ENVIRONMENT<span class="token punctuation">)</span>
+      --lagoon-insights-remote-endpoint string   Insights Remote Problems endpoint
+                                                  <span class="token punctuation">(</span>default <span class="token string">&quot;http://lagoon-remote-insights-remote.lagoon.svc/problems&quot;</span><span class="token punctuation">)</span>
+      --lagoon-project string                    The Lagoon project name <span class="token punctuation">(</span>env: LAGOON_PROJECT<span class="token punctuation">)</span>
+      --lagoon-push-problems-to-insights         Push audit facts to Lagoon via Insights Remote
+      --lagoon-source string                     Source to use <span class="token keyword">for</span> Problems pushed to Lagoon <span class="token punctuation">(</span>default <span class="token string">&quot;Shipshape&quot;</span><span class="token punctuation">)</span>
+      --output-file string                       Path to output <span class="token function">file</span>
+                                                 <span class="token punctuation">(</span>env: SHIPSHAPE_OUTPUT_FILE<span class="token punctuation">)</span>
+      --output-file-format string                Format <span class="token keyword">for</span> the output <span class="token function">file</span> <span class="token punctuation">[</span>pretty<span class="token operator">|</span>table<span class="token operator">|</span>json<span class="token operator">|</span>junit<span class="token punctuation">]</span>
+                                                 <span class="token punctuation">(</span>env: SHIPSHAPE_OUTPUT_FILE_FORMAT<span class="token punctuation">)</span>
+  -o, --output-format string                     Output <span class="token function">format</span> <span class="token punctuation">[</span>pretty<span class="token operator">|</span>table<span class="token operator">|</span>json<span class="token operator">|</span>junit<span class="token punctuation">]</span>
+                                                 <span class="token punctuation">(</span>env: SHIPSHAPE_OUTPUT_FORMAT<span class="token punctuation">)</span> <span class="token punctuation">(</span>default <span class="token string">&quot;pretty&quot;</span><span class="token punctuation">)</span>
+  -r, <span class="token parameter variable">--remediate</span>                                Run remediation <span class="token keyword">for</span> supported checks
+
+Global Flags:
+  -d, <span class="token parameter variable">--debug</span>              Display debug information - equivalent to --log-level debug
+  -x, --exclude-db         Exclude checks requiring a database<span class="token punctuation">;</span> overrides
+                           any db checks specified by <span class="token string">'--types'</span>
+  -f, <span class="token parameter variable">--file</span> strings       Path to the <span class="token function">file</span> containing the checks.
+                           Can be specified as comma-separated single argument or
+                           using <span class="token parameter variable">--file</span> <span class="token punctuation">(</span>-f<span class="token punctuation">)</span> multiple <span class="token builtin class-name">times</span> <span class="token punctuation">(</span>default <span class="token punctuation">[</span>shipshape.yml<span class="token punctuation">]</span><span class="token punctuation">)</span>
+  -l, --log-level string   Level of logs to display <span class="token punctuation">(</span>default <span class="token string">&quot;warn&quot;</span><span class="token punctuation">)</span>
+  -t, <span class="token parameter variable">--types</span> strings      List of checks to run<span class="token punctuation">;</span> default is empty, <span class="token function">which</span> will
+                           run all checks. Can be specified as comma-separated
+                           single argument or using <span class="token parameter variable">--types</span> <span class="token punctuation">(</span>-t<span class="token punctuation">)</span> multiple <span class="token builtin class-name">times</span>
+  -v, <span class="token parameter variable">--verbose</span>            Display verbose output - equivalent to --log-level info
+</code></pre></div><h3 id="merging-multiple-config-files"><a href="#merging-multiple-config-files" class="header-anchor">#</a> Merging multiple config files</h3> <p>You can pass more than one config file and Shipshape will merge them into a
+single configuration before running:</p> <div class="language-sh extra-class"><pre class="language-sh"><code>shipshape run <span class="token parameter variable">-f</span> base.yml <span class="token parameter variable">-f</span> overrides.yml <span class="token builtin class-name">.</span>
+</code></pre></div><p>Files are merged in the order given on the command line — the first file is the
+base, and each subsequent file is layered on top. Merging follows these rules:</p> <ul><li><strong>Maps are merged recursively.</strong> A later file can set or override an
+individual field of a plugin instance without repeating the whole block.</li> <li><strong>Later files win.</strong> When the same scalar value is defined in more than one
+file, the value from the last file on the command line is used.</li> <li><strong>Lists are replaced, not combined.</strong> When a later file defines a list value
+(for example <code>skip-dir</code> or <code>exclude-pattern</code>), it wholly replaces the earlier
+list rather than appending to it.</li></ul> <p>Every override is logged at <code>warn</code> level with the config key that was changed,
+so you can audit what a later file altered.</p> <p>Merging applies to v2 config only. All files in a single run must be v2 config;
+mixing v1 (<code>checks:</code>) and v2 (<code>collect:</code>) config files in one invocation is not
+supported and will return an error.</p> <h4 id="example"><a href="#example" class="header-anchor">#</a> Example</h4> <p><code>base.yml</code>:</p> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">sensitive-files</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:lookup</span><span class="token punctuation">:</span>
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> web/sites/default/files
+      <span class="token key atrule">pattern</span><span class="token punctuation">:</span> <span class="token string">'.*\.(sql|php)?$'</span>
+      <span class="token key atrule">skip-dir</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> private
+</code></pre></div><p><code>overrides.yml</code> — narrows the path and replaces the skip list, leaving the
+pattern untouched:</p> <div class="language-yaml extra-class"><pre class="language-yaml"><code><span class="token key atrule">collect</span><span class="token punctuation">:</span>
+  <span class="token key atrule">sensitive-files</span><span class="token punctuation">:</span>
+    <span class="token key atrule">file:lookup</span><span class="token punctuation">:</span>
+      <span class="token key atrule">path</span><span class="token punctuation">:</span> web/sites/default/files/public
+      <span class="token key atrule">skip-dir</span><span class="token punctuation">:</span>
+        <span class="token punctuation">-</span> tmp
+</code></pre></div><p>The merged result keeps <code>pattern</code> from <code>base.yml</code>, takes <code>path</code> from
+<code>overrides.yml</code>, and uses the <code>skip-dir</code> list from <code>overrides.yml</code>
+(<code>[tmp]</code>, not <code>[private, tmp]</code>).</p> <h2 id="next-steps"><a href="#next-steps" class="header-anchor">#</a> Next steps</h2> <ul><li><a href="connections">Connections</a></li> <li><a href="collect">Collecting data</a></li> <li><a href="analyse">Analysing data</a></li> <li><a href="remediate">Remediating breaches</a></li> <li><a href="outputs">Outputs</a></li></ul></div> <footer class="page-edit"><!----> <!----></footer> <div class="page-nav"><p class="inner"><!----> <span class="next"><a href="/shipshape/guide/connections.html">
+        Connections
+      </a>
+      →
+    </span></p></div> </main></div><div class="global-ui"></div></div>
+    <script src="/shipshape/assets/js/app.9ed6a2c7.js" defer></script><script src="/shipshape/assets/js/2.58881377.js" defer></script><script src="/shipshape/assets/js/1.66d24b6c.js" defer></script><script src="/shipshape/assets/js/40.d2eb897c.js" defer></script>
+  </body>
+</html>
