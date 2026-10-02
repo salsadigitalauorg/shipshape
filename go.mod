@@ -6,7 +6,7 @@ require (
 	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/drone/envsubst v1.0.3
 	github.com/go-sql-driver/mysql v1.10.0
-	github.com/goccy/go-json v0.10.2
+	github.com/goccy/go-json v0.10.6
 	github.com/gocolly/colly v1.2.0
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hasura/go-graphql-client v0.9.2
