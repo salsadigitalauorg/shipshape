@@ -1,6 +1,6 @@
 module github.com/salsadigitalauorg/shipshape
 
-go 1.25.5
+go 1.26.0
 
 require (
 	github.com/doug-martin/goqu/v9 v9.19.0
@@ -24,7 +24,7 @@ require (
 	github.com/theory/jsonpath v0.12.0
 	github.com/vmware-labs/yaml-jsonpath v0.3.2
 	golang.org/x/net v0.55.0
-	golang.org/x/oauth2 v0.32.0
+	golang.org/x/oauth2 v0.37.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
