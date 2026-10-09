@@ -16,6 +16,18 @@ import (
 	"github.com/salsadigitalauorg/shipshape/pkg/utils"
 )
 
+func init() {
+	// gonja >= 2.9.0 strips a single trailing newline from template source by
+	// default (matching Jinja2's keep_trailing_newline=False). Our target file
+	// is read raw via os.ReadFile and keeps its trailing newline, so stripping
+	// it from the rendered source produces a spurious one-line diff. Preserve
+	// it so source and target stay comparable.
+	//
+	// This must stay at package-init: gonja.DefaultConfig is a process-global,
+	// and checks run concurrently, so mutating it during FetchData would race.
+	gonja.DefaultConfig.KeepTrailingNewline = true
+}
+
 type FileDiffCheck struct {
 	config.CheckBase `yaml:",inline"`
 	// TargetFile will be compared with SourceFile.

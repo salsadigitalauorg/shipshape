@@ -39,7 +39,7 @@ func TestJsonCheckUnmarshalDataMap(t *testing.T) {
 			&breach.ValueBreach{
 				BreachType: breach.BreachTypeValue,
 				ValueLabel: "JSON error",
-				Value:      "invalid character 'p' looking for beginning of value",
+				Value:      "invalid character 'p' looking for beginning of object key string",
 			},
 		},
 		c.Result.Breaches,

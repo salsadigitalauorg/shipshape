@@ -36,10 +36,14 @@ func TestRemediatorFromInterface(t *testing.T) {
 	assert := assert.New(t)
 
 	tt := []struct {
-		name                      string
-		input                     interface{}
-		expected                  Remediator
+		name     string
+		input    interface{}
+		expected Remediator
+		// expectFatal asserts the full fatal message. Prefer
+		// expectFatalContains where the message embeds a Go type name, since
+		// encoding/json v1 and v2 spell those differently.
 		expectFatal               string
+		expectFatalContains       string
 		expectFatalHookEntryIndex int
 		expectPanic               bool
 	}{
@@ -100,8 +104,13 @@ func TestRemediatorFromInterface(t *testing.T) {
 				"plugin":                      "test",
 				"expected-remediation-result": "foo",
 			},
-			expected:    nil,
-			expectFatal: "json: cannot unmarshal string into Go struct field TestRemediator.expected-remediation-result of type remediation.RemediationResult",
+			expected: nil,
+			// The struct field is named after the unmarshal target's type,
+			// which differs between encoding/json v1 and v2: v1 uses the
+			// dynamic type (TestRemediator), v2 the static one (Remediator).
+			// RemediatorFromInterface unmarshals into an interface-typed
+			// variable, so match only the toolchain-independent prefix.
+			expectFatalContains: "cannot unmarshal string into Go struct field",
 		},
 	}
 
@@ -127,14 +136,18 @@ func TestRemediatorFromInterface(t *testing.T) {
 			defer func() { logrus.StandardLogger().Hooks = currHooks }()
 			logrus.StandardLogger().AddHook(&hook)
 
-			if tc.expectFatal != "" {
+			if tc.expectFatal != "" || tc.expectFatalContains != "" {
 				if tc.expectPanic {
 					assert.Panics(func() { RemediatorFromInterface(tc.input) })
 				} else {
 					RemediatorFromInterface(tc.input)
 				}
 				assert.Equal(logrus.FatalLevel, hook.Entries[tc.expectFatalHookEntryIndex].Level)
-				assert.Equal(tc.expectFatal, hook.Entries[tc.expectFatalHookEntryIndex].Message)
+				if tc.expectFatalContains != "" {
+					assert.Contains(hook.Entries[tc.expectFatalHookEntryIndex].Message, tc.expectFatalContains)
+				} else {
+					assert.Equal(tc.expectFatal, hook.Entries[tc.expectFatalHookEntryIndex].Message)
+				}
 				return
 			} else {
 				assert.Equal(tc.expected, RemediatorFromInterface(tc.input))

@@ -290,4 +290,33 @@ func TestFileDiffCheck_RunCheck(t *testing.T) {
 			c.Result.Breaches,
 		)
 	})
+
+	// Regression: gonja >= 2.9.0 strips a trailing newline from template
+	// source by default, which made a rendered source differ from an
+	// otherwise-identical raw-read target. See init() in filediffcheck.go.
+	t.Run("jinjaSourcePreservesTrailingNewline", func(t *testing.T) {
+		c := file.FileDiffCheck{
+			CheckBase:     config.CheckBase{Name: "filediffcheck"},
+			SourceFile:    "file4.txt",
+			TargetFile:    "file1.txt",
+			SourceContext: map[string]any{"VERSION": 1},
+		}
+		c.Init(file.FileDiff)
+		c.FetchData()
+		assertions.Equal("This is file #1.\n", string(c.DataMap["source"]))
+	})
+
+	// Guards the opposite direction: KeepTrailingNewline must preserve an
+	// existing trailing newline, never append one that was not in the source.
+	t.Run("jinjaSourceWithoutTrailingNewlineUnchanged", func(t *testing.T) {
+		c := file.FileDiffCheck{
+			CheckBase:     config.CheckBase{Name: "filediffcheck"},
+			SourceFile:    "file5.txt",
+			TargetFile:    "file1.txt",
+			SourceContext: map[string]any{"VERSION": 1},
+		}
+		c.Init(file.FileDiff)
+		c.FetchData()
+		assertions.Equal("This is file #1.", string(c.DataMap["source"]))
+	})
 }
