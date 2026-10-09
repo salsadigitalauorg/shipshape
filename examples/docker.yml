@@ -1,124 +1,151 @@
 collect:
+  # Read the Docker Compose file
   compose-file:
     file:read:
       path: docker-compose.yml
 
-  # Extract the services nodes from the compose file.
-  compose-services-nodes:
+  # Extract services section for processing
+  compose-services:
     yaml:key:
       input: compose-file
       path: services
       nodes-only: true
 
-  # Extract the image for each service.
-  images:
+  # Extract service metadata - grouped for clarity
+  service-images:
     yaml:key:
-      input: compose-services-nodes
+      input: compose-services
       path: image
-  # Extract the Lagoon service type for each service.
-  lagoon-type:
+
+  service-lagoon-types:
     yaml:key:
-      input: compose-services-nodes
+      input: compose-services
       path: labels['lagoon.type']
-  # Extract the Dockerfile for each service.
+
   dockerfile-paths:
     yaml:key:
-      input: compose-services-nodes
+      input: compose-services
       path: build.dockerfile
-  # Extract the build arguments for each service.
-  buildargs:
+
+  build-args:
     yaml:key:
-      input: compose-services-nodes
+      input: compose-services
       path: build.args
       resolve-env: true
 
-  # Read the dockerfiles.
+  # Process Dockerfiles to extract base images
   dockerfiles:
     file:read:multiple:
       input: dockerfile-paths
 
-  # Extract the base image for each dockerfile.
-  base-images:
+  dockerfile-base-images:
     docker:images:
       input: dockerfiles
-      additional-inputs: [buildargs]
+      additional-inputs: [build-args]
       no-tag: true
-      args-from: buildargs
-      ignore:
-        - $CLI_IMAGE
+      args-from: build-args
+      ignore: [$CLI_IMAGE]
+
+# Centralized policy definitions (reduces repetition)
+policies:
+  image-policy: &image-policy
+    allowed:
+      - govcms/govcms
+      - govcms/php
+      - govcms/test
+      - govcms/nginx-drupal
+      - govcms/redis
+      - govcms/solr
+      - govcms/varnish-drupal
+      - govcms/mariadb-drupal
+      - govcms/av
+      - uselagoon/php-8.1-cli-drupal
+      - uselagoon/nginx-drupal
+      - uselagoon/php-8.1-fpm
+      - uselagoon/solr-7.7-drupal
+      - uselagoon/varnish-drupal
+      - uselagoon/redis-5
+      - uselagoon/mariadb-drupal
+    deprecated:
+      - govcms8lagoon/govcms
+      - govcms8lagoon/php
+      - govcms8lagoon/test
+      - govcms8lagoon/nginx-drupal
+      - govcms8lagoon/redis
+      - govcms8lagoon/solr
+      - govcms8lagoon/varnish-drupal
+      - govcms8lagoon/mariadb-drupal
+      - uselagoon/php-7.4-cli-drupal
+      - uselagoon/php-7.4-fpm
+
+  lagoon-service-policy: &lagoon-policy
+    allowed:
+      - none
+      - cli
+      - cli-persistent
+      - mariadb
+      - mariadb-dbaas
+      - nginx
+      - nginx-php
+      - nginx-php-persistent
+      - redis
+      - redis-persistent
+      - solr
+      - varnish
+      - varnish-persistent
 
 analyse:
-  disallowed-service-image:
+  # Docker Compose service image validation
+  compose-service-images:
     allowed:list:
-      description: Disallowed image found in Docker Compose file.
-      input: images
-      # Extract the image name and tag.
-      package-match: '^(.[^:@]*)?[:@]?([^ latest$]*)'
-      allowed: &allowed-images
-        - govcms/govcms
-        - govcms/php
-        - govcms/test
-        - govcms/nginx-drupal
-        - govcms/redis
-        - govcms/solr
-        - govcms/varnish-drupal
-        - govcms/mariadb-drupal
-        - govcms/av
-        - uselagoon/php-8.1-cli-drupal
-        - uselagoon/nginx-drupal
-        - uselagoon/php-8.1-fpm
-        - uselagoon/solr-7.7-drupal
-        - uselagoon/varnish-drupal
-        - uselagoon/redis-5
-        - uselagoon/mariadb-drupal
-      deprecated: &deprecated-images
-        - govcms8lagoon/govcms
-        - govcms8lagoon/php
-        - govcms8lagoon/test
-        - govcms8lagoon/nginx-drupal
-        - govcms8lagoon/redis
-        - govcms8lagoon/solr
-        - govcms8lagoon/varnish-drupal
-        - govcms8lagoon/mariadb-drupal
-        - uselagoon/php-7.4-cli-drupal
-        - uselagoon/php-7.4-fpm
-      exclude-keys:
-        - cli
-        - mariadb
-        - chrome
+      description: Validate Docker Compose service images against approved list
+      input: service-images
+      package-match: '^([^:@]*)?[:@]?([^ latest$]*)'
+      <<: *image-policy
+      exclude-keys: [cli, mariadb, chrome]
+      severity: high
 
-  disallowed-lagoon-service:
+  # Lagoon service type validation
+  lagoon-service-types:
     allowed:list:
-      description: Disallowed Lagoon service type found in Docker Compose file.
-      input: lagoon-type
-      allowed:
-        - none
-        - cli
-        - cli-persistent
-        - mariadb
-        - mariadb-dbaas
-        - nginx
-        - nginx-php
-        - nginx-php-persistent
-        - redis
-        - redis-persistent
-        - solr
-        - varnish
-        - varnish-persistent
+      description: Validate Lagoon service types are supported
+      input: service-lagoon-types
+      <<: *lagoon-policy
+      severity: medium
 
-  disallowed-base-image:
+  # Dockerfile base image validation
+  dockerfile-base-images-check:
     allowed:list:
-      description: Disallowed base image found in services' Dockerfiles.
-      input: base-images
-      allowed: *allowed-images
-      deprecated: *deprecated-images
-      exclude-keys:
-        - test
+      description: Validate base images in Dockerfiles against approved list
+      input: dockerfile-base-images
+      package-match: '^([^:@]*)?[:@]?([^ latest$]*)'
+      <<: *image-policy
+      exclude-keys: [test]
+      severity: high
 
+# Output configuration
 output:
   stdout:
     format: pretty
+
+  # Lagoon integration (requires LAGOON_API_TOKEN environment variable)
   lagoon:
     source: shipshape:paas:docker
     api-base-url: https://api.lagoon.amazeeio.cloud
     api-token: ${LAGOON_API_TOKEN}
+
+# Configuration notes and remediation guidance
+#
+# Common fixes for violations:
+#
+# 1. Deprecated images - upgrade to supported versions:
+#    - govcms8lagoon/* → govcms/*
+#    - uselagoon/php-7.4-* → uselagoon/php-8.1-*
+#
+# 2. Unsupported service types - use approved Lagoon service types:
+#    - Use 'nginx-php' instead of custom service types
+#    - Ensure service types match your deployment environment
+#
+# 3. Disallowed base images in Dockerfiles:
+#    - Use only approved base images from the allowed list
+#    - Check build args are properly resolved
