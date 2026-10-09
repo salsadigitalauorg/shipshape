@@ -14,7 +14,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/selfupdate v0.6.0
 	github.com/moby/buildkit v0.28.1
-	github.com/nikolalohinski/gonja/v2 v2.1.5
+	github.com/nikolalohinski/gonja/v2 v2.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/cobra v1.10.2
@@ -96,6 +96,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 	golang.org/x/crypto v0.52.0 // indirect
+	golang.org/x/exp v0.0.0-20250911091902-df9299821621 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
