@@ -8,7 +8,7 @@ require (
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/goccy/go-json v0.11.2
 	github.com/gocolly/colly v1.2.0
-	github.com/hashicorp/go-version v1.6.0
+	github.com/hashicorp/go-version v1.9.0
 	github.com/hasura/go-graphql-client v0.16.0
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/joho/godotenv v1.5.1
