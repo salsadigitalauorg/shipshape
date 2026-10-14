@@ -5,7 +5,7 @@ go 1.27
 require (
 	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/drone/envsubst v1.0.3
-	github.com/go-sql-driver/mysql v1.10.0
+	github.com/go-sql-driver/mysql v1.10.1
 	github.com/goccy/go-json v0.11.2
 	github.com/gocolly/colly v1.2.0
 	github.com/hashicorp/go-version v1.6.0
