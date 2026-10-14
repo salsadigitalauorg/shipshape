@@ -220,8 +220,8 @@ github.com/testcontainers/testcontainers-go v0.44.0 h1:/Fwh6HY1mIikhnm9e7HwoxGyc
 github.com/testcontainers/testcontainers-go v0.44.0/go.mod h1:IcnwQrYTO86xHXu5bvMaBH7ATlbS3Qn1M1QWW3c66rE=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.44.0 h1:oJPJPxNE6YQ0zlq6mZKh06JOlyimCky4ruQUimdDet4=
 github.com/testcontainers/testcontainers-go/modules/mysql v0.44.0/go.mod h1:MSOAU6ukCpehJVHQDN1k9JgOZXZuqHD+2pT20M3JkIg=
-github.com/theory/jsonpath v0.12.0 h1:NQeuE0ohHHhss0DoxU9Xu2IpTTrlx9x4mv4F3pcmDME=
-github.com/theory/jsonpath v0.12.0/go.mod h1:vl8nfJyq9MKMbcAiKv+7N9W3jDCH8qPr0mZoZj8wRk8=
+github.com/theory/jsonpath v0.12.2 h1:Mi2mGWBLRwg6oT7g92MdhERExzn5jvVx+7dvHPhWbLs=
+github.com/theory/jsonpath v0.12.2/go.mod h1:fYTXa8TVFAnyGzDL5JyaFlfaHzKMm+2XfwK3rbEzTC4=
 github.com/tklauser/go-sysconf v0.4.0 h1:7H0uAN+7RkwWRaxhYXDLqa5V3LPrJeV8wmD9dRUgPQU=
 github.com/tklauser/go-sysconf v0.4.0/go.mod h1:8mTNWyog7H+MpKijp4VmKJAd2bbYQ2zuUwkYRbUArPI=
 github.com/tklauser/numcpus v0.12.0 h1:NR85qdvHA9pFse3x3weVZ0r0ST8R6l5RHbZrlRaqob4=
