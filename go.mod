@@ -13,7 +13,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/selfupdate v0.6.0
-	github.com/moby/buildkit v0.34.0
+	github.com/moby/buildkit v0.34.1
 	github.com/nikolalohinski/gonja/v2 v2.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/sirupsen/logrus v1.10.2
