@@ -11,16 +11,29 @@ jobs:
   gh-pages:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@main
 
-      - name: vuepress-deploy
-        uses: jenkey2011/vuepress-deploy@master
+      - name: Build the docs
+        run: |
+          cd docs
+          npm install
+          npm run build
+
+      - name: Deploy to gh-pages
         env:
-          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BUILD_SCRIPT: cd docs && npm install && npm run build
-          BUILD_DIR: src/.vuepress/dist/1.x
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd docs/src/.vuepress/dist/1.x
+          git init --initial-branch=gh-pages
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git add .
+          git commit -m "Auto deploy from GitHub Actions"
+          git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages:gh-pages
 
   quantcdn:
     runs-on: ubuntu-latest
