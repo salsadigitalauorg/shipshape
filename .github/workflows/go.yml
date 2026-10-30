@@ -76,7 +76,11 @@ jobs:
     - name: Run GoReleaser
       uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
       with:
-        version: latest
+        # Pinned deliberately: 'latest' lets the toolchain change with no
+        # commit here, and a v3 would drop the deprecated keys this config
+        # still uses. Bump after running `goreleaser check` against the new
+        # version. [ES8-application-control]
+        version: '~> v2.19'
         args: release --clean
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

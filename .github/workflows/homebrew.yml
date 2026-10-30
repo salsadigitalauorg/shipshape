@@ -1,0 +1,179 @@
+name: Homebrew
+
+# Publishes the Homebrew formulae to salsadigitalauorg/homebrew-shipshape.
+#
+# Note on triggers: there is deliberately no `on: release` here. GoReleaser
+# creates the release with secrets.GITHUB_TOKEN, and GitHub does not create
+# workflow runs from events triggered by GITHUB_TOKEN (only workflow_dispatch
+# and repository_dispatch are exempt), so an `on: release` workflow would never
+# run. See docs/plans/2026-10-29-release-changelog-and-homebrew-split.md.
+#
+# workflow_call will be added once a manual dispatch run has proven the tap
+# write path; until then GoReleaser's `brews:` section still keeps the tap
+# current and this workflow is opt-in only.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to publish, e.g. v1.0.0-alpha.1.6'
+        required: true
+        type: string
+      dry_run:
+        description: 'Render and diff only; do not push to the tap'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+env:
+  TAP_REPO: salsadigitalauorg/homebrew-shipshape
+  FORMULA_DIR: Formula
+  # Homebrew supports at most five versions of a formula including the main
+  # one; keep the four newest pinned formulae alongside shipshape.rb.
+  KEEP_PINNED: 4
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout shipshape
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history so tag creation dates are available for pruning.
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: "1.27"
+
+      - name: Validate the tag exists
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if ! git rev-parse -q --verify "refs/tags/${VERSION}" >/dev/null; then
+            echo "::error::tag ${VERSION} does not exist in this repository"
+            exit 1
+          fi
+          echo "tag ${VERSION} found"
+
+      - name: Download release checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          gh release download "${VERSION}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern checksums.txt \
+            --dir dist
+          echo "--- checksums.txt ---"
+          cat dist/checksums.txt
+
+      - name: Checkout the tap
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: salsadigitalauorg/homebrew-shipshape
+          token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          path: tap
+
+      - name: Render the formulae
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          go run ./tools/brewgen \
+            --version "${VERSION}" \
+            --checksums dist/checksums.txt \
+            --repo "${GITHUB_REPOSITORY}" \
+            --branch "${GITHUB_REF_NAME}" \
+            --out "tap/${FORMULA_DIR}"
+
+      - name: Remove the legacy root formula
+        working-directory: tap
+        run: |
+          set -euo pipefail
+          # The tap historically held shipshape.rb at the root. Homebrew errors
+          # on a duplicate formula name within one tap, so the root copy must
+          # go in the same commit that adds Formula/shipshape.rb.
+          if [ -f shipshape.rb ]; then
+            git rm --quiet shipshape.rb
+            echo "removed legacy root shipshape.rb"
+          else
+            echo "no legacy root formula to remove"
+          fi
+
+      - name: Prune old pinned formulae
+        working-directory: tap
+        run: |
+          set -euo pipefail
+
+          # Order by tag creation date from the shipshape checkout rather than
+          # sorting filenames: the versions are non-standard prerelease strings
+          # (1.0.0-alpha.1.5.2) and `sort -V` ordering of those is not reliable.
+          keep_file="$(mktemp)"
+          git -C "${GITHUB_WORKSPACE}" for-each-ref \
+            --sort=-creatordate \
+            --format='%(refname:short)' 'refs/tags/v*' \
+            | head -n "${KEEP_PINNED}" \
+            | sed 's|^v||' \
+            | while read -r v; do echo "shipshape@${v}.rb"; done > "${keep_file}"
+
+          echo "--- keeping ---"
+          cat "${keep_file}"
+
+          # Guarded to shipshape@*.rb so the main shipshape.rb can never match.
+          for f in "${FORMULA_DIR}"/shipshape@*.rb; do
+            [ -e "$f" ] || continue
+            base="$(basename "$f")"
+            if ! grep -qxF "${base}" "${keep_file}"; then
+              git rm --quiet "$f"
+              echo "pruned ${base}"
+            fi
+          done
+
+      - name: Show the diff
+        working-directory: tap
+        run: |
+          git add -A
+          git --no-pager diff --cached --stat
+          echo "--- full diff ---"
+          git --no-pager diff --cached
+
+      - name: Validate the rendered Ruby
+        working-directory: tap
+        run: |
+          set -euo pipefail
+          for f in "${FORMULA_DIR}"/*.rb; do
+            ruby -c "$f" >/dev/null
+            # Homebrew derives the expected class name from the file name; a
+            # mismatch makes the formula unloadable.
+            echo "syntax OK: $f"
+          done
+
+      - name: Commit and push to the tap
+        if: ${{ !inputs.dry_run }}
+        working-directory: tap
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if git diff --cached --quiet; then
+            echo "tap already up to date; nothing to commit"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit --quiet -m "chore(tap): shipshape ${VERSION}"
+          git push
+          echo "pushed shipshape ${VERSION} to ${TAP_REPO}"
+
+      - name: Dry run summary
+        if: ${{ inputs.dry_run }}
+        run: echo "dry_run was set; the tap was not modified"

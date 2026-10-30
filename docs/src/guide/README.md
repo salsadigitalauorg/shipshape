@@ -9,6 +9,24 @@ The preferred method is installation via [Homebrew](https://brew.sh/).
 brew install salsadigitalauorg/shipshape/shipshape
 ```
 
+To pin a specific release, install the versioned formula. The tap keeps the
+five most recent versions:
+```sh
+brew install salsadigitalauorg/shipshape/shipshape@1.0.0-alpha.1.6
+```
+
+Versioned formulae are keg-only, so they are not symlinked into your prefix
+while the main formula is installed. To switch between them:
+```sh
+brew unlink shipshape && brew link --overwrite shipshape@1.0.0-alpha.1.6
+```
+
+To compile from source instead of using the published binary, build the `1.x`
+branch tip. This requires Go and takes a few minutes:
+```sh
+brew install --HEAD salsadigitalauorg/shipshape/shipshape
+```
+
 ### Linux
 
 ```sh
