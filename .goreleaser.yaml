@@ -28,7 +28,7 @@ archives:
       {{- else if eq .Arch "arm64" }}aarch64
       {{- else }}{{ .Arch }}{{ end }}
   - id: binaries
-    format: binary
+    formats: [binary]
     name_template: >-
       {{ .ProjectName }}-
       {{- title .Os }}-
@@ -40,25 +40,47 @@ checksum:
   name_template: 'checksums.txt'
 
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 
 changelog:
+  # 'git' is the default and is correct here. Do not use 'github-native':
+  # it disables groups, sort and filters entirely.
+  use: git
   sort: asc
+  # abbrev: -1 drops the SHA; without an explicit format the default
+  # '{{ .SHA }} {{ .Message }}' would leave a stray leading space.
+  abbrev: -1
+  format: "{{ .Message }}"
+  # Matched against the commit subject only, so a `BREAKING CHANGE:` footer
+  # cannot be grouped - only the `!` marker, which falls into its type's group.
+  groups:
+    - title: "Features"
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: "Bug fixes"
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: "Performance"
+      regexp: '^.*?perf(\(.+\))??!?:.+$'
+      order: 2
+    - title: "Refactoring"
+      regexp: '^.*?refactor(\(.+\))??!?:.+$'
+      order: 3
+    - title: "Build & CI"
+      regexp: '^.*?(build|ci)(\(.+\))??!?:.+$'
+      order: 4
+    - title: "Dependencies"
+      regexp: '^.*?chore\(deps(-dev)?\)!?:.+$'
+      order: 5
+    - title: "Other"
+      order: 999
   filters:
+    # Scoped forms such as 'docs(gaps):' and 'test(e2e):' are in active use,
+    # so each pattern allows an optional scope and an optional '!'.
     exclude:
-      - '^docs:'
-      - '^test:'
-
-brews:
-  - name: shipshape
-    repository:
-      owner: "salsadigitalauorg"
-      name: homebrew-shipshape
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    homepage: "https://github.com/salsadigitalauorg/shipshape"
-    description: "Golang CLI tool to run checks/audits on your systems"
-    skip_upload: "false"
-    test: system "#{bin}/shipshape version"
-    install: bin.install "shipshape"
-    ids:
-      - targz
+      - '^.*?docs(\(.+\))??!?:'
+      - '^.*?test(\(.+\))??!?:'
+      - '^.*?style(\(.+\))??!?:'
+      - '^chore\(codegraph\)'
+      - '^Merge pull request'
+      - '^Merge branch'
