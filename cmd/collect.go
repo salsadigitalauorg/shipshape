@@ -30,11 +30,19 @@ output them in the format specified`,
 			}
 
 			log.WithFields(log.Fields{
-				"fact":   f.GetName(),
-				"format": f.GetFormat(),
+				"fact":        f.GetId(),
+				"fact-plugin": f.GetName(),
+				"format":      f.GetFormat(),
 			}).Debug("printing collected fact")
-			fmt.Printf("%s:", f.GetName())
+			fmt.Printf("%s:", f.GetId())
 			switch f.GetFormat() {
+
+			case data.FormatMapBytes:
+				loadedData := data.AsMapBytes(f.GetData())
+				fmt.Println()
+				for k, v := range loadedData {
+					fmt.Printf("  %s: %d bytes\n", k, len(v))
+				}
 
 			case data.FormatMapListString:
 				loadedData := data.AsMapListString(f.GetData())
@@ -74,6 +82,9 @@ output them in the format specified`,
 				fmt.Println("\n",
 					output.TabbedMultiline("  ", fmt.Sprintf("%s", f.GetData())))
 
+			case data.FormatNil:
+				fmt.Println()
+
 			default:
 				log.WithField("data", fmt.Sprintf("%s", f.GetData())).Warn("collect not yet implemented for this format")
 				fmt.Println("  collect not yet implemented for", f.GetFormat())
@@ -88,7 +99,7 @@ func shouldSkipFact(f fact.Facter) bool {
 		return false
 	}
 	for _, n := range fact.OnlyFactNames {
-		if f.GetName() == n {
+		if f.GetId() == n {
 			return false
 		}
 	}
