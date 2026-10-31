@@ -72,6 +72,38 @@ func TestParseConfig(t *testing.T) {
 	}
 }
 
+func TestParseConfigSource(t *testing.T) {
+	currLogOut := logrus.StandardLogger().Out
+	defer logrus.SetOutput(currLogOut)
+	logrus.SetOutput(io.Discard)
+
+	assert := assert.New(t)
+	factoriesBackup := Manager().GetFactories()
+	Manager().Reset()
+	Manager().RegisterFactory("test-analyser", func(id string) Analyser { return &testdata.TestAnalyser{} })
+	defer func() {
+		Manager().Reset()
+		for k, v := range factoriesBackup {
+			Manager().RegisterFactory(k, v)
+		}
+	}()
+
+	err := Manager().ParseConfig(map[string]map[string]interface{}{
+		"test": {
+			"test-analyser": map[string]interface{}{
+				"source": "shipshape:custom:source",
+			},
+		},
+	})
+	assert.NoError(err)
+
+	plugins := Manager().GetPlugins()
+	assert.Len(plugins, 1)
+	sourcer, ok := plugins["test"].(interface{ GetSource() string })
+	assert.True(ok, "TestAnalyser should expose GetSource via BaseAnalyser")
+	assert.Equal("shipshape:custom:source", sourcer.GetSource())
+}
+
 func TestValidateInputs(t *testing.T) {
 	tt := []struct {
 		name             string
