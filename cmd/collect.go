@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -9,9 +10,12 @@ import (
 
 	"github.com/salsadigitalauorg/shipshape/pkg/data"
 	"github.com/salsadigitalauorg/shipshape/pkg/fact"
+	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 	"github.com/salsadigitalauorg/shipshape/pkg/output"
 	"github.com/salsadigitalauorg/shipshape/pkg/shipshape"
 )
+
+var collectFormat string
 
 var collectCmd = &cobra.Command{
 	Use:   "collect",
@@ -24,6 +28,12 @@ output them in the format specified`,
 	Run: func(cmd *cobra.Command, args []string) {
 		shipshape.FactsOnly = true
 		runCmd.Run(cmd, args)
+
+		if collectFormat == "lagoon-facts" {
+			printLagoonFacts()
+			return
+		}
+
 		for _, f := range fact.Manager().GetPlugins() {
 			if shouldSkipFact(f) {
 				continue
@@ -94,6 +104,49 @@ output them in the format specified`,
 	},
 }
 
+// lagoonFactsPayload mirrors the addFactsByName mutation's input shape.
+type lagoonFactsPayload struct {
+	Project     string        `json:"project"`
+	Environment string        `json:"environment"`
+	Facts       []lagoon.Fact `json:"facts"`
+}
+
+// printLagoonFacts emits collected facts as JSON matching the Lagoon
+// addFactsByName mutation input. It only emits the payload - no API call is
+// made, so no Lagoon API credentials are needed. project/environment are
+// read from the Lagoon outputter's config, populated by
+// LAGOON_PROJECT/LAGOON_ENVIRONMENT (collectCmd does not register the
+// --lagoon-* flags; see MustHaveEnvVars for the fail-fast check below).
+func printLagoonFacts() {
+	l := lagoon.Instance()
+	l.MustHaveEnvVars()
+
+	facters := map[string]fact.Facter{}
+	for id, f := range fact.Manager().GetPlugins() {
+		if shouldSkipFact(f) {
+			continue
+		}
+		facters[id] = f
+	}
+
+	source := l.Source
+	if source == "" {
+		source = lagoon.DefaultSource
+	}
+
+	payload := lagoonFactsPayload{
+		Project:     l.Project,
+		Environment: l.Environment,
+		Facts:       lagoon.FactsFromFacters(facters, source),
+	}
+
+	b, err := json.Marshal(payload)
+	if err != nil {
+		log.WithError(err).Fatal("unable to marshal lagoon facts payload")
+	}
+	fmt.Println(string(b))
+}
+
 func shouldSkipFact(f fact.Facter) bool {
 	if len(fact.OnlyFactNames) == 0 {
 		return false
@@ -109,5 +162,7 @@ func shouldSkipFact(f fact.Facter) bool {
 func init() {
 	collectCmd.Flags().StringSliceVarP(&fact.OnlyFactNames, "facts", "n",
 		[]string{}, "Collect only these facts")
+	collectCmd.Flags().StringVarP(&collectFormat, "output-format", "o", "pretty",
+		"Output format [pretty|lagoon-facts]")
 	rootCmd.AddCommand(collectCmd)
 }

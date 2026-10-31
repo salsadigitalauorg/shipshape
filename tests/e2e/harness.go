@@ -58,9 +58,21 @@ type RunResult struct {
 // (e.g. with -e when breaches are found), so callers assert on ExitCode.
 func runShipshape(t *testing.T, workdir string, args ...string) RunResult {
 	t.Helper()
+	return runShipshapeEnv(t, workdir, nil, args...)
+}
+
+// runShipshapeEnv is runShipshape with additional environment variables
+// appended to the subprocess's environment (e.g. LAGOON_PROJECT for the
+// lagoon-facts output, which is env-var-driven only - see
+// cmd/collect.go:printLagoonFacts).
+func runShipshapeEnv(t *testing.T, workdir string, extraEnv []string, args ...string) RunResult {
+	t.Helper()
 
 	cmd := exec.Command(shipshapeBin, args...)
 	cmd.Dir = workdir
+	if len(extraEnv) > 0 {
+		cmd.Env = append(os.Environ(), extraEnv...)
+	}
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
