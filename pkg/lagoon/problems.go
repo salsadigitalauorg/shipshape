@@ -48,6 +48,14 @@ func init() {
 	output.Outputters["lagoon"] = l
 }
 
+// Instance returns the package-level Lagoon outputter singleton, so callers
+// outside this package (e.g. the collect command's lagoon-facts output) can
+// read its configured Project/Environment/Source without duplicating flag
+// and env-var wiring.
+func Instance() *Lagoon {
+	return l
+}
+
 // getBearerToken is overridable in tests so Output() can be exercised without
 // the real in-cluster token file at DefaultLagoonInsightsTokenLocation.
 var getBearerToken = func() (string, error) {

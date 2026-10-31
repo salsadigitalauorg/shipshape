@@ -16,6 +16,11 @@ type BaseFact struct {
 	InputName            string          `yaml:"input"`
 	AdditionalInputNames []string        `yaml:"additional-inputs"`
 
+	// Category is the Lagoon fact category. Defaults to the fact id.
+	Category string `yaml:"category"`
+	// Description is the Lagoon fact description.
+	Description string `yaml:"description"`
+
 	connection       connection.Connectioner
 	input            Facter
 	additionalInputs []Facter
@@ -44,6 +49,20 @@ func (p *BaseFact) GetInput() Facter {
 
 func (p *BaseFact) GetAdditionalInputNames() []string {
 	return p.AdditionalInputNames
+}
+
+// GetCategory returns the Lagoon fact category, falling back to the fact id
+// when unset.
+func (p *BaseFact) GetCategory() string {
+	if p.Category != "" {
+		return p.Category
+	}
+	return p.GetId()
+}
+
+// GetDescription returns the Lagoon fact description.
+func (p *BaseFact) GetDescription() string {
+	return p.Description
 }
 
 func (p *BaseFact) GetAdditionalInputs() []Facter {
