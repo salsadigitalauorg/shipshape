@@ -3,7 +3,6 @@ package lagoon
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -20,14 +19,14 @@ import (
 type Lagoon struct {
 	// Plugin-specific fields.
 
-	// ApiBaseUrl is the base URL for the Lagoon API.
-	ApiBaseUrl string `yaml:"api-base-url"`
-
-	// ApiToken is the token for the Lagoon API.
-	ApiToken string `yaml:"api-token"`
-
 	PushProblemsToInsightsRemote bool   `yaml:"push-problems-to-insights"`
 	InsightsRemoteEndpoint       string `yaml:"insights-remote-endpoint"`
+
+	// InsightsRemoteBaseUrl is the base insights-remote URL used for
+	// deletion requests, e.g. "http://lagoon-remote-insights-remote.lagoon.svc".
+	// Distinct from InsightsRemoteEndpoint, which is the "/problems"-suffixed
+	// POST endpoint.
+	InsightsRemoteBaseUrl string `yaml:"insights-remote-base-url"`
 
 	// Source can be specified when pushing Problems to Lagoon.
 	// Default is "Shipshape".
@@ -66,9 +65,11 @@ func (p *Lagoon) Output(rl *result.ResultList) ([]byte, error) {
 			"source":      p.Source,
 		}).Debug("cleaning up existing problems")
 
-		InitClient(p.ApiBaseUrl, p.ApiToken)
-		err := p.DeleteProblems()
+		bearerToken, err := GetBearerTokenFromDisk(DefaultLagoonInsightsTokenLocation)
 		if err != nil {
+			return nil, err
+		}
+		if err := DeleteProblems([]string{p.Source}, p.InsightsRemoteBaseUrl, bearerToken); err != nil {
 			return nil, err
 		}
 		fmt.Fprint(bufW, "no breach to push to Lagoon; only deleted previous problems")
@@ -102,40 +103,14 @@ func (p *Lagoon) Output(rl *result.ResultList) ([]byte, error) {
 		})
 	}
 
-	InitClient(p.ApiBaseUrl, p.ApiToken)
-	// first, let's try doing this via in-cluster functionality
 	bearerToken, err := GetBearerTokenFromDisk(DefaultLagoonInsightsTokenLocation)
-	if err == nil { // we have a token, and so we can proceed via the internal service call
-		err = ProblemsToInsightsRemote(problems, p.InsightsRemoteEndpoint, bearerToken)
-		if err != nil {
-			return nil, err
-		}
-	} else {
+	if err != nil {
+		return nil, err
+	}
+	if err := ProblemsToInsightsRemote(problems, p.InsightsRemoteEndpoint, bearerToken); err != nil {
 		return nil, err
 	}
 	fmt.Fprintln(bufW, "successfully pushed problems to Lagoon Remote")
 	bufW.Flush()
 	return buf.Bytes(), nil
-}
-
-func (p *Lagoon) DeleteProblems() error {
-	log.WithFields(log.Fields{
-		"project":     p.Project,
-		"environment": p.Environment,
-		"source":      p.Source,
-	}).Debug("deleting problems from Lagoon")
-
-	envId, err := GetEnvironmentId(p.Project, p.Environment)
-	if err != nil {
-		return err
-	}
-	var m struct {
-		DeleteFactsFromSource string `graphql:"deleteProblemsFromSource(input: {environment: $envId, source: $sourceName, service:$service})"`
-	}
-	variables := map[string]interface{}{
-		"envId":      envId,
-		"sourceName": p.Source,
-		"service":    "",
-	}
-	return Client.Mutate(context.Background(), &m, variables)
 }

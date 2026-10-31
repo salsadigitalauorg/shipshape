@@ -9,7 +9,6 @@ require (
 	github.com/goccy/go-json v0.11.2
 	github.com/gocolly/colly v1.2.0
 	github.com/hashicorp/go-version v1.9.0
-	github.com/hasura/go-graphql-client v0.16.0
 	github.com/jmespath/go-jmespath v0.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/selfupdate v0.6.0
@@ -24,7 +23,6 @@ require (
 	github.com/theory/jsonpath v0.12.2
 	github.com/vmware-labs/yaml-jsonpath v0.3.2
 	golang.org/x/net v0.61.0
-	golang.org/x/oauth2 v0.37.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -41,7 +39,6 @@ require (
 	github.com/antchfx/xpath v1.3.6 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/coder/websocket v1.8.14 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/log v0.2.0 // indirect

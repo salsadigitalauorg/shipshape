@@ -133,11 +133,9 @@ Flags:
       --fail-severity string                     The severity level at which the program
                                                  should exit with an error (default "high")
   -h, --help                                     help for run
-      --lagoon-api-base-url string               Base url for the Lagoon API when pushing
-                                                 problems to API (env: LAGOON_API_BASE_URL)
-      --lagoon-api-token string                  Lagoon API token when pushing problems
-                                                 to API (env: LAGOON_API_TOKEN)
       --lagoon-environment string                The Lagoon environment name (env: LAGOON_ENVIRONMENT)
+      --lagoon-insights-remote-base-url string   Insights Remote base url, used for deleting problems
+                                                  (default "http://lagoon-remote-insights-remote.lagoon.svc")
       --lagoon-insights-remote-endpoint string   Insights Remote Problems endpoint
                                                   (default "http://lagoon-remote-insights-remote.lagoon.svc/problems")
       --lagoon-project string                    The Lagoon project name (env: LAGOON_PROJECT)
@@ -219,6 +217,15 @@ collect:
 The merged result keeps `pattern` from `base.yml`, takes `path` from
 `overrides.yml`, and uses the `skip-dir` list from `overrides.yml`
 (`[tmp]`, not `[private, tmp]`).
+
+### Pushing problems to Lagoon
+
+Pushing and deleting Lagoon Problems uses insights-remote's token-authenticated
+HTTP endpoints exclusively — the Lagoon GraphQL API is not used for this, so no
+`project`/`environment` lookup or API credentials are required. Only
+`--lagoon-insights-remote-endpoint` (or `--lagoon-insights-remote-base-url` for
+deletion) and the in-cluster bearer token at
+`/var/run/secrets/lagoon/dynamic/insights-token/INSIGHTS_TOKEN` are needed.
 
 ## Next steps
 

@@ -120,5 +120,5 @@ output:
     format: pretty
   lagoon:
     source: shipshape:paas:docker
-    api-base-url: https://api.lagoon.amazeeio.cloud
-    api-token: ${LAGOON_API_TOKEN}
+    insights-remote-endpoint: http://lagoon-remote-insights-remote.lagoon.svc/problems
+    insights-remote-base-url: http://lagoon-remote-insights-remote.lagoon.svc
