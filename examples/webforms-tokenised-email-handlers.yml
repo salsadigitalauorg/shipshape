@@ -61,6 +61,6 @@ analyse:
 output:
   stdout:
     format: pretty
-  lagoon.problems:
-    api_key:
-    api_endpoint:
+  lagoon:
+    insights-remote-endpoint: http://lagoon-remote-insights-remote.lagoon.svc/problems
+    insights-remote-base-url: http://lagoon-remote-insights-remote.lagoon.svc

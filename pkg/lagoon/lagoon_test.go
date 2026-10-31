@@ -5,24 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/internal"
 	"github.com/salsadigitalauorg/shipshape/pkg/lagoon"
 
-	"github.com/hasura/go-graphql-client"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestInitClient(t *testing.T) {
-	assert := assert.New(t)
-
-	assert.Nil(lagoon.Client)
-	lagoon.InitClient("", "")
-	assert.NotNil(lagoon.Client)
-}
 
 func TestMustHaveEnvVars(t *testing.T) {
 	assert := assert.New(t)
@@ -63,55 +55,57 @@ func TestMustHaveEnvVars(t *testing.T) {
 	})
 }
 
-func TestGetEnvironmentIdFromEnvVars(t *testing.T) {
-	assert := assert.New(t)
+func Test_DeleteProblemsInsightsRemote(t *testing.T) {
+	t.Run("single source", func(t *testing.T) {
+		state := internal.MockInsightsRemoteTestState{}
+		svr := internal.MockRemoteInsightsServer(&state)
+		defer svr.Close()
 
-	svr := internal.MockLagoonServer()
-	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
-	origOutput := logrus.StandardLogger().Out
-	var buf bytes.Buffer
-	logrus.SetOutput(&buf)
-	defer func() {
-		svr.Close()
-		internal.MockLagoonReset()
-		lagoon.Client = nil
-		logrus.SetOutput(origOutput)
-	}()
+		err := lagoon.DeleteProblems([]string{"Shipshape"}, svr.URL, "bearertoken")
+		assert.NoError(t, err)
+		assert.Equal(t, http.MethodDelete, state.LastCallMethod)
+		assert.Equal(t, "/problems/Shipshape", state.LastCallEndpoint)
+	})
 
-	_, err := lagoon.GetEnvironmentId("foo", "bar")
-	assert.NoError(err)
-	assert.Equal(1, internal.MockLagoonNumCalls)
-	assert.Equal("{\"query\":\"query ($ns:String!){"+
-		"environmentByKubernetesNamespaceName(kubernetesNamespaceName: $ns)"+
-		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
-}
+	t.Run("source containing colons round-trips as a single path segment", func(t *testing.T) {
+		// url.PathEscape does not percent-encode ':' - it is a valid pchar
+		// per RFC 3986 - so the literal colon is expected here. The point of
+		// using PathEscape is correctness for characters that DO need
+		// escaping (e.g. '/', '?', '#', spaces), not colons specifically.
+		state := internal.MockInsightsRemoteTestState{}
+		svr := internal.MockRemoteInsightsServer(&state)
+		defer svr.Close()
 
-func TestDeleteProblems(t *testing.T) {
-	assert := assert.New(t)
+		err := lagoon.DeleteProblems([]string{"shipshape:paas:docker"}, svr.URL, "bearertoken")
+		assert.NoError(t, err)
+		assert.Equal(t, http.MethodDelete, state.LastCallMethod)
+		assert.Equal(t, "/problems/shipshape:paas:docker", state.LastCallEndpoint)
+	})
 
-	svr := internal.MockLagoonServer()
-	lagoon.Client = graphql.NewClient(svr.URL, http.DefaultClient)
-	origOutput := logrus.StandardLogger().Out
-	var buf bytes.Buffer
-	logrus.SetOutput(&buf)
-	defer func() {
-		svr.Close()
-		internal.MockLagoonReset()
-		lagoon.Client = nil
-		logrus.SetOutput(origOutput)
-	}()
+	t.Run("one request per distinct source, duplicates skipped", func(t *testing.T) {
+		var calls []string
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			calls = append(calls, r.URL.Path)
+		})
+		svr := httptest.NewServer(mux)
+		defer svr.Close()
 
-	o := lagoon.Lagoon{Project: "foo", Environment: "bar", Source: "Shipshape"}
-	err := o.DeleteProblems()
-	assert.NoError(err)
-	assert.Equal(2, internal.MockLagoonNumCalls)
-	assert.Equal("{\"query\":\"query ($ns:String!){"+
-		"environmentByKubernetesNamespaceName(kubernetesNamespaceName: $ns)"+
-		"{id}}\",\"variables\":{\"ns\":\"foo-bar\"}}\n", internal.MockLagoonRequestBodies[0])
-	assert.Equal("{\"query\":\"mutation ($envId:Int!$service:String!$sourceName:String!)"+
-		"{deleteProblemsFromSource(input: {environment: $envId, source: "+
-		"$sourceName, service:$service})}\",\"variables\":{\"envId\":50,\"service\":\"\",\"sourceName\":"+
-		"\"Shipshape\"}}\n", internal.MockLagoonRequestBodies[1])
+		err := lagoon.DeleteProblems(
+			[]string{"a", "b", "a", "b", "c"}, svr.URL, "bearertoken")
+		assert.NoError(t, err)
+		assert.ElementsMatch(t, []string{"/problems/a", "/problems/b", "/problems/c"}, calls)
+	})
+
+	t.Run("base url with trailing slash", func(t *testing.T) {
+		state := internal.MockInsightsRemoteTestState{}
+		svr := internal.MockRemoteInsightsServer(&state)
+		defer svr.Close()
+
+		err := lagoon.DeleteProblems([]string{"Shipshape"}, svr.URL+"/", "bearertoken")
+		assert.NoError(t, err)
+		assert.Equal(t, "/problems/Shipshape", state.LastCallEndpoint)
+	})
 }
 
 func Test_GetBearerTokenFromDisk(t *testing.T) {

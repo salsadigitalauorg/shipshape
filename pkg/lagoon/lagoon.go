@@ -2,18 +2,16 @@ package lagoon
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
 	"github.com/salsadigitalauorg/shipshape/pkg/config"
 
-	"github.com/hasura/go-graphql-client"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
 )
 
 type Fact struct {
@@ -39,37 +37,6 @@ type Problem struct {
 	AssociatedPackage string                `json:"associatedPackage,omitempty"`
 	Description       string                `json:"description,omitempty"`
 	Links             string                `json:"links,omitempty"`
-}
-
-var Client *graphql.Client
-
-func InitClient(apiBaseUrl, apiToken string) {
-	if Client != nil {
-		return
-	}
-	src := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: apiToken},
-	)
-	httpClient := oauth2.NewClient(context.Background(), src)
-	Client = graphql.NewClient(apiBaseUrl+"/graphql", httpClient)
-}
-
-// GetEnvironmentId derives the environment id from a Lagoon project
-// name & environment name.
-func GetEnvironmentId(project string, environment string) (int, error) {
-	ns := project + "-" + environment
-	log.WithField("namespace", ns).Info("fetching environment id")
-	var q struct {
-		EnvironmentByKubernetesNamespaceName struct {
-			Id int
-		} `graphql:"environmentByKubernetesNamespaceName(kubernetesNamespaceName: $ns)"`
-	}
-	variables := map[string]interface{}{"ns": ns}
-	err := Client.Query(context.Background(), &q, variables)
-	if err != nil {
-		return 0, err
-	}
-	return q.EnvironmentByKubernetesNamespaceName.Id, nil
 }
 
 const DefaultLagoonInsightsTokenLocation = "/var/run/secrets/lagoon/dynamic/insights-token/INSIGHTS_TOKEN"
@@ -102,13 +69,49 @@ func ProblemsToInsightsRemote(problems []Problem, serviceEndpoint string, bearer
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	response, err := client.Do(req)
-
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
-		return fmt.Errorf("there was an error sending the problems to '%s' : %s", serviceEndpoint, response.Body)
+		return fmt.Errorf("there was an error sending the problems to '%s' : %s", serviceEndpoint, response.Status)
+	}
+	return nil
+}
+
+// DeleteProblems deletes all problems for the given sources via
+// insights-remote's HTTP DELETE endpoint. One request per distinct source;
+// duplicate sources are only requested once. insightsRemoteBaseUrl is the
+// base insights-remote URL (e.g.
+// "http://lagoon-remote-insights-remote.lagoon.svc"), not the
+// "/problems"-suffixed POST endpoint.
+func DeleteProblems(sources []string, insightsRemoteBaseUrl string, bearerToken string) error {
+	seen := map[string]bool{}
+	client := &http.Client{}
+	for _, source := range sources {
+		if source == "" || seen[source] {
+			continue
+		}
+		seen[source] = true
+
+		endpoint := strings.TrimSuffix(insightsRemoteBaseUrl, "/") + "/problems/" + url.PathEscape(source)
+		log.WithField("endpoint", endpoint).Trace("deleting problems from Lagoon Insights")
+
+		req, err := http.NewRequest(http.MethodDelete, endpoint, nil)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Authorization", bearerToken)
+
+		response, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		response.Body.Close()
+		if response.StatusCode >= 300 {
+			return fmt.Errorf("there was an error deleting problems at '%s': %s", endpoint, response.Status)
+		}
 	}
 	return nil
 }
