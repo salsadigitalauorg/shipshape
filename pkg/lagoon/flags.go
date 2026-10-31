@@ -31,6 +31,10 @@ func (p *Lagoon) AddFlags(c *cobra.Command) {
 	c.Flags().StringVar(&p.Source, "lagoon-source", "Shipshape",
 		"Source to use for Problems pushed to Lagoon")
 
+	c.Flags().BoolVar(&p.ClearProblems, "lagoon-clear-problems", true,
+		`Delete existing Lagoon problems for this run's sources before
+pushing new ones; use --lagoon-clear-problems=false to disable`)
+
 	c.Flags().StringVar(&p.Project, "lagoon-project", "",
 		"The Lagoon project name (env: LAGOON_PROJECT)")
 

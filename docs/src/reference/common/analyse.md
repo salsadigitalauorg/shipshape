@@ -6,6 +6,7 @@
 | description   | The description of the policy - if specified, it will be used as the heading for the policy in the output. |    No    |          ""           |
 | input         | The input for the policy - used to select the fact plugin to use.                                          |   Yes    |           -           |
 | severity      | The severity of the policy when breached (low, normal, high, critical)                                     |    No    |        normal         |
+| source        | Overrides the Lagoon Problem source for this policy's breaches. Falls back to the `lagoon` output's own `source` (and ultimately `"Shipshape"`) when empty. See [Lagoon output](../../guide/#pushing-problems-to-lagoon). |    No    |          ""           |
 | breach-format | The breach template for the policy. The table below shows the available fields.                            |    No    | Empty breach template |
 | remediation   | The remediation for the policy. The table below shows the available fields.                                |    No    |   Empty remediation   |
 

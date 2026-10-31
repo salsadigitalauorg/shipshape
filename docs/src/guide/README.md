@@ -133,6 +133,8 @@ Flags:
       --fail-severity string                     The severity level at which the program
                                                  should exit with an error (default "high")
   -h, --help                                     help for run
+      --lagoon-clear-problems                    Delete existing Lagoon problems for this run's sources before
+                                                 pushing new ones; use --lagoon-clear-problems=false to disable (default true)
       --lagoon-environment string                The Lagoon environment name (env: LAGOON_ENVIRONMENT)
       --lagoon-insights-remote-base-url string   Insights Remote base url, used for deleting problems
                                                   (default "http://lagoon-remote-insights-remote.lagoon.svc")
@@ -226,6 +228,16 @@ HTTP endpoints exclusively — the Lagoon GraphQL API is not used for this, so n
 `--lagoon-insights-remote-endpoint` (or `--lagoon-insights-remote-base-url` for
 deletion) and the in-cluster bearer token at
 `/var/run/secrets/lagoon/dynamic/insights-token/INSIGHTS_TOKEN` are needed.
+
+By default (`--lagoon-clear-problems=true`), Shipshape deletes existing Lagoon
+problems for its owned sources on every run, before pushing new ones — not only
+when a run has zero breaches. Set `--lagoon-clear-problems=false` to disable
+deletion entirely.
+
+The Problem `source` can be overridden per-analyser via the analyser's
+`source:` field, falling back to the plugin-level `--lagoon-source` /
+`source:` when unset, and to `"Shipshape"` if neither is set. See
+[Analysing data](analyse) for the per-analyser field.
 
 ## Next steps
 

@@ -64,3 +64,4 @@ output:
   lagoon:
     insights-remote-endpoint: http://lagoon-remote-insights-remote.lagoon.svc/problems
     insights-remote-base-url: http://lagoon-remote-insights-remote.lagoon.svc
+    clear-problems: true

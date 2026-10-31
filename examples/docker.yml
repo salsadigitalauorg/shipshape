@@ -110,6 +110,7 @@ analyse:
     allowed:list:
       description: Disallowed base image found in services' Dockerfiles.
       input: base-images
+      source: shipshape:paas:docker:base-image
       allowed: *allowed-images
       deprecated: *deprecated-images
       exclude-keys:
@@ -122,3 +123,4 @@ output:
     source: shipshape:paas:docker
     insights-remote-endpoint: http://lagoon-remote-insights-remote.lagoon.svc/problems
     insights-remote-base-url: http://lagoon-remote-insights-remote.lagoon.svc
+    clear-problems: true

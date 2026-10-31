@@ -27,6 +27,12 @@ type Result struct {
 	Status            Status                        `json:"status"`
 	RemediationStatus remediation.RemediationStatus `json:"remediation-status"`
 	DetailedMessage   string                        `json:"detailed-message"`
+	// Source overrides the Lagoon Problem source for this result's
+	// breaches. omitempty is deliberate: unlike every other field here, it
+	// must not appear in the serialised JSON when unset, since
+	// pkg/output/file_test.go asserts an exact golden JSON string that
+	// predates this field.
+	Source string `json:"source,omitempty"`
 }
 
 // Sort reorders the Passes & Failures in order to get consistent output.

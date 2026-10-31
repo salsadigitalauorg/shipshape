@@ -28,18 +28,66 @@ type Lagoon struct {
 	// POST endpoint.
 	InsightsRemoteBaseUrl string `yaml:"insights-remote-base-url"`
 
-	// Source can be specified when pushing Problems to Lagoon.
-	// Default is "Shipshape".
+	// Source can be specified when pushing Problems to Lagoon. Falls back
+	// to the per-Result source (see result.Result.Source) when set there;
+	// default is "Shipshape".
 	Source string `yaml:"source"`
+
+	// ClearProblems controls whether Shipshape deletes existing Lagoon
+	// problems for its owned sources before pushing new ones. Defaults to
+	// true, and runs on every invocation, not only zero-breach runs.
+	ClearProblems bool `yaml:"clear-problems"`
 
 	Project     string `yaml:"project"`
 	Environment string `yaml:"environment"`
 }
 
-var l = &Lagoon{Source: "Shipshape"}
+var l = &Lagoon{Source: DefaultSource, ClearProblems: true}
 
 func init() {
 	output.Outputters["lagoon"] = l
+}
+
+// getBearerToken is overridable in tests so Output() can be exercised without
+// the real in-cluster token file at DefaultLagoonInsightsTokenLocation.
+var getBearerToken = func() (string, error) {
+	return GetBearerTokenFromDisk(DefaultLagoonInsightsTokenLocation)
+}
+
+// resolveSource returns the effective Lagoon Problem source for a Result: the
+// per-analyser override when set, falling back to the plugin-level Source,
+// falling back to DefaultSource if both are empty (so a YAML `source:` with
+// no value never produces an empty-string deletion target).
+func (p *Lagoon) resolveSource(r result.Result) string {
+	if r.Source != "" {
+		return r.Source
+	}
+	if p.Source != "" {
+		return p.Source
+	}
+	return DefaultSource
+}
+
+// ownedSources returns the deduplicated set of Lagoon Problem sources this
+// run owns: the plugin-level default plus every per-Result override, derived
+// from all Results (not only breached ones), so a fully-clean run still
+// clears its own stale problems.
+func (p *Lagoon) ownedSources(rl *result.ResultList) []string {
+	seen := map[string]bool{}
+	sources := []string{}
+	add := func(s string) {
+		if s == "" || seen[s] {
+			return
+		}
+		seen[s] = true
+		sources = append(sources, s)
+	}
+
+	add(p.resolveSource(result.Result{}))
+	for _, r := range rl.Results {
+		add(p.resolveSource(r))
+	}
+	return sources
 }
 
 func (p *Lagoon) Output(rl *result.ResultList) ([]byte, error) {
@@ -53,26 +101,34 @@ func (p *Lagoon) Output(rl *result.ResultList) ([]byte, error) {
 		"project":                  p.Project,
 		"environment":              p.Environment,
 		"source":                   p.Source,
+		"clear-problems":           p.ClearProblems,
 	}).Debug("pushing problems to Lagoon")
 	buf := bytes.Buffer{}
 	bufW := bufio.NewWriter(&buf)
 	problems := []Problem{}
 
-	if rl.TotalBreaches == 0 {
-		log.WithFields(log.Fields{
-			"project":     p.Project,
-			"environment": p.Environment,
-			"source":      p.Source,
-		}).Debug("cleaning up existing problems")
+	bearerToken, tokenErr := getBearerToken()
 
-		bearerToken, err := GetBearerTokenFromDisk(DefaultLagoonInsightsTokenLocation)
-		if err != nil {
+	deleted := false
+	if p.ClearProblems {
+		if tokenErr != nil {
+			return nil, tokenErr
+		}
+		sources := p.ownedSources(rl)
+		log.WithField("sources", sources).Debug("clearing existing problems")
+		if err := DeleteProblems(sources, p.InsightsRemoteBaseUrl, bearerToken); err != nil {
 			return nil, err
 		}
-		if err := DeleteProblems([]string{p.Source}, p.InsightsRemoteBaseUrl, bearerToken); err != nil {
-			return nil, err
+		deleted = true
+	}
+
+	if rl.TotalBreaches == 0 {
+		switch {
+		case deleted:
+			fmt.Fprint(bufW, "no breach to push to Lagoon; only deleted previous problems")
+		default:
+			fmt.Fprint(bufW, "no breach to push to Lagoon")
 		}
-		fmt.Fprint(bufW, "no breach to push to Lagoon; only deleted previous problems")
 		bufW.Flush()
 		return buf.Bytes(), nil
 	}
@@ -92,7 +148,7 @@ func (p *Lagoon) Output(rl *result.ResultList) ([]byte, error) {
 			Identifier:        r.Name,
 			Version:           "1",
 			FixedVersion:      "",
-			Source:            p.Source,
+			Source:            p.resolveSource(r),
 			Service:           "",
 			Data:              string(breachMapJson),
 			Severity:          SeverityTranslation(config.Severity(r.Severity)),
@@ -103,9 +159,8 @@ func (p *Lagoon) Output(rl *result.ResultList) ([]byte, error) {
 		})
 	}
 
-	bearerToken, err := GetBearerTokenFromDisk(DefaultLagoonInsightsTokenLocation)
-	if err != nil {
-		return nil, err
+	if tokenErr != nil {
+		return nil, tokenErr
 	}
 	if err := ProblemsToInsightsRemote(problems, p.InsightsRemoteEndpoint, bearerToken); err != nil {
 		return nil, err

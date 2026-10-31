@@ -41,6 +41,10 @@ type Problem struct {
 
 const DefaultLagoonInsightsTokenLocation = "/var/run/secrets/lagoon/dynamic/insights-token/INSIGHTS_TOKEN"
 
+// DefaultSource is the Lagoon Problem/Fact source used when neither a
+// per-analyser nor a plugin-level source is configured.
+const DefaultSource = "Shipshape"
+
 func GetBearerTokenFromDisk(tokenLocation string) (string, error) {
 	//first, we check that the token exists on disk
 	_, err := os.Stat(tokenLocation)

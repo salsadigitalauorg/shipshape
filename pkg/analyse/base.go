@@ -10,10 +10,13 @@ import (
 
 // BaseAnalyser provides common fields and functionality for analyse plugins.
 type BaseAnalyser struct {
-	plugin.BasePlugin     `yaml:",inline"`
-	Description           string `yaml:"description"`
-	InputName             string `yaml:"input"`
-	Severity              string `yaml:"severity"`
+	plugin.BasePlugin `yaml:",inline"`
+	Description       string `yaml:"description"`
+	InputName         string `yaml:"input"`
+	Severity          string `yaml:"severity"`
+	// Source overrides the Lagoon Problem source for this policy's
+	// breaches. Falls back to the lagoon outputter's own Source when empty.
+	Source                string `yaml:"source"`
 	breach.BreachTemplate `yaml:"breach-format"`
 	Result                result.Result
 	Remediation           interface{} `yaml:"remediation"`
@@ -28,6 +31,11 @@ func (p *BaseAnalyser) GetDescription() string {
 
 func (p *BaseAnalyser) GetInputName() string {
 	return p.InputName
+}
+
+// GetSource returns the per-analyser Lagoon Problem source override.
+func (p *BaseAnalyser) GetSource() string {
+	return p.Source
 }
 
 // GetDetailedMessage returns the DetailedMessage of the check.
@@ -49,6 +57,9 @@ func (p *BaseAnalyser) GetResult() result.Result {
 		p.Result.Severity = p.Severity
 	}
 	p.Result.DetailedMessage = p.DetailedMessage
+	if p.Source != "" {
+		p.Result.Source = p.Source
+	}
 	return p.Result
 }
 
