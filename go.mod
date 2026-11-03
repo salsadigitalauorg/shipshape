@@ -23,7 +23,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/mysql v0.44.0
 	github.com/theory/jsonpath v0.12.2
 	github.com/vmware-labs/yaml-jsonpath v0.3.2
-	golang.org/x/net v0.61.0
+	golang.org/x/net v0.62.0
 	golang.org/x/oauth2 v0.37.0
 	gopkg.in/yaml.v3 v3.0.1
 )
