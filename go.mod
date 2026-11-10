@@ -19,8 +19,8 @@ require (
 	github.com/sirupsen/logrus v1.10.2
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
-	github.com/testcontainers/testcontainers-go v0.44.0
-	github.com/testcontainers/testcontainers-go/modules/mysql v0.44.0
+	github.com/testcontainers/testcontainers-go v0.45.0
+	github.com/testcontainers/testcontainers-go/modules/mysql v0.45.0
 	github.com/theory/jsonpath v0.12.2
 	github.com/vmware-labs/yaml-jsonpath v0.3.2
 	golang.org/x/net v0.62.0
